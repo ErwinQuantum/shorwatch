@@ -64,4 +64,5 @@ hybrid:
     - import: '^org\.bouncycastle\.pqc\.'
     - import: '^org\.openquantumsafe\.'
     - type: '(?i)(kyber|dilithium|ml-?kem|ml-?dsa)'
-    - literal: '(?i)\b(kyber|dilithium|ml-?kem|ml-?dsa)\b'
+    # Not `\b`: hybrid group names glue the parts together (X25519MLKEM768).
+    - literal: '(?i)(^|[^a-z])(kyber|dilithium|ml-?kem|ml-?dsa)'

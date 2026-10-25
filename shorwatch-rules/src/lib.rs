@@ -24,6 +24,7 @@ macro_rules! builtin {
 const BUILTIN: &[(&str, &str)] = builtin![
     "java/rsa.yaml",
     "java/dh.yaml",
+    "java/ecdh.yaml",
 ];
 
 #[derive(Debug, Error)]
