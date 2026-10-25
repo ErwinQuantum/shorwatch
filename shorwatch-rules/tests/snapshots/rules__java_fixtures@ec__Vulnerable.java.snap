@@ -1,0 +1,14 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/java/ec/Vulnerable.java
+---
+- rule: java.crypto.ec
+  at: "11:38"
+  status: vulnerable
+- rule: java.crypto.ec
+  at: "12:30"
+  status: vulnerable
+- rule: java.crypto.ecdsa
+  at: "18:16"
+  status: vulnerable
