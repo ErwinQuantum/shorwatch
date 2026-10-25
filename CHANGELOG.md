@@ -11,4 +11,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Initial repository layout (5-crate workspace).
 - `shorwatch-core`: intermediate model, rule model with validation (Shor-category rules cannot carry an auto-fix) and evaluation engine with hybrid-scheme detection.
 - `shorwatch-langs`: Java frontend (tree-sitter) resolving receiver types and same-file `final` constants.
-- `shorwatch-rules`: YAML loader and the first rule, `java.crypto.rsa`.
+- `shorwatch-rules`: YAML loader and 11 built-in Java rules:
+  - Shor category (advice only, never an auto-fix): `rsa`, `dh`, `ecdh` (including X25519/X448/XDH and ECIES), `ecdsa`, `ec` (ambiguous "EC" key material), `eddsa` (Ed25519/Ed448), `dsa`, `elgamal`.
+  - Grover category: `aes-128` (with a mechanical AES-256 fix), `sha1`, `3des`.
+- Hybrid-scheme detection: findings next to ML-KEM/ML-DSA/Kyber/Dilithium code, BouncyCastle PQC or liboqs imports are reported as `in_transition`. Glued hybrid names such as `X25519MLKEM768` are recognised.
+- Fixture-driven snapshot tests: one folder per rule, discovered automatically.
