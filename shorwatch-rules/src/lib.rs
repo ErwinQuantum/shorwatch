@@ -14,8 +14,17 @@ use std::path::{Path, PathBuf};
 pub use shorwatch_core::{Rule, RuleError, RuleSet};
 use thiserror::Error;
 
+macro_rules! builtin {
+    ($($file:literal),* $(,)?) => {
+        &[$(($file, include_str!(concat!("../rules/", $file)))),*]
+    };
+}
+
 /// Built-in rule files, keyed by their path under `rules/`.
-const BUILTIN: &[(&str, &str)] = &[("java/rsa.yaml", include_str!("../rules/java/rsa.yaml"))];
+const BUILTIN: &[(&str, &str)] = builtin![
+    "java/rsa.yaml",
+    "java/dh.yaml",
+];
 
 #[derive(Debug, Error)]
 pub enum LoadError {
@@ -112,6 +121,32 @@ patterns:
     fn builtin_rules_compile() {
         let set = builtin().unwrap();
         assert_eq!(set.len(), BUILTIN.len());
+    }
+
+    #[test]
+    fn every_rule_file_is_registered_as_builtin() {
+        let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("rules");
+        let on_disk = load_dir(&dir).unwrap();
+        let mut on_disk: Vec<_> = on_disk.into_iter().map(|r| r.id).collect();
+        let mut builtin: Vec<_> = builtin_rules().unwrap().into_iter().map(|r| r.id).collect();
+        on_disk.sort();
+        builtin.sort();
+        assert_eq!(builtin, on_disk, "add new rule files to `BUILTIN`");
+    }
+
+    #[test]
+    fn shor_rules_point_to_a_pqc_standard() {
+        for rule in builtin_rules().unwrap() {
+            if rule.category == shorwatch_core::Category::Shor {
+                assert!(
+                    rule.references
+                        .iter()
+                        .any(|r| r.url.contains("/fips/203/") || r.url.contains("/fips/204/")),
+                    "{} must reference FIPS 203 or FIPS 204",
+                    rule.id
+                );
+            }
+        }
     }
 
     #[test]

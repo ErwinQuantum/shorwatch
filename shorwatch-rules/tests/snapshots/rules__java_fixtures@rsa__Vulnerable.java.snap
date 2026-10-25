@@ -1,7 +1,7 @@
 ---
 source: shorwatch-rules/tests/rules.rs
-assertion_line: 49
-expression: "findings(\"java/rsa/Vulnerable.java\")"
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/java/rsa/Vulnerable.java
 ---
 - rule: java.crypto.rsa
   at: "14:38"

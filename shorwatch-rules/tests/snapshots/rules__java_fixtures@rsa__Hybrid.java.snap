@@ -1,7 +1,7 @@
 ---
 source: shorwatch-rules/tests/rules.rs
-assertion_line: 54
-expression: "findings(\"java/rsa/Hybrid.java\")"
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/java/rsa/Hybrid.java
 ---
 - rule: java.crypto.rsa
   at: "9:31"

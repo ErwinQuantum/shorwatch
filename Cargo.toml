@@ -36,7 +36,7 @@ ignore = "0.4"
 rayon = "1.10"
 anstream = "0.6"
 owo-colors = "4"
-insta = { version = "1", features = ["yaml"] }
+insta = { version = "1", features = ["yaml", "glob"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

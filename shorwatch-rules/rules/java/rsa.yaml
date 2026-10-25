@@ -27,19 +27,19 @@ patterns:
   - call:
       type: java.security.KeyPairGenerator
       method: getInstance
-      arg: { index: 0, matches: "(?i)^RSA(SSA-PSS)?$" }
+      arg: { index: 0, matches: '(?i)^RSA(SSA-PSS)?$' }
   - call:
       type: java.security.KeyFactory
       method: getInstance
-      arg: { index: 0, matches: "(?i)^RSA(SSA-PSS)?$" }
+      arg: { index: 0, matches: '(?i)^RSA(SSA-PSS)?$' }
   - call:
       type: javax.crypto.Cipher
       method: getInstance
-      arg: { index: 0, matches: "(?i)^RSA(/|$)" }
+      arg: { index: 0, matches: '(?i)^RSA(/|$)' }
   - call:
       type: java.security.Signature
       method: getInstance
-      arg: { index: 0, matches: "(?i)^(RSASSA-PSS|.+withRSA(andMGF1|/PSS|/ISO9796-2|/X9\\.31)?)$" }
+      arg: { index: 0, matches: '(?i)^(RSASSA-PSS|.+withRSA(andMGF1|/PSS|/ISO9796-2|/X9\.31)?)$' }
   - construct:
       type: java.security.spec.RSAKeyGenParameterSpec
 
@@ -54,7 +54,7 @@ patterns:
 hybrid:
   scope: type
   markers:
-    - import: "^org\\.bouncycastle\\.pqc\\."
-    - import: "^org\\.openquantumsafe\\."
-    - type: "(?i)(kyber|dilithium|ml-?kem|ml-?dsa)"
-    - literal: "(?i)\\b(kyber|dilithium|ml-?kem|ml-?dsa)\\b"
+    - import: '^org\.bouncycastle\.pqc\.'
+    - import: '^org\.openquantumsafe\.'
+    - type: '(?i)(kyber|dilithium|ml-?kem|ml-?dsa)'
+    - literal: '(?i)\b(kyber|dilithium|ml-?kem|ml-?dsa)\b'

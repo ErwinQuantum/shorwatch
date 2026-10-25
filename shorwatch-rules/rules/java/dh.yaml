@@ -1,0 +1,67 @@
+id: java.crypto.dh
+language: java
+algorithm: Diffie-Hellman
+category: shor
+severity: high
+title: Finite-field Diffie-Hellman is broken by Shor's algorithm
+message: >-
+  Classical (finite-field) Diffie-Hellman key agreement detected. Shor's
+  algorithm solves the discrete logarithm problem it relies on, so recorded
+  handshakes can be decrypted once a large quantum computer exists
+  (harvest now, decrypt later).
+suggestion: >-
+  Replace the key agreement with a key-encapsulation mechanism: ML-KEM
+  (FIPS 203). KEMs have a different shape than DH (encapsulate/decapsulate
+  instead of a symmetric exchange), so this is a protocol change. A hybrid
+  combiner (classical shared secret + ML-KEM shared secret through a KDF)
+  keeps today's security guarantees during the transition.
+references:
+  - title: "FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)"
+    url: https://csrc.nist.gov/pubs/fips/203/final
+  - title: "NIST SP 800-227: Recommendations for Key-Encapsulation Mechanisms"
+    url: https://csrc.nist.gov/pubs/sp/800/227/final
+  - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
+    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+
+patterns:
+  # JCA / JCE. "DiffieHellman" is the standard alias of "DH".
+  - call:
+      type: javax.crypto.KeyAgreement
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DH|DiffieHellman)$' }
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DH|DiffieHellman)$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DH|DiffieHellman)$' }
+  - call:
+      type: java.security.AlgorithmParameterGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DH|DiffieHellman)$' }
+  - construct:
+      type: javax.crypto.spec.DHParameterSpec
+  - construct:
+      type: javax.crypto.spec.DHGenParameterSpec
+
+  # BouncyCastle lightweight API
+  - construct:
+      type: org.bouncycastle.crypto.agreement.DHBasicAgreement
+  - construct:
+      type: org.bouncycastle.crypto.agreement.DHAgreement
+  - construct:
+      type: org.bouncycastle.crypto.generators.DHKeyPairGenerator
+  - construct:
+      type: org.bouncycastle.crypto.generators.DHBasicKeyPairGenerator
+  - construct:
+      type: org.bouncycastle.crypto.generators.DHParametersGenerator
+
+hybrid:
+  scope: type
+  markers:
+    - import: '^org\.bouncycastle\.pqc\.'
+    - import: '^org\.openquantumsafe\.'
+    - type: '(?i)(kyber|dilithium|ml-?kem|ml-?dsa)'
+    - literal: '(?i)\b(kyber|dilithium|ml-?kem|ml-?dsa)\b'

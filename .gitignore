@@ -2,15 +2,15 @@
 **/*.rs.bk
 *.pdb
 
-# insta: snapshots pendientes de revisión
+# insta: snapshots awaiting review
 *.snap.new
 *.pending-snap
 
-# Salidas locales de análisis
+# Local analysis output
 *.sarif
 !examples/**/*.sarif
 
-# Editor / SO
+# Editor / OS
 .idea/
 .vscode/
 .DS_Store
