@@ -1,0 +1,20 @@
+//! # shorwatch-core
+//!
+//! The pure domain of Shorwatch. It knows nothing about parsers, files,
+//! command lines or output formats:
+//!
+//! - [`ir`]: the language-neutral model that frontends produce.
+//! - [`rule`]: the declarative rule model and its validation.
+//! - [`analyze`]: evaluates a [`RuleSet`] against a [`SourceUnit`].
+//! - [`finding`]: what the engine reports.
+
+pub mod finding;
+pub mod ir;
+pub mod rule;
+
+mod engine;
+
+pub use engine::analyze;
+pub use finding::{Finding, HybridEvidence, Status, SuggestedFix};
+pub use ir::{Language, SourceUnit};
+pub use rule::{Category, Rule, RuleError, RuleSet, Severity};

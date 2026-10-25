@@ -1,0 +1,27 @@
+[package]
+name = "shorwatch-cli"
+description = "Shorwatch command line: finds quantum-vulnerable cryptography in source code."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[[bin]]
+name = "shorwatch"
+path = "src/main.rs"
+
+[dependencies]
+shorwatch-core.workspace = true
+shorwatch-rules.workspace = true
+shorwatch-langs.workspace = true
+shorwatch-report.workspace = true
+clap.workspace = true
+ignore.workspace = true
+rayon.workspace = true
+anyhow.workspace = true
+
+[lints]
+workspace = true

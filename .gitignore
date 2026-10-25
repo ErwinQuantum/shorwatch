@@ -1,0 +1,17 @@
+/target
+**/*.rs.bk
+*.pdb
+
+# insta: snapshots pendientes de revisión
+*.snap.new
+*.pending-snap
+
+# Salidas locales de análisis
+*.sarif
+!examples/**/*.sarif
+
+# Editor / SO
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,51 @@
+[workspace]
+resolver = "3"
+members = [
+    "shorwatch-core",
+    "shorwatch-rules",
+    "shorwatch-langs",
+    "shorwatch-report",
+    "shorwatch-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0"
+repository = "https://github.com/ErwinQuantum/shorwatch"
+keywords = ["sast", "post-quantum", "cryptography", "security", "static-analysis"]
+categories = ["development-tools", "cryptography"]
+
+[workspace.dependencies]
+shorwatch-core = { path = "shorwatch-core", version = "0.1.0" }
+shorwatch-rules = { path = "shorwatch-rules", version = "0.1.0" }
+shorwatch-langs = { path = "shorwatch-langs", version = "0.1.0" }
+shorwatch-report = { path = "shorwatch-report", version = "0.1.0" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml_ng = "0.10"
+regex = "1"
+thiserror = "2"
+anyhow = "1"
+tree-sitter = "0.25"
+tree-sitter-java = "0.23"
+clap = { version = "4.5", features = ["derive"] }
+ignore = "0.4"
+rayon = "1.10"
+anstream = "0.6"
+owo-colors = "4"
+insta = { version = "1", features = ["yaml"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

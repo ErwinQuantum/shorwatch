@@ -1,0 +1,47 @@
+---
+source: shorwatch-langs/src/java.rs
+assertion_line: 625
+expression: unit
+---
+path: Test.java
+language: java
+scopes:
+  - kind: file
+    name: ~
+    parent: ~
+  - kind: type
+    name: Outer
+    parent: 0
+  - kind: type
+    name: Inner
+    parent: 1
+  - kind: method
+    name: alg
+    parent: 2
+facts:
+  - kind:
+      import:
+        path: org.bouncycastle.pqc.crypto.mlkem.*
+    scope: 0
+    location:
+      start:
+        line: 2
+        column: 13
+      end:
+        line: 2
+        column: 56
+      start_byte: 13
+      end_byte: 56
+  - kind:
+      literal:
+        value: ML-KEM-768
+    scope: 3
+    location:
+      start:
+        line: 5
+        column: 43
+      end:
+        line: 5
+        column: 55
+      start_byte: 155
+      end_byte: 167
