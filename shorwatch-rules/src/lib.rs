@@ -31,6 +31,7 @@ const BUILTIN: &[(&str, &str)] = builtin![
     "java/dsa.yaml",
     "java/elgamal.yaml",
     "java/aes-128.yaml",
+    "java/sha1.yaml",
 ];
 
 #[derive(Debug, Error)]

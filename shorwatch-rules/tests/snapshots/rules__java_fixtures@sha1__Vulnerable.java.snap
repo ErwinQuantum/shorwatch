@@ -1,0 +1,26 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/java/sha1/Vulnerable.java
+---
+- rule: java.crypto.sha1
+  at: "11:9"
+  status: vulnerable
+- rule: java.crypto.sha1
+  at: "12:16"
+  status: vulnerable
+- rule: java.crypto.rsa
+  at: "17:16"
+  status: vulnerable
+- rule: java.crypto.sha1
+  at: "17:16"
+  status: vulnerable
+- rule: java.crypto.sha1
+  at: "21:9"
+  status: vulnerable
+- rule: java.crypto.sha1
+  at: "22:9"
+  status: vulnerable
+- rule: java.crypto.sha1
+  at: "23:16"
+  status: vulnerable
