@@ -1,3 +1,4 @@
 # Keep fixtures and snapshots byte-identical across platforms: findings carry
 # byte offsets, and snapshots must not churn on Windows checkouts.
 * text=auto eol=lf
+graphify-out/graph.json merge=graphify
