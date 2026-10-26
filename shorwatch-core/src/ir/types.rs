@@ -5,8 +5,9 @@ use serde::Serialize;
 /// A reference to a type as the frontend could resolve it.
 ///
 /// `qualified` is only set when the frontend is certain (explicit import or a
-/// fully qualified name in the source); otherwise matching falls back to the
-/// simple name.
+/// fully qualified name in the source); otherwise matching falls back to
+/// `name`, the type as written without its package: `Cipher`, or `Outer.Inner`
+/// for a nested type whose outer type was not imported.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
 pub struct TypeRef {
     pub name: String,
@@ -31,10 +32,12 @@ impl TypeRef {
     }
 
     /// Whether this reference denotes `wanted`, a fully qualified type name.
+    /// Without a qualified name the whole type path must agree: a bare
+    /// `Builder` or `Context.Builder` is not `com.nimbusds.jose.jwk.ECKey.Builder`.
     pub fn is(&self, wanted: &str) -> bool {
         match &self.qualified {
             Some(qualified) => qualified == wanted,
-            None => self.name == simple_name(wanted),
+            None => self.name == type_path(wanted),
         }
     }
 
@@ -46,4 +49,18 @@ impl TypeRef {
 
 fn simple_name(qualified: &str) -> &str {
     qualified.rsplit('.').next().unwrap_or(qualified)
+}
+
+/// `com.nimbusds.jose.jwk.ECKey.Builder` -> `ECKey.Builder`: the name without
+/// its package, which by JVM convention is everything from the first segment
+/// starting with an upper-case letter.
+fn type_path(qualified: &str) -> &str {
+    let mut start = 0;
+    for segment in qualified.split('.') {
+        if segment.chars().next().is_some_and(char::is_uppercase) {
+            return &qualified[start..];
+        }
+        start += segment.len() + 1;
+    }
+    simple_name(qualified)
 }

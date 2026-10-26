@@ -7,5 +7,10 @@ class Clean {
         KeyPairGenerator.getInstance("ML-DSA")
         // Not "EC": only the exact name is ambiguous.
         KeyPairGenerator.getInstance("ECX")
+        // Other types' nested builders are not Nimbus' `ECKey.Builder`.
+        Settings.Builder().build()
+        Builder()
     }
+
+    class Builder
 }

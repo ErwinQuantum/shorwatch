@@ -106,10 +106,11 @@ impl JvmFile {
         match name.split_once('.') {
             // `java.security.KeyPairGenerator`: already fully qualified.
             Some((first, _)) if !starts_uppercase(first) => TypeRef::qualified(name),
-            // `Outer.Inner`: qualified only if `Outer` was imported.
+            // `Outer.Inner`: qualified only if `Outer` was imported; otherwise
+            // kept whole, so it is not mistaken for another type's `Inner`.
             Some((first, rest)) => match self.imports.get(first) {
                 Some(outer) => TypeRef::qualified(format!("{outer}.{rest}")),
-                None => TypeRef::simple(name.rsplit('.').next().unwrap_or(name)),
+                None => TypeRef::simple(name),
             },
             None => match self.imports.get(name) {
                 Some(qualified) => TypeRef::qualified(qualified.clone()),

@@ -13,6 +13,17 @@ fn type_ref_falls_back_to_simple_name() {
 }
 
 #[test]
+fn nested_types_need_their_outer_type_to_match() {
+    let wanted = "com.nimbusds.jose.jwk.ECKey.Builder";
+    assert!(TypeRef::simple("ECKey.Builder").is(wanted));
+    // Found in the wild: every other class's `Builder`.
+    assert!(!TypeRef::simple("Builder").is(wanted));
+    assert!(!TypeRef::simple("GroupMetadataManagerTestContext.Builder").is(wanted));
+    assert!(!TypeRef::simple("SIG").is("io.jsonwebtoken.Jwts.SIG"));
+    assert!(TypeRef::simple("Jwts.SIG").is("io.jsonwebtoken.Jwts.SIG"));
+}
+
+#[test]
 fn enclosing_walks_up_to_requested_kind() {
     let mut unit = SourceUnit::new("A.java", Language::Java);
     let class = unit.add_scope(ScopeKind::Type, Some("A".into()), SourceUnit::ROOT);
