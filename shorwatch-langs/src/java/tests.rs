@@ -341,3 +341,39 @@ fn calls_on_factory_made_variables_know_their_origin() {
         ]
     );
 }
+
+fn field_owners(unit: &SourceUnit) -> Vec<TypeRef> {
+    unit.facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Field { owner, .. } => Some(owner.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn unimported_types_belong_to_the_package_or_on_demand_imports() {
+    let azure = "com.azure.security.keyvault.keys.models.KeyType";
+    let same_package = lower(
+        "package org.keycloak.crypto;
+class A { Object t() { return KeyType.RSA; } }",
+    );
+    let owner = &field_owners(&same_package)[0];
+    assert!(owner.is("org.keycloak.crypto.KeyType"));
+    assert!(!owner.is(azure));
+
+    let on_demand = lower(
+        "package com.acme;
+import com.azure.security.keyvault.keys.models.*;
+class A { Object t() { return KeyType.RSA; } }",
+    );
+    assert!(field_owners(&on_demand)[0].is(azure));
+
+    // A module import brings packages only the module graph knows.
+    let module = lower(
+        "package org.acme;\nimport module java.base;\nclass A { void r() throws Exception { KeyFactory.getInstance(\"RSA\"); } }",
+    );
+    let (receiver, ..) = &calls(&module)[0];
+    assert!(receiver.as_ref().unwrap().is("java.security.KeyFactory"));
+}

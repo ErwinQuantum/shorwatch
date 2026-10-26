@@ -3,10 +3,14 @@ profile: rsa
 platform: jvm
 
 patterns:
-  # Spring Security: PEM key loading and spring-security-rsa encryption.
+  # Spring Security: PEM key loading and spring-security-rsa encryption, which
+  # Spring Security 6.3 absorbed into `org.springframework.security.crypto.encrypt`.
   - call: { type: org.springframework.security.converter.RsaKeyConverters, method: pkcs8 }
   - call: { type: org.springframework.security.converter.RsaKeyConverters, method: x509 }
   - construct: { type: org.springframework.security.rsa.crypto.RsaSecretEncryptor }
   - construct: { type: org.springframework.security.rsa.crypto.RsaRawEncryptor }
+  - construct: { type: org.springframework.security.crypto.encrypt.RsaSecretEncryptor }
+  - construct: { type: org.springframework.security.crypto.encrypt.RsaRawEncryptor }
   # Loads the RSA key pair the encryptors above (and Spring Cloud Config) use.
   - construct: { type: org.springframework.security.rsa.crypto.KeyStoreKeyFactory }
+  - construct: { type: org.springframework.security.crypto.encrypt.KeyStoreKeyFactory }

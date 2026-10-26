@@ -90,6 +90,16 @@ impl<'s> Lowering<'s> {
     fn visit(&mut self, node: Node<'_>, scope: ScopeId) -> Option<ScopeId> {
         match node.kind() {
             "line_comment" | "block_comment" => None,
+            "package_declaration" => {
+                let mut cursor = node.walk();
+                if let Some(name) = node
+                    .named_children(&mut cursor)
+                    .find(|c| matches!(c.kind(), "scoped_identifier" | "identifier"))
+                {
+                    self.file.package = self.text(name).to_owned();
+                }
+                None
+            }
             "import_declaration" => {
                 self.import(node, scope);
                 None
@@ -173,6 +183,14 @@ impl<'s> Lowering<'s> {
     }
 
     fn import(&mut self, node: Node<'_>, scope: ScopeId) {
+        // `import module java.base;` (Java 25): the grammar does not know it yet.
+        let mut words = self.text(node).split_whitespace().skip(1);
+        if let (Some("module"), Some(module)) = (words.next(), words.next()) {
+            self.file.module_imports = true;
+            let path = format!("module {}", module.trim_end_matches(';'));
+            self.ready(FactKind::Import { path }, scope, node);
+            return;
+        }
         let mut cursor = node.walk();
         let children: Vec<_> = node.children(&mut cursor).collect();
         let is_static = children.iter().any(|c| c.kind() == "static");
@@ -192,6 +210,9 @@ impl<'s> Lowering<'s> {
             } else {
                 self.file.imports.insert(simple.to_owned(), name.clone());
             }
+        }
+        if is_wildcard && !is_static {
+            self.file.on_demand_imports.push(name.clone());
         }
         let path = if is_wildcard {
             format!("{name}.*")

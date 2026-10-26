@@ -12,6 +12,11 @@ use serde::Serialize;
 pub struct TypeRef {
     pub name: String,
     pub qualified: Option<String>,
+    /// The packages an unqualified `name` can come from: the file's own
+    /// package, its on-demand imports (`import a.b.*`) and the language's
+    /// implicit ones (`java.lang`). Empty when unknown, which accepts any.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub packages: Vec<String>,
 }
 
 impl TypeRef {
@@ -19,6 +24,15 @@ impl TypeRef {
         Self {
             name: name.into(),
             qualified: None,
+            packages: Vec::new(),
+        }
+    }
+
+    /// An unqualified name that can only come from one of `packages`.
+    pub fn in_packages(name: impl Into<String>, packages: Vec<String>) -> Self {
+        Self {
+            packages,
+            ..Self::simple(name)
         }
     }
 
@@ -28,16 +42,24 @@ impl TypeRef {
         Self {
             name,
             qualified: Some(qualified),
+            packages: Vec::new(),
         }
     }
 
     /// Whether this reference denotes `wanted`, a fully qualified type name.
     /// Without a qualified name the whole type path must agree: a bare
     /// `Builder` or `Context.Builder` is not `com.nimbusds.jose.jwk.ECKey.Builder`.
+    /// The type must also live in a package the name can come from: a
+    /// same-package `KeyType` is not Azure's.
     pub fn is(&self, wanted: &str) -> bool {
         match &self.qualified {
             Some(qualified) => qualified == wanted,
-            None => self.name == type_path(wanted),
+            None => {
+                let path = type_path(wanted);
+                let package = wanted[..wanted.len() - path.len()].trim_end_matches('.');
+                self.name == path
+                    && (self.packages.is_empty() || self.packages.iter().any(|p| p == package))
+            }
         }
     }
 

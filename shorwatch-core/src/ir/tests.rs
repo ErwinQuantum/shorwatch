@@ -49,3 +49,16 @@ fn is_within_follows_parents() {
     assert!(unit.is_within(m, SourceUnit::ROOT));
     assert!(!unit.is_within(m, b));
 }
+
+#[test]
+fn unimported_names_only_match_types_of_their_possible_packages() {
+    let packages = vec!["org.keycloak.crypto".to_owned(), "java.lang".to_owned()];
+    let key_type = TypeRef::in_packages("KeyType", packages);
+    assert!(key_type.is("org.keycloak.crypto.KeyType"));
+    assert!(!key_type.is("com.azure.security.keyvault.keys.models.KeyType"));
+    let system = TypeRef::in_packages(
+        "System",
+        vec!["com.acme".to_owned(), "java.lang".to_owned()],
+    );
+    assert!(system.is("java.lang.System"));
+}

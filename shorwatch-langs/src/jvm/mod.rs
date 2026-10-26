@@ -28,6 +28,14 @@ pub(crate) struct JvmFile {
     /// Member name -> fully qualified owner type, from member imports
     /// (`import static` in Java, any member import in Kotlin).
     pub(crate) static_imports: HashMap<String, String>,
+    /// The file's package (empty for the default package).
+    pub(crate) package: String,
+    /// Packages imported on demand (`import a.b.*`).
+    pub(crate) on_demand_imports: Vec<String>,
+    /// Whether the file imports a whole module (`import module java.base;`,
+    /// Java 25): every package the module exports, which only the module
+    /// graph knows, so an unimported name may come from anywhere.
+    pub(crate) module_imports: bool,
     /// Methods declared in this file, which shadow imported ones.
     pub(crate) methods: HashSet<String>,
     pub(crate) symbols: HashMap<(ScopeId, String), Symbol>,
@@ -40,6 +48,9 @@ impl JvmFile {
             unit: SourceUnit::new(path, language),
             imports: HashMap::new(),
             static_imports: HashMap::new(),
+            package: String::new(),
+            on_demand_imports: Vec::new(),
+            module_imports: false,
             methods: HashSet::new(),
             symbols: HashMap::new(),
             pending: Vec::new(),

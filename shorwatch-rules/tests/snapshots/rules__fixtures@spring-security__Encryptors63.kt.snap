@@ -1,0 +1,11 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/spring-security/Encryptors63.kt
+---
+- rule: jvm.spring-security.rsa
+  at: "10:20"
+  status: vulnerable
+- rule: jvm.spring-security.rsa
+  at: "11:16"
+  status: vulnerable

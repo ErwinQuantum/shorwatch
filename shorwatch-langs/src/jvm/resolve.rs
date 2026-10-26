@@ -3,6 +3,7 @@
 //! their constant or injected values, member imports their owners.
 
 use super::{ArgSource, JvmFile, Pending, PendingArg, Receiver, starts_uppercase};
+use shorwatch_core::Language;
 use shorwatch_core::ir::{Arg, ArgValue, FactKind, ScopeId, ScopeKind, SourceUnit, TypeRef};
 
 impl JvmFile {
@@ -110,13 +111,41 @@ impl JvmFile {
             // kept whole, so it is not mistaken for another type's `Inner`.
             Some((first, rest)) => match self.imports.get(first) {
                 Some(outer) => TypeRef::qualified(format!("{outer}.{rest}")),
-                None => TypeRef::simple(name),
+                None => self.unimported(name),
             },
             None => match self.imports.get(name) {
                 Some(qualified) => TypeRef::qualified(qualified.clone()),
-                None => TypeRef::simple(name),
+                None => self.unimported(name),
             },
         }
+    }
+
+    /// A type name no import names: it can only come from the file's
+    /// package, an on-demand import or the language's implicit imports.
+    fn unimported(&self, name: &str) -> TypeRef {
+        if self.module_imports {
+            return TypeRef::simple(name);
+        }
+        let implicit: &[&str] = match self.unit.language() {
+            Language::Kotlin => &[
+                "java.lang",
+                "kotlin",
+                "kotlin.annotation",
+                "kotlin.collections",
+                "kotlin.comparisons",
+                "kotlin.io",
+                "kotlin.jvm",
+                "kotlin.ranges",
+                "kotlin.sequences",
+                "kotlin.text",
+            ],
+            _ => &["java.lang"],
+        };
+        let packages = std::iter::once(self.package.clone())
+            .chain(self.on_demand_imports.iter().cloned())
+            .chain(implicit.iter().map(|p| (*p).to_owned()))
+            .collect();
+        TypeRef::in_packages(name, packages)
     }
 
     fn resolve_args(&self, args: Vec<PendingArg>, scope: ScopeId) -> Vec<Arg> {

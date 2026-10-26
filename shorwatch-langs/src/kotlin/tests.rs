@@ -459,3 +459,35 @@ fn calls_on_factory_made_receivers_know_their_origin() {
         ]
     );
 }
+
+#[test]
+fn unimported_types_belong_to_the_package_or_on_demand_imports() {
+    let owner = |source: &str| {
+        lower(source)
+            .facts()
+            .iter()
+            .find_map(|f| match &f.kind {
+                FactKind::Field { owner, .. } => Some(owner.clone()),
+                _ => None,
+            })
+            .unwrap()
+    };
+    let azure = "com.azure.security.keyvault.keys.models.KeyType";
+    let same_package = owner(
+        "package org.keycloak.crypto
+
+fun t() = KeyType.RSA
+",
+    );
+    assert!(same_package.is("org.keycloak.crypto.KeyType"));
+    assert!(!same_package.is(azure));
+    let on_demand = owner(
+        "package com.acme
+
+import com.azure.security.keyvault.keys.models.*
+
+fun t() = KeyType.RSA
+",
+    );
+    assert!(on_demand.is(azure));
+}

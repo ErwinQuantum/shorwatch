@@ -125,9 +125,19 @@ impl<'s> Lowering<'s> {
     /// to, or `None` when they need no further visiting.
     fn visit(&mut self, node: Node<'_>, scope: ScopeId) -> Option<ScopeId> {
         match node.kind() {
+            "package_header" => {
+                if let Some(path) = child_of_kind(node, "qualified_identifier") {
+                    let mut cursor = path.walk();
+                    let segments: Vec<&str> = path
+                        .named_children(&mut cursor)
+                        .map(|s| self.text(s))
+                        .collect();
+                    self.file.package = segments.join(".");
+                }
+                None
+            }
             "line_comment"
             | "block_comment"
-            | "package_header"
             | "variable_declaration"
             | "user_type"
             | "nullable_type"
@@ -199,6 +209,7 @@ impl<'s> Lowering<'s> {
             .collect();
         let name = segments.join(".");
         if has_child(node, "*") {
+            self.file.on_demand_imports.push(name.clone());
             self.ready(
                 FactKind::Import {
                     path: format!("{name}.*"),
