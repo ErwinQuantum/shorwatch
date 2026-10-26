@@ -1,0 +1,51 @@
+---
+source: shorwatch-report/src/terminal/tests.rs
+expression: "plain(&render(&scan(), Options::default()))"
+---
+ HIGH  RSA · jvm.jca.rsa · vulnerable
+  ──▶ src/main/java/com/acme/auth/AuthConfig.java:5:25
+   │
+ 5 │         var generator = KeyPairGenerator.getInstance("RSA");
+   │                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ RSA is broken by Shor's algorithm
+   = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and
+           ML-DSA (FIPS 204) for signatures; hybrid schemes keep classical security
+           during the transition.
+   = ref: https://csrc.nist.gov/pubs/fips/203/final
+
+ LOW  AES-128 · jvm.jca.aes-128 · vulnerable
+  ──▶ src/main/java/com/acme/auth/AuthConfig.java:11:2
+   │
+11 │     generator.init(128);
+   │     ^^^^^^^^^^^^^^^^^^^
+   │ AES-128 keeps only about 64 bits of security against Grover's algorithm
+   = fix: Use a 256-bit AES key → `256` at 11:17
+   = help: Use 256-bit keys (AES-256).
+   = ref: https://csrc.nist.gov/pubs/fips/197/final
+
+ HIGH  ECDSA · jvm.jca.ecdsa · in transition
+  ──▶ src/main/java/com/acme/auth/Signer.java:3:34
+   │
+ 3 │         return new Signature[] { Signature.getInstance("SHA256withECDSA"), Signature.getInstance("ML-DSA-65") };
+   │                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ ECDSA is broken by Shor's algorithm
+   = in transition: post-quantum code at line 3 (ML-DSA-65)
+   = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and
+           ML-DSA (FIPS 204) for signatures; hybrid schemes keep classical security
+           during the transition.
+   = ref: https://csrc.nist.gov/pubs/fips/203/final
+
+ HIGH  RSA (JOSE/JWT) · config.spring-boot.jose-rsa · vulnerable
+  ──▶ src/main/resources/application.yml:4:24
+   │
+ 4 │       jws-algorithms: [RS256]
+   │                        ^^^^^
+   │ RSA (JOSE/JWT) is broken by Shor's algorithm
+   = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and
+           ML-DSA (FIPS 204) for signatures; hybrid schemes keep classical security
+           during the transition.
+   = ref: https://csrc.nist.gov/pubs/fips/203/final
+
+ Summary  4 findings in 3 files (12 scanned)
+          3 vulnerable · 1 in transition · 1 auto-fixable
+          3 high · 1 low
