@@ -50,6 +50,10 @@ Shorwatch automates that inventory.
 | SHA-1 | classical + Grover | SHA-256 / SHA3-256 | no |
 | 3DES | Grover | AES-256-GCM | no |
 
+The same algorithms are also detected inside **JWT/JOSE** (RS256, PS256,
+ES256, EdDSA, RSA-OAEP, ECDH-ES, A128GCM, ...) with token-specific advice:
+ML-DSA for JOSE, algorithm-agile verifiers and JWKS rotation.
+
 Every finding carries the file, line, severity, an explanation, migration
 advice and links to the relevant NIST documents.
 
@@ -77,11 +81,12 @@ Language: **Java** (more planned).
 
 | Covered today | Not yet |
 |---|---|
-| JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | JWT libraries (jjwt, Nimbus JOSE, Auth0 java-jwt) |
-| BouncyCastle lightweight API (engines, signers, generators) | Spring Security key and JWT configuration |
-| Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | Configuration files (`application.yml`, `.properties`, TLS cipher suites) |
-| Algorithm names given as literals or same-file `final` constants | Values injected from configuration or passed through other methods (needs data-flow analysis) |
-| Receiver types resolved through declarations, `var`, imports and fully qualified names | Kotlin, compiled `.jar` dependencies |
+| JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | Configuration files (`application.yml`, `.properties`, TLS cipher suites) |
+| BouncyCastle lightweight API (engines, signers, generators) | Values injected from configuration (`@Value`) or passed through other methods (needs data-flow analysis) |
+| JWT/JOSE: jjwt (0.11 and 0.12), Nimbus JOSE + JWT, Auth0 java-jwt | Algorithms chosen at runtime, e.g. from a remote JWKS |
+| Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Kotlin |
+| Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | Compiled `.jar` dependencies |
+| Algorithm names as literals, same-file `final` constants, enum/static constants and static imports | |
 
 ## Example rule
 
@@ -157,7 +162,7 @@ cargo test --workspace
 ## Roadmap
 
 - CLI, SARIF and terminal reports, CI integration
-- JWT and Spring Security coverage, configuration files
+- Configuration files (`application.yml`, `.properties`)
 - Data-flow analysis to follow crypto through wrapper methods
 - Dependency scanning (`pom.xml`, `build.gradle`, compiled `.jar`s)
 - Editor integration through LSP
