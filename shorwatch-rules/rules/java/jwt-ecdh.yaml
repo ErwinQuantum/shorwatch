@@ -1,5 +1,5 @@
 id: java.jwt.ecdh
-language: java
+platform: jvm
 algorithm: ECDH (JOSE/JWE)
 category: shor
 severity: high

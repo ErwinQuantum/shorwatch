@@ -1,5 +1,5 @@
 id: java.crypto.3des
-language: java
+platform: jvm
 algorithm: 3DES
 category: grover
 severity: medium

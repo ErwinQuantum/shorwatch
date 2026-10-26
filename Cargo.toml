@@ -31,6 +31,7 @@ thiserror = "2"
 anyhow = "1"
 tree-sitter = "0.25"
 tree-sitter-java = "0.23"
+tree-sitter-yaml = "0.7"
 clap = { version = "4.5", features = ["derive"] }
 ignore = "0.4"
 rayon = "1.10"

@@ -2,16 +2,13 @@ use crate::finding::{Finding, HybridEvidence, Status, SuggestedFix};
 use crate::ir::{Arg, Fact, FactKind, SourceUnit};
 use crate::rule::{CompiledMarker, CompiledPattern, CompiledRule, RuleSet};
 
-/// Evaluates every rule for the unit's language against the unit.
+/// Evaluates every rule for the unit's platform against the unit.
 ///
 /// Pure and deterministic: findings are ordered by position, then rule id.
 pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
+    let platform = unit.language().platform();
     let mut findings = Vec::new();
-    for rule in rules
-        .rules
-        .iter()
-        .filter(|r| r.rule.language == unit.language())
-    {
+    for rule in rules.rules.iter().filter(|r| r.rule.platform == platform) {
         for fact in unit.facts() {
             if let Some(matched) = rule.patterns.iter().find_map(|p| match_pattern(p, fact)) {
                 findings.push(build_finding(unit, rule, fact, matched));
@@ -28,18 +25,9 @@ struct Match<'a> {
 }
 
 fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Option<Match<'a>> {
-    if let (
-        CompiledPattern::Field { owner, name },
-        FactKind::Field {
-            owner: actual,
-            name: actual_name,
-        },
-    ) = (pattern, &fact.kind)
-    {
-        let name_ok = name.as_ref().is_none_or(|re| re.is_match(actual_name));
-        return (actual.is(owner) && name_ok).then_some(Match { arg: None });
-    }
-
+    // An absent regex accepts anything.
+    let optional =
+        |re: &Option<regex::Regex>, text: &str| re.as_ref().is_none_or(|re| re.is_match(text));
     let (args, arg_pattern) = match (pattern, &fact.kind) {
         (
             CompiledPattern::Call {
@@ -58,6 +46,18 @@ fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Option<Match<
         {
             (args, arg)
         }
+        (
+            CompiledPattern::Field { owner, name },
+            FactKind::Field {
+                owner: actual,
+                name: field,
+            },
+        ) => {
+            return (actual.is(owner) && optional(name, field)).then_some(Match { arg: None });
+        }
+        (CompiledPattern::Property { key, value }, FactKind::Property { key: k, value: v }) => {
+            return (key.is_match(k) && optional(value, v)).then_some(Match { arg: None });
+        }
         _ => return None,
     };
 
@@ -65,10 +65,9 @@ fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Option<Match<
         return Some(Match { arg: None });
     };
     let arg = args.get(arg_pattern.index)?;
-    let text = arg.match_text()?;
-    arg_pattern
-        .regex
-        .is_match(&text)
+    arg.match_texts()
+        .iter()
+        .any(|text| arg_pattern.regex.is_match(text))
         .then_some(Match { arg: Some(arg) })
 }
 
@@ -111,7 +110,10 @@ fn hybrid_evidence(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact) -> Optio
                 (CompiledMarker::Import(re), FactKind::Import { path }) => {
                     re.is_match(path).then_some(path.as_str())
                 }
-                (CompiledMarker::Literal(re), FactKind::Literal { value }) if in_region => {
+                (CompiledMarker::Literal(re), FactKind::Literal { value })
+                | (CompiledMarker::Literal(re), FactKind::Property { value, .. })
+                    if in_region =>
+                {
                     re.is_match(value).then_some(value.as_str())
                 }
                 (CompiledMarker::Type(re), FactKind::Construct { ty, .. })
@@ -138,7 +140,7 @@ fn hybrid_evidence(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact) -> Optio
 fn suggested_fix(rule: &CompiledRule, matched: &Match) -> Option<SuggestedFix> {
     let fix = rule.fix.as_ref()?;
     let arg = matched.arg?;
-    if arg.via_constant.is_some() || !fix.replace.is_match(&arg.raw) {
+    if arg.resolved_via.is_some() || !fix.replace.is_match(&arg.raw) {
         return None;
     }
     Some(SuggestedFix {
@@ -241,7 +243,7 @@ mod tests {
                 args: vec![Arg {
                     value: crate::ir::ArgValue::Unknown,
                     raw: "alg()".into(),
-                    via_constant: None,
+                    resolved_via: None,
                     location: loc(3),
                 }],
             },
@@ -386,7 +388,7 @@ mod tests {
     #[test]
     fn no_fix_when_value_comes_from_a_constant() {
         let unit = key_generator_init(Arg {
-            via_constant: Some("KEY_BITS".into()),
+            resolved_via: Some("KEY_BITS".into()),
             raw: "KEY_BITS".into(),
             ..Arg::int(128, loc(4))
         });

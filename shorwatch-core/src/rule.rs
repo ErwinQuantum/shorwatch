@@ -1,7 +1,7 @@
 //! Rule model.
 //!
-//! [`Rule`] is the declarative shape rules are written in (deserialized from
-//! YAML by `shorwatch-rules`, or built in code). [`RuleSet::compile`] turns
+//! [`Rule`] is the fully resolved, declarative shape of a rule (assembled from
+//! YAML files by `shorwatch-rules`, or built in code). [`RuleSet::compile`] turns
 //! rules into their executable form and enforces the domain invariants, most
 //! importantly that a rule for an algorithm broken by Shor can never carry an
 //! automatic fix.
@@ -12,7 +12,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::ir::{Language, ScopeKind};
+use crate::ir::{Platform, ScopeKind};
 
 /// Which quantum attack weakens the algorithm. This decides what kind of
 /// remediation is acceptable.
@@ -47,9 +47,9 @@ pub struct Reference {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Rule {
-    /// Stable identifier, e.g. `java.crypto.rsa`. Used as the SARIF rule id.
+    /// Stable identifier, e.g. `jvm.jca.rsa`. Used as the SARIF rule id.
     pub id: String,
-    pub language: Language,
+    pub platform: Platform,
     /// Human name of the detected algorithm, e.g. `RSA`.
     pub algorithm: String,
     pub category: Category,
@@ -95,13 +95,20 @@ pub enum Pattern {
         #[serde(default)]
         matches: Option<String>,
     },
+    /// A configuration entry whose key matches the `key` regex and whose value
+    /// matches `matches` (any value when absent).
+    Property {
+        key: String,
+        #[serde(default)]
+        matches: Option<String>,
+    },
 }
 
 impl Pattern {
     fn arg(&self) -> Option<&ArgPattern> {
         match self {
             Pattern::Call { arg, .. } | Pattern::Construct { arg, .. } => arg.as_ref(),
-            Pattern::Field { .. } => None,
+            Pattern::Field { .. } | Pattern::Property { .. } => None,
         }
     }
 }
@@ -193,6 +200,10 @@ pub(crate) enum CompiledPattern {
     Field {
         owner: String,
         name: Option<Regex>,
+    },
+    Property {
+        key: Regex,
+        value: Option<Regex>,
     },
 }
 
@@ -309,6 +320,10 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     owner: owner.clone(),
                     name: matches.as_deref().map(regex).transpose()?,
                 },
+                Pattern::Property { key, matches } => CompiledPattern::Property {
+                    key: regex(key)?,
+                    value: matches.as_deref().map(regex).transpose()?,
+                },
             })
         })
         .collect::<Result<Vec<_>, RuleError>>()?;
@@ -362,7 +377,7 @@ pub(crate) mod tests {
     pub(crate) fn rsa_rule() -> Rule {
         Rule {
             id: "java.crypto.rsa".into(),
-            language: Language::Java,
+            platform: Platform::Jvm,
             algorithm: "RSA".into(),
             category: Category::Shor,
             severity: Severity::High,

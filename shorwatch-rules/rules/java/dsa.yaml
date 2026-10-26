@@ -1,5 +1,5 @@
 id: java.crypto.dsa
-language: java
+platform: jvm
 algorithm: DSA
 category: shor
 severity: high

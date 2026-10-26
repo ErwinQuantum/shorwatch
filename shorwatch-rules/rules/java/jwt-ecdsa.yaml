@@ -1,5 +1,5 @@
 id: java.jwt.ecdsa
-language: java
+platform: jvm
 algorithm: ECDSA (JOSE/JWT)
 category: shor
 severity: high

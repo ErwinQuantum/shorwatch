@@ -13,6 +13,7 @@ categories.workspace = true
 shorwatch-core.workspace = true
 tree-sitter.workspace = true
 tree-sitter-java.workspace = true
+tree-sitter-yaml.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]

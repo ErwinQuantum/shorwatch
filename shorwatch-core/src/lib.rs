@@ -6,6 +6,7 @@
 //! - [`ir`]: the language-neutral model that frontends produce.
 //! - [`rule`]: the declarative rule model and its validation.
 //! - [`analyze`]: evaluates a [`RuleSet`] against a [`SourceUnit`].
+//! - [`link`]: cross-file resolution (config values injected into code).
 //! - [`finding`]: what the engine reports.
 
 pub mod finding;
@@ -13,8 +14,10 @@ pub mod ir;
 pub mod rule;
 
 mod engine;
+mod link;
 
 pub use engine::analyze;
 pub use finding::{Finding, HybridEvidence, Status, SuggestedFix};
-pub use ir::{Language, SourceUnit};
+pub use ir::{Language, Platform, SourceUnit};
+pub use link::link;
 pub use rule::{Category, Rule, RuleError, RuleSet, Severity};

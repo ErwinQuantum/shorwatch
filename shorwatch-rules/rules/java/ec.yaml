@@ -1,5 +1,5 @@
 id: java.crypto.ec
-language: java
+platform: jvm
 algorithm: ECC
 category: shor
 severity: high

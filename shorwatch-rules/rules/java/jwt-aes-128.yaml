@@ -1,5 +1,5 @@
 id: java.jwt.aes-128
-language: java
+platform: jvm
 algorithm: AES-128 (JOSE/JWE)
 category: grover
 severity: low

@@ -1,5 +1,5 @@
 id: java.crypto.aes-128
-language: java
+platform: jvm
 algorithm: AES-128
 category: grover
 severity: low

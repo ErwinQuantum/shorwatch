@@ -1,5 +1,5 @@
 id: java.crypto.ecdh
-language: java
+platform: jvm
 algorithm: ECDH
 category: shor
 severity: high

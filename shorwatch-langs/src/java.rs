@@ -51,7 +51,8 @@ impl Frontend for JavaFrontend {
 struct Symbol {
     /// Declared (or, for `var`, inferred) type as written.
     ty: Option<String>,
-    /// Literal initializer of a `final` declaration.
+    /// Literal initializer of a `final` declaration, or the property injected
+    /// by `@Value("${...}")`.
     constant: Option<ArgValue>,
 }
 
@@ -200,7 +201,7 @@ impl<'s> Lowering<'s> {
                 ) {
                     let symbol = Symbol {
                         ty: Some(type_name(self.text(ty))),
-                        constant: None,
+                        constant: self.injected(node),
                     };
                     self.symbols.insert((scope, name.to_owned()), symbol);
                 }
@@ -267,6 +268,7 @@ impl<'s> Lowering<'s> {
             .child_by_field_name("type")
             .map(|t| type_name(self.text(t)));
         let is_final = implicitly_final || has_modifier(node, "final");
+        let injected = self.injected(node);
         let mut cursor = node.walk();
         let declarators: Vec<_> = node
             .children_by_field_name("declarator", &mut cursor)
@@ -280,10 +282,10 @@ impl<'s> Lowering<'s> {
                 Some("var") => value.and_then(|v| self.infer_type(v)),
                 other => other.map(str::to_owned),
             };
-            let constant = if is_final {
-                value.and_then(|v| self.literal(v))
-            } else {
-                None
+            let constant = match (&injected, is_final) {
+                (Some(injected), _) => Some(injected.clone()),
+                (None, true) => value.and_then(|v| self.literal(v)),
+                (None, false) => None,
             };
             self.symbols
                 .insert((scope, name.to_owned()), Symbol { ty, constant });
@@ -522,7 +524,7 @@ impl<'s> Lowering<'s> {
                      raw,
                      location,
                  }| {
-                    let (value, via_constant) = match source {
+                    let (value, mut resolved_via) = match source {
                         ArgSource::Value(value) => (Some(value), None),
                         ArgSource::Name(name) => (self.constant(scope, &name), Some(name)),
                         ArgSource::Member { owner, name } => (
@@ -530,23 +532,58 @@ impl<'s> Lowering<'s> {
                             Some(format!("{owner}.{name}")),
                         ),
                     };
+                    if let Some(ArgValue::Injected { key, .. }) = &value {
+                        resolved_via = Some(format!("${{{key}}}"));
+                    }
                     match value {
                         Some(value) => Arg {
                             value,
                             raw,
-                            via_constant,
+                            resolved_via,
                             location,
                         },
                         None => Arg {
                             value: ArgValue::Unknown,
                             raw,
-                            via_constant: None,
+                            resolved_via: None,
                             location,
                         },
                     }
                 },
             )
             .collect()
+    }
+
+    /// `@Value("${key}")` or `@Value("${key:default}")` on a declaration
+    /// (Spring). SpEL (`#{...}`) and composite strings are not interpreted.
+    fn injected(&self, declaration: Node<'_>) -> Option<ArgValue> {
+        let mut cursor = declaration.walk();
+        let modifiers = declaration
+            .children(&mut cursor)
+            .find(|c| c.kind() == "modifiers")?;
+        let mut cursor = modifiers.walk();
+        let annotation = modifiers.children(&mut cursor).find(|a| {
+            a.kind() == "annotation"
+                && self
+                    .field_text(*a, "name")
+                    .is_some_and(|n| n == "Value" || n.ends_with(".Value"))
+        })?;
+        let arguments = annotation.child_by_field_name("arguments")?;
+        let mut cursor = arguments.walk();
+        let literal = arguments
+            .named_children(&mut cursor)
+            .find(|n| n.kind() == "string_literal")?;
+        let text = string_value(self.text(literal))?;
+        let inner = text.strip_prefix("${")?.strip_suffix('}')?;
+        let (key, default) = match inner.split_once(':') {
+            Some((key, default)) => (key, Some(default.to_owned())),
+            None => (inner, None),
+        };
+        Some(ArgValue::Injected {
+            key: key.to_owned(),
+            default,
+            resolved: Vec::new(),
+        })
     }
 
     fn constant(&self, scope: ScopeId, name: &str) -> Option<ArgValue> {
@@ -799,7 +836,7 @@ mod tests {
             panic!()
         };
         assert_eq!(args[0].value, ArgValue::Str("RSA/ECB/PKCS1Padding".into()));
-        assert_eq!(args[0].via_constant.as_deref(), Some("TRANSFORMATION"));
+        assert_eq!(args[0].resolved_via.as_deref(), Some("TRANSFORMATION"));
 
         let values: Vec<_> = calls(&unit)
             .into_iter()
@@ -952,6 +989,39 @@ mod tests {
                 .iter()
                 .any(|(r, m, _)| m == "RSA256" && r.as_ref() == Some(&algorithm))
         );
+    }
+
+    #[test]
+    fn records_values_injected_with_at_value() {
+        let unit = lower(
+            r##"
+            import org.springframework.beans.factory.annotation.Value;
+            class A {
+                @Value("${jwt.algorithm:RS256}") private String alg;
+                @Value("#{systemProperties['alg']}") private String spel;
+                A(@Value("${jwt.key-size}") int bits) { init(bits); }
+                void run() { parse(alg); parse(this.alg); parse(spel); }
+            }
+            "##,
+        );
+        let args: Vec<_> = unit
+            .facts()
+            .iter()
+            .filter_map(|f| match &f.kind {
+                FactKind::Call { args, .. } => Some(args[0].clone()),
+                _ => None,
+            })
+            .collect();
+        let injected = |key: &str, default: Option<&str>| ArgValue::Injected {
+            key: key.into(),
+            default: default.map(str::to_owned),
+            resolved: vec![],
+        };
+        assert_eq!(args[0].value, injected("jwt.key-size", None));
+        assert_eq!(args[1].value, injected("jwt.algorithm", Some("RS256")));
+        assert_eq!(args[1].resolved_via.as_deref(), Some("${jwt.algorithm}"));
+        assert_eq!(args[2].value, injected("jwt.algorithm", Some("RS256")));
+        assert_eq!(args[3].value, ArgValue::Unknown);
     }
 
     #[test]

@@ -119,7 +119,7 @@ mod tests {
 
     const MINIMAL: &str = r#"
 id: test.rule
-language: java
+platform: jvm
 algorithm: X
 category: shor
 severity: low

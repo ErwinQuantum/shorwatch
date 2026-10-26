@@ -7,8 +7,10 @@
 use shorwatch_core::{Language, SourceUnit};
 use thiserror::Error;
 
+pub mod config;
 pub mod java;
 
+pub use config::{PropertiesFrontend, YamlFrontend};
 pub use java::JavaFrontend;
 
 #[derive(Debug, Error)]
@@ -32,7 +34,11 @@ pub trait Frontend: Send + Sync {
 
 /// Every built-in frontend.
 pub fn frontends() -> Vec<Box<dyn Frontend>> {
-    vec![Box::new(JavaFrontend)]
+    vec![
+        Box::new(JavaFrontend),
+        Box::new(PropertiesFrontend),
+        Box::new(YamlFrontend),
+    ]
 }
 
 /// The frontend registered for a file extension, if any.

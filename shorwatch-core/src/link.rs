@@ -1,0 +1,188 @@
+//! Cross-file resolution.
+//!
+//! Frontends lower each file in isolation. [`link`] connects what only makes
+//! sense across files: today, values injected from configuration
+//! (`@Value("${jwt.algorithm}")`) and the config entries that define them.
+//! It is still not data flow; a value only resolves where the injected field
+//! or parameter itself is the argument.
+
+use std::collections::HashMap;
+
+use crate::ir::{ArgValue, FactKind, SourceUnit};
+
+/// Fills [`ArgValue::Injected::resolved`] in every unit from the
+/// [`FactKind::Property`] facts of all units. Deterministic: values keep the
+/// order of `units`, then of the file, without duplicates.
+pub fn link(units: &mut [SourceUnit]) {
+    let mut properties: HashMap<String, Vec<String>> = HashMap::new();
+    for unit in units.iter() {
+        for fact in unit.facts() {
+            if let FactKind::Property { key, value } = &fact.kind {
+                let values = properties.entry(canonical(key)).or_default();
+                if !values.contains(value) {
+                    values.push(value.clone());
+                }
+            }
+        }
+    }
+    if properties.is_empty() {
+        return;
+    }
+
+    for unit in units.iter_mut() {
+        for fact in &mut unit.facts {
+            let args = match &mut fact.kind {
+                FactKind::Call { args, .. } | FactKind::Construct { args, .. } => args,
+                _ => continue,
+            };
+            for arg in args {
+                if let ArgValue::Injected { key, resolved, .. } = &mut arg.value {
+                    *resolved = lookup(&properties, key);
+                }
+            }
+        }
+    }
+}
+
+/// Values for `key`, or for its list elements (`key[0]`, `key[1]`...) when the
+/// key names a list.
+fn lookup(properties: &HashMap<String, Vec<String>>, key: &str) -> Vec<String> {
+    let key = canonical(key);
+    if let Some(values) = properties.get(&key) {
+        return values.clone();
+    }
+    let prefix = format!("{key}[");
+    let mut elements: Vec<_> = properties
+        .iter()
+        .filter(|(k, _)| k.starts_with(&prefix))
+        .collect();
+    elements.sort_by(|a, b| a.0.cmp(b.0));
+    elements.into_iter().flat_map(|(_, v)| v.clone()).collect()
+}
+
+/// Spring-style relaxed binding: `jwt.jws-algorithms`, `jwt.jwsAlgorithms`
+/// and `jwt.jws_algorithms` name the same property.
+fn canonical(key: &str) -> String {
+    key.chars()
+        .filter(|c| !matches!(c, '-' | '_'))
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ir::{Arg, Language, Location};
+
+    fn config(path: &str, entries: &[(&str, &str)]) -> SourceUnit {
+        let mut unit = SourceUnit::new(path, Language::Yaml);
+        for (key, value) in entries {
+            unit.push(
+                FactKind::Property {
+                    key: (*key).into(),
+                    value: (*value).into(),
+                },
+                SourceUnit::ROOT,
+                Location::line(1, 1, 2),
+            );
+        }
+        unit
+    }
+
+    fn java_with_injected(key: &str, default: Option<&str>) -> SourceUnit {
+        let mut unit = SourceUnit::new("A.java", Language::Java);
+        unit.push(
+            FactKind::Call {
+                receiver: None,
+                method: "parse".into(),
+                args: vec![Arg {
+                    value: ArgValue::Injected {
+                        key: key.into(),
+                        default: default.map(str::to_owned),
+                        resolved: vec![],
+                    },
+                    raw: "alg".into(),
+                    resolved_via: Some(format!("${{{key}}}")),
+                    location: Location::line(3, 1, 4),
+                }],
+            },
+            SourceUnit::ROOT,
+            Location::line(3, 1, 10),
+        );
+        unit
+    }
+
+    fn texts(unit: &SourceUnit) -> Vec<String> {
+        match &unit.facts()[0].kind {
+            FactKind::Call { args, .. } => args[0].match_texts(),
+            _ => unreachable!(),
+        }
+    }
+
+    #[test]
+    fn resolves_injected_values_from_config_units() {
+        let mut units = vec![
+            java_with_injected("jwt.algorithm", None),
+            config("application.yml", &[("jwt.algorithm", "RS256")]),
+        ];
+        link(&mut units);
+        assert_eq!(texts(&units[0]), ["RS256"]);
+    }
+
+    #[test]
+    fn keys_bind_relaxed() {
+        let mut units = vec![
+            java_with_injected("jwt.signingAlgorithm", None),
+            config(
+                "application.properties",
+                &[("jwt.signing-algorithm", "ES256")],
+            ),
+        ];
+        link(&mut units);
+        assert_eq!(texts(&units[0]), ["ES256"]);
+    }
+
+    #[test]
+    fn every_profile_value_is_a_candidate() {
+        let mut units = vec![
+            java_with_injected("jwt.algorithm", Some("HS256")),
+            config("application.yml", &[("jwt.algorithm", "HS256")]),
+            config("application-prod.yml", &[("jwt.algorithm", "RS256")]),
+        ];
+        link(&mut units);
+        assert_eq!(texts(&units[0]), ["HS256", "RS256"]);
+    }
+
+    #[test]
+    fn list_keys_collect_their_elements() {
+        let mut units = vec![
+            java_with_injected("security.algorithms", None),
+            config(
+                "application.yml",
+                &[
+                    ("security.algorithms[0]", "ES256"),
+                    ("security.algorithms[1]", "RS256"),
+                ],
+            ),
+        ];
+        link(&mut units);
+        assert_eq!(texts(&units[0]), ["ES256", "RS256"]);
+    }
+
+    #[test]
+    fn falls_back_to_the_default_when_unset() {
+        let mut units = vec![
+            java_with_injected("jwt.algorithm", Some("RS256")),
+            config("application.yml", &[("server.port", "8080")]),
+        ];
+        link(&mut units);
+        assert_eq!(texts(&units[0]), ["RS256"]);
+    }
+
+    #[test]
+    fn unresolved_without_default_matches_nothing() {
+        let mut units = vec![java_with_injected("jwt.algorithm", None)];
+        link(&mut units);
+        assert!(texts(&units[0]).is_empty());
+    }
+}

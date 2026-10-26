@@ -1,5 +1,5 @@
 id: java.crypto.elgamal
-language: java
+platform: jvm
 algorithm: ElGamal
 category: shor
 severity: high

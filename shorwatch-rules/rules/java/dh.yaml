@@ -1,5 +1,5 @@
 id: java.crypto.dh
-language: java
+platform: jvm
 algorithm: Diffie-Hellman
 category: shor
 severity: high

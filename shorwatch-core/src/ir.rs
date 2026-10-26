@@ -8,12 +8,36 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Source language of a [`SourceUnit`]. Rules declare the language they apply to.
+/// Source language of a [`SourceUnit`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum Language {
     Java,
+    /// `.properties` files (Spring Boot, Quarkus, Micronaut...).
+    Properties,
+    /// YAML configuration files.
+    Yaml,
+}
+
+impl Language {
+    pub fn platform(self) -> Platform {
+        match self {
+            Language::Java => Platform::Jvm,
+            Language::Properties | Language::Yaml => Platform::Config,
+        }
+    }
+}
+
+/// What a rule targets. Several languages share a platform: JVM rules describe
+/// library APIs (JCA, Nimbus, Spring...) that Java and, later, Kotlin call the
+/// same way; config rules describe keys whatever the file format.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+#[non_exhaustive]
+pub enum Platform {
+    Jvm,
+    Config,
 }
 
 /// A point in the source. Both fields are 1-based; `column` counts Unicode
@@ -125,6 +149,14 @@ fn simple_name(qualified: &str) -> &str {
 pub enum ArgValue {
     Str(String),
     Int(i64),
+    /// A value injected from configuration, e.g. a `@Value("${jwt.alg:RS256}")`
+    /// field. `resolved` holds every value the project's config files assign
+    /// to `key` (filled by [`crate::link`]); `default` applies when none do.
+    Injected {
+        key: String,
+        default: Option<String>,
+        resolved: Vec<String>,
+    },
     /// Anything the frontend could not fold to a literal.
     Unknown,
 }
@@ -134,10 +166,10 @@ pub struct Arg {
     pub value: ArgValue,
     /// The argument exactly as written in the source.
     pub raw: String,
-    /// Name of the constant the value was resolved through, if any. Fixes are
-    /// never offered for such arguments, since editing the use site would not
-    /// be a faithful rewrite.
-    pub via_constant: Option<String>,
+    /// The constant (`KEY_BITS`) or property (`${jwt.alg}`) the value was
+    /// resolved through, if any. Fixes are never offered for such arguments,
+    /// since editing the use site would not be a faithful rewrite.
+    pub resolved_via: Option<String>,
     pub location: Location,
 }
 
@@ -147,7 +179,7 @@ impl Arg {
         Self {
             raw: format!("{value:?}"),
             value: ArgValue::Str(value),
-            via_constant: None,
+            resolved_via: None,
             location,
         }
     }
@@ -156,17 +188,23 @@ impl Arg {
         Self {
             raw: value.to_string(),
             value: ArgValue::Int(value),
-            via_constant: None,
+            resolved_via: None,
             location,
         }
     }
 
-    /// Text that argument patterns are matched against.
-    pub fn match_text(&self) -> Option<String> {
+    /// Texts that argument patterns are matched against: a pattern matches if
+    /// any of them does. Several only for injected values set differently by
+    /// different config files (profiles).
+    pub fn match_texts(&self) -> Vec<String> {
         match &self.value {
-            ArgValue::Str(s) => Some(s.clone()),
-            ArgValue::Int(i) => Some(i.to_string()),
-            ArgValue::Unknown => None,
+            ArgValue::Str(s) => vec![s.clone()],
+            ArgValue::Int(i) => vec![i.to_string()],
+            ArgValue::Injected {
+                default, resolved, ..
+            } if resolved.is_empty() => default.iter().cloned().collect(),
+            ArgValue::Injected { resolved, .. } => resolved.clone(),
+            ArgValue::Unknown => Vec::new(),
         }
     }
 }
@@ -189,6 +227,9 @@ pub enum FactKind {
     Import { path: String },
     /// A string literal anywhere in the code.
     Literal { value: String },
+    /// A configuration entry. `key` is flattened with dots and list indexes as
+    /// written (`a.b[0].c`); `value` is the scalar as text.
+    Property { key: String, value: String },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -205,7 +246,7 @@ pub struct SourceUnit {
     path: String,
     language: Language,
     scopes: Vec<Scope>,
-    facts: Vec<Fact>,
+    pub(crate) facts: Vec<Fact>,
 }
 
 impl SourceUnit {

@@ -1,5 +1,5 @@
 id: java.crypto.sha1
-language: java
+platform: jvm
 algorithm: SHA-1
 category: grover
 severity: medium

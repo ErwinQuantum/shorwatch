@@ -1,5 +1,5 @@
 id: java.crypto.eddsa
-language: java
+platform: jvm
 algorithm: EdDSA
 category: shor
 severity: high

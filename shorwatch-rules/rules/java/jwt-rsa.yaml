@@ -1,5 +1,5 @@
 id: java.jwt.rsa
-language: java
+platform: jvm
 algorithm: RSA (JOSE/JWT)
 category: shor
 severity: high
