@@ -76,9 +76,31 @@ fn too_large(path: &Path) -> bool {
 pub fn display_path(path: &Path, cwd: &Path) -> String {
     let relative = path.strip_prefix(cwd).unwrap_or(path);
     let relative = relative.strip_prefix(".").unwrap_or(relative);
-    relative
-        .components()
-        .map(|c| c.as_os_str().to_string_lossy())
-        .collect::<Vec<_>>()
-        .join("/")
+    // Not by joining components: a Windows root would come out as `C:/\/`.
+    relative.to_string_lossy().replace('\\', "/")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn paths_are_relative_to_the_working_directory_with_slashes() {
+        let cwd = Path::new("/work");
+        assert_eq!(
+            display_path(Path::new("/work/src/A.java"), cwd),
+            "src/A.java"
+        );
+        assert_eq!(display_path(Path::new("./src/A.java"), cwd), "src/A.java");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_absolute_paths_outside_it_keep_their_drive() {
+        let cwd = Path::new(r"D:\work");
+        assert_eq!(
+            display_path(Path::new(r"C:\Users\dev\A.java"), cwd),
+            "C:/Users/dev/A.java"
+        );
+    }
 }
