@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{Fact, FactKind, Language, Location};
+use super::{Fact, FactKind, Language, Location, MethodSummary};
 
 /// Lexical nesting level. Ordered from widest to narrowest.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -53,6 +53,9 @@ pub struct SourceUnit {
     role: CodeRole,
     scopes: Vec<Scope>,
     pub(crate) facts: Vec<Fact>,
+    /// What this file's methods return, for data flow across files.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    methods: Vec<MethodSummary>,
 }
 
 impl SourceUnit {
@@ -67,6 +70,7 @@ impl SourceUnit {
                 parent: None,
             }],
             facts: Vec::new(),
+            methods: Vec::new(),
         }
     }
 
@@ -86,6 +90,14 @@ impl SourceUnit {
 
     pub fn set_role(&mut self, role: CodeRole) {
         self.role = role;
+    }
+
+    pub fn methods(&self) -> &[MethodSummary] {
+        &self.methods
+    }
+
+    pub fn add_method(&mut self, method: MethodSummary) {
+        self.methods.push(method);
     }
 
     pub fn facts(&self) -> &[Fact] {

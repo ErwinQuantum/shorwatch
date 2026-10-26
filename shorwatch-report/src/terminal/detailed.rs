@@ -65,10 +65,16 @@ pub(super) fn render(scan: &Scan, finding: &Finding) -> String {
             "{pad} {} {label}{} {}",
             if index == 0 { eq.clone() } else { " ".into() },
             paint(
-                format!(
-                    "{}:{}",
-                    step.location.start.line, step.location.start.column
-                ),
+                match &step.path {
+                    Some(path) => format!(
+                        "{path}:{}:{}",
+                        step.location.start.line, step.location.start.column
+                    ),
+                    None => format!(
+                        "{}:{}",
+                        step.location.start.line, step.location.start.column
+                    ),
+                },
                 accent()
             ),
             step.note

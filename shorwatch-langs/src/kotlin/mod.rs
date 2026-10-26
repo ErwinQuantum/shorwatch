@@ -171,6 +171,11 @@ impl<'s> Lowering<'s> {
             }
             "class_parameter" => {
                 self.declare(node, scope, self.injected(node));
+                // The primary constructor's parameters belong to the class.
+                if let Some(name) = child_of_kind(node, "identifier") {
+                    let name = self.text(name).to_owned();
+                    self.file.params.entry(scope).or_default().push(name);
+                }
                 Some(scope)
             }
             "function_value_parameters" => {
@@ -775,14 +780,41 @@ impl<'s> Lowering<'s> {
                     .map(|value| self.pending(branch_value(value)))
                     .collect(),
             ),
-            // A function of this file.
             "call_expression" => match node.named_child(0) {
+                // A function of this file.
                 Some(callee)
                     if callee.kind() == "identifier" && !looks_like_type(self.text(callee)) =>
                 {
                     ArgSource::Call {
                         method: self.text(callee).to_owned(),
                         args: self.args(node),
+                    }
+                }
+                // Another type's function, by the receiver's type.
+                Some(callee) if callee.kind() == "navigation_expression" => {
+                    let Some((object, member)) = navigation_parts(callee) else {
+                        return unknown;
+                    };
+                    let method = self.text(member).to_owned();
+                    let receiver = match object.kind() {
+                        "this_expression" => None,
+                        "identifier" => Some(Receiver::Name(self.text(object).to_owned())),
+                        _ if is_name_path(object) => {
+                            Some(Receiver::Path(name_path(object, self.src)))
+                        }
+                        _ => return unknown,
+                    };
+                    if looks_like_type(&method) || is_scope_function(&method) {
+                        return unknown;
+                    }
+                    let args = self.args(node);
+                    match receiver {
+                        None => ArgSource::Call { method, args },
+                        Some(receiver) => ArgSource::MemberCall {
+                            receiver,
+                            method,
+                            args,
+                        },
                     }
                 }
                 _ => unknown,

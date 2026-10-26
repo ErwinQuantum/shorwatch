@@ -139,3 +139,84 @@ fn unresolved_without_default_matches_nothing() {
     link(&mut units);
     assert!(texts(&units[0]).is_empty());
 }
+
+/// A production helper `com.acme.Util.sign(alg)` whose `getInstance(alg)`
+/// waits for its callers, and a caller in `caller` with the given role.
+fn helper_and_caller(caller_role: CodeRole) -> Vec<SourceUnit> {
+    use crate::ir::{Candidate, TypeRef};
+    let mut helper = SourceUnit::new("Util.java", Language::Java);
+    helper.push(
+        FactKind::Call {
+            receiver: Some(TypeRef::qualified("java.security.Signature")),
+            method: "getInstance".into(),
+            args: vec![Arg {
+                value: ArgValue::OneOf(vec![Candidate {
+                    value: ArgValue::Param {
+                        owner: "com.acme.Util".into(),
+                        method: "sign".into(),
+                        arity: 1,
+                        index: 0,
+                        param: "alg".into(),
+                    },
+                    flow: vec![],
+                }]),
+                raw: "alg".into(),
+                resolved_via: Some("alg".into()),
+                location: Location::line(3, 9, 12),
+            }],
+            receiver_origin: None,
+        },
+        SourceUnit::ROOT,
+        Location::line(3, 1, 13),
+    );
+    let mut caller = SourceUnit::new("Caller.java", Language::Java);
+    caller.set_role(caller_role);
+    caller.push(
+        FactKind::Call {
+            receiver: Some(TypeRef::qualified("com.acme.Util")),
+            method: "sign".into(),
+            args: vec![Arg::str("SHA1withRSA", Location::line(7, 18, 31))],
+            receiver_origin: None,
+        },
+        SourceUnit::ROOT,
+        Location::line(7, 9, 32),
+    );
+    vec![helper, caller]
+}
+
+fn helper_arg(units: &[SourceUnit]) -> &Arg {
+    match &units[0].facts()[0].kind {
+        FactKind::Call { args, .. } => &args[0],
+        _ => unreachable!(),
+    }
+}
+
+#[test]
+fn parameters_take_the_values_other_files_pass() {
+    let mut units = helper_and_caller(CodeRole::Production);
+    link(&mut units);
+    let arg = helper_arg(&units);
+    assert_eq!(arg.match_texts(), ["SHA1withRSA"]);
+    let ArgValue::OneOf(candidates) = &arg.value else {
+        panic!("{arg:?}")
+    };
+    let notes: Vec<_> = candidates[0]
+        .flow
+        .iter()
+        .map(|s| (s.path.as_deref(), s.note.as_str()))
+        .collect();
+    assert_eq!(
+        notes,
+        [
+            (Some("Caller.java"), "\"SHA1withRSA\" is written here"),
+            (Some("Caller.java"), "passed as alg to sign(...)"),
+        ]
+    );
+}
+
+#[test]
+fn production_code_takes_no_values_from_test_code() {
+    let mut units = helper_and_caller(CodeRole::Test);
+    link(&mut units);
+    assert_eq!(helper_arg(&units).value, ArgValue::Unknown);
+}

@@ -57,9 +57,17 @@ langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, synta
   included), parameters fed by calls in the same file, returns of the file's
   methods, concatenations, `?:`/`switch`/`if`/`when` branches. It yields
   `ArgValue::OneOf` candidates, each with its `FlowStep` path, which becomes
-  `Finding::flow`. Context- and order-insensitive, bounded (depth 6, 16
-  candidates); overloaded targets and cycles stay unknown. Calls across
-  files are not followed yet. A receiver's *origin* (`Call.receiver_origin`)
+  `Finding::flow`. Order-insensitive, bounded (depth 6, 16 candidates);
+  overloaded targets and cycles stay unknown. A call's return binds the
+  callee's parameters to that call's arguments.
+- **Cross-file data flow** (`core/src/link/flow.rs`): what a file cannot
+  resolve stays as `ArgValue::Param` (a parameter, constructors included)
+  or `ArgValue::Returns` (another type's method, with the call's args)
+  candidates; frontends publish `MethodSummary`s (what each method returns).
+  `link` matches calls/constructions by receiver type + name + arity
+  (unique match only: no interfaces, no overloads), up to 3 hops, and tags
+  each `FlowStep` with the file it is in. Production code takes no values
+  from test code. A receiver's *origin* (`Call.receiver_origin`)
   still comes only from the variable's own initializer; `origin` patterns
   let unknown origins match (no lost detections). Don't hack around missing
   flow in rules.

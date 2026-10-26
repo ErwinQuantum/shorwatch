@@ -1,6 +1,5 @@
 ---
-source: shorwatch-langs/src/java.rs
-assertion_line: 625
+source: shorwatch-langs/src/java/tests.rs
 expression: unit
 ---
 path: Test.java
@@ -45,3 +44,31 @@ facts:
         column: 55
       start_byte: 155
       end_byte: 167
+methods:
+  - owner: Outer.Inner
+    name: alg
+    arity: 0
+    returns:
+      - value:
+          str: ML-KEM-768
+        flow:
+          - location:
+              start:
+                line: 5
+                column: 43
+              end:
+                line: 5
+                column: 55
+              start_byte: 155
+              end_byte: 167
+            note: "\"ML-KEM-768\" is written here"
+          - location:
+              start:
+                line: 5
+                column: 43
+              end:
+                line: 5
+                column: 55
+              start_byte: 155
+              end_byte: 167
+            note: returned by alg(...)

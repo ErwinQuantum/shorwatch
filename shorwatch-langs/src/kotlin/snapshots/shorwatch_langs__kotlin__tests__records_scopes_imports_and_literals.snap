@@ -100,3 +100,31 @@ facts:
         column: 35
       start_byte: 216
       end_byte: 223
+methods:
+  - owner: com.example.Kem
+    name: group
+    arity: 0
+    returns:
+      - value:
+          str: X25519MLKEM768
+        flow:
+          - location:
+              start:
+                line: 8
+                column: 27
+              end:
+                line: 8
+                column: 43
+              start_byte: 172
+              end_byte: 188
+            note: "\"X25519MLKEM768\" is written here"
+          - location:
+              start:
+                line: 8
+                column: 27
+              end:
+                line: 8
+                column: 43
+              start_byte: 172
+              end_byte: 188
+            note: returned by group(...)

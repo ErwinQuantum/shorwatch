@@ -54,7 +54,10 @@ fn entry<'a>(scan: &'a Scan, finding: &'a Finding) -> Entry<'a> {
         flow_lines: finding
             .flow
             .iter()
-            .map(|step| scan.line(&finding.path, step.location.start.line))
+            .map(|step| {
+                let path = step.path.as_deref().unwrap_or(&finding.path);
+                scan.line(path, step.location.start.line)
+            })
             .collect(),
     }
 }

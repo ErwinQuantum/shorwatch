@@ -25,19 +25,7 @@ pub(super) fn inject(units: &mut [SourceUnit]) {
             CodeRole::Test => &all,
         };
         for fact in &mut unit.facts {
-            let args: Vec<_> = match &mut fact.kind {
-                FactKind::Call {
-                    args,
-                    receiver_origin,
-                    ..
-                } => args
-                    .iter_mut()
-                    .chain(receiver_origin.iter_mut().flatten())
-                    .collect(),
-                FactKind::Construct { args, .. } => args.iter_mut().collect(),
-                _ => continue,
-            };
-            for arg in args {
+            for arg in super::args_mut(&mut fact.kind) {
                 resolve(&mut arg.value, properties);
             }
         }

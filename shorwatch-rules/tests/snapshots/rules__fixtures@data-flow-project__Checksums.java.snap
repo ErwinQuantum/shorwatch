@@ -1,0 +1,12 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/data-flow-project/Checksums.java
+---
+- rule: jvm.jca.sha1
+  at: "14:16"
+  status: vulnerable
+  flow:
+    - "Invoices.java:29: \"SHA-1\" is written here"
+    - "Invoices.java:29: passed as algorithm to Checksums(...)"
+    - "10: assigned to algorithm"

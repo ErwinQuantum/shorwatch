@@ -58,7 +58,14 @@ pub fn render(scan: &Scan) -> String {
             cell(&f.path),
             f.location.start.line,
             match f.flow.first() {
-                Some(origin) => format!(" (value from line {})", origin.location.start.line),
+                Some(origin) => match &origin.path {
+                    Some(path) => format!(
+                        " (value from `{}:{}`)",
+                        cell(path),
+                        origin.location.start.line
+                    ),
+                    None => format!(" (value from line {})", origin.location.start.line),
+                },
                 None => String::new(),
             },
             match f.role {

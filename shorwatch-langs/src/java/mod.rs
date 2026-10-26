@@ -518,18 +518,29 @@ impl<'s> Lowering<'s> {
                         .collect(),
                 )
             }
-            // A method of this file (no receiver, or `this`).
-            "method_invocation"
-                if node
-                    .child_by_field_name("object")
-                    .is_none_or(|o| o.kind() == "this") =>
-            {
-                match self.field_text(node, "name") {
-                    Some(method) => ArgSource::Call {
-                        method: method.to_owned(),
-                        args: self.args(node),
+            "method_invocation" => {
+                let Some(method) = self.field_text(node, "name").map(str::to_owned) else {
+                    return ArgSource::Value(ArgValue::Unknown);
+                };
+                let args = self.args(node);
+                match node.child_by_field_name("object") {
+                    // A method of this file.
+                    None => ArgSource::Call { method, args },
+                    Some(o) if o.kind() == "this" => ArgSource::Call { method, args },
+                    // Another type's method, by the receiver's type.
+                    Some(o) if o.kind() == "identifier" => ArgSource::MemberCall {
+                        receiver: Receiver::Name(self.text(o).to_owned()),
+                        method,
+                        args,
                     },
-                    None => ArgSource::Value(ArgValue::Unknown),
+                    Some(o) if matches!(o.kind(), "field_access" | "scoped_identifier") => {
+                        ArgSource::MemberCall {
+                            receiver: Receiver::Path(self.text(o).to_owned()),
+                            method,
+                            args,
+                        }
+                    }
+                    Some(_) => ArgSource::Value(ArgValue::Unknown),
                 }
             }
             _ => ArgSource::Value(ArgValue::Unknown),

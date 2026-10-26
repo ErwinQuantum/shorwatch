@@ -5,7 +5,7 @@ use serde::Serialize;
 use super::{Location, ScopeId, TypeRef};
 
 /// Statically known value of an argument expression.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ArgValue {
     Str(String),
@@ -21,6 +21,24 @@ pub enum ArgValue {
     /// The values a variable, parameter or method result may hold, each with
     /// the path it takes to the argument (data flow).
     OneOf(Vec<Candidate>),
+    /// Among [`ArgValue::OneOf`] candidates: parameter `index` (named
+    /// `param`) of method `method` of type `owner`, declared in this file.
+    /// Its values come from calls in other files, which [`crate::link`]
+    /// looks up.
+    Param {
+        owner: String,
+        method: String,
+        arity: usize,
+        index: usize,
+        param: String,
+    },
+    /// Among [`ArgValue::OneOf`] candidates: what `owner.method(args)`, a
+    /// method of another file, returns. [`crate::link`] looks it up.
+    Returns {
+        owner: TypeRef,
+        method: String,
+        args: Vec<Arg>,
+    },
     /// Anything the frontend could not fold to a literal.
     Unknown,
 }
@@ -40,14 +58,15 @@ impl ArgValue {
             ArgValue::OneOf(candidates) => {
                 candidates.iter().flat_map(|c| c.value.texts()).collect()
             }
-            ArgValue::Unknown => Vec::new(),
+            // Unresolved until `link`; nothing to match on its own.
+            ArgValue::Param { .. } | ArgValue::Returns { .. } | ArgValue::Unknown => Vec::new(),
         }
     }
 }
 
 /// A value an argument may take, and the path it takes to get there: where
 /// it is written, then each assignment, call or return it goes through.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Candidate {
     pub value: ArgValue,
     #[serde(skip_serializing_if = "Vec::is_empty")]
@@ -56,10 +75,24 @@ pub struct Candidate {
 
 /// One step of a value's path, such as `assigned to alg` or
 /// `passed as alg to sign(...)`.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct FlowStep {
+    /// The file of the step, when it is not the file of the finding.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
     pub location: Location,
     pub note: String,
+}
+
+/// What a method of a file returns, for other files' calls to it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct MethodSummary {
+    /// The declaring type, fully qualified (`com.acme.CryptoUtil`).
+    pub owner: String,
+    pub name: String,
+    pub arity: usize,
+    /// The values of its `return`s, like an argument's candidates.
+    pub returns: Vec<Candidate>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

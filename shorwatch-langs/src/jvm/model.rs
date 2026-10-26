@@ -50,6 +50,12 @@ pub(crate) enum ArgSource {
         method: String,
         args: Vec<PendingArg>,
     },
+    /// `x.m(...)` or `Type.m(...)`: what another type's method returns.
+    MemberCall {
+        receiver: Receiver,
+        method: String,
+        args: Vec<PendingArg>,
+    },
 }
 
 /// `name = value` (an initializer included), or `this.name = value` when

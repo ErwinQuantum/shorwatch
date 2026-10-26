@@ -161,10 +161,12 @@ pub(crate) fn scan() -> Scan {
         role: CodeRole::Test,
         flow: vec![
             FlowStep {
+                path: None,
                 location: location(7, 24, 29),
                 note: "\"RSA\" is written here".into(),
             },
             FlowStep {
+                path: None,
                 location: location(7, 24, 29),
                 note: "passed as algorithm to fixture(...)".into(),
             },

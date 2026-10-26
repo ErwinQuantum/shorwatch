@@ -43,6 +43,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - `--format html`: a self-contained HTML report (styles, script and data embedded, nothing loaded from the network) with a summary, post-quantum readiness, findings by severity and algorithm, filters, and every finding with its code, explanation, advice and data-flow path. Light and dark themes, print styles.
 - The example Spring service gains a statement signer whose algorithm comes from a `switch`, to show data flow; `examples/output/` includes the HTML report.
 
+- Data flow across files: an algorithm passed to a method or constructor of another file, or returned by one, is followed through the project (receiver type, name and arity; up to three calls), and each step of the path names its file. A method's return binds its parameters to the call's own arguments. Production code takes no values from test code. On the field-test projects this finds Keycloak's central signing contexts (RSA, ECDSA, EdDSA through `JavaAlgorithm.getJavaAlgorithm`) and Spring Security's SHA-1 password encoder across three files; all new findings were true positives.
+
 ### Fixed
 - Absolute paths outside the working directory were shown as `C:/\/Users/...` on Windows.
 

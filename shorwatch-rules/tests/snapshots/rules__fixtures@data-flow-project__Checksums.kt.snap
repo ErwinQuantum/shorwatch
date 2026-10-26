@@ -1,0 +1,11 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/data-flow-project/Checksums.kt
+---
+- rule: jvm.jca.sha1
+  at: "7:42"
+  status: vulnerable
+  flow:
+    - "Invoices.kt:23: \"SHA-1\" is written here"
+    - "Invoices.kt:23: passed as algorithm to Checksums(...)"

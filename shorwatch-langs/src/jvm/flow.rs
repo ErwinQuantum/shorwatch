@@ -2,13 +2,21 @@
 //! when it is not a literal or constant, each with the path it takes.
 //!
 //! A variable's values come from its assignments (initializer included); a
-//! parameter's from the calls to its method in this file; a call's from the
-//! method's `return`s. Concatenations combine their parts, conditionals
-//! (`?:`, `switch`, `if`, `when`) offer each branch. The analysis is
-//! context-insensitive and bounded: when in doubt (an overloaded method, too
-//! many combinations, a cycle) a value stays unknown rather than invented.
+//! parameter's from the calls to its method; a call's from the method's
+//! `return`s, with the method's parameters bound to that call's arguments.
+//! Concatenations combine their parts, conditionals (`?:`, `switch`, `if`,
+//! `when`) offer each branch. What depends on other files is left as
+//! [`ArgValue::Param`] and [`ArgValue::Returns`] candidates, and each method
+//! that returns something publishes a [`MethodSummary`]: `shorwatch_core::link`
+//! connects them across the project.
+//!
+//! Bounded and otherwise context-insensitive: when in doubt (an overloaded
+//! method, too many combinations, a cycle) a value stays unknown rather than
+//! invented.
 
-use shorwatch_core::ir::{ArgValue, Candidate, FlowStep, Location, ScopeId, ScopeKind};
+use shorwatch_core::ir::{
+    Arg, ArgValue, Candidate, FlowStep, Location, MethodSummary, ScopeId, ScopeKind,
+};
 
 use super::{ArgSource, Assignment, JvmFile, PendingArg};
 
@@ -17,19 +25,70 @@ const MAX_DEPTH: usize = 6;
 /// How many values an argument may have before it is considered unknown.
 const MAX_CANDIDATES: usize = 16;
 
-/// What a resolution is in the middle of, to stop at cycles and depth.
-type Trail = Vec<(ScopeId, String)>;
+/// A resolution in progress: what it is in the middle of, to stop at cycles
+/// and depth, and the calls it entered, so that a parameter takes the value
+/// of *that* call rather than of every call to the method.
+#[derive(Default)]
+struct Context<'a> {
+    trail: Vec<(ScopeId, String)>,
+    calls: Vec<Entered<'a>>,
+}
+
+/// A call whose callee's `return`s are being resolved.
+struct Entered<'a> {
+    method: ScopeId,
+    args: &'a [PendingArg],
+    scope: ScopeId,
+}
 
 impl JvmFile {
     /// The values `arg` may hold, as an [`ArgValue::OneOf`], or `None` when
     /// none is known.
     pub(super) fn flow_value(&self, arg: &PendingArg, scope: ScopeId) -> Option<ArgValue> {
-        let candidates = self.candidates(arg, scope, &mut Vec::new());
+        let candidates = self.candidates(arg, scope, &mut Context::default());
         (!candidates.is_empty()).then_some(ArgValue::OneOf(candidates))
     }
 
-    fn candidates(&self, arg: &PendingArg, scope: ScopeId, trail: &mut Trail) -> Vec<Candidate> {
-        if trail.len() >= MAX_DEPTH {
+    /// What each method of this file that returns something returns, for
+    /// calls from other files.
+    pub(super) fn summaries(&self) -> Vec<MethodSummary> {
+        let mut summaries = Vec::new();
+        for (index, scope) in self.unit.scopes().iter().enumerate() {
+            let Ok(id) = u32::try_from(index).map(ScopeId) else {
+                continue;
+            };
+            let (Some(name), Some(owner)) = (scope.name.as_deref(), self.owner(id)) else {
+                continue;
+            };
+            let arity = self.arity(id);
+            let returns_something = self.returns.iter().any(|(s, _)| *s == id);
+            if scope.kind != ScopeKind::Method
+                || name.starts_with('<')
+                || !returns_something
+                || self.method_scope(name, arity) != Some(id)
+            {
+                continue;
+            }
+            let returns = self.returns_of(id, &mut Context::default());
+            if !returns.is_empty() {
+                summaries.push(MethodSummary {
+                    owner,
+                    name: name.to_owned(),
+                    arity,
+                    returns,
+                });
+            }
+        }
+        summaries
+    }
+
+    fn candidates<'a>(
+        &'a self,
+        arg: &'a PendingArg,
+        scope: ScopeId,
+        cx: &mut Context<'a>,
+    ) -> Vec<Candidate> {
+        if cx.trail.len() >= MAX_DEPTH {
             return Vec::new();
         }
         let found = match &arg.source {
@@ -38,9 +97,9 @@ impl JvmFile {
                 value: value.clone(),
                 flow: vec![step(arg.location, format!("{} is written here", arg.raw))],
             }],
-            ArgSource::Name(name) => self.variable(scope, name, false, arg.location, trail),
+            ArgSource::Name(name) => self.variable(scope, name, false, arg.location, cx),
             ArgSource::Member { owner, name } if owner == "this" => {
-                self.variable(scope, name, true, arg.location, trail)
+                self.variable(scope, name, true, arg.location, cx)
             }
             ArgSource::Member { owner, name } => self
                 .member_constant(scope, owner, name)
@@ -51,12 +110,28 @@ impl JvmFile {
                     }]
                 })
                 .unwrap_or_default(),
-            ArgSource::Concat(parts) => self.concat(parts, scope, trail),
+            ArgSource::Concat(parts) => self.concat(parts, scope, cx),
             ArgSource::Choice(options) => options
                 .iter()
-                .flat_map(|option| self.candidates(option, scope, trail))
+                .flat_map(|option| self.candidates(option, scope, cx))
                 .collect(),
-            ArgSource::Call { method, args } => self.returns(method, args.len(), trail),
+            ArgSource::Call { method, args } => self.call(method, args, scope, cx),
+            // Another type's method: `link` looks up what it returns.
+            ArgSource::MemberCall {
+                receiver,
+                method,
+                args,
+            } => match self.resolve_receiver(receiver, scope) {
+                Some(owner) => vec![Candidate {
+                    value: ArgValue::Returns {
+                        owner,
+                        method: method.clone(),
+                        args: self.call_args(args, scope, cx),
+                    },
+                    flow: Vec::new(),
+                }],
+                None => Vec::new(),
+            },
         };
         let mut unique: Vec<Candidate> = Vec::new();
         for candidate in found {
@@ -70,15 +145,46 @@ impl JvmFile {
         unique
     }
 
+    /// The arguments of a call to another file's method, resolved within the
+    /// resolution in progress (its bounds and cycle checks apply).
+    fn call_args<'a>(
+        &'a self,
+        args: &'a [PendingArg],
+        scope: ScopeId,
+        cx: &mut Context<'a>,
+    ) -> Vec<Arg> {
+        args.iter()
+            .map(|arg| {
+                let (value, resolved_via) = match &arg.source {
+                    ArgSource::Value(value) => (value.clone(), None),
+                    _ => {
+                        let candidates = self.candidates(arg, scope, cx);
+                        if candidates.is_empty() {
+                            (ArgValue::Unknown, None)
+                        } else {
+                            (ArgValue::OneOf(candidates), Some(arg.raw.clone()))
+                        }
+                    }
+                };
+                Arg {
+                    value,
+                    raw: arg.raw.clone(),
+                    resolved_via,
+                    location: arg.location,
+                }
+            })
+            .collect()
+    }
+
     /// A local variable, parameter or field (`this.name` when `field`),
     /// referred to at `at`.
-    fn variable(
-        &self,
+    fn variable<'a>(
+        &'a self,
         scope: ScopeId,
         name: &str,
         field: bool,
         at: Location,
-        trail: &mut Trail,
+        cx: &mut Context<'a>,
     ) -> Vec<Candidate> {
         let declared = if field {
             self.enclosing_type(scope)
@@ -90,7 +196,7 @@ impl JvmFile {
             return Vec::new();
         };
         let key = (declared, name.to_owned());
-        if trail.contains(&key) {
+        if cx.trail.contains(&key) {
             return Vec::new();
         }
         if let Some(value) = &self.symbols[&key].constant {
@@ -103,13 +209,13 @@ impl JvmFile {
                 flow: vec![step(at, note)],
             }];
         }
-        trail.push(key);
+        cx.trail.push(key);
         let mut found = Vec::new();
         for assignment in self.assignments.iter().filter(|a| a.name == name) {
             if self.assignment_target(assignment) != Some(declared) {
                 continue;
             }
-            for mut candidate in self.candidates(&assignment.value, assignment.scope, trail) {
+            for mut candidate in self.candidates(&assignment.value, assignment.scope, cx) {
                 candidate
                     .flow
                     .push(step(assignment.location, format!("assigned to {name}")));
@@ -121,76 +227,118 @@ impl JvmFile {
             .get(&declared)
             .and_then(|params| params.iter().position(|p| p == name));
         if let Some(index) = index {
-            found.extend(self.passed_to(declared, name, index, trail));
+            found.extend(self.parameter(declared, name, index, cx));
         }
-        trail.pop();
+        cx.trail.pop();
         found
     }
 
-    /// The values the calls in this file pass as parameter `index` of
-    /// `method`, provided no overload makes the call ambiguous.
-    fn passed_to(
-        &self,
+    /// Parameter `index` of `method`: the argument of the call being
+    /// resolved, if any; otherwise every call in this file, and, for `link`,
+    /// the calls from other files.
+    fn parameter<'a>(
+        &'a self,
         method: ScopeId,
         param: &str,
         index: usize,
-        trail: &mut Trail,
+        cx: &mut Context<'a>,
     ) -> Vec<Candidate> {
         let Some(name) = self.unit.scope(method).name.as_deref() else {
             return Vec::new();
         };
         let arity = self.arity(method);
-        if self.method_scope(name, arity) != Some(method) {
+        // A type's own parameters are its primary constructor's (Kotlin).
+        let constructor = self.unit.scope(method).kind == ScopeKind::Type;
+        if !constructor && self.method_scope(name, arity) != Some(method) {
             return Vec::new();
+        }
+        let note = format!("passed as {param} to {name}(...)");
+        if let Some(position) = cx.calls.iter().rposition(|c| c.method == method) {
+            // The caller's argument is resolved where the caller is.
+            let inner = cx.calls.split_off(position);
+            let (args, scope) = (inner[0].args, inner[0].scope);
+            let found = self.candidates(&args[index], scope, cx);
+            cx.calls.extend(inner);
+            return then(found, args[index].location, &note);
         }
         let mut found = Vec::new();
         for call in &self.local_calls {
-            if call.method != name || call.args.len() != arity {
-                continue;
+            if call.method == name && call.args.len() == arity {
+                let arg = &call.args[index];
+                let candidates = self.candidates(arg, call.scope, cx);
+                found.extend(then(candidates, arg.location, &note));
             }
-            let arg = &call.args[index];
-            for mut candidate in self.candidates(arg, call.scope, trail) {
-                candidate.flow.push(step(
-                    arg.location,
-                    format!("passed as {param} to {name}(...)"),
-                ));
-                found.push(candidate);
-            }
+        }
+        if let Some(owner) = self.owner(method) {
+            found.push(Candidate {
+                value: ArgValue::Param {
+                    owner,
+                    method: name.to_owned(),
+                    arity,
+                    index,
+                    param: param.to_owned(),
+                },
+                flow: Vec::new(),
+            });
         }
         found
     }
 
-    /// The values returned by the method of this file named `name` that
-    /// takes `arity` arguments, when exactly one does.
-    fn returns(&self, name: &str, arity: usize, trail: &mut Trail) -> Vec<Candidate> {
-        let Some(method) = self.method_scope(name, arity) else {
+    /// `name(args)`: what the method of this file returns for these
+    /// arguments.
+    fn call<'a>(
+        &'a self,
+        name: &str,
+        args: &'a [PendingArg],
+        scope: ScopeId,
+        cx: &mut Context<'a>,
+    ) -> Vec<Candidate> {
+        let Some(method) = self.method_scope(name, args.len()) else {
             return Vec::new();
         };
+        cx.calls.push(Entered {
+            method,
+            args,
+            scope,
+        });
+        let found = self.returns_of(method, cx);
+        cx.calls.pop();
+        found
+    }
+
+    /// The values `method`'s `return`s may hold.
+    fn returns_of<'a>(&'a self, method: ScopeId, cx: &mut Context<'a>) -> Vec<Candidate> {
         let key = (method, "<return>".to_owned());
-        if trail.contains(&key) {
+        if cx.trail.contains(&key) {
             return Vec::new();
         }
-        trail.push(key);
+        let name = self.unit.scope(method).name.clone().unwrap_or_default();
+        cx.trail.push(key);
         let mut found = Vec::new();
         for (scope, value) in self.returns.iter().filter(|(scope, _)| *scope == method) {
-            for mut candidate in self.candidates(value, *scope, trail) {
+            for mut candidate in self.candidates(value, *scope, cx) {
                 candidate
                     .flow
                     .push(step(value.location, format!("returned by {name}(...)")));
                 found.push(candidate);
             }
         }
-        trail.pop();
+        cx.trail.pop();
         found
     }
 
     /// Every combination of the parts' values, as long as one part at least
     /// is a string (`KEY_BITS + 1` is not a concatenation).
-    fn concat(&self, parts: &[PendingArg], scope: ScopeId, trail: &mut Trail) -> Vec<Candidate> {
+    fn concat<'a>(
+        &'a self,
+        parts: &'a [PendingArg],
+        scope: ScopeId,
+        cx: &mut Context<'a>,
+    ) -> Vec<Candidate> {
         let mut combinations = vec![(String::new(), Vec::new())];
         let mut has_string = false;
         for part in parts {
-            let candidates = self.candidates(part, scope, trail);
+            let candidates = self.candidates(part, scope, cx);
             let values: Vec<(String, &[FlowStep])> = candidates
                 .iter()
                 .flat_map(|c| {
@@ -262,6 +410,30 @@ impl JvmFile {
         self.params.get(&method).map_or(0, Vec::len)
     }
 
+    /// The fully qualified type that declares `scope`: package, then the
+    /// enclosing types (`com.acme.Outer.Inner`). `None` outside any type.
+    fn owner(&self, scope: ScopeId) -> Option<String> {
+        let mut types = Vec::new();
+        let mut current = Some(scope);
+        while let Some(id) = current {
+            let scope = self.unit.scope(id);
+            if scope.kind == ScopeKind::Type {
+                types.push(scope.name.clone()?);
+            }
+            current = scope.parent;
+        }
+        if types.is_empty() {
+            return None;
+        }
+        types.reverse();
+        let path = types.join(".");
+        Some(if self.package.is_empty() {
+            path
+        } else {
+            format!("{}.{path}", self.package)
+        })
+    }
+
     fn enclosing_type(&self, mut scope: ScopeId) -> Option<ScopeId> {
         loop {
             if self.unit.scope(scope).kind == ScopeKind::Type {
@@ -272,6 +444,21 @@ impl JvmFile {
     }
 }
 
+/// The candidates, each with one more step.
+fn then(candidates: Vec<Candidate>, location: Location, note: &str) -> Vec<Candidate> {
+    candidates
+        .into_iter()
+        .map(|mut candidate| {
+            candidate.flow.push(step(location, note.to_owned()));
+            candidate
+        })
+        .collect()
+}
+
 fn step(location: Location, note: String) -> FlowStep {
-    FlowStep { location, note }
+    FlowStep {
+        path: None,
+        location,
+        note,
+    }
 }

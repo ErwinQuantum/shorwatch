@@ -38,10 +38,16 @@ pub fn scan(files: &[(PathBuf, CodeRole)], rules: &RuleSet, options: &Options) -
         (&a.path, a.location.start, &a.rule_id).cmp(&(&b.path, b.location.start, &b.rule_id))
     });
 
+    // Files with findings, and the files their data-flow paths go through.
+    let shown = |path: &str| {
+        findings
+            .iter()
+            .any(|f| f.path == path || f.flow.iter().any(|s| s.path.as_deref() == Some(path)))
+    };
     let sources = units
         .iter()
         .zip(sources)
-        .filter(|(unit, _)| findings.iter().any(|f| f.path == unit.path()))
+        .filter(|(unit, _)| shown(unit.path()))
         .map(|(unit, source)| (unit.path().to_owned(), source))
         .collect();
     Scan {

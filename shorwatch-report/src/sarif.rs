@@ -156,10 +156,16 @@ fn code_flows(finding: &Finding, artifact: &Artifact) -> Vec<CodeFlow> {
     if finding.flow.is_empty() {
         return Vec::new();
     }
-    let step = |location: &Location, note: &str| ThreadFlowLocation {
+    let step = |path: Option<&str>, location: &Location, note: &str| ThreadFlowLocation {
         location: ResultLocation {
             physical_location: PhysicalLocation {
-                artifact_location: artifact.clone(),
+                artifact_location: match path {
+                    Some(path) => Artifact {
+                        uri: path.replace('\\', "/"),
+                        ..artifact.clone()
+                    },
+                    None => artifact.clone(),
+                },
                 region: region(location),
             },
             message: Some(Text { text: note.into() }),
@@ -168,8 +174,8 @@ fn code_flows(finding: &Finding, artifact: &Artifact) -> Vec<CodeFlow> {
     let locations = finding
         .flow
         .iter()
-        .map(|s| step(&s.location, &s.note))
-        .chain([step(&finding.location, "used here")])
+        .map(|s| step(s.path.as_deref(), &s.location, &s.note))
+        .chain([step(None, &finding.location, "used here")])
         .collect();
     vec![CodeFlow {
         thread_flows: [ThreadFlow { locations }],

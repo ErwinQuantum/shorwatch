@@ -207,13 +207,14 @@
     // Steps on the same line ("written here", "passed as x") read as one.
     const merged = [];
     f.flow.forEach((step, i) => {
+      const path = step.path || f.path;
       const last = merged[merged.length - 1];
-      if (last && last.line === step.location.start.line) last.notes.push(step.note);
-      else merged.push({ line: step.location.start.line, notes: [step.note], code: f.flow_lines[i] });
+      if (last && last.path === path && last.line === step.location.start.line) last.notes.push(step.note);
+      else merged.push({ path, line: step.location.start.line, notes: [step.note], code: f.flow_lines[i] });
     });
     const steps = merged.map((step) => el("li", {}, [
       el("span", { class: "flow-note", text: step.notes.join(", ") }),
-      el("span", { class: "flow-where", text: `${fileName(f.path)}:${step.line}` }),
+      el("span", { class: "flow-where", title: step.path, text: `${fileName(step.path)}:${step.line}` }),
       step.code ? el("code", { class: "flow-code", text: step.code.trim() }) : null,
     ]));
     const use = f.snippet.lines[f.location.start.line - f.snippet.first_line];

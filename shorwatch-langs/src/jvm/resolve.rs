@@ -62,10 +62,13 @@ impl JvmFile {
             };
             self.unit.push(kind, scope, location);
         }
+        for summary in self.summaries() {
+            self.unit.add_method(summary);
+        }
         self.unit
     }
 
-    fn resolve_receiver(&self, receiver: &Receiver, scope: ScopeId) -> Option<TypeRef> {
+    pub(super) fn resolve_receiver(&self, receiver: &Receiver, scope: ScopeId) -> Option<TypeRef> {
         let variable_type = |name: &str| {
             self.lookup(scope, name)
                 .and_then(|s| s.ty.as_deref())
@@ -176,9 +179,10 @@ impl JvmFile {
                         self.member_constant(scope, owner, name),
                         Some(format!("{owner}.{name}")),
                     ),
-                    ArgSource::Concat(_) | ArgSource::Choice(_) | ArgSource::Call { .. } => {
-                        (None, None)
-                    }
+                    ArgSource::Concat(_)
+                    | ArgSource::Choice(_)
+                    | ArgSource::Call { .. }
+                    | ArgSource::MemberCall { .. } => (None, None),
                 };
                 if let Some(ArgValue::Injected { key, .. }) = &value {
                     resolved_via = Some(format!("${{{key}}}"));

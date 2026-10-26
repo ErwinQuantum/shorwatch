@@ -1,0 +1,30 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/data-flow-project/Invoices.kt
+---
+- rule: jvm.jca.ecdsa
+  at: "17:50"
+  status: vulnerable
+  flow:
+    - "Algorithms.kt:5: \"SHA256withECDSA\" is written here"
+    - "Algorithms.kt:5: returned by forPartner(...)"
+- rule: jvm.jca.rsa
+  at: "17:50"
+  status: vulnerable
+  flow:
+    - "Algorithms.kt:5: \"SHA1withRSA\" is written here"
+    - "Algorithms.kt:5: returned by forPartner(...)"
+- rule: jvm.jca.sha1
+  at: "17:50"
+  status: vulnerable
+  flow:
+    - "Algorithms.kt:5: \"SHA1withRSA\" is written here"
+    - "Algorithms.kt:5: returned by forPartner(...)"
+- rule: jvm.jca.sha1
+  at: "20:9"
+  status: vulnerable
+  flow:
+    - "20: \"SHA-1\" is written here"
+    - "20: passed as algorithm to identity(...)"
+    - "Algorithms.kt:7: returned by identity(...)"
