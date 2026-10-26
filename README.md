@@ -216,6 +216,50 @@ jobs:
           sarif_file: shorwatch.sarif
 ```
 
+### Docker (Jenkins, Azure DevOps, GitLab CI)
+
+The image needs no Rust toolchain: a static binary on Alpine (~23 MB).
+
+```sh
+docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch scan . --format sarif -o shorwatch.sarif
+```
+
+Jenkins, with the [Warnings Next Generation](https://plugins.jenkins.io/warnings-ng/)
+plugin reading the SARIF report:
+
+```groovy
+stage('Post-quantum crypto') {
+    steps {
+        sh 'docker run --rm -v "$WORKSPACE:/src" ghcr.io/erwinquantum/shorwatch scan . --format sarif -o shorwatch.sarif --fail-on never'
+        recordIssues tool: sarif(pattern: 'shorwatch.sarif', id: 'shorwatch', name: 'Shorwatch')
+    }
+}
+```
+
+Azure DevOps, with the [SARIF SAST Scans Tab](https://marketplace.visualstudio.com/items?itemName=sariftools.scans)
+extension (it reads the `CodeAnalysisLogs` artifact):
+
+```yaml
+- script: |
+    docker run --rm -v "$(Build.SourcesDirectory):/src" ghcr.io/erwinquantum/shorwatch \
+      scan . --format sarif -o shorwatch.sarif --fail-on never
+- publish: shorwatch.sarif
+  artifact: CodeAnalysisLogs
+```
+
+GitLab CI:
+
+```yaml
+shorwatch:
+  image:
+    name: ghcr.io/erwinquantum/shorwatch
+    entrypoint: [""]
+  script:
+    - shorwatch scan . --format markdown -o shorwatch.md
+  artifacts:
+    paths: [shorwatch.md]
+```
+
 ## Coverage
 
 Java and Kotlin source code and its configuration (`application.yml`,

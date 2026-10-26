@@ -1,0 +1,7 @@
+# Only the workspace crates are copied; keep the build context small.
+target
+graphify-out
+examples
+.git
+.github
+*.local.md
