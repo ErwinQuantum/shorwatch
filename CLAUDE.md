@@ -90,7 +90,8 @@ langs/src/ jvm/{mod: JvmFile, model, resolve}  java/{mod: traversal, syntax, lit
 - **YAML / properties**: flatten keys like Spring (`a.b[0].c`), one
   `FactKind::Property` per scalar, located at the value. Multi-document YAML,
   flow/block collections, `\` continuations, CRLF. Comments produce nothing.
-- `core::link`: fills `Injected.resolved` from every config unit with relaxed
+- `core::link`: fills `Injected.resolved` from config units (production code
+  sees production config only; test code sees both) with relaxed
   binding (`signingAlgorithm` = `signing-algorithm`); list keys collect their
   elements; every profile's value is a candidate; default if unset.
 - Columns are Unicode code points (SARIF `unicodeCodePoints`).

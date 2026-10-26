@@ -8,28 +8,27 @@
 
 use std::collections::HashMap;
 
-use crate::ir::{ArgValue, FactKind, SourceUnit};
+use crate::ir::{ArgValue, CodeRole, FactKind, SourceUnit};
+
+type Properties = HashMap<String, Vec<String>>;
 
 /// Fills [`ArgValue::Injected::resolved`] in every unit from the
-/// [`FactKind::Property`] facts of all units. Deterministic: values keep the
-/// order of `units`, then of the file, without duplicates.
+/// [`FactKind::Property`] facts of the config units. Production code only
+/// sees production config; test code sees both, as on a test classpath
+/// (`src/main/resources` and `src/test/resources`). Deterministic: values keep
+/// the order of `units`, then of the file, without duplicates.
 pub fn link(units: &mut [SourceUnit]) {
-    let mut properties: HashMap<String, Vec<String>> = HashMap::new();
-    for unit in units.iter() {
-        for fact in unit.facts() {
-            if let FactKind::Property { key, value } = &fact.kind {
-                let values = properties.entry(canonical(key)).or_default();
-                if !values.contains(value) {
-                    values.push(value.clone());
-                }
-            }
-        }
-    }
-    if properties.is_empty() {
+    let production = properties(units, |role| role == CodeRole::Production);
+    let all = properties(units, |_| true);
+    if all.is_empty() {
         return;
     }
 
     for unit in units.iter_mut() {
+        let properties = match unit.role() {
+            CodeRole::Production => &production,
+            CodeRole::Test => &all,
+        };
         for fact in &mut unit.facts {
             let args: Vec<_> = match &mut fact.kind {
                 FactKind::Call {
@@ -45,16 +44,32 @@ pub fn link(units: &mut [SourceUnit]) {
             };
             for arg in args {
                 if let ArgValue::Injected { key, resolved, .. } = &mut arg.value {
-                    *resolved = lookup(&properties, key);
+                    *resolved = lookup(properties, key);
                 }
             }
         }
     }
 }
 
+/// Every config value of the units whose role passes `include`, by key.
+fn properties(units: &[SourceUnit], include: impl Fn(CodeRole) -> bool) -> Properties {
+    let mut properties = Properties::new();
+    for unit in units.iter().filter(|u| include(u.role())) {
+        for fact in unit.facts() {
+            if let FactKind::Property { key, value } = &fact.kind {
+                let values = properties.entry(canonical(key)).or_default();
+                if !values.contains(value) {
+                    values.push(value.clone());
+                }
+            }
+        }
+    }
+    properties
+}
+
 /// Values for `key`, or for its list elements (`key[0]`, `key[1]`...) when the
 /// key names a list.
-fn lookup(properties: &HashMap<String, Vec<String>>, key: &str) -> Vec<String> {
+fn lookup(properties: &Properties, key: &str) -> Vec<String> {
     let key = canonical(key);
     if let Some(values) = properties.get(&key) {
         return values.clone();
@@ -186,6 +201,32 @@ mod tests {
         ];
         link(&mut units);
         assert_eq!(texts(&units[0]), ["RS256"]);
+    }
+
+    #[test]
+    fn test_config_only_reaches_test_code() {
+        let test_config = || {
+            let mut unit = config(
+                "src/test/resources/application.yml",
+                &[("jwt.algorithm", "RS256")],
+            );
+            unit.set_role(CodeRole::Test);
+            unit
+        };
+        let mut test_code = java_with_injected("jwt.algorithm", None);
+        test_code.set_role(CodeRole::Test);
+        let mut units = vec![
+            java_with_injected("jwt.algorithm", None),
+            test_code,
+            config(
+                "src/main/resources/application.yml",
+                &[("jwt.algorithm", "HS256")],
+            ),
+            test_config(),
+        ];
+        link(&mut units);
+        assert_eq!(texts(&units[0]), ["HS256"]);
+        assert_eq!(texts(&units[1]), ["HS256", "RS256"]);
     }
 
     #[test]
