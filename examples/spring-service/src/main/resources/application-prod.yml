@@ -1,0 +1,4 @@
+# Partners verify production webhooks with our public key.
+payments:
+  webhooks:
+    signing-algorithm: ES256

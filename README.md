@@ -8,9 +8,9 @@ into a syntax tree, matches it against declarative rules, and reports every use
 of cryptography that a quantum computer would break or weaken, together with
 the post-quantum replacement and the NIST standard behind it.
 
-**Status: pre-alpha.** The detection engine and the Java rules work and are
-tested; the command-line interface and SARIF output are under construction.
-See [Coverage](#coverage) for exactly what is and isn't detected yet.
+**Status: pre-alpha (v0.1 in progress).** The scanner works end to end on Java
+and Spring projects; no release has been published yet. See
+[Coverage](#coverage) for exactly what is and isn't detected.
 
 ## Why
 
@@ -74,6 +74,95 @@ advice and links to the relevant NIST documents.
   is rejected when the rules are loaded.
 - **Rules are data.** Detections live in YAML files, so adding one never
   requires touching or recompiling the engine.
+
+## Usage
+
+```sh
+cargo install --path shorwatch-cli          # until the first release is published
+
+shorwatch scan .                             # scan the current project
+shorwatch scan src/ config/ --compact        # several paths, one line per finding
+shorwatch scan . --format sarif -o shorwatch.sarif
+shorwatch scan . --min-severity medium --fail-on any
+shorwatch scan . --rules ./company-rules/    # add your own YAML rules
+shorwatch rules                              # list the rules in effect
+```
+
+`scan` walks the given paths respecting `.gitignore`, analyzes `.java`,
+`.yml`, `.yaml` and `.properties` files in parallel, and resolves
+`@Value("${...}")` injections against the project's configuration files.
+
+| Option | |
+|---|---|
+| `--format text\|sarif\|json\|markdown` | Output format (default `text`, coloured on terminals) |
+| `-o, --output FILE` | Write the report to a file |
+| `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
+| `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`) |
+| `--compact` | One line per finding |
+| `--rules DIR` | Extra rules directory (repeatable) |
+
+Exit codes: `0` nothing failing, `1` failing findings, `2` error.
+
+### Example output
+
+Scanning [`examples/spring-service`](examples/spring-service/), a small Spring
+Boot service:
+
+```text
+ HIGH  RSA · jvm.jca.rsa · vulnerable
+  ──▶ examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java:32:42
+   │
+32 │             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+   │                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ RSA is broken by Shor's algorithm
+   = help: Plan a protocol migration, not a drop-in swap. For key establishment and
+           encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS
+           204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or
+           RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding
+           post-quantum protection.
+   = ref: https://csrc.nist.gov/pubs/fips/203/final
+
+ HIGH  ECDH · jvm.jca.ecdh · in transition
+  ──▶ examples/spring-service/src/main/java/com/example/payments/tls/HybridKeyExchange.java:9:16
+   │
+ 9 │         return KeyAgreement.getInstance("X25519");
+   │                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ Elliptic-curve Diffie-Hellman (including X25519/X448) is broken by Shor's algorithm
+   = in transition: post-quantum code at line 13 (ML-KEM)
+   ...
+
+ Summary  10 findings in 6 files (6 scanned)
+          9 vulnerable · 1 in transition · 1 auto-fixable
+          7 high · 2 medium · 1 low
+```
+
+Every format for that scan is in [`examples/output/`](examples/output/):
+[text](examples/output/report.txt), [SARIF](examples/output/report.sarif),
+[JSON](examples/output/report.json), [Markdown](examples/output/report.md).
+
+### GitHub code scanning
+
+SARIF results show up as alerts on the exact line of a pull request:
+
+```yaml
+# .github/workflows/shorwatch.yml
+name: Shorwatch
+on: [push, pull_request]
+permissions:
+  contents: read
+  security-events: write
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install --git https://github.com/ErwinQuantum/shorwatch shorwatch-cli
+      - run: shorwatch scan . --format sarif -o shorwatch.sarif --fail-on never
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: shorwatch.sarif
+```
 
 ## Coverage
 
@@ -164,19 +253,6 @@ Because the engine only sees a language-neutral model, the same core can later
 power an editor integration (LSP), dependency scanning or CI-only incremental
 scans without being rewritten.
 
-## Usage (planned)
-
-The CLI is under construction. The intended interface:
-
-```sh
-shorwatch scan ./my-service                    # human-readable report
-shorwatch scan ./my-service --format sarif     # for GitHub code scanning
-shorwatch scan . --rules ./company-rules/      # add your own YAML rules
-```
-
-SARIF output will plug into GitHub code scanning, GitLab and the VS Code SARIF
-viewer.
-
 ## Building from source
 
 Requires Rust 1.85 or later.
@@ -188,7 +264,6 @@ cargo test --workspace
 
 ## Roadmap
 
-- CLI, SARIF and terminal reports, CI integration
 - Kotlin and more configuration formats (Quarkus, Micronaut)
 - Data-flow analysis to follow crypto through wrapper methods
 - Dependency scanning (`pom.xml`, `build.gradle`, compiled `.jar`s)

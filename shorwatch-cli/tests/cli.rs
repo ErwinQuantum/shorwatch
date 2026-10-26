@@ -144,3 +144,29 @@ fn rules_lists_every_builtin_rule() {
     );
     assert!(text.trim_end().ends_with("50 rules"), "{text}");
 }
+
+fn examples(folder: &str) -> String {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../examples")
+        .join(folder)
+        .display()
+        .to_string()
+}
+
+/// The examples are documentation: if a rule change alters what they show,
+/// update `examples/README.md` and `examples/output/` together.
+#[test]
+fn examples_keep_showing_what_their_readme_describes() {
+    let output = shorwatch(&["scan", &examples("spring-service"), "--format", "json"]);
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report["summary"]["findings"], 10);
+    assert_eq!(report["summary"]["in_transition"], 1);
+    assert_eq!(report["summary"]["fixable"], 1);
+
+    let output = shorwatch(&["scan", &examples("algorithms"), "--format", "json"]);
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(
+        report["summary"]["files_with_findings"], 11,
+        "every example file is flagged"
+    );
+}

@@ -1,0 +1,126 @@
+# Contributing to Shorwatch
+
+Thanks for helping! Most contributions are **new detections**, and those never
+require touching Rust: rules are YAML data. This guide covers that first, then
+code changes.
+
+## Setup
+
+Requires Rust 1.85 or later.
+
+```sh
+cargo build
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+cargo fmt --all --check
+```
+
+Snapshot tests use [insta](https://insta.rs). After a change that alters
+output, review and accept snapshots with `cargo insta review` (install it with
+`cargo install cargo-insta`), or regenerate them with
+`INSTA_UPDATE=always cargo test` and review the diff in git.
+
+## Adding a detection
+
+Rules live in [`shorwatch-rules/rules/`](shorwatch-rules/rules/):
+
+```
+algorithms/<profile>.yaml        what an algorithm is and why it matters (written once)
+markers/<name>.yaml              signs of post-quantum code (hybrid detection)
+jvm/<library>/<profile>.yaml     the patterns one library exposes
+config/<framework>/<profile>.yaml
+```
+
+### Covering a new library for an existing algorithm
+
+Say you want to flag RSA in a library called `acme-crypto`. Create
+`shorwatch-rules/rules/jvm/acme-crypto/rsa.yaml`:
+
+```yaml
+id: jvm.acme-crypto.rsa      # must match the file path
+profile: rsa                 # must match the file name
+platform: jvm                # must match the top folder
+patterns:
+  - call:
+      type: com.acme.crypto.KeyPairs
+      method: rsa
+  - construct:
+      type: com.acme.crypto.RsaSigner
+  - field:
+      type: com.acme.crypto.Algorithms
+      matches: '^RSA_\d+$'
+```
+
+That's it: every file under `rules/` is embedded automatically. The message,
+migration advice and NIST references come from `algorithms/rsa.yaml`.
+
+### Pattern kinds
+
+| Pattern | Matches | Example |
+|---|---|---|
+| `call` | `Type.method(...)` or `variable.method(...)` where the variable has that type; optional `arg: { index, matches }` regex on a literal argument | `Cipher.getInstance("RSA/ECB/...")` |
+| `construct` | `new Type(...)`, with the same optional `arg` | `new RSAEngine()` |
+| `field` | A static constant `Type.NAME`, with an optional `matches` regex on the name | `JWSAlgorithm.RS256` |
+| `property` | A config entry: `key` regex, optional `matches` regex on the value | `server.ssl.ciphers: TLS_RSA_...` |
+
+Types are fully qualified; Shorwatch resolves imports, `var`, fields and
+parameters, so code using simple names still matches. Arguments match through
+literals, same-file `final` constants and `@Value("${...}")` properties.
+
+Write regexes in **single quotes** (`'^RSA$'`): in single-quoted YAML a
+backslash is literal, which is what regexes want.
+
+### Adding a new algorithm
+
+Add `algorithms/<profile>.yaml` with `algorithm`, `category` (`shor` or
+`grover`), `severity`, `title`, `message`, `suggestion`, `references` and
+usually `hybrid: pqc`. Two rules the tests enforce:
+
+- **Shor-category algorithms never get an automatic `fix`.** Migrating away
+  from RSA or ECC changes the protocol; the advice must stay a human decision.
+- **Shor-category profiles reference FIPS 203 or FIPS 204.**
+
+### Tests for your rule
+
+Add a folder under
+[`shorwatch-rules/tests/fixtures/`](shorwatch-rules/tests/fixtures/) with:
+
+- `Vulnerable.java` (or `.yml`, `.properties`): real-looking code that must be
+  flagged;
+- `Hybrid.java`: the same next to post-quantum code, expected `in_transition`;
+- `Clean.java`: look-alikes that must **not** be flagged (it is asserted to
+  produce zero findings).
+
+Each folder is analyzed as a small project with *all* rules, then
+snapshotted. Run the tests and review the new `.snap` files: they are the
+specification of what your rule does.
+
+## Changing code
+
+The workspace is hexagonal; `shorwatch-core` never does I/O and never depends
+on the other crates.
+
+| Crate | Responsibility |
+|---|---|
+| `shorwatch-core` | Intermediate model, rule model and validation, engine, cross-file linking |
+| `shorwatch-rules` | Embedded YAML rules and the loader that assembles profiles and rules |
+| `shorwatch-langs` | Frontends: Java (tree-sitter), YAML (tree-sitter), `.properties` |
+| `shorwatch-report` | Pure renderers: terminal, SARIF, JSON, Markdown |
+| `shorwatch-cli` | The `shorwatch` binary |
+
+Conventions:
+
+- **One responsibility per file.** When a file starts mixing concerns, split
+  it into a module folder; tests go in a sibling `tests.rs`.
+- **Refactors keep snapshots unchanged.** `tests/inventory.rs` snapshots every
+  pattern; fixture snapshots pin every finding.
+- Comments explain *why*, not *what*.
+- English everywhere; commit messages in the imperative mood, one logical
+  change per commit.
+
+## Reporting a false positive or a missed detection
+
+Open an issue with the smallest Java or config snippet that reproduces it. It
+will very likely become a fixture.
+
+By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).

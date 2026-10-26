@@ -8,6 +8,12 @@ use crate::Scan;
 const EXCERPT_WIDTH: usize = 56;
 
 pub(super) fn render(scan: &Scan) -> String {
+    let width = scan
+        .findings
+        .iter()
+        .map(|f| f.algorithm.chars().count())
+        .max()
+        .unwrap_or(0);
     let mut out = String::new();
     let mut current: Option<&str> = None;
     for finding in &scan.findings {
@@ -25,7 +31,7 @@ pub(super) fn render(scan: &Scan) -> String {
             .unwrap_or_default();
         let _ = writeln!(
             out,
-            "  {} {} {:<16} {}  {}",
+            "  {} {} {:<width$}  {}  {}",
             paint(format!("{:>5}:{:<3}", start.line, start.column), accent()),
             severity_badge(finding.severity, "CRITICAL".len()),
             finding.algorithm,

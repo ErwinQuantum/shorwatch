@@ -3,14 +3,14 @@ source: shorwatch-report/src/terminal/tests.rs
 expression: "plain(&render(&scan(), Options { compact: true }))"
 ---
 src/main/java/com/acme/auth/AuthConfig.java
-      5:25   HIGH      RSA              vulnerable     var generator = KeyPairGenerator.getInstance("RSA");
-     11:2    LOW       AES-128          vulnerable     generator.init(128);
+      5:25   HIGH      RSA             vulnerable     var generator = KeyPairGenerator.getInstance("RSA");
+     11:2    LOW       AES-128         vulnerable     generator.init(128);
 
 src/main/java/com/acme/auth/Signer.java
-      3:34   HIGH      ECDSA            in transition  return new Signature[] { Signature.getInstance("SHA256w…
+      3:34   HIGH      ECDSA           in transition  return new Signature[] { Signature.getInstance("SHA256w…
 
 src/main/resources/application.yml
-      4:24   HIGH      RSA (JOSE/JWT)   vulnerable     jws-algorithms: [RS256]
+      4:24   HIGH      RSA (JOSE/JWT)  vulnerable     jws-algorithms: [RS256]
 
  Summary  4 findings in 3 files (12 scanned)
           3 vulnerable · 1 in transition · 1 auto-fixable
