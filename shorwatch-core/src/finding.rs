@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::ir::{CodeRole, Location};
+use crate::ir::{CodeRole, FlowStep, Location};
 use crate::rule::{Category, CryptoProperties, Reference, Severity};
 
 /// Whether the project still depends solely on the vulnerable algorithm.
@@ -44,6 +44,10 @@ pub struct Finding {
     /// Whether the finding is in production or test code.
     pub role: CodeRole,
     pub location: Location,
+    /// How the matched value reached `location` when it was written
+    /// elsewhere: the literal first, then each assignment, call or return.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub flow: Vec<FlowStep>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hybrid_evidence: Option<HybridEvidence>,
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -2,12 +2,29 @@
 //! pending facts are resolved. Receivers get their declared types, names
 //! their constant or injected values, member imports their owners.
 
-use super::{ArgSource, JvmFile, Pending, PendingArg, Receiver, starts_uppercase};
+use super::{ArgSource, JvmFile, LocalCall, Pending, PendingArg, Receiver, starts_uppercase};
 use shorwatch_core::Language;
 use shorwatch_core::ir::{Arg, ArgValue, FactKind, ScopeId, ScopeKind, SourceUnit, TypeRef};
 
 impl JvmFile {
     pub(crate) fn resolve(mut self) -> SourceUnit {
+        self.local_calls = self
+            .pending
+            .iter()
+            .filter_map(|(pending, scope, _)| match pending {
+                // `m(...)` and `this.m(...)` have no receiver.
+                Pending::Call {
+                    receiver: None,
+                    method,
+                    args,
+                } => Some(LocalCall {
+                    scope: *scope,
+                    method: method.clone(),
+                    args: args.clone(),
+                }),
+                _ => None,
+            })
+            .collect();
         for (pending, scope, location) in std::mem::take(&mut self.pending) {
             let kind = match pending {
                 Pending::Call {
@@ -150,39 +167,35 @@ impl JvmFile {
 
     fn resolve_args(&self, args: Vec<PendingArg>, scope: ScopeId) -> Vec<Arg> {
         args.into_iter()
-            .map(
-                |PendingArg {
-                     source,
-                     raw,
-                     location,
-                 }| {
-                    let (value, mut resolved_via) = match source {
-                        ArgSource::Value(value) => (Some(value), None),
-                        ArgSource::Name(name) => (self.constant(scope, &name), Some(name)),
-                        ArgSource::Member { owner, name } => (
-                            self.member_constant(scope, &owner, &name),
-                            Some(format!("{owner}.{name}")),
-                        ),
-                    };
-                    if let Some(ArgValue::Injected { key, .. }) = &value {
-                        resolved_via = Some(format!("${{{key}}}"));
+            .map(|arg| {
+                let (value, mut resolved_via) = match &arg.source {
+                    ArgSource::Value(ArgValue::Unknown) => (None, None),
+                    ArgSource::Value(value) => (Some(value.clone()), None),
+                    ArgSource::Name(name) => (self.constant(scope, name), Some(name.clone())),
+                    ArgSource::Member { owner, name } => (
+                        self.member_constant(scope, owner, name),
+                        Some(format!("{owner}.{name}")),
+                    ),
+                    ArgSource::Concat(_) | ArgSource::Choice(_) | ArgSource::Call { .. } => {
+                        (None, None)
                     }
-                    match value {
-                        Some(value) => Arg {
-                            value,
-                            raw,
-                            resolved_via,
-                            location,
-                        },
-                        None => Arg {
-                            value: ArgValue::Unknown,
-                            raw,
-                            resolved_via: None,
-                            location,
-                        },
-                    }
-                },
-            )
+                };
+                if let Some(ArgValue::Injected { key, .. }) = &value {
+                    resolved_via = Some(format!("${{{key}}}"));
+                }
+                // Not a literal or constant: maybe data flow knows.
+                let value = value.or_else(|| {
+                    let flowed = self.flow_value(&arg, scope)?;
+                    resolved_via = Some(arg.raw.clone());
+                    Some(flowed)
+                });
+                Arg {
+                    resolved_via: value.as_ref().and(resolved_via),
+                    value: value.unwrap_or(ArgValue::Unknown),
+                    raw: arg.raw,
+                    location: arg.location,
+                }
+            })
             .collect()
     }
 
@@ -191,7 +204,12 @@ impl JvmFile {
     }
 
     /// `Owner.NAME` or `this.NAME`, for owners declared in this file.
-    fn member_constant(&self, scope: ScopeId, owner: &str, name: &str) -> Option<ArgValue> {
+    pub(super) fn member_constant(
+        &self,
+        scope: ScopeId,
+        owner: &str,
+        name: &str,
+    ) -> Option<ArgValue> {
         if owner == "this" {
             return self.constant(scope, name);
         }

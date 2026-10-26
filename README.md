@@ -273,7 +273,7 @@ the same findings.
 | Covered today | Not yet |
 |---|---|
 | JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | Groovy and Scala |
-| BouncyCastle lightweight API (engines, signers, generators) and PKIX certificate signing (`JcaContentSignerBuilder`) | `@ConfigurationProperties` binding; values passed through other methods (needs data-flow analysis) |
+| BouncyCastle lightweight API (engines, signers, generators) and PKIX certificate signing (`JcaContentSignerBuilder`) | `@ConfigurationProperties` binding; values passed between files (data flow covers one file today) |
 | JWT/JOSE: jjwt (0.11 and 0.12), Nimbus JOSE + JWT, Auth0 java-jwt | Algorithms chosen at runtime, e.g. from a remote JWKS |
 | Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Quarkus and Micronaut configuration keys |
 | Spring Boot config: `jws-algorithms`, `public-key-location`, TLS cipher suites (`*.ssl.ciphers`); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Compiled `.jar` dependencies |
@@ -287,6 +287,7 @@ the same findings.
 | Google Tink: predefined parameters, legacy key templates, `KeyTemplates.get("ECDSA_P256")` | |
 | Android Keystore (`KeyProperties.KEY_ALGORITHM_RSA/EC`) | |
 | Algorithm names as literals, same-file `final` constants, enum/static constants and static imports | |
+| Data flow within a file: variables, fields set in constructors, parameters fed by calls in the file, returned values (`switch`/`when` mappings), concatenations and templates, `?:`/`if` branches. Findings show the path from the literal to the use | Calls between files; values that depend on the order of execution |
 | Kotlin idioms: constructor calls without `new`, `val` / `const val` / `companion object` constants, member imports, `@Value` on constructor parameters, scope functions (`apply`, `run`, `with`, `also`, `let`) | Kotlin extension functions that wrap crypto (needs data flow) |
 
 ## Rules

@@ -74,3 +74,68 @@ fn decode(body: &str, raw: bool) -> Option<String> {
     }
     Some(out)
 }
+
+/// One part of a string template.
+#[derive(Debug, PartialEq)]
+pub(super) enum TemplatePart {
+    Text(String),
+    /// `$name` or `${name}`.
+    Name(String),
+    /// `${expression}`.
+    Unknown,
+}
+
+/// The parts of a string literal with interpolations, read from its text
+/// like [`string_value`]: `"$alg/ECB/${padding}"` -> name, text, name.
+pub(super) fn template_parts(node: Node<'_>, src: &str) -> Option<Vec<TemplatePart>> {
+    let raw = node.kind() == "multiline_string_literal";
+    let quote = if raw { "\"\"\"" } else { "\"" };
+    let body = text(node, src).strip_prefix(quote)?.strip_suffix(quote)?;
+    let mut parts = Vec::new();
+    let mut chunk = String::new();
+    let mut chars = body.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '\\' if !raw => {
+                chunk.push(c);
+                chunk.extend(chars.next());
+            }
+            '$' if chars.peek() == Some(&'{') => {
+                chars.next();
+                let inner: String = chars.by_ref().take_while(|c| *c != '}').collect();
+                flush(&mut chunk, &mut parts, raw)?;
+                parts.push(if is_identifier(inner.trim()) {
+                    TemplatePart::Name(inner.trim().to_owned())
+                } else {
+                    TemplatePart::Unknown
+                });
+            }
+            '$' if chars.peek().is_some_and(|n| n.is_alphabetic() || *n == '_') => {
+                flush(&mut chunk, &mut parts, raw)?;
+                let mut name = String::new();
+                while let Some(n) = chars.next_if(|n| n.is_alphanumeric() || *n == '_') {
+                    name.push(n);
+                }
+                parts.push(TemplatePart::Name(name));
+            }
+            _ => chunk.push(c),
+        }
+    }
+    flush(&mut chunk, &mut parts, raw)?;
+    Some(parts)
+}
+
+fn flush(chunk: &mut String, parts: &mut Vec<TemplatePart>, raw: bool) -> Option<()> {
+    if !chunk.is_empty() {
+        parts.push(TemplatePart::Text(decode(chunk, raw)?));
+        chunk.clear();
+    }
+    Some(())
+}
+
+fn is_identifier(text: &str) -> bool {
+    text.chars()
+        .next()
+        .is_some_and(|c| c.is_alphabetic() || c == '_')
+        && text.chars().all(|c| c.is_alphanumeric() || c == '_')
+}

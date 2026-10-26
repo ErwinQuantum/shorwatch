@@ -7,15 +7,18 @@
 //! into the unit's facts, once declarations made after their use are known.
 //!
 //! - [`model`]: what phase one records;
-//! - [`resolve`]: phase two, names to types, constant and injected values.
+//! - [`resolve`]: phase two, names to types, constant and injected values;
+//! - [`flow`]: phase two, values that reach an argument through variables,
+//!   parameters and returns of this file.
 
 use std::collections::{HashMap, HashSet};
 
 use shorwatch_core::Language;
 use shorwatch_core::ir::{Location, ScopeId, SourceUnit};
 
-pub(crate) use model::{ArgSource, Pending, PendingArg, Receiver, Symbol};
+pub(crate) use model::{ArgSource, Assignment, LocalCall, Pending, PendingArg, Receiver, Symbol};
 
+mod flow;
 mod model;
 mod resolve;
 
@@ -39,6 +42,14 @@ pub(crate) struct JvmFile {
     /// Methods declared in this file, which shadow imported ones.
     pub(crate) methods: HashSet<String>,
     pub(crate) symbols: HashMap<(ScopeId, String), Symbol>,
+    /// Assignments and non-constant initializers, for data flow.
+    pub(crate) assignments: Vec<Assignment>,
+    /// Parameter names of each method scope, in order.
+    pub(crate) params: HashMap<ScopeId, Vec<String>>,
+    /// `return` values (and Kotlin expression bodies) by method scope.
+    pub(crate) returns: Vec<(ScopeId, PendingArg)>,
+    /// Calls that may target a method of this file, gathered in phase two.
+    local_calls: Vec<LocalCall>,
     pending: Vec<(Pending, ScopeId, Location)>,
 }
 
@@ -53,6 +64,10 @@ impl JvmFile {
             module_imports: false,
             methods: HashSet::new(),
             symbols: HashMap::new(),
+            assignments: Vec::new(),
+            params: HashMap::new(),
+            returns: Vec::new(),
+            local_calls: Vec::new(),
             pending: Vec::new(),
         }
     }
@@ -62,10 +77,16 @@ impl JvmFile {
     }
 
     /// The symbol `name` refers to from `scope`, searching enclosing scopes.
-    pub(crate) fn lookup(&self, mut scope: ScopeId, name: &str) -> Option<&Symbol> {
+    pub(crate) fn lookup(&self, scope: ScopeId, name: &str) -> Option<&Symbol> {
+        let declared = self.lookup_scope(scope, name)?;
+        self.symbols.get(&(declared, name.to_owned()))
+    }
+
+    /// The scope that declares the `name` visible from `scope`.
+    pub(crate) fn lookup_scope(&self, mut scope: ScopeId, name: &str) -> Option<ScopeId> {
         loop {
-            if let Some(symbol) = self.symbols.get(&(scope, name.to_owned())) {
-                return Some(symbol);
+            if self.symbols.contains_key(&(scope, name.to_owned())) {
+                return Some(scope);
             }
             scope = self.unit.scope(scope).parent?;
         }

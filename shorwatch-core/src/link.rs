@@ -43,11 +43,23 @@ pub fn link(units: &mut [SourceUnit]) {
                 _ => continue,
             };
             for arg in args {
-                if let ArgValue::Injected { key, resolved, .. } = &mut arg.value {
-                    *resolved = lookup(properties, key);
-                }
+                resolve(&mut arg.value, properties);
             }
         }
+    }
+}
+
+/// Injected values, also among data-flow candidates (a `@Value` parameter
+/// passed on to another method).
+fn resolve(value: &mut ArgValue, properties: &Properties) {
+    match value {
+        ArgValue::Injected { key, resolved, .. } => *resolved = lookup(properties, key),
+        ArgValue::OneOf(candidates) => {
+            for candidate in candidates {
+                resolve(&mut candidate.value, properties);
+            }
+        }
+        _ => {}
     }
 }
 

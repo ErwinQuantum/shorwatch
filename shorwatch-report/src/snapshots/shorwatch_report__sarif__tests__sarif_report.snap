@@ -292,9 +292,76 @@ expression: render(&scan())
                   "startLine": 3,
                   "startColumn": 16,
                   "endLine": 3,
-                  "endColumn": 58
+                  "endColumn": 55
                 }
               }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "src/test/java/com/acme/auth/SignerTest.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 7,
+                            "startColumn": 24,
+                            "endLine": 7,
+                            "endColumn": 29
+                          }
+                        },
+                        "message": {
+                          "text": "\"RSA\" is written here"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "src/test/java/com/acme/auth/SignerTest.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 7,
+                            "startColumn": 24,
+                            "endLine": 7,
+                            "endColumn": 29
+                          }
+                        },
+                        "message": {
+                          "text": "passed as algorithm to fixture(...)"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "src/test/java/com/acme/auth/SignerTest.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 3,
+                            "startColumn": 16,
+                            "endLine": 3,
+                            "endColumn": 55
+                          }
+                        },
+                        "message": {
+                          "text": "used here"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           ],
           "properties": {

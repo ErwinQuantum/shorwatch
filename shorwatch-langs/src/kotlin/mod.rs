@@ -29,11 +29,13 @@ use shorwatch_core::Language;
 use shorwatch_core::ir::{ArgValue, FactKind, Location, ScopeId, ScopeKind, SourceUnit};
 use tree_sitter::{Node, Parser};
 
-use crate::jvm::{ArgSource, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase};
+use crate::jvm::{
+    ArgSource, Assignment, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase,
+};
 use crate::{Frontend, LangError, span};
-use literals::{int_value, string_value};
+use literals::{TemplatePart, int_value, string_value, template_parts};
 use syntax::{
-    child_of_kind, declared_type, enclosing_calls, has_child, is_name_path, is_value,
+    branch_value, child_of_kind, declared_type, enclosing_calls, has_child, is_name_path, is_value,
     looks_like_type, name_path, navigation_parts, text,
 };
 
@@ -175,6 +177,25 @@ impl<'s> Lowering<'s> {
                 self.declare_parameters(node, scope);
                 Some(scope)
             }
+            // `fun f() = expression`: an expression body is a return.
+            "function_body" => {
+                if let Some(value) = node.named_child(0).filter(|v| v.kind() != "block") {
+                    let value = self.pending(value);
+                    self.file.returns.push((scope, value));
+                }
+                Some(scope)
+            }
+            "return_expression" => {
+                if let Some(value) = node.named_child(0) {
+                    let value = self.pending(value);
+                    self.file.returns.push((scope, value));
+                }
+                Some(scope)
+            }
+            "assignment" => {
+                self.assign(node, scope);
+                Some(scope)
+            }
             "call_expression" => {
                 self.call(node, scope);
                 Some(scope)
@@ -256,6 +277,15 @@ impl<'s> Lowering<'s> {
                 .flatten()
         });
         let origin = value.and_then(|v| self.origin(v, scope));
+        if let (None, Some(value)) = (&constant, value) {
+            self.file.assignments.push(Assignment {
+                scope,
+                name: name.to_owned(),
+                field: false,
+                value: self.pending(value),
+                location: self.location(node),
+            });
+        }
         self.file.symbols.insert(
             (scope, name.to_owned()),
             Symbol {
@@ -311,6 +341,10 @@ impl<'s> Lowering<'s> {
                 "parameter" => {
                     let injected = annotations.take().and_then(|m| self.value_annotation(m));
                     self.declare(child, scope, injected);
+                    if let Some(name) = child_of_kind(child, "identifier") {
+                        let name = self.text(name).to_owned();
+                        self.file.params.entry(scope).or_default().push(name);
+                    }
                 }
                 _ => {}
             }
@@ -609,6 +643,37 @@ impl<'s> Lowering<'s> {
         None
     }
 
+    /// `name = value` or `this.name = value`, for data flow.
+    fn assign(&mut self, node: Node<'_>, scope: ScopeId) {
+        let (Some(left), Some(right)) = (
+            node.child_by_field_name("left"),
+            node.child_by_field_name("right"),
+        ) else {
+            return;
+        };
+        // Compound assignments (`+=`) are not values of their own.
+        let mut cursor = node.walk();
+        let is_plain = node
+            .children(&mut cursor)
+            .any(|c| !c.is_named() && self.text(c) == "=");
+        let target = match left.kind() {
+            "identifier" => Some((self.text(left), false)),
+            "navigation_expression" => navigation_parts(left)
+                .filter(|(owner, _)| owner.kind() == "this_expression")
+                .map(|(_, name)| (self.text(name), true)),
+            _ => None,
+        };
+        if let (true, Some((name, field))) = (is_plain, target) {
+            self.file.assignments.push(Assignment {
+                scope,
+                name: name.to_owned(),
+                field,
+                value: self.pending(right),
+                location: self.location(node),
+            });
+        }
+    }
+
     fn args(&self, node: Node<'_>) -> Vec<PendingArg> {
         let Some(list) = child_of_kind(node, "value_arguments") else {
             return Vec::new();
@@ -618,26 +683,112 @@ impl<'s> Lowering<'s> {
             .filter(|a| a.kind() == "value_argument")
             // `name = value`: the label is not the value.
             .filter_map(|a| a.named_child(a.named_child_count().checked_sub(1)?))
-            .map(|arg| {
-                let source = match (self.literal(arg), arg.kind()) {
-                    (Some(value), _) => ArgSource::Value(value),
-                    (None, "identifier") => ArgSource::Name(self.text(arg).to_owned()),
-                    (None, "navigation_expression") => match navigation_parts(arg) {
-                        Some((owner, name)) if is_name_path(owner) => ArgSource::Member {
-                            owner: name_path(owner, self.src),
-                            name: self.text(name).to_owned(),
-                        },
-                        _ => ArgSource::Value(ArgValue::Unknown),
-                    },
-                    _ => ArgSource::Value(ArgValue::Unknown),
-                };
-                PendingArg {
-                    source,
-                    raw: self.text(arg).to_owned(),
-                    location: self.location(arg),
-                }
-            })
+            .map(|arg| self.pending(arg))
             .collect()
+    }
+
+    fn pending(&self, node: Node<'_>) -> PendingArg {
+        PendingArg {
+            source: self.source(node),
+            raw: self.text(node).to_owned(),
+            location: self.location(node),
+        }
+    }
+
+    /// What an expression's value depends on, for phase two to resolve.
+    fn source(&self, node: Node<'_>) -> ArgSource {
+        if let Some(value) = self.literal(node) {
+            return ArgSource::Value(value);
+        }
+        let unknown = ArgSource::Value(ArgValue::Unknown);
+        let mut cursor = node.walk();
+        match node.kind() {
+            "string_literal" | "multiline_string_literal" => {
+                let Some(parts) = template_parts(node, self.src) else {
+                    return unknown;
+                };
+                let location = self.location(node);
+                ArgSource::Concat(
+                    parts
+                        .into_iter()
+                        .map(|part| {
+                            let (source, raw) = match part {
+                                TemplatePart::Text(text) => {
+                                    (ArgSource::Value(ArgValue::Str(text.clone())), text)
+                                }
+                                TemplatePart::Name(name) => (ArgSource::Name(name.clone()), name),
+                                TemplatePart::Unknown => {
+                                    (ArgSource::Value(ArgValue::Unknown), String::new())
+                                }
+                            };
+                            PendingArg {
+                                source,
+                                raw,
+                                location,
+                            }
+                        })
+                        .collect(),
+                )
+            }
+            "identifier" => ArgSource::Name(self.text(node).to_owned()),
+            "navigation_expression" => match navigation_parts(node) {
+                Some((owner, name)) if owner.kind() == "this_expression" => ArgSource::Member {
+                    owner: "this".to_owned(),
+                    name: self.text(name).to_owned(),
+                },
+                Some((owner, name)) if is_name_path(owner) => ArgSource::Member {
+                    owner: name_path(owner, self.src),
+                    name: self.text(name).to_owned(),
+                },
+                _ => unknown,
+            },
+            "parenthesized_expression" => node
+                .named_child(0)
+                .map_or(unknown, |inner| self.source(inner)),
+            "binary_expression"
+                if node
+                    .children(&mut cursor)
+                    .any(|c| !c.is_named() && self.text(c) == "+") =>
+            {
+                let parts = ["left", "right"]
+                    .iter()
+                    .filter_map(|f| node.child_by_field_name(f))
+                    .map(|part| self.pending(part))
+                    .collect();
+                ArgSource::Concat(parts)
+            }
+            // `if (c) "RSA" else "EC"`: the branches after the condition.
+            "if_expression" => {
+                let condition = node.child_by_field_name("condition");
+                ArgSource::Choice(
+                    node.named_children(&mut cursor)
+                        .filter(|c| Some(*c) != condition)
+                        .map(|branch| self.pending(branch_value(branch)))
+                        .collect(),
+                )
+            }
+            // `when (x) { A -> "RSA"; else -> "EC" }`: each entry's value.
+            "when_expression" => ArgSource::Choice(
+                node.named_children(&mut cursor)
+                    .filter(|e| e.kind() == "when_entry")
+                    .filter_map(|e| e.named_child(e.named_child_count().checked_sub(1)?))
+                    .map(|value| self.pending(branch_value(value)))
+                    .collect(),
+            ),
+            // A function of this file.
+            "call_expression" => match node.named_child(0) {
+                Some(callee)
+                    if callee.kind() == "identifier" && !looks_like_type(self.text(callee)) =>
+                {
+                    ArgSource::Call {
+                        method: self.text(callee).to_owned(),
+                        args: self.args(node),
+                    }
+                }
+                _ => unknown,
+            },
+            _ => unknown,
+        }
     }
 
     fn literal(&self, node: Node<'_>) -> Option<ArgValue> {

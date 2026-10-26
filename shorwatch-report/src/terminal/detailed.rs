@@ -57,6 +57,24 @@ pub(super) fn render(scan: &Scan, finding: &Finding) -> String {
     }
     let _ = writeln!(out, "{pad} {bar} {}", paint(&finding.title, bold()));
 
+    // Where the value comes from, step by step, when it is written elsewhere.
+    for (index, step) in finding.flow.iter().enumerate() {
+        let label = if index == 0 { "value: " } else { "       " };
+        let _ = writeln!(
+            out,
+            "{pad} {} {label}{} {}",
+            if index == 0 { eq.clone() } else { " ".into() },
+            paint(
+                format!(
+                    "{}:{}",
+                    step.location.start.line, step.location.start.column
+                ),
+                accent()
+            ),
+            step.note
+        );
+    }
+
     if let Some(evidence) = &finding.hybrid_evidence {
         let _ = writeln!(
             out,

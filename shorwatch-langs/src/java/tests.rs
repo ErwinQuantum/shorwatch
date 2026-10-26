@@ -103,7 +103,9 @@ fn resolves_final_constants_declared_after_use() {
         .map(|(_, _, a)| a[0].clone())
         .collect();
     assert_eq!(values[1], ArgValue::Str("RSA/ECB/PKCS1Padding".into()));
-    assert_eq!(values[2], ArgValue::Unknown);
+    // Not a constant, but data flow knows its initializer.
+    assert_eq!(values[2].texts(), ["RSA"]);
+    assert!(matches!(values[2], ArgValue::OneOf(_)));
 }
 
 #[test]

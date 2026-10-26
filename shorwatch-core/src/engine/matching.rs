@@ -1,11 +1,20 @@
 //! Whether a compiled pattern matches one fact.
 
-use crate::ir::{Arg, Fact, FactKind};
+use crate::ir::{Arg, ArgValue, Fact, FactKind, FlowStep};
 use crate::rule::{CompiledArg, CompiledPattern};
 
 pub(super) struct Match<'a> {
     /// The argument the pattern constrained, if it constrained one.
     pub(super) arg: Option<&'a Arg>,
+    /// The path of the matched value, when data flow resolved it.
+    pub(super) flow: Vec<FlowStep>,
+}
+
+impl Match<'_> {
+    const NONE: Self = Self {
+        arg: None,
+        flow: Vec::new(),
+    };
 }
 
 pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Option<Match<'a>> {
@@ -44,7 +53,7 @@ pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Op
                 name: field,
             },
         ) => {
-            return (actual.is(owner) && optional(name, field)).then_some(Match { arg: None });
+            return (actual.is(owner) && optional(name, field)).then_some(Match::NONE);
         }
         (
             CompiledPattern::Literal { value, unless_call },
@@ -56,19 +65,34 @@ pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Op
             let excluded = unless_call
                 .as_ref()
                 .is_some_and(|re| calls.iter().any(|call| re.is_match(call)));
-            return (value.is_match(literal) && !excluded).then_some(Match { arg: None });
+            return (value.is_match(literal) && !excluded).then_some(Match::NONE);
         }
         (CompiledPattern::Property { key, value }, FactKind::Property { key: k, value: v }) => {
-            return (key.is_match(k) && optional(value, v)).then_some(Match { arg: None });
+            return (key.is_match(k) && optional(value, v)).then_some(Match::NONE);
         }
         _ => return None,
     };
 
     let Some(arg_pattern) = arg_pattern else {
-        return Some(Match { arg: None });
+        return Some(Match::NONE);
     };
     let arg = args.get(arg_pattern.index)?;
-    arg_matches(arg_pattern, arg).then_some(Match { arg: Some(arg) })
+    arg_matches(arg_pattern, arg).then(|| Match {
+        arg: Some(arg),
+        flow: matched_flow(arg_pattern, arg),
+    })
+}
+
+/// The path of the first data-flow candidate that matches.
+fn matched_flow(pattern: &CompiledArg, arg: &Arg) -> Vec<FlowStep> {
+    let ArgValue::OneOf(candidates) = &arg.value else {
+        return Vec::new();
+    };
+    candidates
+        .iter()
+        .find(|c| c.value.texts().iter().any(|t| pattern.regex.is_match(t)))
+        .map(|c| c.flow.clone())
+        .unwrap_or_default()
 }
 
 fn arg_matches(pattern: &CompiledArg, arg: &Arg) -> bool {

@@ -55,6 +55,7 @@ fn build_finding(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact, matched: M
         path: unit.path().to_owned(),
         role: unit.role(),
         location: fact.location,
+        flow: matched.flow.clone(),
         hybrid_evidence,
         fix: suggested_fix(rule, &matched),
         crypto: spec.crypto.clone(),

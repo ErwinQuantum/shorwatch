@@ -13,7 +13,7 @@ src/main/resources/application.yml
       4:24   HIGH      RSA (JOSE/JWT)  vulnerable           jws-algorithms: [RS256]
 
 src/test/java/com/acme/auth/SignerTest.java
-      3:16   HIGH      RSA             vulnerable     test  return KeyPairGenerator.getInstance("RSA").generateKeyP…
+      3:16   HIGH      RSA             vulnerable     test  return KeyPairGenerator.getInstance(algorithm).generate…
 
  Summary  5 findings in 4 files (12 scanned)
           4 vulnerable · 1 in transition · 1 auto-fixable

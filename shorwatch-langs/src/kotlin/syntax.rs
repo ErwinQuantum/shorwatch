@@ -114,6 +114,16 @@ pub(super) fn text<'s>(node: Node<'_>, src: &'s str) -> &'s str {
     &src[node.byte_range()]
 }
 
+/// The value of an `if` branch or `when` entry body: its last expression.
+pub(super) fn branch_value(node: Node<'_>) -> Node<'_> {
+    match node.kind() {
+        "control_structure_body" | "block" | "statements" => node
+            .named_child(node.named_child_count().saturating_sub(1))
+            .map_or(node, branch_value),
+        _ => node,
+    }
+}
+
 /// The methods of the calls `literal` is an argument of, innermost first,
 /// up to the enclosing block or lambda.
 pub(super) fn enclosing_calls(literal: Node<'_>, src: &str) -> Vec<String> {

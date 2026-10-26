@@ -20,7 +20,9 @@ use shorwatch_core::Language;
 use shorwatch_core::ir::{ArgValue, FactKind, Location, ScopeId, ScopeKind, SourceUnit};
 use tree_sitter::{Node, Parser};
 
-use crate::jvm::{ArgSource, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase};
+use crate::jvm::{
+    ArgSource, Assignment, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase,
+};
 use crate::{Frontend, LangError, span};
 use literals::{int_value, string_value};
 use syntax::{enclosing_calls, has_modifier, is_name_path, is_name_slot, type_name};
@@ -147,6 +149,18 @@ impl<'s> Lowering<'s> {
                     node.child_by_field_name("type"),
                     self.field_text(node, "name"),
                 ) {
+                    // A typed lambda's parameters are not the method's.
+                    let of_method = node.parent().and_then(|p| p.parent()).is_some_and(|d| {
+                        d.kind().ends_with("constructor_declaration")
+                            || d.kind() == "method_declaration"
+                    });
+                    if of_method {
+                        self.file
+                            .params
+                            .entry(scope)
+                            .or_default()
+                            .push(name.to_owned());
+                    }
                     let symbol = Symbol {
                         ty: Some(type_name(self.text(ty))),
                         constant: self.injected(node),
@@ -155,6 +169,17 @@ impl<'s> Lowering<'s> {
                     self.file.symbols.insert((scope, name.to_owned()), symbol);
                 }
                 None
+            }
+            "assignment_expression" => {
+                self.assign(node, scope);
+                Some(scope)
+            }
+            "return_statement" => {
+                if let Some(value) = node.named_child(0) {
+                    let value = self.pending(value);
+                    self.file.returns.push((scope, value));
+                }
+                Some(scope)
             }
             "method_invocation" => {
                 self.call(node, scope);
@@ -248,6 +273,15 @@ impl<'s> Lowering<'s> {
                 (None, false) => None,
             };
             let origin = value.and_then(|v| self.origin(v));
+            if let (None, Some(value)) = (&constant, value) {
+                self.file.assignments.push(Assignment {
+                    scope,
+                    name: name.to_owned(),
+                    field: false,
+                    value: self.pending(value),
+                    location: self.location(declarator),
+                });
+            }
             self.file.symbols.insert(
                 (scope, name.to_owned()),
                 Symbol {
@@ -368,6 +402,37 @@ impl<'s> Lowering<'s> {
         None
     }
 
+    /// `name = value` or `this.name = value`, for data flow.
+    fn assign(&mut self, node: Node<'_>, scope: ScopeId) {
+        let is_plain = node
+            .child_by_field_name("operator")
+            .is_some_and(|op| self.text(op) == "=");
+        let (Some(left), Some(right)) = (
+            node.child_by_field_name("left"),
+            node.child_by_field_name("right"),
+        ) else {
+            return;
+        };
+        let target = match left.kind() {
+            "identifier" => Some((self.text(left), false)),
+            "field_access" => left
+                .child_by_field_name("object")
+                .filter(|o| o.kind() == "this")
+                .and_then(|_| self.field_text(left, "field"))
+                .map(|name| (name, true)),
+            _ => None,
+        };
+        if let (true, Some((name, field))) = (is_plain, target) {
+            self.file.assignments.push(Assignment {
+                scope,
+                name: name.to_owned(),
+                field,
+                value: self.pending(right),
+                location: self.location(node),
+            });
+        }
+    }
+
     fn args(&self, node: Node<'_>) -> Vec<PendingArg> {
         let Some(list) = node.child_by_field_name("arguments") else {
             return Vec::new();
@@ -375,29 +440,100 @@ impl<'s> Lowering<'s> {
         let mut cursor = list.walk();
         list.named_children(&mut cursor)
             .filter(|arg| !matches!(arg.kind(), "line_comment" | "block_comment"))
-            .map(|arg| {
-                let source = match (self.literal(arg), arg.kind()) {
-                    (Some(value), _) => ArgSource::Value(value),
-                    (None, "identifier") => ArgSource::Name(self.text(arg).to_owned()),
-                    (None, "field_access") => match (
-                        arg.child_by_field_name("object"),
-                        self.field_text(arg, "field"),
-                    ) {
-                        (Some(owner), Some(name)) => ArgSource::Member {
-                            owner: self.text(owner).to_owned(),
-                            name: name.to_owned(),
-                        },
-                        _ => ArgSource::Value(ArgValue::Unknown),
-                    },
-                    _ => ArgSource::Value(ArgValue::Unknown),
-                };
-                PendingArg {
-                    source,
-                    raw: self.text(arg).to_owned(),
-                    location: self.location(arg),
-                }
-            })
+            .map(|arg| self.pending(arg))
             .collect()
+    }
+
+    fn pending(&self, node: Node<'_>) -> PendingArg {
+        PendingArg {
+            source: self.source(node),
+            raw: self.text(node).to_owned(),
+            location: self.location(node),
+        }
+    }
+
+    /// What an expression's value depends on, for phase two to resolve.
+    fn source(&self, node: Node<'_>) -> ArgSource {
+        if let Some(value) = self.literal(node) {
+            return ArgSource::Value(value);
+        }
+        let mut cursor = node.walk();
+        match node.kind() {
+            "identifier" => ArgSource::Name(self.text(node).to_owned()),
+            "field_access" => match (
+                node.child_by_field_name("object"),
+                self.field_text(node, "field"),
+            ) {
+                (Some(owner), Some(name)) => ArgSource::Member {
+                    owner: self.text(owner).to_owned(),
+                    name: name.to_owned(),
+                },
+                _ => ArgSource::Value(ArgValue::Unknown),
+            },
+            "parenthesized_expression" => node
+                .named_child(0)
+                .map_or(ArgSource::Value(ArgValue::Unknown), |inner| {
+                    self.source(inner)
+                }),
+            "binary_expression"
+                if node
+                    .child_by_field_name("operator")
+                    .is_some_and(|op| self.text(op) == "+") =>
+            {
+                let parts = ["left", "right"]
+                    .iter()
+                    .filter_map(|f| node.child_by_field_name(f))
+                    .map(|part| self.pending(part))
+                    .collect();
+                ArgSource::Concat(parts)
+            }
+            "ternary_expression" => ArgSource::Choice(
+                ["consequence", "alternative"]
+                    .iter()
+                    .filter_map(|f| node.child_by_field_name(f))
+                    .map(|branch| self.pending(branch))
+                    .collect(),
+            ),
+            // `switch (x) { case A -> "RSA"; ... }`: the value of each rule.
+            "switch_expression" => {
+                let rules = node
+                    .child_by_field_name("body")
+                    .map(|body| {
+                        body.named_children(&mut cursor)
+                            .filter(|r| r.kind() == "switch_rule")
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                ArgSource::Choice(
+                    rules
+                        .into_iter()
+                        .filter_map(|rule| {
+                            let body =
+                                rule.named_child(rule.named_child_count().checked_sub(1)?)?;
+                            (body.kind() == "expression_statement")
+                                .then(|| body.named_child(0))
+                                .flatten()
+                        })
+                        .map(|value| self.pending(value))
+                        .collect(),
+                )
+            }
+            // A method of this file (no receiver, or `this`).
+            "method_invocation"
+                if node
+                    .child_by_field_name("object")
+                    .is_none_or(|o| o.kind() == "this") =>
+            {
+                match self.field_text(node, "name") {
+                    Some(method) => ArgSource::Call {
+                        method: method.to_owned(),
+                        args: self.args(node),
+                    },
+                    None => ArgSource::Value(ArgValue::Unknown),
+                }
+            }
+            _ => ArgSource::Value(ArgValue::Unknown),
+        }
     }
 
     fn literal(&self, node: Node<'_>) -> Option<ArgValue> {

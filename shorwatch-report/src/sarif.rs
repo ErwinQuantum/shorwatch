@@ -117,7 +117,9 @@ fn result(finding: &Finding, rule_index: usize) -> SarifResult<'_> {
                 artifact_location: artifact.clone(),
                 region: region(&finding.location),
             },
+            message: None,
         }],
+        code_flows: code_flows(finding, &artifact),
         fixes: finding
             .fix
             .iter()
@@ -147,6 +149,31 @@ fn result(finding: &Finding, rule_index: usize) -> SarifResult<'_> {
             },
         },
     }
+}
+
+/// The data-flow path as one thread flow: each step, then the use.
+fn code_flows(finding: &Finding, artifact: &Artifact) -> Vec<CodeFlow> {
+    if finding.flow.is_empty() {
+        return Vec::new();
+    }
+    let step = |location: &Location, note: &str| ThreadFlowLocation {
+        location: ResultLocation {
+            physical_location: PhysicalLocation {
+                artifact_location: artifact.clone(),
+                region: region(location),
+            },
+            message: Some(Text { text: note.into() }),
+        },
+    };
+    let locations = finding
+        .flow
+        .iter()
+        .map(|s| step(&s.location, &s.note))
+        .chain([step(&finding.location, "used here")])
+        .collect();
+    vec![CodeFlow {
+        thread_flows: [ThreadFlow { locations }],
+    }]
 }
 
 fn region(location: &Location) -> Region {
@@ -254,6 +281,8 @@ struct SarifResult<'a> {
     message: Text,
     locations: [ResultLocation; 1],
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    code_flows: Vec<CodeFlow>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     fixes: Vec<Fix>,
     properties: ResultProperties<'a>,
 }
@@ -262,6 +291,24 @@ struct SarifResult<'a> {
 #[serde(rename_all = "camelCase")]
 struct ResultLocation {
     physical_location: PhysicalLocation,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    message: Option<Text>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CodeFlow {
+    thread_flows: [ThreadFlow; 1],
+}
+
+#[derive(Serialize)]
+struct ThreadFlow {
+    locations: Vec<ThreadFlowLocation>,
+}
+
+#[derive(Serialize)]
+struct ThreadFlowLocation {
+    location: ResultLocation,
 }
 
 #[derive(Serialize)]

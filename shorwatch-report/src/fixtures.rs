@@ -1,7 +1,8 @@
 //! A small, realistic scan shared by the renderer tests: findings in Java and
-//! YAML, one in transition, one with a fix, one in test code.
+//! YAML, one in transition, one with a fix, one in test code whose value
+//! comes through a parameter.
 
-use shorwatch_core::ir::{Location, Position};
+use shorwatch_core::ir::{FlowStep, Location, Position};
 use shorwatch_core::rule::{
     Category, CryptoFunction, CryptoProperties, Primitive, Reference, Severity,
 };
@@ -36,8 +37,12 @@ class Signer {
 
 const SIGNER_TEST: &str = "\
 class SignerTest {
-    KeyPair fixture() throws Exception {
-        return KeyPairGenerator.getInstance(\"RSA\").generateKeyPair();
+    KeyPair fixture(String algorithm) throws Exception {
+        return KeyPairGenerator.getInstance(algorithm).generateKeyPair();
+    }
+
+    KeyPair rsa() throws Exception {
+        return fixture(\"RSA\");
     }
 }
 ";
@@ -94,6 +99,7 @@ fn shor(rule_id: &str, algorithm: &str, path: &str, at: Location) -> Finding {
         path: path.into(),
         role: CodeRole::Production,
         location: at,
+        flow: Vec::new(),
         hybrid_evidence: None,
         fix: None,
         crypto: Some(crypto(Primitive::Pke, None, 0)),
@@ -153,7 +159,17 @@ pub(crate) fn scan() -> Scan {
     );
     let test = Finding {
         role: CodeRole::Test,
-        ..shor("jvm.jca.rsa", "RSA", signer_test, location(3, 16, 58))
+        flow: vec![
+            FlowStep {
+                location: location(7, 24, 29),
+                note: "\"RSA\" is written here".into(),
+            },
+            FlowStep {
+                location: location(7, 24, 29),
+                note: "passed as algorithm to fixture(...)".into(),
+            },
+        ],
+        ..shor("jvm.jca.rsa", "RSA", signer_test, location(3, 16, 55))
     };
 
     Scan {

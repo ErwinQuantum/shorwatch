@@ -14,7 +14,7 @@ mod tests;
 mod types;
 mod unit;
 
-pub use facts::{Arg, ArgValue, Fact, FactKind};
+pub use facts::{Arg, ArgValue, Candidate, Fact, FactKind, FlowStep};
 pub use language::{Language, Platform};
 pub use location::{Location, Position};
 pub use types::TypeRef;

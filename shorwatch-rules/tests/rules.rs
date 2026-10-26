@@ -28,6 +28,9 @@ struct Compact {
     hybrid_evidence: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     fix: Option<String>,
+    /// The data-flow path, one `line: note` per step.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    flow: Vec<String>,
 }
 
 impl From<Finding> for Compact {
@@ -42,6 +45,11 @@ impl From<Finding> for Compact {
             fix: f
                 .fix
                 .map(|fix| format!("{} @ {}", fix.replacement, fix.location.start.line)),
+            flow: f
+                .flow
+                .iter()
+                .map(|s| format!("{}: {}", s.location.start.line, s.note))
+                .collect(),
         }
     }
 }

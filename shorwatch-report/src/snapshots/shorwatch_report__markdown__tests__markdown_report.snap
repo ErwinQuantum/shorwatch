@@ -22,4 +22,4 @@ expression: render(&scan())
 | low | AES-128 | `src/main/java/com/acme/auth/AuthConfig.java:11` | vulnerable | `jvm.jca.aes-128` |
 | high | ECDSA | `src/main/java/com/acme/auth/Signer.java:3` | in transition | `jvm.jca.ecdsa` |
 | high | RSA (JOSE/JWT) | `src/main/resources/application.yml:4` | vulnerable | `config.spring-boot.jose-rsa` |
-| high | RSA | `src/test/java/com/acme/auth/SignerTest.java:3` | vulnerable (test code) | `jvm.jca.rsa` |
+| high | RSA | `src/test/java/com/acme/auth/SignerTest.java:3` (value from line 7) | vulnerable (test code) | `jvm.jca.rsa` |

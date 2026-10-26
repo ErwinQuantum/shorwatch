@@ -38,6 +38,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - `examples/`: one file per algorithm, a Spring Boot service (Java and Kotlin) and its reports in every format.
 - `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
 
+- Data flow within a file: an algorithm reaching the crypto API through a variable, a field, a parameter fed by a call in the same file, a method's return value, a concatenation or a conditional is resolved, and the finding carries its path (`flow`: where the value is written, then each assignment, call or return). Shown in the terminal, as SARIF `codeFlows`, in JSON and in Markdown. On the field-test projects: 9 new findings, all true positives.
+
 ### Changed
 - A type name without an import only matches types of the file's package, its on-demand imports and the implicit ones (`java.lang`, Kotlin's defaults); Java 25 `import module` keeps any match. Fixes same-package classes mistaken for library types (Keycloak's `KeyType` for Azure's).
 - The Spring Security RSA rule also covers `org.springframework.security.crypto.encrypt`, where Spring Security 6.3 moved spring-security-rsa.

@@ -51,14 +51,18 @@ langs/src/ jvm/{mod: JvmFile, model, resolve}  java/{mod: traversal, syntax, lit
   **imports count for the whole file**; literal markers also see config
   values. Match → `Status::InTransition`.
 - Every Shor rule must reference FIPS 203 or FIPS 204 (enforced by a test).
-- No general data flow yet: a value only resolves when it is a literal, a
-  same-file `final` constant, a static constant/import, or an `@Value`
-  field/parameter used *directly* as the argument. Likewise a receiver's
-  *origin* (`Call.receiver_origin`, the factory args of `x = T.getInstance(..)`)
-  comes only from the variable's own initializer (or a Kotlin scope-function
-  receiver). `origin` patterns let unknown origins match (no lost
-  detections). Anything else is `ArgValue::Unknown`. That is the future taint layer's job; don't hack around
-  it in rules.
+- Values resolve, in order: a literal, a same-file `final` constant, a static
+  constant/import, an `@Value` field/parameter used directly; otherwise
+  **in-file data flow** (`langs/src/jvm/flow.rs`): assignments (initializers
+  included), parameters fed by calls in the same file, returns of the file's
+  methods, concatenations, `?:`/`switch`/`if`/`when` branches. It yields
+  `ArgValue::OneOf` candidates, each with its `FlowStep` path, which becomes
+  `Finding::flow`. Context- and order-insensitive, bounded (depth 6, 16
+  candidates); overloaded targets and cycles stay unknown. Calls across
+  files are not followed yet. A receiver's *origin* (`Call.receiver_origin`)
+  still comes only from the variable's own initializer; `origin` patterns
+  let unknown origins match (no lost detections). Don't hack around missing
+  flow in rules.
 
 ### Frontends
 

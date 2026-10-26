@@ -159,14 +159,12 @@ fn resolves_val_constants_and_companion_members() {
     );
     let args: Vec<_> = calls(&unit).into_iter().map(|(_, _, args)| args).collect();
     assert_eq!(
-        args,
-        [
-            vec![str("RSA")],
-            vec![str("RSA")],
-            vec![str("DSA")],
-            vec![ArgValue::Unknown],
-        ]
+        args[..3],
+        [vec![str("RSA")], vec![str("RSA")], vec![str("DSA")]]
     );
+    // Not a constant, but data flow knows its initializer.
+    assert_eq!(args[3][0].texts(), ["EC"]);
+    assert!(matches!(args[3][0], ArgValue::OneOf(_)));
 }
 
 #[test]

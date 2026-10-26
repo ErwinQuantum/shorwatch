@@ -52,11 +52,15 @@ pub fn render(scan: &Scan) -> String {
     for f in &scan.findings {
         let _ = writeln!(
             out,
-            "| {} | {} | `{}:{}` | {} | `{}` |",
+            "| {} | {} | `{}:{}`{} | {} | `{}` |",
             severity_label(f.severity),
             cell(&f.algorithm),
             cell(&f.path),
             f.location.start.line,
+            match f.flow.first() {
+                Some(origin) => format!(" (value from line {})", origin.location.start.line),
+                None => String::new(),
+            },
             match f.role {
                 CodeRole::Production => status_label(f.status).to_owned(),
                 CodeRole::Test => format!("{} (test code)", status_label(f.status)),

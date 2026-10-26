@@ -18,8 +18,48 @@ pub enum ArgValue {
         default: Option<String>,
         resolved: Vec<String>,
     },
+    /// The values a variable, parameter or method result may hold, each with
+    /// the path it takes to the argument (data flow).
+    OneOf(Vec<Candidate>),
     /// Anything the frontend could not fold to a literal.
     Unknown,
+}
+
+impl ArgValue {
+    /// Texts that argument patterns are matched against: a pattern matches if
+    /// any of them does. Several for injected values set differently by
+    /// different config files (profiles), and for data-flow candidates.
+    pub fn texts(&self) -> Vec<String> {
+        match self {
+            ArgValue::Str(s) => vec![s.clone()],
+            ArgValue::Int(i) => vec![i.to_string()],
+            ArgValue::Injected {
+                default, resolved, ..
+            } if resolved.is_empty() => default.iter().cloned().collect(),
+            ArgValue::Injected { resolved, .. } => resolved.clone(),
+            ArgValue::OneOf(candidates) => {
+                candidates.iter().flat_map(|c| c.value.texts()).collect()
+            }
+            ArgValue::Unknown => Vec::new(),
+        }
+    }
+}
+
+/// A value an argument may take, and the path it takes to get there: where
+/// it is written, then each assignment, call or return it goes through.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+pub struct Candidate {
+    pub value: ArgValue,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub flow: Vec<FlowStep>,
+}
+
+/// One step of a value's path, such as `assigned to alg` or
+/// `passed as alg to sign(...)`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+pub struct FlowStep {
+    pub location: Location,
+    pub note: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -54,19 +94,9 @@ impl Arg {
         }
     }
 
-    /// Texts that argument patterns are matched against: a pattern matches if
-    /// any of them does. Several only for injected values set differently by
-    /// different config files (profiles).
+    /// See [`ArgValue::texts`].
     pub fn match_texts(&self) -> Vec<String> {
-        match &self.value {
-            ArgValue::Str(s) => vec![s.clone()],
-            ArgValue::Int(i) => vec![i.to_string()],
-            ArgValue::Injected {
-                default, resolved, ..
-            } if resolved.is_empty() => default.iter().cloned().collect(),
-            ArgValue::Injected { resolved, .. } => resolved.clone(),
-            ArgValue::Unknown => Vec::new(),
-        }
+        self.value.texts()
     }
 }
 

@@ -49,9 +49,11 @@ expression: "plain(&render(&scan(), Options::default()))"
  HIGH  RSA · jvm.jca.rsa · vulnerable · test code
   ──▶ src/test/java/com/acme/auth/SignerTest.java:3:16
    │
- 3 │         return KeyPairGenerator.getInstance("RSA").generateKeyPair();
-   │                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 3 │         return KeyPairGenerator.getInstance(algorithm).generateKeyPair();
+   │                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    │ RSA is broken by Shor's algorithm
+   = value: 7:24 "RSA" is written here
+            7:24 passed as algorithm to fixture(...)
    = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and
            ML-DSA (FIPS 204) for signatures; hybrid schemes keep classical security
            during the transition.

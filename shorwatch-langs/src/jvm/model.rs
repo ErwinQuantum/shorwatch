@@ -1,7 +1,7 @@
 //! What the traversal records before resolution: declared symbols and
 //! pending facts whose names are not resolved yet.
 
-use shorwatch_core::ir::{ArgValue, FactKind, Location};
+use shorwatch_core::ir::{ArgValue, FactKind, Location, ScopeId};
 
 /// What the file says about a name declared in some scope.
 #[derive(Debug, Default)]
@@ -36,11 +36,40 @@ pub(crate) enum ArgSource {
     Value(ArgValue),
     /// `m(NAME)`.
     Name(String),
-    /// `m(Owner.NAME)`.
+    /// `m(Owner.NAME)`, or `m(this.name)` with owner `this`.
     Member {
         owner: String,
         name: String,
     },
+    /// `a + b`, `"$a/ECB"`: the parts, all of which must be known.
+    Concat(Vec<PendingArg>),
+    /// `c ? a : b`, `switch`, `if` and `when` expressions: any branch.
+    Choice(Vec<PendingArg>),
+    /// `m(...)` or `this.m(...)`: what a method of this file returns.
+    Call {
+        method: String,
+        args: Vec<PendingArg>,
+    },
+}
+
+/// `name = value` (an initializer included), or `this.name = value` when
+/// `field`.
+#[derive(Debug)]
+pub(crate) struct Assignment {
+    pub(crate) scope: ScopeId,
+    pub(crate) name: String,
+    pub(crate) field: bool,
+    pub(crate) value: PendingArg,
+    pub(crate) location: Location,
+}
+
+/// A call to a method that may be declared in this file: no receiver, or
+/// `this`.
+#[derive(Debug)]
+pub(crate) struct LocalCall {
+    pub(crate) scope: ScopeId,
+    pub(crate) method: String,
+    pub(crate) args: Vec<PendingArg>,
 }
 
 #[derive(Debug, Clone)]
