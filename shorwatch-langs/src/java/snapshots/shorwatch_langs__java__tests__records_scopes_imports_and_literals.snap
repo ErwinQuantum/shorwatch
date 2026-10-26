@@ -1,6 +1,6 @@
 ---
-source: shorwatch-langs/src/java/tests.rs
-assertion_line: 134
+source: shorwatch-langs/src/java.rs
+assertion_line: 625
 expression: unit
 ---
 path: Test.java
@@ -26,12 +26,12 @@ facts:
     location:
       start:
         line: 2
-        column: 9
+        column: 13
       end:
         line: 2
-        column: 52
-      start_byte: 9
-      end_byte: 52
+        column: 56
+      start_byte: 13
+      end_byte: 56
   - kind:
       literal:
         value: ML-KEM-768
@@ -39,9 +39,9 @@ facts:
     location:
       start:
         line: 5
-        column: 39
+        column: 43
       end:
         line: 5
-        column: 51
-      start_byte: 139
-      end_byte: 151
+        column: 55
+      start_byte: 155
+      end_byte: 167

@@ -22,9 +22,13 @@ use tree_sitter::{Node, Parser, Point};
 
 use crate::{Frontend, LangError};
 use literals::{int_value, string_value};
+use model::{ArgSource, Pending, PendingArg, Receiver, Symbol};
+use syntax::{has_modifier, is_name_path, is_name_slot, starts_uppercase, type_name};
 
 mod literals;
+mod model;
 mod resolve;
+mod syntax;
 #[cfg(test)]
 mod tests;
 
@@ -52,64 +56,6 @@ impl Frontend for JavaFrontend {
             .ok_or_else(|| LangError::Parse(path.to_owned()))?;
         Ok(Lowering::new(path, source).run(tree.root_node()))
     }
-}
-
-/// What the file says about a name declared in some scope.
-#[derive(Debug, Default)]
-struct Symbol {
-    /// Declared (or, for `var`, inferred) type as written.
-    ty: Option<String>,
-    /// Literal initializer of a `final` declaration, or the property injected
-    /// by `@Value("${...}")`.
-    constant: Option<ArgValue>,
-}
-
-#[derive(Debug)]
-enum Receiver {
-    /// `x.m()`: a variable or a type name.
-    Name(String),
-    /// `a.b.C.m()` or `this.x.m()`.
-    Path(String),
-}
-
-#[derive(Debug)]
-enum ArgSource {
-    Value(ArgValue),
-    /// `m(NAME)`.
-    Name(String),
-    /// `m(Owner.NAME)`.
-    Member {
-        owner: String,
-        name: String,
-    },
-}
-
-#[derive(Debug)]
-struct PendingArg {
-    source: ArgSource,
-    raw: String,
-    location: Location,
-}
-
-#[derive(Debug)]
-enum Pending {
-    Call {
-        receiver: Option<Receiver>,
-        method: String,
-        args: Vec<PendingArg>,
-    },
-    Construct {
-        ty: String,
-        args: Vec<PendingArg>,
-    },
-    /// `Owner.NAME`, where `Owner` may turn out to be a variable, not a type.
-    Field {
-        owner: String,
-        name: String,
-    },
-    /// A bare name that a static import may refer to, unless shadowed.
-    StaticMember(String),
-    Ready(FactKind),
 }
 
 struct Lowering<'s> {
@@ -481,43 +427,4 @@ impl<'s> Lowering<'s> {
             column: u32::try_from(column + 1).unwrap_or(u32::MAX),
         }
     }
-}
-
-fn has_modifier(node: Node<'_>, modifier: &str) -> bool {
-    let mut cursor = node.walk();
-    node.children(&mut cursor)
-        .filter(|c| c.kind() == "modifiers")
-        .any(|modifiers| {
-            let mut inner = modifiers.walk();
-            modifiers.children(&mut inner).any(|m| m.kind() == modifier)
-        })
-}
-
-/// `a`, `this.x`, `a.b.C`: nothing but names, so nothing inside to analyze.
-fn is_name_path(node: Node<'_>) -> bool {
-    match node.kind() {
-        "identifier" | "this" | "super" => true,
-        "field_access" => node.child_by_field_name("object").is_some_and(is_name_path),
-        _ => false,
-    }
-}
-
-/// Whether `node` is the name slot of its parent (a declaration, an invoked
-/// method, a selected field) rather than an expression with a value.
-fn is_name_slot(node: Node<'_>) -> bool {
-    node.parent().is_some_and(|parent| {
-        ["name", "field"]
-            .iter()
-            .any(|field| parent.child_by_field_name(field) == Some(node))
-    })
-}
-
-/// `Map<String, Cipher>[]` -> `Map`. Annotations and generics are dropped.
-fn type_name(written: &str) -> String {
-    let base = written.split(['<', '[']).next().unwrap_or(written);
-    base.split_whitespace().last().unwrap_or(base).to_owned()
-}
-
-fn starts_uppercase(name: &str) -> bool {
-    name.chars().next().is_some_and(char::is_uppercase)
 }

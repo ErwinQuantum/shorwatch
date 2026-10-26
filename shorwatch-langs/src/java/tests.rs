@@ -31,13 +31,13 @@ fn calls(unit: &SourceUnit) -> Vec<(Option<TypeRef>, String, Vec<ArgValue>)> {
 fn lowers_a_static_factory_call() {
     let unit = lower(
         r#"
-        import java.security.KeyPairGenerator;
-        class A {
-            void run() throws Exception {
-                KeyPairGenerator.getInstance("RSA");
+            import java.security.KeyPairGenerator;
+            class A {
+                void run() throws Exception {
+                    KeyPairGenerator.getInstance("RSA");
+                }
             }
-        }
-        "#,
+            "#,
     );
     assert_eq!(
         calls(&unit),
@@ -53,16 +53,16 @@ fn lowers_a_static_factory_call() {
 fn resolves_receiver_through_variable_type() {
     let unit = lower(
         r#"
-        import javax.crypto.KeyGenerator;
-        class A {
-            void run() throws Exception {
-                KeyGenerator kg = KeyGenerator.getInstance("AES");
-                kg.init(128);
-                var other = KeyGenerator.getInstance("AES");
-                other.init(256);
+            import javax.crypto.KeyGenerator;
+            class A {
+                void run() throws Exception {
+                    KeyGenerator kg = KeyGenerator.getInstance("AES");
+                    kg.init(128);
+                    var other = KeyGenerator.getInstance("AES");
+                    other.init(256);
+                }
             }
-        }
-        "#,
+            "#,
     );
     let init: Vec<_> = calls(&unit)
         .into_iter()
@@ -80,16 +80,16 @@ fn resolves_receiver_through_variable_type() {
 fn resolves_final_constants_declared_after_use() {
     let unit = lower(
         r#"
-        class A {
-            void run() throws Exception {
-                javax.crypto.Cipher.getInstance(TRANSFORMATION);
-                javax.crypto.Cipher.getInstance(A.TRANSFORMATION);
-                javax.crypto.Cipher.getInstance(mutable);
+            class A {
+                void run() throws Exception {
+                    javax.crypto.Cipher.getInstance(TRANSFORMATION);
+                    javax.crypto.Cipher.getInstance(A.TRANSFORMATION);
+                    javax.crypto.Cipher.getInstance(mutable);
+                }
+                private static final String TRANSFORMATION = "RSA/ECB/PKCS1Padding";
+                private String mutable = "RSA";
             }
-            private static final String TRANSFORMATION = "RSA/ECB/PKCS1Padding";
-            private String mutable = "RSA";
-        }
-        "#,
+            "#,
     );
     let FactKind::Call { args, .. } = &unit.facts()[0].kind else {
         panic!()
@@ -109,12 +109,12 @@ fn resolves_final_constants_declared_after_use() {
 fn comments_produce_no_facts() {
     let unit = lower(
         r#"
-        class A {
-            // KeyPairGenerator.getInstance("RSA");
-            /* Cipher.getInstance("RSA"); */
-            void run() {}
-        }
-        "#,
+            class A {
+                // KeyPairGenerator.getInstance("RSA");
+                /* Cipher.getInstance("RSA"); */
+                void run() {}
+            }
+            "#,
     );
     assert!(unit.facts().is_empty());
 }
@@ -123,13 +123,13 @@ fn comments_produce_no_facts() {
 fn records_scopes_imports_and_literals() {
     let unit = lower(
         r#"
-        import org.bouncycastle.pqc.crypto.mlkem.*;
-        class Outer {
-            class Inner {
-                String alg() { return "ML-KEM-768"; }
+            import org.bouncycastle.pqc.crypto.mlkem.*;
+            class Outer {
+                class Inner {
+                    String alg() { return "ML-KEM-768"; }
+                }
             }
-        }
-        "#,
+            "#,
     );
     insta::assert_yaml_snapshot!(unit);
 }
@@ -172,16 +172,16 @@ fn fields(unit: &SourceUnit) -> Vec<(TypeRef, String)> {
 fn records_static_field_reads() {
     let unit = lower(
         r#"
-        import com.nimbusds.jose.JWSAlgorithm;
-        import io.jsonwebtoken.Jwts;
-        class A {
-            void run() {
-                sign(JWSAlgorithm.RS256);
-                Jwts.SIG.ES256.keyPair().build();
-                sign(com.nimbusds.jose.JWEAlgorithm.RSA_OAEP_256);
+            import com.nimbusds.jose.JWSAlgorithm;
+            import io.jsonwebtoken.Jwts;
+            class A {
+                void run() {
+                    sign(JWSAlgorithm.RS256);
+                    Jwts.SIG.ES256.keyPair().build();
+                    sign(com.nimbusds.jose.JWEAlgorithm.RSA_OAEP_256);
+                }
             }
-        }
-        "#,
+            "#,
     );
     assert_eq!(
         fields(&unit),
@@ -206,13 +206,13 @@ fn records_static_field_reads() {
 fn instance_fields_are_not_static_reads() {
     let unit = lower(
         r#"
-        class A {
-            Config config;
-            void run(Options options) {
-                use(this.alg, config.alg, options.Alg, config.inner.Alg);
+            class A {
+                Config config;
+                void run(Options options) {
+                    use(this.alg, config.alg, options.Alg, config.inner.Alg);
+                }
             }
-        }
-        "#,
+            "#,
     );
     assert!(fields(&unit).is_empty(), "{:?}", fields(&unit));
 }
@@ -221,19 +221,19 @@ fn instance_fields_are_not_static_reads() {
 fn resolves_static_imports() {
     let unit = lower(
         r#"
-        import static com.nimbusds.jose.JWSAlgorithm.RS256;
-        import static com.auth0.jwt.algorithms.Algorithm.RSA256;
-        class A {
-            void run(Object pub, Object priv) {
-                sign(RS256);
-                RSA256(pub, priv);
+            import static com.nimbusds.jose.JWSAlgorithm.RS256;
+            import static com.auth0.jwt.algorithms.Algorithm.RSA256;
+            class A {
+                void run(Object pub, Object priv) {
+                    sign(RS256);
+                    RSA256(pub, priv);
+                }
+                void shadowed() {
+                    String RS256 = "local";
+                    use(RS256);
+                }
             }
-            void shadowed() {
-                String RS256 = "local";
-                use(RS256);
-            }
-        }
-        "#,
+            "#,
     );
     assert_eq!(
         fields(&unit),
@@ -254,14 +254,14 @@ fn resolves_static_imports() {
 fn records_values_injected_with_at_value() {
     let unit = lower(
         r##"
-        import org.springframework.beans.factory.annotation.Value;
-        class A {
-            @Value("${jwt.algorithm:RS256}") private String alg;
-            @Value("#{systemProperties['alg']}") private String spel;
-            A(@Value("${jwt.key-size}") int bits) { init(bits); }
-            void run() { parse(alg); parse(this.alg); parse(spel); }
-        }
-        "##,
+            import org.springframework.beans.factory.annotation.Value;
+            class A {
+                @Value("${jwt.algorithm:RS256}") private String alg;
+                @Value("#{systemProperties['alg']}") private String spel;
+                A(@Value("${jwt.key-size}") int bits) { init(bits); }
+                void run() { parse(alg); parse(this.alg); parse(spel); }
+            }
+            "##,
     );
     let args: Vec<_> = unit
         .facts()
@@ -287,12 +287,12 @@ fn records_values_injected_with_at_value() {
 fn local_methods_shadow_static_imports() {
     let unit = lower(
         r#"
-        import static com.auth0.jwt.algorithms.Algorithm.RSA256;
-        class A {
-            void run() { RSA256(); }
-            void RSA256() {}
-        }
-        "#,
+            import static com.auth0.jwt.algorithms.Algorithm.RSA256;
+            class A {
+                void run() { RSA256(); }
+                void RSA256() {}
+            }
+            "#,
     );
     assert_eq!(calls(&unit)[0].0, None);
 }
