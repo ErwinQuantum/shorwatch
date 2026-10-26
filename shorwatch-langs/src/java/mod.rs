@@ -199,14 +199,12 @@ impl<'s> Lowering<'s> {
             return;
         };
         let name = self.text(*name).to_owned();
-        if !is_wildcard {
-            if let Some((owner, simple)) = name.rsplit_once('.') {
-                if is_static {
-                    self.static_imports
-                        .insert(simple.to_owned(), owner.to_owned());
-                } else {
-                    self.imports.insert(simple.to_owned(), name.clone());
-                }
+        if !is_wildcard && let Some((owner, simple)) = name.rsplit_once('.') {
+            if is_static {
+                self.static_imports
+                    .insert(simple.to_owned(), owner.to_owned());
+            } else {
+                self.imports.insert(simple.to_owned(), name.clone());
             }
         }
         let path = if is_wildcard {
