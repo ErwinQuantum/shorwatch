@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 #[non_exhaustive]
 pub enum Language {
     Java,
+    Kotlin,
     /// `.properties` files (Spring Boot, Quarkus, Micronaut...).
     Properties,
     /// YAML configuration files.
@@ -17,15 +18,15 @@ pub enum Language {
 impl Language {
     pub fn platform(self) -> Platform {
         match self {
-            Language::Java => Platform::Jvm,
+            Language::Java | Language::Kotlin => Platform::Jvm,
             Language::Properties | Language::Yaml => Platform::Config,
         }
     }
 }
 
 /// What a rule targets. Several languages share a platform: JVM rules describe
-/// library APIs (JCA, Nimbus, Spring...) that Java and, later, Kotlin call the
-/// same way; config rules describe keys whatever the file format.
+/// library APIs (JCA, Nimbus, Spring...) that Java and Kotlin call the same
+/// way; config rules describe keys whatever the file format.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]

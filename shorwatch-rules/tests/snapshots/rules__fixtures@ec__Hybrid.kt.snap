@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/ec/Hybrid.kt
+---
+- rule: jvm.jca.ec
+  at: "7:23"
+  status: in_transition
+  hybrid_evidence: org.openquantumsafe.KeyEncapsulation @ 4

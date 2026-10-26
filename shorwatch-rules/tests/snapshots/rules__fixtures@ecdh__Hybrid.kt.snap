@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/ecdh/Hybrid.kt
+---
+- rule: jvm.jca.ecdh
+  at: "7:38"
+  status: in_transition
+  hybrid_evidence: X25519MLKEM768 @ 10

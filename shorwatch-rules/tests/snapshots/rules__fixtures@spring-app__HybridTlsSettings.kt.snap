@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/spring-app/HybridTlsSettings.kt
+---
+- rule: jvm.jca.ecdh
+  at: "8:45"
+  status: in_transition
+  hybrid_evidence: X25519MLKEM768 @ 11

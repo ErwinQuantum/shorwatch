@@ -1,19 +1,23 @@
 //! Snapshot tests for the built-in rules against real sources.
 //!
 //! Every folder under `tests/fixtures/` is a small project: all its files
-//! (Java, YAML, `.properties`) are lowered and [`link`]ed together, so values
+//! (Java, Kotlin, YAML, `.properties`) are lowered and [`link`]ed together, so values
 //! injected with `@Value` resolve against the folder's config files. Each file
 //! is then analyzed with *all* built-in rules (so overlaps between rules show
 //! up) and its findings snapshotted in a compact, reviewable form. Files named
 //! `Clean.*` must produce no findings at all.
 //!
+//! A Kotlin file next to a Java file of the same name is its twin: JVM rules
+//! describe library APIs, so both must yield the same findings.
+//!
 //! Adding a fixture needs no code here: run `cargo insta test` and review.
 
 use std::fs;
 use std::path::Path;
+use std::sync::OnceLock;
 
 use serde::Serialize;
-use shorwatch_core::{Finding, SourceUnit, Status, analyze, link};
+use shorwatch_core::{Finding, RuleSet, SourceUnit, Status, analyze, link};
 
 #[derive(Serialize)]
 struct Compact {
@@ -50,6 +54,12 @@ fn lower(path: &Path) -> Option<SourceUnit> {
     Some(frontend.lower(&name, &source).unwrap())
 }
 
+/// Compiled once: every fixture is analyzed with all built-in rules.
+fn rules() -> &'static RuleSet {
+    static RULES: OnceLock<RuleSet> = OnceLock::new();
+    RULES.get_or_init(|| shorwatch_rules::builtin().unwrap())
+}
+
 /// Lowers and links every file next to `path`, then analyzes `path` alone.
 fn findings(path: &Path) -> Vec<Compact> {
     let mut siblings: Vec<_> = fs::read_dir(path.parent().unwrap())
@@ -62,8 +72,7 @@ fn findings(path: &Path) -> Vec<Compact> {
 
     let name = path.file_name().unwrap().to_string_lossy();
     let unit = units.iter().find(|u| u.path() == name).unwrap();
-    let rules = shorwatch_rules::builtin().unwrap();
-    analyze(unit, &rules)
+    analyze(unit, rules())
         .into_iter()
         .map(Compact::from)
         .collect()
@@ -71,7 +80,7 @@ fn findings(path: &Path) -> Vec<Compact> {
 
 #[test]
 fn fixtures() {
-    insta::glob!("fixtures/**/*.{java,yml,yaml,properties}", |path| {
+    insta::glob!("fixtures/**/*.{java,kt,yml,yaml,properties}", |path| {
         let findings = findings(path);
         if path.file_stem().is_some_and(|s| s == "Clean") {
             assert!(
@@ -83,4 +92,40 @@ fn fixtures() {
         }
         insta::assert_yaml_snapshot!(findings);
     });
+}
+
+/// What a finding means, without where it is: twins differ in layout.
+fn meaning(findings: Vec<Compact>) -> Vec<(String, Status, bool, bool)> {
+    let mut meaning: Vec<_> = findings
+        .into_iter()
+        .map(|f| {
+            (
+                f.rule,
+                f.status,
+                f.hybrid_evidence.is_some(),
+                f.fix.is_some(),
+            )
+        })
+        .collect();
+    meaning.sort_by(|a, b| format!("{a:?}").cmp(&format!("{b:?}")));
+    meaning
+}
+
+#[test]
+fn kotlin_twins_find_what_java_finds() {
+    let mut twins = 0;
+    insta::glob!("fixtures/**/*.kt", |kotlin| {
+        let java = kotlin.with_extension("java");
+        if !java.exists() {
+            return;
+        }
+        twins += 1;
+        assert_eq!(
+            meaning(findings(kotlin)),
+            meaning(findings(&java)),
+            "{} and its Java twin disagree",
+            kotlin.display()
+        );
+    });
+    assert!(twins > 0, "no Kotlin twins found");
 }

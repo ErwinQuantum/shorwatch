@@ -13,12 +13,15 @@ pub(crate) struct Symbol {
     pub(crate) constant: Option<ArgValue>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum Receiver {
     /// `x.m()`: a variable or a type name.
     Name(String),
     /// `a.b.C.m()` or `this.x.m()`.
     Path(String),
+    /// A type known from the syntax, such as the implicit receiver inside
+    /// Kotlin's `KeyGenerator.getInstance("AES").apply { init(128) }`.
+    Type(String),
 }
 
 #[derive(Debug)]

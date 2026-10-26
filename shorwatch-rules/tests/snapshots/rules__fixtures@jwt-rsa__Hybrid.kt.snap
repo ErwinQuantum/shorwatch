@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/jwt-rsa/Hybrid.kt
+---
+- rule: jvm.nimbus.jose-rsa
+  at: "7:37"
+  status: in_transition
+  hybrid_evidence: ML-DSA-65 @ 10

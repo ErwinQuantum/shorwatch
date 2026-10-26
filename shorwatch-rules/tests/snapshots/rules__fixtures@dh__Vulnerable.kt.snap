@@ -1,0 +1,17 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/dh/Vulnerable.kt
+---
+- rule: jvm.jca.dh
+  at: "17:25"
+  status: vulnerable
+- rule: jvm.jca.dh
+  at: "18:30"
+  status: vulnerable
+- rule: jvm.jca.dh
+  at: "23:25"
+  status: vulnerable
+- rule: jvm.bouncycastle.dh
+  at: "29:30"
+  status: vulnerable

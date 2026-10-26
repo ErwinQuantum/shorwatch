@@ -26,9 +26,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - `shorwatch` CLI: `scan` (parallel, `.gitignore`-aware, `--format text|sarif|json|markdown`, `--output`, `--min-severity`, `--fail-on`, `--compact`, `--rules`) and `rules`. Exit codes 0/1/2 for CI gates.
 - Reports: rustc-style terminal output with the matched span underlined and a gradient banner on interactive terminals, SARIF 2.1.0 (rule descriptors, `security-severity`, fixes), JSON and Markdown.
 - CycloneDX 1.6 CBOM output (`--format cbom`): one `cryptographic-asset` per algorithm with primitive, parameters and NIST quantum security level, and every occurrence as evidence. Validated against the official schema. Profiles gain a `crypto:` block, enforced by tests.
-- `examples/`: one file per algorithm, a Spring Boot service and its reports in every format.
+- Kotlin frontend (tree-sitter-kotlin-ng) for `.kt` and `.kts`: constructor calls without `new`, `val`/`const val`/`companion object` constants, member imports and aliases, `@Value` on constructor and function parameters, string templates, and scope functions (`apply`, `run`, `with`, `also`, `let`) passing their receiver to the lambda. All JVM rules apply unchanged; every Java fixture has a Kotlin twin that must produce the same findings.
+- `examples/`: one file per algorithm, a Spring Boot service (Java and Kotlin) and its reports in every format.
 - `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
 
 ### Changed
-- Rules target a platform (`jvm`, `config`) instead of a language, so JVM rules will apply to Kotlin unchanged.
+- Rules target a platform (`jvm`, `config`) instead of a language, so JVM rules apply to Java and Kotlin alike.
+- JVM name resolution (receivers, constants, injected values, member imports) is shared by the Java and Kotlin frontends (`shorwatch-langs/src/jvm`).
+- MSRV raised to Rust 1.88.
 - Rules are split into algorithm profiles (`rules/algorithms/`, written once) and per-library rule files (`rules/jvm/<library>/`, `rules/config/<framework>/`) holding only patterns. Rule ids follow the path, e.g. `jvm.nimbus.jose-rsa`. Hybrid markers are shared (`rules/markers/pqc.yaml`). Every file under `rules/` is embedded automatically.

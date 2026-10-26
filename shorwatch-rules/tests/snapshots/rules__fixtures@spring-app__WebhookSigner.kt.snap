@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/spring-app/WebhookSigner.kt
+---
+- rule: jvm.jca.aes-128
+  at: "19:9"
+  status: vulnerable
+  fix: 256 @ 19

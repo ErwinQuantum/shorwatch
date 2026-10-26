@@ -8,8 +8,8 @@ into a syntax tree, matches it against declarative rules, and reports every use
 of cryptography that a quantum computer would break or weaken, together with
 the post-quantum replacement and the NIST standard behind it.
 
-**Status: pre-alpha (v0.1 in progress).** The scanner works end to end on Java
-and Spring projects; no release has been published yet. See
+**Status: pre-alpha (v0.1 in progress).** The scanner works end to end on Java,
+Kotlin and Spring projects; no release has been published yet. See
 [Coverage](#coverage) for exactly what is and isn't detected.
 
 ## Why
@@ -90,7 +90,7 @@ shorwatch rules                              # list the rules in effect
 ```
 
 `scan` walks the given paths respecting `.gitignore`, analyzes `.java`,
-`.yml`, `.yaml` and `.properties` files in parallel, and resolves
+`.kt`, `.kts`, `.yml`, `.yaml` and `.properties` files in parallel, and resolves
 `@Value("${...}")` injections against the project's configuration files.
 
 | Option | |
@@ -132,9 +132,17 @@ Boot service:
    = in transition: post-quantum code at line 13 (ML-KEM)
    ...
 
- Summary  10 findings in 6 files (6 scanned)
-          9 vulnerable · 1 in transition · 1 auto-fixable
-          7 high · 2 medium · 1 low
+ HIGH  ECC · jvm.jca.ec · vulnerable
+  ──▶ examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:19:9
+   │
+19 │         KeyPairGenerator.getInstance("EC").apply {
+   │         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ Elliptic-curve keys are broken by Shor's algorithm
+   ...
+
+ Summary  13 findings in 7 files (7 scanned)
+          12 vulnerable · 1 in transition · 1 auto-fixable
+          10 high · 2 medium · 1 low
 ```
 
 Every format for that scan is in [`examples/output/`](examples/output/):
@@ -209,13 +217,14 @@ jobs:
 
 ## Coverage
 
-Java source code and its configuration (`application.yml`, `.properties`).
-Rules are written per platform, so JVM rules will apply to Kotlin unchanged
-once its frontend lands.
+Java and Kotlin source code and its configuration (`application.yml`,
+`.properties`). Rules are written per platform, not per language: one JVM rule
+covers both, and every Java test fixture has a Kotlin twin that must produce
+the same findings.
 
 | Covered today | Not yet |
 |---|---|
-| JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | Kotlin |
+| JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | Groovy and Scala |
 | BouncyCastle lightweight API (engines, signers, generators) | `@ConfigurationProperties` binding; values passed through other methods (needs data-flow analysis) |
 | JWT/JOSE: jjwt (0.11 and 0.12), Nimbus JOSE + JWT, Auth0 java-jwt | Algorithms chosen at runtime, e.g. from a remote JWKS |
 | Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Quarkus and Micronaut configuration keys |
@@ -223,6 +232,7 @@ once its frontend lands.
 | Values injected with `@Value("${key:default}")`, resolved against every profile's config file | |
 | Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
 | Algorithm names as literals, same-file `final` constants, enum/static constants and static imports | |
+| Kotlin idioms: constructor calls without `new`, `val` / `const val` / `companion object` constants, member imports, `@Value` on constructor parameters, scope functions (`apply`, `run`, `with`, `also`, `let`) | Kotlin extension functions that wrap crypto (needs data flow) |
 
 ## Rules
 
@@ -287,9 +297,11 @@ shorwatch-core     Pure domain: intermediate code model, rule model and
                    validation, evaluation engine, cross-file linking. No I/O.
 shorwatch-rules    Built-in YAML rules, loader and schema validation.
 shorwatch-langs    Frontends that lower files into the core's intermediate
-                   model: Java (tree-sitter), YAML (tree-sitter), .properties.
-shorwatch-report   Output adapters: SARIF 2.1.0 and terminal (in progress).
-shorwatch-cli      The `shorwatch` binary (in progress).
+                   model: Java and Kotlin (tree-sitter, sharing one JVM
+                   name resolver), YAML (tree-sitter), .properties.
+shorwatch-report   Output adapters: terminal, SARIF 2.1.0, CycloneDX CBOM,
+                   JSON and Markdown.
+shorwatch-cli      The `shorwatch` binary.
 ```
 
 Because the engine only sees a language-neutral model, the same core can later
@@ -307,7 +319,7 @@ cargo test --workspace
 
 ## Roadmap
 
-- Kotlin and more configuration formats (Quarkus, Micronaut)
+- More configuration formats (Quarkus, Micronaut)
 - Data-flow analysis to follow crypto through wrapper methods
 - Dependency scanning (`pom.xml`, `build.gradle`, compiled `.jar`s)
 - Editor integration through LSP

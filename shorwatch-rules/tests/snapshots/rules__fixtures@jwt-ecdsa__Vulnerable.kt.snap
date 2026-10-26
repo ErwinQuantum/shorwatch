@@ -1,0 +1,20 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/jwt-ecdsa/Vulnerable.kt
+---
+- rule: jvm.nimbus.jose-ecdsa
+  at: "13:9"
+  status: vulnerable
+- rule: jvm.nimbus.jose-ecdsa
+  at: "14:16"
+  status: vulnerable
+- rule: jvm.jjwt.jose-ecdsa
+  at: "17:23"
+  status: vulnerable
+- rule: jvm.auth0.jose-ecdsa
+  at: "19:60"
+  status: vulnerable
+- rule: jvm.nimbus.jose-ecdsa
+  at: "21:25"
+  status: vulnerable

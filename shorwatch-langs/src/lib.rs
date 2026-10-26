@@ -10,9 +10,12 @@ use thiserror::Error;
 pub mod config;
 pub mod java;
 mod jvm;
+pub mod kotlin;
+mod span;
 
 pub use config::{PropertiesFrontend, YamlFrontend};
 pub use java::JavaFrontend;
+pub use kotlin::KotlinFrontend;
 
 #[derive(Debug, Error)]
 pub enum LangError {
@@ -37,6 +40,7 @@ pub trait Frontend: Send + Sync {
 pub fn frontends() -> Vec<Box<dyn Frontend>> {
     vec![
         Box::new(JavaFrontend),
+        Box::new(KotlinFrontend),
         Box::new(PropertiesFrontend),
         Box::new(YamlFrontend),
     ]

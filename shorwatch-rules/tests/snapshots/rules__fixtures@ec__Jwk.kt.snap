@@ -1,0 +1,14 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/ec/Jwk.kt
+---
+- rule: jvm.nimbus.ec
+  at: "12:9"
+  status: vulnerable
+- rule: jvm.nimbus.ec
+  at: "13:16"
+  status: vulnerable
+- rule: jvm.jjwt.ec
+  at: "16:23"
+  status: vulnerable

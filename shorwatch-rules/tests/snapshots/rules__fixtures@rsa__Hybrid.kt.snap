@@ -1,0 +1,12 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/rsa/Hybrid.kt
+---
+- rule: jvm.jca.rsa
+  at: "9:25"
+  status: in_transition
+  hybrid_evidence: ML-DSA-65 @ 10
+- rule: jvm.jca.rsa
+  at: "19:27"
+  status: vulnerable

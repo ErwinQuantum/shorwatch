@@ -1,14 +1,14 @@
-## 🛡️ Shorwatch: 10 quantum-vulnerable findings
+## 🛡️ Shorwatch: 13 quantum-vulnerable findings
 
 | | Count |
 |---|---:|
-| Vulnerable | 9 |
+| Vulnerable | 12 |
 | In transition (hybrid) | 1 |
 | Auto-fixable | 1 |
-| Severity high | 7 |
+| Severity high | 10 |
 | Severity medium | 2 |
 | Severity low | 1 |
-| Files with findings / scanned | 6 / 6 |
+| Files with findings / scanned | 7 / 7 |
 
 ### Findings
 
@@ -21,6 +21,9 @@
 | medium | 3DES | `examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java:17` | vulnerable | `jvm.jca.3des` |
 | low | AES-128 | `examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java:22` | vulnerable | `jvm.jca.aes-128` |
 | high | ECDH | `examples/spring-service/src/main/java/com/example/payments/tls/HybridKeyExchange.java:9` | in transition | `jvm.jca.ecdh` |
+| high | ECDSA (JOSE/JWT) | `examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:16` | vulnerable | `jvm.nimbus.jose-ecdsa` |
+| high | ECC | `examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:19` | vulnerable | `jvm.jca.ec` |
+| high | ECC | `examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:20` | vulnerable | `jvm.jca.ec` |
 | high | ECDSA (JOSE/JWT) | `examples/spring-service/src/main/resources/application-prod.yml:4` | vulnerable | `config.app.jose-ecdsa` |
 | high | RSA (JOSE/JWT) | `examples/spring-service/src/main/resources/application.yml:8` | vulnerable | `config.spring-boot.jose-rsa` |
 | high | TLS key exchange | `examples/spring-service/src/main/resources/application.yml:14` | vulnerable | `config.spring-boot.tls-key-exchange` |

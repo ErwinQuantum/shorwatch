@@ -6,7 +6,7 @@ to be compiled or run: these files exist to be scanned.
 | Folder | What it shows |
 |---|---|
 | [`algorithms/`](algorithms/) | One minimal file per detected algorithm (RSA, DH, ECDH, ECDSA, EdDSA, DSA, ElGamal, AES-128, SHA-1, 3DES) plus JWT signatures |
-| [`spring-service/`](spring-service/) | A small Spring Boot payments service: an RSA-signed authorization server, a webhook signer whose algorithm comes from `application-prod.yml` through `@Value`, a legacy crypto helper, TLS cipher suites, and a class already migrating to hybrid ML-KEM |
+| [`spring-service/`](spring-service/) | A small Spring Boot payments service: an RSA-signed authorization server, a webhook signer whose algorithm comes from `application-prod.yml` through `@Value`, a legacy crypto helper, TLS cipher suites, a class already migrating to hybrid ML-KEM, and partner keys written in Kotlin |
 | [`output/`](output/) | The reports for `spring-service/` in every format |
 
 ## Try it
@@ -30,6 +30,9 @@ cargo run --release -- scan examples/spring-service --format sarif --output repo
   AES-128 finding carries an automatic fix (`128` → `256`).
 - `HybridKeyExchange.java` uses X25519 next to ML-KEM: reported as
   **in transition**, not vulnerable.
+- `PartnerKeys.kt` is Kotlin: the same JVM rules apply. The EC key generated
+  inside `apply { initialize(...) }` and the `ES384` member import are found
+  like their Java equivalents.
 - `application.yml`: an RS256 resource server and a TLS 1.2 ECDHE suite.
 
 Regenerate `output/` after changing rules or examples:

@@ -35,7 +35,9 @@ fn vulnerable_project_exits_with_1_and_reports_locations() {
         text.contains("AuthorizationServerConfig.java:40:49"),
         "{text}"
     );
-    assert!(text.contains("7 findings in 5 files"), "{text}");
+    // Java sources and their Kotlin twins.
+    assert!(text.contains("WebhookSigner.kt:19:9"), "{text}");
+    assert!(text.contains("14 findings in 10 files"), "{text}");
     assert!(!text.contains('\x1b'), "piped output must not be coloured");
 }
 
@@ -159,7 +161,7 @@ fn examples(folder: &str) -> String {
 fn examples_keep_showing_what_their_readme_describes() {
     let output = shorwatch(&["scan", &examples("spring-service"), "--format", "json"]);
     let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(report["summary"]["findings"], 10);
+    assert_eq!(report["summary"]["findings"], 13);
     assert_eq!(report["summary"]["in_transition"], 1);
     assert_eq!(report["summary"]["fixable"], 1);
 

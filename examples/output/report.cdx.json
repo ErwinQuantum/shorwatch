@@ -125,6 +125,11 @@
             "additionalContext": "jvm.nimbus.jose-ecdsa (vulnerable)"
           },
           {
+            "location": "examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt",
+            "line": 16,
+            "additionalContext": "jvm.nimbus.jose-ecdsa (vulnerable)"
+          },
+          {
             "location": "examples/spring-service/src/main/resources/application-prod.yml",
             "line": 4,
             "additionalContext": "config.app.jose-ecdsa (vulnerable)"
@@ -304,6 +309,49 @@
         {
           "name": "shorwatch:status",
           "value": "in_transition"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ecc",
+      "name": "ECC",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "other",
+          "cryptoFunctions": [
+            "keygen"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt",
+            "line": 19,
+            "additionalContext": "jvm.jca.ec (vulnerable)"
+          },
+          {
+            "location": "examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt",
+            "line": 20,
+            "additionalContext": "jvm.jca.ec (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
         }
       ]
     },

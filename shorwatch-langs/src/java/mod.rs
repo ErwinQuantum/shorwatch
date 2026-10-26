@@ -17,11 +17,11 @@
 use std::collections::HashSet;
 
 use shorwatch_core::Language;
-use shorwatch_core::ir::{ArgValue, FactKind, Location, Position, ScopeId, ScopeKind, SourceUnit};
-use tree_sitter::{Node, Parser, Point};
+use shorwatch_core::ir::{ArgValue, FactKind, Location, ScopeId, ScopeKind, SourceUnit};
+use tree_sitter::{Node, Parser};
 
 use crate::jvm::{ArgSource, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase};
-use crate::{Frontend, LangError};
+use crate::{Frontend, LangError, span};
 use literals::{int_value, string_value};
 use syntax::{has_modifier, is_name_path, is_name_slot, type_name};
 
@@ -391,24 +391,6 @@ impl<'s> Lowering<'s> {
     }
 
     fn location(&self, node: Node<'_>) -> Location {
-        Location {
-            start: self.position(node.start_byte(), node.start_position()),
-            end: self.position(node.end_byte(), node.end_position()),
-            start_byte: node.start_byte(),
-            end_byte: node.end_byte(),
-        }
-    }
-
-    /// tree-sitter columns are byte offsets; SARIF wants code points.
-    fn position(&self, byte: usize, point: Point) -> Position {
-        let line_start = byte - point.column;
-        let column = self
-            .src
-            .get(line_start..byte)
-            .map_or(point.column, |s| s.chars().count());
-        Position {
-            line: u32::try_from(point.row + 1).unwrap_or(u32::MAX),
-            column: u32::try_from(column + 1).unwrap_or(u32::MAX),
-        }
+        span::location(self.src, node)
     }
 }

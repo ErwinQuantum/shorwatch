@@ -58,6 +58,7 @@ impl JvmFile {
                 Some(_) => None,
                 None => Some(self.type_ref(path)),
             },
+            Receiver::Type(ty) => Some(self.type_ref(ty)),
         }
     }
 

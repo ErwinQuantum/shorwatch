@@ -91,6 +91,10 @@ Add a folder under
 - `Clean.java`: look-alikes that must **not** be flagged (it is asserted to
   produce zero findings).
 
+JVM rules cover Java and Kotlin alike. Next to a `.java` fixture, add its
+Kotlin twin (`Vulnerable.kt`, written the Kotlin way): a test requires both to
+produce the same findings.
+
 Each folder is analyzed as a small project with *all* rules, then
 snapshotted. Run the tests and review the new `.snap` files: they are the
 specification of what your rule does.

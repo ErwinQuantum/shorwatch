@@ -1,0 +1,17 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/eddsa/Vulnerable.kt
+---
+- rule: jvm.jca.eddsa
+  at: "10:31"
+  status: vulnerable
+- rule: jvm.jca.eddsa
+  at: "13:9"
+  status: vulnerable
+- rule: jvm.bouncycastle.eddsa
+  at: "19:31"
+  status: vulnerable
+- rule: jvm.i2p-eddsa.eddsa
+  at: "21:22"
+  status: vulnerable

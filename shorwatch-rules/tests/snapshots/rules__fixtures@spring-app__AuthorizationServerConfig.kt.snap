@@ -1,0 +1,11 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/spring-app/AuthorizationServerConfig.kt
+---
+- rule: jvm.nimbus.jose-rsa
+  at: "28:22"
+  status: vulnerable
+- rule: jvm.jca.rsa
+  at: "41:13"
+  status: vulnerable

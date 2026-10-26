@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/eddsa/Hybrid.kt
+---
+- rule: jvm.jca.eddsa
+  at: "8:34"
+  status: in_transition
+  hybrid_evidence: org.bouncycastle.pqc.crypto.mldsa.MLDSASigner @ 4

@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/ecdsa/Hybrid.kt
+---
+- rule: jvm.jca.ecdsa
+  at: "8:9"
+  status: in_transition
+  hybrid_evidence: ML-DSA-65 @ 9
