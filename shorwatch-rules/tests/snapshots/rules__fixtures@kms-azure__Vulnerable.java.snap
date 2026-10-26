@@ -1,0 +1,23 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/kms-azure/Vulnerable.java
+---
+- rule: jvm.azure-keyvault.rsa
+  at: "13:34"
+  status: vulnerable
+- rule: jvm.azure-keyvault.ec
+  at: "18:33"
+  status: vulnerable
+- rule: jvm.azure-keyvault.ec
+  at: "18:82"
+  status: vulnerable
+- rule: jvm.azure-keyvault.ecdsa
+  at: "22:28"
+  status: vulnerable
+- rule: jvm.azure-keyvault.aes-128
+  at: "26:24"
+  status: vulnerable
+- rule: jvm.azure-keyvault.rsa
+  at: "27:31"
+  status: vulnerable

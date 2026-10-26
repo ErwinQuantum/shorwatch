@@ -1,0 +1,17 @@
+id: jvm.aws-kms.ec
+profile: ec
+platform: jvm
+
+patterns:
+  - field:
+      type: software.amazon.awssdk.services.kms.model.KeySpec
+      matches: '^(ECC_|SM2$)'
+  - field:
+      type: com.amazonaws.services.kms.model.KeySpec
+      matches: '^(ECC_|SM2$)'
+  - field:
+      type: software.amazon.awssdk.services.kms.model.CustomerMasterKeySpec
+      matches: '^(ECC_|SM2$)'
+  - field:
+      type: com.amazonaws.services.kms.model.CustomerMasterKeySpec
+      matches: '^(ECC_|SM2$)'

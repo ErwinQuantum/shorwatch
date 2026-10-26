@@ -61,10 +61,14 @@ migration advice and NIST references come from `algorithms/rsa.yaml`.
 | `call` | `Type.method(...)` or `variable.method(...)` where the variable has that type; optional `arg: { index, matches }` regex on a literal argument; optional `origin: { index, matches }` on the factory that created the variable (`KeyGenerator.getInstance("AES")`), where an unknown origin still matches | `Cipher.getInstance("RSA/ECB/...")`, `generator.init(128)` |
 | `construct` | `new Type(...)`, with the same optional `arg` | `new RSAEngine()` |
 | `field` | A static constant `Type.NAME`, with an optional `matches` regex on the name | `JWSAlgorithm.RS256` |
+| `literal` | A string literal anywhere in the code, by `matches` regex; optional `unless_call` regex on the methods it is passed to. Only for names specific enough to stand alone | `"TLS_ECDHE_RSA_WITH_..."`, but not in `setExcludeCipherSuites(...)` |
 | `property` | A config entry: `key` regex, optional `matches` regex on the value | `server.ssl.ciphers: TLS_RSA_...` |
 
 Types are fully qualified; Shorwatch resolves imports, `var`, fields and
-parameters, so code using simple names still matches. Arguments match through
+parameters, so code using simple names still matches. A name without an
+import only matches types of the file's own package, its `import a.b.*`
+packages and `java.lang` (a same-package `KeyType` is not Azure's), unless the
+file uses a Java 25 `import module`. Arguments match through
 literals, same-file `final` constants and `@Value("${...}")` properties.
 
 Write regexes in **single quotes** (`'^RSA$'`): in single-quoted YAML a

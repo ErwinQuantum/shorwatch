@@ -1,0 +1,11 @@
+id: jvm.opensaml.aes-128
+profile: aes-128
+platform: jvm
+
+patterns:
+  - field:
+      type: org.opensaml.xmlsec.encryption.support.EncryptionConstants
+      matches: '^ALGO_ID_(BLOCKCIPHER|KEYWRAP)_AES128'
+  - field:
+      type: org.opensaml.xml.encryption.EncryptionConstants
+      matches: '^ALGO_ID_(BLOCKCIPHER|KEYWRAP)_AES128'

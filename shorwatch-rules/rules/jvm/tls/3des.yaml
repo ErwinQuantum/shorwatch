@@ -1,0 +1,8 @@
+id: jvm.tls.3des
+profile: 3des
+platform: jvm
+
+patterns:
+  - literal:
+      matches: '(^|[,:\s])(TLS|SSL)_\w*3DES_EDE'
+      unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'

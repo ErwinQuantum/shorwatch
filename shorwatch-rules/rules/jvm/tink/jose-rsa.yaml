@@ -1,0 +1,9 @@
+id: jvm.tink.jose-rsa
+profile: jose-rsa
+platform: jvm
+
+patterns:
+  - call:
+      type: com.google.crypto.tink.KeyTemplates
+      method: get
+      arg: { index: 0, matches: '^JWT_(RS|PS)\d+' }

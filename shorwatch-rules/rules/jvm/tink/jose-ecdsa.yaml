@@ -1,0 +1,9 @@
+id: jvm.tink.jose-ecdsa
+profile: jose-ecdsa
+platform: jvm
+
+patterns:
+  - call:
+      type: com.google.crypto.tink.KeyTemplates
+      method: get
+      arg: { index: 0, matches: '^JWT_ES\d+' }

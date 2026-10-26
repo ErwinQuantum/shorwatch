@@ -1,0 +1,16 @@
+id: jvm.tink.ecdh
+profile: ecdh
+platform: jvm
+
+# ECIES and HPKE with classical DH-KEMs.
+patterns:
+  - field:
+      type: com.google.crypto.tink.hybrid.PredefinedHybridParameters
+      matches: '^ECIES_'
+  - field:
+      type: com.google.crypto.tink.hybrid.HybridKeyTemplates
+      matches: '^ECIES_'
+  - call:
+      type: com.google.crypto.tink.KeyTemplates
+      method: get
+      arg: { index: 0, matches: '^(ECIES_|DHKEM_(X25519|P256|P384|P521)_)' }

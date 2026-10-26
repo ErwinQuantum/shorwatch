@@ -1,0 +1,19 @@
+id: jvm.opensaml.rsa
+profile: rsa
+platform: jvm
+
+# OpenSAML (v3+ `org.opensaml.xmlsec`, v2 `org.opensaml.xml`): XML signature
+# and encryption algorithm constants for SAML assertions.
+patterns:
+  - field:
+      type: org.opensaml.xmlsec.signature.support.SignatureConstants
+      matches: '^ALGO_ID_SIGNATURE_RSA'
+  - field:
+      type: org.opensaml.xml.signature.SignatureConstants
+      matches: '^ALGO_ID_SIGNATURE_RSA'
+  - field:
+      type: org.opensaml.xmlsec.encryption.support.EncryptionConstants
+      matches: '^ALGO_ID_KEYTRANSPORT_RSA'
+  - field:
+      type: org.opensaml.xml.encryption.EncryptionConstants
+      matches: '^ALGO_ID_KEYTRANSPORT_RSA'

@@ -5,7 +5,8 @@ platform: config
 patterns:
   # `server.ssl.ciphers`, SSL bundles (`spring.ssl.bundle.*.*.options.ciphers`)
   # and the `*.ssl.ciphers` of Spring Boot's clients (Kafka, RabbitMQ...).
-  # Values are lists, comma-separated in `.properties`.
+  # Values are lists, comma-separated in `.properties`; IANA names
+  # (TLS_ECDHE_RSA_...) or OpenSSL names (ECDHE-RSA-...), which Tomcat accepts.
   - property:
       key: '(?i)(^|\.)(ssl|options)\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\[\d+\])?$'
-      matches: '(?i)(^|[,\s])TLS_(RSA|DHE?|ECDHE?)_'
+      matches: '(?i)(^|[,:\s])(TLS_(RSA|DHE?|ECDHE?)_|(ECDHE|DHE|EDH)-(RSA|ECDSA|DSS)-)'

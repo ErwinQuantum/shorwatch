@@ -1,0 +1,11 @@
+id: jvm.aws-kms.ecdh
+profile: ecdh
+platform: jvm
+
+patterns:
+  - field:
+      type: software.amazon.awssdk.services.kms.model.KeyAgreementAlgorithmSpec
+      matches: '^ECDH$'
+  - field:
+      type: com.amazonaws.services.kms.model.KeyAgreementAlgorithmSpec
+      matches: '^ECDH$'

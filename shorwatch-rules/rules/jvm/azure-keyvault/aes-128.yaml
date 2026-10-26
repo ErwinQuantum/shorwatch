@@ -1,0 +1,11 @@
+id: jvm.azure-keyvault.aes-128
+profile: aes-128
+platform: jvm
+
+patterns:
+  - field:
+      type: com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm
+      matches: '^A128'
+  - field:
+      type: com.azure.security.keyvault.keys.cryptography.models.KeyWrapAlgorithm
+      matches: '^A128'

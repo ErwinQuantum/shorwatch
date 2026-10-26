@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/tls-in-code/Hybrid.java
+---
+- rule: jvm.tls.tls-key-exchange
+  at: "6:9"
+  status: in_transition
+  hybrid_evidence: "X25519MLKEM768,x25519 @ 6"

@@ -1,0 +1,23 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/tink/Vulnerable.java
+---
+- rule: jvm.tink.eddsa
+  at: "11:41"
+  status: vulnerable
+- rule: jvm.tink.jose-ecdsa
+  at: "15:34"
+  status: vulnerable
+- rule: jvm.tink.ecdh
+  at: "16:34"
+  status: vulnerable
+- rule: jvm.tink.aes-128
+  at: "17:41"
+  status: vulnerable
+- rule: jvm.tink.rsa
+  at: "22:13"
+  status: vulnerable
+- rule: jvm.tink.ecdh
+  at: "23:13"
+  status: vulnerable

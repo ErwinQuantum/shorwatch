@@ -1,0 +1,15 @@
+id: jvm.tink.aes-128
+profile: aes-128
+platform: jvm
+
+patterns:
+  - field:
+      type: com.google.crypto.tink.aead.PredefinedAeadParameters
+      matches: '^AES128_'
+  - field:
+      type: com.google.crypto.tink.aead.AeadKeyTemplates
+      matches: '^AES128_'
+  - call:
+      type: com.google.crypto.tink.KeyTemplates
+      method: get
+      arg: { index: 0, matches: '^AES128_' }

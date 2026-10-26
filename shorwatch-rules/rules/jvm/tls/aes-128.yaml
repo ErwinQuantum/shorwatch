@@ -1,0 +1,8 @@
+id: jvm.tls.aes-128
+profile: aes-128
+platform: jvm
+
+patterns:
+  - literal:
+      matches: '(^|[,:\s])TLS_\w*AES_128_'
+      unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'

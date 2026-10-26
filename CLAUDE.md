@@ -95,6 +95,12 @@ langs/src/ jvm/{mod: JvmFile, model, resolve}  java/{mod: traversal, syntax, lit
   binding (`signingAlgorithm` = `signing-algorithm`); list keys collect their
   elements; every profile's value is a candidate; default if unset.
 - Columns are Unicode code points (SARIF `unicodeCodePoints`).
+- `TypeRef::packages`: a name no import qualifies can only be a type of the
+  file's package, an `import a.b.*` package or an implicit one (`java.lang`,
+  Kotlin defaults); a Java 25 `import module` lifts the restriction.
+- `FactKind::Literal::calls`: the methods the literal is an argument of,
+  innermost first, up to the enclosing block or lambda. `literal` patterns
+  use it for `unless_call` (`setExcludeCipherSuites`).
 - `SourceUnit::role` (`CodeRole::Production | Test`) is set by whoever knows
   the project layout (the CLI's `layout.rs`, from the path relative to the
   scan root); `analyze` copies it to every `Finding`. Sources that are not
@@ -119,8 +125,9 @@ Profiles (17): `rsa dh ecdh ecdsa ec eddsa dsa elgamal` (shor, high),
 medium, no fix), `jose-rsa jose-ecdsa jose-eddsa jose-ecdh` (shor, JWT advice),
 `jose-aes-128` (grover), `tls-key-exchange` (shor, TLS suites).
 
-Libraries (87 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
-jsch, apache-sshd,
+Libraries (119 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
+jsch, apache-sshd, tls (suite-name literals, `jdk.tls.namedGroups`), okhttp,
+aws-kms, azure-keyvault, gcp-kms, tink, opensaml,
 xml-security (JSR 105 + Santuario), android-keystore, spring-security, jjwt,
 nimbus (incl. `JWSAlgorithm.Family`), auth0, i2p-eddsa, commons-codec, guava
 · `config/` spring-boot

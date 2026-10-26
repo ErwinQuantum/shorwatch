@@ -281,7 +281,10 @@ the same findings.
 | Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
 | OpenPGP (BouncyCastle `bcpg`): key, hash and symmetric algorithm tags | The algorithm of keys read from existing key rings |
 | SSH: JSch key types and `setConfig` algorithm lists, Apache MINA SSHD signature and key-exchange factories, host key algorithms | Library defaults when nothing is configured |
-| XML Signature and Encryption (SAML, WS-Security): JSR 105 `SignatureMethod`/`DigestMethod`, Apache Santuario | Algorithm URIs written as strings |
+| XML Signature and Encryption (SAML, WS-Security): JSR 105 `SignatureMethod`/`DigestMethod`, Apache Santuario, OpenSAML `SignatureConstants`/`EncryptionConstants` | Algorithm URIs written as strings |
+| TLS configured in code: cipher suite names in any stack (JSSE, Netty, Jetty, Tomcat), through arrays, lists and constants; OkHttp `CipherSuite`; `jdk.tls.namedGroups`. Suites passed to exclusion methods are ignored | TLS defaults of the JDK and of HTTP clients |
+| Cloud KMS: AWS KMS key specs and algorithms (SDK v1 and v2), Azure Key Vault key types, curves and algorithms, Google Cloud KMS key version algorithms | Key specs passed as strings to builders |
+| Google Tink: predefined parameters, legacy key templates, `KeyTemplates.get("ECDSA_P256")` | |
 | Android Keystore (`KeyProperties.KEY_ALGORITHM_RSA/EC`) | |
 | Algorithm names as literals, same-file `final` constants, enum/static constants and static imports | |
 | Kotlin idioms: constructor calls without `new`, `val` / `const val` / `companion object` constants, member imports, `@Value` on constructor parameters, scope functions (`apply`, `run`, `with`, `also`, `let`) | Kotlin extension functions that wrap crypto (needs data flow) |

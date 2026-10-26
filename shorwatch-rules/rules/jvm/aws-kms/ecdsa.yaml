@@ -1,0 +1,11 @@
+id: jvm.aws-kms.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec
+      matches: '^(ECDSA_|SM2DSA$)'
+  - field:
+      type: com.amazonaws.services.kms.model.SigningAlgorithmSpec
+      matches: '^(ECDSA_|SM2DSA$)'

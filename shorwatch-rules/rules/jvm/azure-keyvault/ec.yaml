@@ -1,0 +1,13 @@
+id: jvm.azure-keyvault.ec
+profile: ec
+platform: jvm
+
+patterns:
+  - field:
+      type: com.azure.security.keyvault.keys.models.KeyType
+      matches: '^EC'
+  - field:
+      type: com.azure.security.keyvault.keys.models.KeyCurveName
+      matches: '^P_'
+  - construct:
+      type: com.azure.security.keyvault.keys.models.CreateEcKeyOptions

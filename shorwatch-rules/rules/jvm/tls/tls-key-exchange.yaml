@@ -1,0 +1,19 @@
+id: jvm.tls.tls-key-exchange
+profile: tls-key-exchange
+platform: jvm
+
+# TLS configured in code, whatever the stack (JSSE `setEnabledCipherSuites`,
+# Netty `SslContextBuilder.ciphers`, Jetty `setIncludeCipherSuites`, Tomcat
+# connectors...). Suite names go through arrays, lists and constants that
+# argument patterns cannot follow, but they are specific enough to match as
+# plain string literals. Suites passed to an exclusion method are skipped.
+patterns:
+  - literal:
+      matches: '(^|[,:\s])((TLS|SSL)_(RSA|DHE?|ECDHE?)_\w*WITH_\w+|(ECDHE|DHE|EDH)-(RSA|ECDSA|DSS)-)'
+      unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'
+  # `System.setProperty("jdk.tls.namedGroups", "x25519,secp256r1")` with a
+  # classical group in the list.
+  - call:
+      type: java.lang.System
+      method: setProperty
+      arg: { index: 1, matches: '(?i)(^|,)\s*(x25519|x448|secp(256|384|521)r1|ffdhe\d+)\s*(,|$)' }

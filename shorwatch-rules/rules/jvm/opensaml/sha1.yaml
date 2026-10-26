@@ -1,0 +1,13 @@
+id: jvm.opensaml.sha1
+profile: sha1
+platform: jvm
+
+# SHA-1 digests and SHA-1 signatures (`ALGO_ID_SIGNATURE_RSA` is RSA-SHA1).
+# HMAC-SHA1 is deliberately not matched.
+patterns:
+  - field:
+      type: org.opensaml.xmlsec.signature.support.SignatureConstants
+      matches: '^(ALGO_ID_DIGEST_SHA1|ALGO_ID_SIGNATURE_(RSA|DSA|RSA_SHA1|DSA_SHA1|ECDSA_SHA1))$'
+  - field:
+      type: org.opensaml.xml.signature.SignatureConstants
+      matches: '^(ALGO_ID_DIGEST_SHA1|ALGO_ID_SIGNATURE_(RSA|DSA|RSA_SHA1|DSA_SHA1|ECDSA_SHA1))$'

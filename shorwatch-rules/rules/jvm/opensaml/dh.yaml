@@ -1,0 +1,11 @@
+id: jvm.opensaml.dh
+profile: dh
+platform: jvm
+
+patterns:
+  - field:
+      type: org.opensaml.xmlsec.encryption.support.EncryptionConstants
+      matches: '^ALGO_ID_KEYAGREEMENT_DH'
+  - field:
+      type: org.opensaml.xml.encryption.EncryptionConstants
+      matches: '^ALGO_ID_KEYAGREEMENT_DH'

@@ -1,0 +1,8 @@
+id: jvm.okhttp.3des
+profile: 3des
+platform: jvm
+
+patterns:
+  - field:
+      type: okhttp3.CipherSuite
+      matches: '3DES_EDE'

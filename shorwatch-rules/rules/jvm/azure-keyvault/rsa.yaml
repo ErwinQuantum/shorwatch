@@ -1,0 +1,20 @@
+id: jvm.azure-keyvault.rsa
+profile: rsa
+platform: jvm
+
+# Azure Key Vault keys (`com.azure.security.keyvault.keys`).
+patterns:
+  - field:
+      type: com.azure.security.keyvault.keys.models.KeyType
+      matches: '^RSA'
+  - construct:
+      type: com.azure.security.keyvault.keys.models.CreateRsaKeyOptions
+  - field:
+      type: com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm
+      matches: '^(RS|PS)\d+$'
+  - field:
+      type: com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm
+      matches: '^RSA'
+  - field:
+      type: com.azure.security.keyvault.keys.cryptography.models.KeyWrapAlgorithm
+      matches: '^RSA'

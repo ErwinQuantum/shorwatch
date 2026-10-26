@@ -1,0 +1,29 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/tls-in-code/Vulnerable.java
+---
+- rule: jvm.tls.3des
+  at: "12:48"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "12:48"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "17:13"
+  status: vulnerable
+- rule: jvm.tls.aes-128
+  at: "17:56"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "17:56"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "24:34"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "29:40"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "33:9"
+  status: vulnerable

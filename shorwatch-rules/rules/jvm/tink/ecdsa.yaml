@@ -1,0 +1,15 @@
+id: jvm.tink.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: com.google.crypto.tink.signature.PredefinedSignatureParameters
+      matches: '^ECDSA_'
+  - field:
+      type: com.google.crypto.tink.signature.SignatureKeyTemplates
+      matches: '^ECDSA_'
+  - call:
+      type: com.google.crypto.tink.KeyTemplates
+      method: get
+      arg: { index: 0, matches: '^ECDSA_' }

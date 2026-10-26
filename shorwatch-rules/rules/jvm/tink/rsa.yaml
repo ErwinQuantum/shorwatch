@@ -1,0 +1,17 @@
+id: jvm.tink.rsa
+profile: rsa
+platform: jvm
+
+# Google Tink: predefined parameters, legacy key templates and template names
+# (`KeyTemplates.get("ECDSA_P256")`).
+patterns:
+  - field:
+      type: com.google.crypto.tink.signature.PredefinedSignatureParameters
+      matches: '^RSA_SSA_'
+  - field:
+      type: com.google.crypto.tink.signature.SignatureKeyTemplates
+      matches: '^RSA_SSA_'
+  - call:
+      type: com.google.crypto.tink.KeyTemplates
+      method: get
+      arg: { index: 0, matches: '^RSA_SSA_' }

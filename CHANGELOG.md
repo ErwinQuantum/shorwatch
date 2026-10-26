@@ -32,11 +32,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Receiver origin: a call on a variable created by a factory (`g = KeyGenerator.getInstance("AES"); g.init(128)`, Kotlin `...getInstance("AES").apply { init(128) }`) carries the factory's arguments, and `call` patterns can constrain them with `origin`. `KeyGenerator.init(128)` on an HMAC generator is no longer reported as AES-128; a generator of unknown origin still is.
 - Rules for BouncyCastle PKIX certificate signing (`JcaContentSignerBuilder`, `Bc*ContentSignerBuilder`), XML Signature and Encryption (JSR 105 and Apache Santuario: RSA, ECDSA, DSA, EdDSA, SHA-1, AES-128, 3DES), the Android Keystore (`KeyProperties.KEY_ALGORITHM_RSA/EC`) and Nimbus algorithm families (`JWSAlgorithm.Family.RSA`...). 64 rules.
 - Rules for OpenPGP (BouncyCastle `bcpg` algorithm tags), JSch (key types and `setConfig` algorithm lists, hybrid `mlkem768x25519-sha256` recognised as in transition) and Apache MINA SSHD (signature and key-exchange factories, host key algorithms). 87 rules.
+- `literal` rule pattern: a string literal anywhere in the code, optionally skipped when passed to methods matching `unless_call`. Literal facts record the calls they are arguments of.
+- Rules for TLS configured in code (cipher suite names in any stack, OkHttp `CipherSuite`, `jdk.tls.namedGroups`; exclusion lists ignored), cloud KMS (AWS, Azure Key Vault, Google Cloud KMS), Google Tink and OpenSAML. Spring Boot cipher lists also accept OpenSSL names. 119 rules.
 - Findings know whether they are in production or test code (`CodeRole`, set from the project layout: Maven/Gradle test source sets, test directories, `*Test`/`*IT` classes). Every format shows it (terminal label and summary split, `role` in JSON and SARIF plus a `test` SARIF tag, Markdown, CBOM), and `--exclude-tests` skips test code.
 - `examples/`: one file per algorithm, a Spring Boot service (Java and Kotlin) and its reports in every format.
 - `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
 
 ### Changed
+- A type name without an import only matches types of the file's package, its on-demand imports and the implicit ones (`java.lang`, Kotlin's defaults); Java 25 `import module` keeps any match. Fixes same-package classes mistaken for library types (Keycloak's `KeyType` for Azure's).
+- The Spring Security RSA rule also covers `org.springframework.security.crypto.encrypt`, where Spring Security 6.3 moved spring-security-rsa.
 - Rules target a platform (`jvm`, `config`) instead of a language, so JVM rules apply to Java and Kotlin alike.
 - JVM name resolution (receivers, constants, injected values, member imports) is shared by the Java and Kotlin frontends (`shorwatch-langs/src/jvm`).
 - MSRV raised to Rust 1.88.

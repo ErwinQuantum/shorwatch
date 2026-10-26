@@ -1,0 +1,15 @@
+id: jvm.tink.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  - field:
+      type: com.google.crypto.tink.signature.PredefinedSignatureParameters
+      matches: '^ED25519'
+  - field:
+      type: com.google.crypto.tink.signature.SignatureKeyTemplates
+      matches: '^ED25519'
+  - call:
+      type: com.google.crypto.tink.KeyTemplates
+      method: get
+      arg: { index: 0, matches: '^ED25519' }

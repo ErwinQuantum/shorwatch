@@ -1,0 +1,11 @@
+id: jvm.opensaml.ecdh
+profile: ecdh
+platform: jvm
+
+patterns:
+  - field:
+      type: org.opensaml.xmlsec.encryption.support.EncryptionConstants
+      matches: '^ALGO_ID_KEYAGREEMENT_ECDH'
+  - field:
+      type: org.opensaml.xml.encryption.EncryptionConstants
+      matches: '^ALGO_ID_KEYAGREEMENT_ECDH'

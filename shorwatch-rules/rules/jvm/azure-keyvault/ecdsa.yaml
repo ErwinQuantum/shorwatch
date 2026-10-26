@@ -1,0 +1,8 @@
+id: jvm.azure-keyvault.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm
+      matches: '^ES\d+K?$'

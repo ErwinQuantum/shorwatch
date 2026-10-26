@@ -1,0 +1,31 @@
+id: jvm.aws-kms.rsa
+profile: rsa
+platform: jvm
+
+# AWS KMS asymmetric keys (SDK v2 `software.amazon.awssdk.services.kms`, and
+# v1 `com.amazonaws.services.kms`): key specs and the algorithms used with them.
+patterns:
+  - field:
+      type: software.amazon.awssdk.services.kms.model.KeySpec
+      matches: '^RSA_'
+  - field:
+      type: com.amazonaws.services.kms.model.KeySpec
+      matches: '^RSA_'
+  - field:
+      type: software.amazon.awssdk.services.kms.model.CustomerMasterKeySpec
+      matches: '^RSA_'
+  - field:
+      type: com.amazonaws.services.kms.model.CustomerMasterKeySpec
+      matches: '^RSA_'
+  - field:
+      type: software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec
+      matches: '^RSASSA_'
+  - field:
+      type: com.amazonaws.services.kms.model.SigningAlgorithmSpec
+      matches: '^RSASSA_'
+  - field:
+      type: software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec
+      matches: '^RSAES_'
+  - field:
+      type: com.amazonaws.services.kms.model.EncryptionAlgorithmSpec
+      matches: '^RSAES_'

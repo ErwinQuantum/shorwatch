@@ -1,0 +1,9 @@
+id: jvm.gcp-kms.rsa
+profile: rsa
+platform: jvm
+
+# Google Cloud KMS key version algorithms (`CryptoKeyVersionAlgorithm`).
+patterns:
+  - field:
+      type: com.google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionAlgorithm
+      matches: '^RSA_'

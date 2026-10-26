@@ -1,0 +1,23 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/opensaml/Vulnerable.kt
+---
+- rule: jvm.opensaml.rsa
+  at: "8:40"
+  status: vulnerable
+- rule: jvm.opensaml.ecdsa
+  at: "11:37"
+  status: vulnerable
+- rule: jvm.opensaml.sha1
+  at: "11:37"
+  status: vulnerable
+- rule: jvm.opensaml.rsa
+  at: "14:9"
+  status: vulnerable
+- rule: jvm.opensaml.aes-128
+  at: "15:9"
+  status: vulnerable
+- rule: jvm.opensaml.ecdh
+  at: "16:9"
+  status: vulnerable

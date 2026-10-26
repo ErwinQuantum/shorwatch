@@ -1,0 +1,9 @@
+id: jvm.okhttp.tls-key-exchange
+profile: tls-key-exchange
+platform: jvm
+
+# OkHttp names suites as constants: `ConnectionSpec.Builder.cipherSuites(CipherSuite.TLS_...)`.
+patterns:
+  - field:
+      type: okhttp3.CipherSuite
+      matches: '^(TLS|SSL)_(RSA|DHE?|ECDHE?)_'

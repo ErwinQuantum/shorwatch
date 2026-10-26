@@ -1,0 +1,11 @@
+id: jvm.opensaml.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.opensaml.xmlsec.signature.support.SignatureConstants
+      matches: '^ALGO_ID_SIGNATURE_ECDSA'
+  - field:
+      type: org.opensaml.xml.signature.SignatureConstants
+      matches: '^ALGO_ID_SIGNATURE_ECDSA'

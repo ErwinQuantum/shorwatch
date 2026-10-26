@@ -1,0 +1,8 @@
+id: jvm.okhttp.aes-128
+profile: aes-128
+platform: jvm
+
+patterns:
+  - field:
+      type: okhttp3.CipherSuite
+      matches: 'AES_128_'
