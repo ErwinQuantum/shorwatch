@@ -198,3 +198,24 @@ fn cbom_inventories_algorithms_with_their_occurrences() {
         "pke"
     );
 }
+
+/// `.properties` files are often ISO-8859-1 (found in the wild in Keycloak and
+/// Spring Security): they are decoded, not skipped.
+#[test]
+fn latin1_properties_are_scanned() {
+    let dir = std::env::temp_dir().join(format!("shorwatch-latin1-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("application.properties");
+    // `# Café` in ISO-8859-1: 0xE9 is not valid UTF-8 on its own.
+    std::fs::write(&file, b"# Caf\xe9\njwt.algorithm=RS256\n").unwrap();
+
+    let output = shorwatch(&["scan", &dir.display().to_string(), "--format", "json"]);
+    std::fs::remove_dir_all(&dir).unwrap();
+    assert!(
+        output.stderr.is_empty(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report["findings"][0]["rule_id"], "config.app.jose-rsa");
+}

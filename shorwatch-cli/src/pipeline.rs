@@ -48,13 +48,13 @@ pub fn scan(files: &[PathBuf], rules: &RuleSet, options: &Options) -> Scan {
     }
 }
 
-/// Reads and lowers one file. Unreadable or non-UTF-8 files are reported on
-/// stderr and skipped, so one bad file never aborts a scan.
+/// Reads and lowers one file. Unreadable files are reported on stderr and
+/// skipped, so one bad file never aborts a scan.
 fn lower(path: &Path, cwd: &Path) -> Option<(SourceUnit, String)> {
     let extension = path.extension()?.to_str()?;
     let frontend = shorwatch_langs::for_extension(extension)?;
-    let source = match fs::read_to_string(path) {
-        Ok(source) => source,
+    let source = match fs::read(path) {
+        Ok(bytes) => decode(bytes),
         Err(error) => {
             eprintln!("warning: skipping `{}`: {error}", path.display());
             return None;
@@ -67,4 +67,12 @@ fn lower(path: &Path, cwd: &Path) -> Option<(SourceUnit, String)> {
             None
         }
     }
+}
+
+/// UTF-8, or else ISO-8859-1: the historical encoding of `.properties` files
+/// and of older Java sources. Every byte is a Latin-1 character, so decoding
+/// never fails; algorithm names and keys are ASCII either way.
+fn decode(bytes: Vec<u8>) -> String {
+    String::from_utf8(bytes)
+        .unwrap_or_else(|error| error.into_bytes().into_iter().map(char::from).collect())
 }
