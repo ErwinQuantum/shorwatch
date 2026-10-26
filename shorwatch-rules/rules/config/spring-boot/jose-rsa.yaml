@@ -1,0 +1,13 @@
+id: config.spring-boot.jose-rsa
+profile: jose-rsa
+platform: config
+
+patterns:
+  # Resource server: algorithms accepted for incoming JWTs (a list).
+  - property:
+      key: '(?i)^spring\.security\.oauth2\.resourceserver\.jwt\.jws-?algorithms?(\[\d+\])?$'
+      matches: '(?i)(^|[,\s])(RS|PS)(256|384|512)($|[,\s])'
+  # Resource server verifying with a local public key: Spring Boot only
+  # supports RSA keys here.
+  - property:
+      key: '(?i)^spring\.security\.oauth2\.resourceserver\.jwt\.public-?key-?location$'

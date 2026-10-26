@@ -1,0 +1,4 @@
+jwt:
+  signing-algorithm: HS256
+crypto:
+  key-size: 128

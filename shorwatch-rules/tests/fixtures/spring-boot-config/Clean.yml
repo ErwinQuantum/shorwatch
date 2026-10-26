@@ -1,0 +1,19 @@
+# Nothing here is quantum-vulnerable.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Symmetric (HMAC) tokens.
+          jws-algorithms: HS256
+server:
+  ssl:
+    # TLS 1.3 only, 256-bit AES; key exchange negotiated by named groups.
+    ciphers: TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256
+app:
+  # "algorithm" settings that are not JOSE names.
+  hashing:
+    algorithm: argon2id
+  cache:
+    eviction-algorithm: LRU
+  # Comment mentioning RS256 is not a value.

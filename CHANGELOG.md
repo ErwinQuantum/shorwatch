@@ -20,3 +20,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - JWT/JOSE rules: `jwt.rsa`, `jwt.ecdsa`, `jwt.eddsa`, `jwt.ecdh` and `jwt.aes-128`, covering jjwt (0.11 and 0.12), Nimbus JOSE + JWT and Auth0 java-jwt. EC JWKs are reported as generic ECC.
 - Spring Security coverage: OAuth2 JOSE algorithm constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters` and spring-security-rsa.
 - A realistic Spring Authorization Server fixture exercising the frontend on records, lambdas, annotations and generics.
+- Configuration frontends: YAML (tree-sitter-yaml) and `.properties`, flattening keys the Spring way (`a.b[0].c`), with a `property` rule pattern.
+- Config rules: Spring Boot resource server algorithms and public keys, TLS cipher suites (`*.ssl.ciphers`), Spring Cloud Config encryption keys, and application keys such as `jwt.algorithm: RS256`. New `tls-key-exchange` profile.
+- Values injected with `@Value("${key:default}")` are resolved across files (`shorwatch_core::link`) against every profile's config, with Spring relaxed binding.
+
+### Changed
+- Rules target a platform (`jvm`, `config`) instead of a language, so JVM rules will apply to Kotlin unchanged.
+- Rules are split into algorithm profiles (`rules/algorithms/`, written once) and per-library rule files (`rules/jvm/<library>/`, `rules/config/<framework>/`) holding only patterns. Rule ids follow the path, e.g. `jvm.nimbus.jose-rsa`. Hybrid markers are shared (`rules/markers/pqc.yaml`). Every file under `rules/` is embedded automatically.

@@ -1,0 +1,11 @@
+id: config.spring-cloud-config.rsa
+profile: rsa
+platform: config
+
+patterns:
+  # Config Server encrypts `{cipher}` property values with the RSA key pair
+  # from this keystore (spring-security-rsa).
+  - property:
+      key: '(?i)^encrypt\.key-?store\.location$'
+  - property:
+      key: '(?i)^encrypt\.rsa\.'

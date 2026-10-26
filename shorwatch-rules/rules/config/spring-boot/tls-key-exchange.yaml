@@ -1,0 +1,11 @@
+id: config.spring-boot.tls-key-exchange
+profile: tls-key-exchange
+platform: config
+
+patterns:
+  # `server.ssl.ciphers`, SSL bundles (`spring.ssl.bundle.*.*.options.ciphers`)
+  # and the `*.ssl.ciphers` of Spring Boot's clients (Kafka, RabbitMQ...).
+  # Values are lists, comma-separated in `.properties`.
+  - property:
+      key: '(?i)(^|\.)(ssl|options)\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\[\d+\])?$'
+      matches: '(?i)(^|[,\s])TLS_(RSA|DHE?|ECDHE?)_'

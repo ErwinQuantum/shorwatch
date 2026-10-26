@@ -77,26 +77,41 @@ advice and links to the relevant NIST documents.
 
 ## Coverage
 
-Language: **Java** (more planned).
+Java source code and its configuration (`application.yml`, `.properties`).
+Rules are written per platform, so JVM rules will apply to Kotlin unchanged
+once its frontend lands.
 
 | Covered today | Not yet |
 |---|---|
-| JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | Configuration files (`application.yml`, `.properties`, TLS cipher suites) |
-| BouncyCastle lightweight API (engines, signers, generators) | Values injected from configuration (`@Value`) or passed through other methods (needs data-flow analysis) |
+| JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | Kotlin |
+| BouncyCastle lightweight API (engines, signers, generators) | `@ConfigurationProperties` binding; values passed through other methods (needs data-flow analysis) |
 | JWT/JOSE: jjwt (0.11 and 0.12), Nimbus JOSE + JWT, Auth0 java-jwt | Algorithms chosen at runtime, e.g. from a remote JWKS |
-| Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Kotlin |
-| Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | Compiled `.jar` dependencies |
+| Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Quarkus and Micronaut configuration keys |
+| Spring Boot config: `jws-algorithms`, `public-key-location`, TLS cipher suites (`*.ssl.ciphers`); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Compiled `.jar` dependencies |
+| Values injected with `@Value("${key:default}")`, resolved against every profile's config file | |
+| Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
 | Algorithm names as literals, same-file `final` constants, enum/static constants and static imports | |
 
-## Example rule
+## Rules
 
-A rule is a YAML file: what to match, why it matters, and how to migrate.
+Rules are YAML data, organized so that adding coverage means adding a file:
+
+```
+shorwatch-rules/rules/
+  algorithms/   what each algorithm is and why it matters (written once)
+  markers/      signs of post-quantum code, for hybrid detection
+  jvm/          one folder per library: jca, bouncycastle, nimbus, jjwt,
+                auth0, spring-security, ...
+  config/       one folder per framework: spring-boot, spring-cloud-config, app
+```
+
+An algorithm profile carries the explanation, migration advice and NIST
+references:
 
 ```yaml
-id: java.crypto.ecdsa
-language: java
+# algorithms/ecdsa.yaml
 algorithm: ECDSA
-category: shor          # shor rules can never declare a `fix`
+category: shor          # rules for Shor-broken algorithms can never declare a `fix`
 severity: high
 title: ECDSA signatures are forgeable with Shor's algorithm
 suggestion: >-
@@ -104,19 +119,31 @@ suggestion: >-
 references:
   - title: "FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)"
     url: https://csrc.nist.gov/pubs/fips/204/final
-patterns:
-  - call:
-      type: java.security.Signature
-      method: getInstance
-      arg: { index: 0, matches: '(?i)^(ECD?DSA|.+with(PLAIN-|CVC-)?ECD?DSA(inP1363Format)?)$' }
-  - construct:
-      type: org.bouncycastle.crypto.signers.ECDSASigner
-hybrid:
-  markers:
-    - literal: '(?i)(^|[^a-z])(kyber|dilithium|ml-?kem|ml-?dsa)'
+hybrid: pqc
 ```
 
-All built-in rules live in [`shorwatch-rules/rules/`](shorwatch-rules/rules/).
+A library rule only says what to match:
+
+```yaml
+# jvm/bouncycastle/ecdsa.yaml
+id: jvm.bouncycastle.ecdsa
+profile: ecdsa
+platform: jvm
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.signers.ECDSASigner
+```
+
+```yaml
+# config/spring-boot/jose-rsa.yaml
+id: config.spring-boot.jose-rsa
+profile: jose-rsa
+platform: config
+patterns:
+  - property:
+      key: '(?i)^spring\.security\.oauth2\.resourceserver\.jwt\.jws-?algorithms?(\[\d+\])?$'
+      matches: '(?i)(^|[,\s])(RS|PS)(256|384|512)($|[,\s])'
+```
 
 ## Architecture
 
@@ -125,10 +152,10 @@ parsers, files or output formats.
 
 ```
 shorwatch-core     Pure domain: intermediate code model, rule model and
-                   validation, evaluation engine. No I/O.
+                   validation, evaluation engine, cross-file linking. No I/O.
 shorwatch-rules    Built-in YAML rules, loader and schema validation.
-shorwatch-langs    tree-sitter frontends that lower source code into the
-                   core's intermediate model (Java today).
+shorwatch-langs    Frontends that lower files into the core's intermediate
+                   model: Java (tree-sitter), YAML (tree-sitter), .properties.
 shorwatch-report   Output adapters: SARIF 2.1.0 and terminal (in progress).
 shorwatch-cli      The `shorwatch` binary (in progress).
 ```
@@ -162,7 +189,7 @@ cargo test --workspace
 ## Roadmap
 
 - CLI, SARIF and terminal reports, CI integration
-- Configuration files (`application.yml`, `.properties`)
+- Kotlin and more configuration formats (Quarkus, Micronaut)
 - Data-flow analysis to follow crypto through wrapper methods
 - Dependency scanning (`pom.xml`, `build.gradle`, compiled `.jar`s)
 - Editor integration through LSP

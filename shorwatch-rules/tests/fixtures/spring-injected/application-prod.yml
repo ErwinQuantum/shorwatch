@@ -1,0 +1,3 @@
+# Production switches to asymmetric tokens.
+jwt:
+  signing-algorithm: RS256

@@ -1,0 +1,22 @@
+# Typical resource server + TLS settings of a Spring Boot service.
+spring:
+  application:
+    name: orders
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jws-algorithms: [RS256, ES256]
+          public-key-location: classpath:keys/issuer.pub
+
+server:
+  port: 8443
+  ssl:
+    key-store: classpath:server.p12
+    ciphers:
+      - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+      - TLS_AES_128_GCM_SHA256
+
+jwt:
+  issuer: https://auth.example.com
+  algorithm: PS512

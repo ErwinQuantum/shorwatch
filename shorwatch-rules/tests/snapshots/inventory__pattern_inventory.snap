@@ -10,9 +10,11 @@ expression: inventory
   - "Construct { ty: \"javax.crypto.spec.SecretKeySpec\", arg: Some(ArgPattern { index: 1, matches: \"(?i)^(DESede|TripleDES|3DES)$\" }) }"
   - "Construct { ty: \"org.bouncycastle.crypto.engines.DESedeEngine\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.engines.DESedeWrapEngine\", arg: None }"
+  - "Property { key: \"(?i)(^|\\\\.)(ssl|options)\\\\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)3DES_EDE\") }"
 AES-128:
   - "Call { receiver: \"javax.crypto.Cipher\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^AES_128(/|$)\" }) }"
   - "Call { receiver: \"javax.crypto.KeyGenerator\", method: \"init\", arg: Some(ArgPattern { index: 0, matches: \"^128$\" }) }"
+  - "Property { key: \"(?i)(^|\\\\.)(ssl|options)\\\\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)(^|[,\\\\s])TLS_\\\\w*AES_128_\") }"
 AES-128 (JOSE/JWE):
   - "Field { owner: \"com.nimbusds.jose.EncryptionMethod\", matches: Some(\"^A128(GCM|CBC_HS256)$\") }"
   - "Field { owner: \"com.nimbusds.jose.JWEAlgorithm\", matches: Some(\"(^|_)A128(GCM)?KW$\") }"
@@ -95,6 +97,8 @@ ECDSA (JOSE/JWT):
   - "Field { owner: \"io.jsonwebtoken.SignatureAlgorithm\", matches: Some(\"^ES(256|384|512)$\") }"
   - "Field { owner: \"org.springframework.security.oauth2.jose.jws.JwsAlgorithms\", matches: Some(\"^ES(256|384|512)$\") }"
   - "Field { owner: \"org.springframework.security.oauth2.jose.jws.SignatureAlgorithm\", matches: Some(\"^ES(256|384|512)$\") }"
+  - "Property { key: \"(?i)(^|\\\\.)(alg|algorithms?|signing-?algorithms?|signature-?algorithms?)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"^(ES(256K?|384|512))$\") }"
+  - "Property { key: \"(?i)^spring\\\\.security\\\\.oauth2\\\\.resourceserver\\\\.jwt\\\\.jws-?algorithms?(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)(^|[,\\\\s])ES(256|384|512)($|[,\\\\s])\") }"
 EdDSA:
   - "Call { receiver: \"java.security.KeyFactory\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^(EdDSA|Ed25519|Ed448)$\" }) }"
   - "Call { receiver: \"java.security.KeyPairGenerator\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^(EdDSA|Ed25519|Ed448)$\" }) }"
@@ -117,6 +121,7 @@ EdDSA (JOSE/JWT):
   - "Field { owner: \"com.nimbusds.jose.jwk.Curve\", matches: Some(\"^Ed(25519|448)$\") }"
   - "Field { owner: \"io.jsonwebtoken.Jwts.SIG\", matches: Some(\"^EdDSA$\") }"
   - "Field { owner: \"io.jsonwebtoken.security.Jwks.CRV\", matches: Some(\"^Ed(25519|448)$\") }"
+  - "Property { key: \"(?i)(^|\\\\.)(alg|algorithms?|signing-?algorithms?|signature-?algorithms?)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"^(EdDSA|Ed25519|Ed448)$\") }"
 ElGamal:
   - "Call { receiver: \"java.security.KeyFactory\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^ElGamal$\" }) }"
   - "Call { receiver: \"java.security.KeyPairGenerator\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^ElGamal$\" }) }"
@@ -139,6 +144,8 @@ RSA:
   - "Construct { ty: \"org.springframework.security.rsa.crypto.KeyStoreKeyFactory\", arg: None }"
   - "Construct { ty: \"org.springframework.security.rsa.crypto.RsaRawEncryptor\", arg: None }"
   - "Construct { ty: \"org.springframework.security.rsa.crypto.RsaSecretEncryptor\", arg: None }"
+  - "Property { key: \"(?i)^encrypt\\\\.key-?store\\\\.location$\", matches: None }"
+  - "Property { key: \"(?i)^encrypt\\\\.rsa\\\\.\", matches: None }"
 RSA (JOSE/JWT):
   - "Call { receiver: \"com.auth0.jwt.algorithms.Algorithm\", method: \"RSA256\", arg: None }"
   - "Call { receiver: \"com.auth0.jwt.algorithms.Algorithm\", method: \"RSA384\", arg: None }"
@@ -160,6 +167,9 @@ RSA (JOSE/JWT):
   - "Field { owner: \"io.jsonwebtoken.SignatureAlgorithm\", matches: Some(\"^(RS|PS)(256|384|512)$\") }"
   - "Field { owner: \"org.springframework.security.oauth2.jose.jws.JwsAlgorithms\", matches: Some(\"^(RS|PS)(256|384|512)$\") }"
   - "Field { owner: \"org.springframework.security.oauth2.jose.jws.SignatureAlgorithm\", matches: Some(\"^(RS|PS)(256|384|512)$\") }"
+  - "Property { key: \"(?i)(^|\\\\.)(alg|algorithms?|signing-?algorithms?|signature-?algorithms?)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"^((RS|PS)(256|384|512))$\") }"
+  - "Property { key: \"(?i)^spring\\\\.security\\\\.oauth2\\\\.resourceserver\\\\.jwt\\\\.jws-?algorithms?(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)(^|[,\\\\s])(RS|PS)(256|384|512)($|[,\\\\s])\") }"
+  - "Property { key: \"(?i)^spring\\\\.security\\\\.oauth2\\\\.resourceserver\\\\.jwt\\\\.public-?key-?location$\", matches: None }"
 SHA-1:
   - "Call { receiver: \"com.google.common.hash.Hashing\", method: \"sha1\", arg: None }"
   - "Call { receiver: \"java.security.MessageDigest\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^SHA(-?1)?$\" }) }"
@@ -168,3 +178,5 @@ SHA-1:
   - "Call { receiver: \"org.apache.commons.codec.digest.DigestUtils\", method: \"sha1\", arg: None }"
   - "Call { receiver: \"org.apache.commons.codec.digest.DigestUtils\", method: \"sha1Hex\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.digests.SHA1Digest\", arg: None }"
+TLS key exchange:
+  - "Property { key: \"(?i)(^|\\\\.)(ssl|options)\\\\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)(^|[,\\\\s])TLS_(RSA|DHE?|ECDHE?)_\") }"

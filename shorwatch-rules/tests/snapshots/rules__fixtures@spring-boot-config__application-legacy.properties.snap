@@ -1,0 +1,17 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/spring-boot-config/application-legacy.properties
+---
+- rule: config.spring-boot.3des
+  at: "2:20"
+  status: vulnerable
+- rule: config.spring-boot.aes-128
+  at: "2:20"
+  status: vulnerable
+- rule: config.spring-boot.tls-key-exchange
+  at: "2:20"
+  status: vulnerable
+- rule: config.spring-cloud-config.rsa
+  at: "4:28"
+  status: vulnerable

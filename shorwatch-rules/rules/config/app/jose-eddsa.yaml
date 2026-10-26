@@ -1,0 +1,11 @@
+id: config.app.jose-eddsa
+profile: jose-eddsa
+platform: config
+
+patterns:
+  # Application-defined keys such as `jwt.algorithm` or `security.token.alg`,
+  # usually injected with @Value. Only exact JOSE names count, so unrelated
+  # "algorithm" settings stay quiet.
+  - property:
+      key: '(?i)(^|\.)(alg|algorithms?|signing-?algorithms?|signature-?algorithms?)(\[\d+\])?$'
+      matches: '^(EdDSA|Ed25519|Ed448)$'

@@ -1,0 +1,9 @@
+id: config.spring-boot.jose-ecdsa
+profile: jose-ecdsa
+platform: config
+
+patterns:
+  # Resource server: algorithms accepted for incoming JWTs (a list).
+  - property:
+      key: '(?i)^spring\.security\.oauth2\.resourceserver\.jwt\.jws-?algorithms?(\[\d+\])?$'
+      matches: '(?i)(^|[,\s])ES(256|384|512)($|[,\s])'

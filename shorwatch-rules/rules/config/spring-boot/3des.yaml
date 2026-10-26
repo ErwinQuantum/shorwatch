@@ -1,0 +1,9 @@
+id: config.spring-boot.3des
+profile: 3des
+platform: config
+
+patterns:
+  # TLS cipher suites with Triple DES (`..._WITH_3DES_EDE_CBC_SHA`).
+  - property:
+      key: '(?i)(^|\.)(ssl|options)\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\[\d+\])?$'
+      matches: '(?i)3DES_EDE'
