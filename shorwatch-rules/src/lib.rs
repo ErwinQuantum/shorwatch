@@ -35,6 +35,7 @@ const BUILTIN: &[(&str, &str)] = builtin![
     "java/3des.yaml",
     "java/jwt-rsa.yaml",
     "java/jwt-ecdsa.yaml",
+    "java/jwt-eddsa.yaml",
 ];
 
 #[derive(Debug, Error)]
