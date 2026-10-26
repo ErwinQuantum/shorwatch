@@ -187,3 +187,20 @@ fn error_names_the_origin() {
     let err = parse("rules/broken.yaml", "id: [").unwrap_err();
     assert!(err.to_string().starts_with("rules/broken.yaml:"), "{err}");
 }
+
+#[test]
+fn every_builtin_rule_describes_its_cryptography() {
+    for rule in builtin_rules().unwrap() {
+        let crypto = rule
+            .crypto
+            .as_ref()
+            .unwrap_or_else(|| panic!("{}: add a `crypto:` block to its profile", rule.id));
+        if rule.category == shorwatch_core::Category::Shor {
+            assert_eq!(
+                crypto.nist_quantum_security_level, 0,
+                "{}: Shor-broken algorithms have no quantum security",
+                rule.id
+            );
+        }
+    }
+}

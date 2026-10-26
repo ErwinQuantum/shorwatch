@@ -7,6 +7,7 @@
 //!
 //! - [`terminal`]: colored, human-readable report and the banner.
 //! - [`sarif`]: SARIF 2.1.0 for GitHub code scanning, GitLab and IDEs.
+//! - [`cbom`]: a CycloneDX 1.6 Cryptography Bill of Materials (inventory).
 //! - [`json`]: the findings as JSON, for scripts and other tools.
 //! - [`markdown`]: a summary for CI job summaries and pull-request comments.
 
@@ -14,6 +15,7 @@ use std::collections::BTreeMap;
 
 use shorwatch_core::Finding;
 
+pub mod cbom;
 pub mod json;
 pub mod markdown;
 pub mod sarif;

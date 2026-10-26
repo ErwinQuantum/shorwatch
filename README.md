@@ -83,6 +83,7 @@ cargo install --path shorwatch-cli          # until the first release is publish
 shorwatch scan .                             # scan the current project
 shorwatch scan src/ config/ --compact        # several paths, one line per finding
 shorwatch scan . --format sarif -o shorwatch.sarif
+shorwatch scan . --format cbom -o crypto.cdx.json # CycloneDX CBOM inventory
 shorwatch scan . --min-severity medium --fail-on any
 shorwatch scan . --rules ./company-rules/    # add your own YAML rules
 shorwatch rules                              # list the rules in effect
@@ -94,7 +95,7 @@ shorwatch rules                              # list the rules in effect
 
 | Option | |
 |---|---|
-| `--format text\|sarif\|json\|markdown` | Output format (default `text`, coloured on terminals) |
+| `--format text\|sarif\|cbom\|json\|markdown` | Output format (default `text`, coloured on terminals) |
 | `-o, --output FILE` | Write the report to a file |
 | `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
 | `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`) |
@@ -138,7 +139,49 @@ Boot service:
 
 Every format for that scan is in [`examples/output/`](examples/output/):
 [text](examples/output/report.txt), [SARIF](examples/output/report.sarif),
-[JSON](examples/output/report.json), [Markdown](examples/output/report.md).
+[CBOM](examples/output/report.cdx.json), [JSON](examples/output/report.json),
+[Markdown](examples/output/report.md).
+
+### Cryptography Bill of Materials (CBOM)
+
+`--format cbom` emits a [CycloneDX 1.6](https://cyclonedx.org/capabilities/cbom/)
+CBOM, the inventory format used by the post-quantum ecosystem (PQCA tooling
+such as CBOMkit). Each algorithm becomes a `cryptographic-asset` with its
+primitive, parameters and **NIST quantum security level**, and every place it
+occurs is listed as evidence:
+
+```json
+{
+  "type": "cryptographic-asset",
+  "bom-ref": "crypto/algorithm/aes-128",
+  "name": "AES-128",
+  "cryptoProperties": {
+    "assetType": "algorithm",
+    "algorithmProperties": {
+      "primitive": "block-cipher",
+      "parameterSetIdentifier": "128",
+      "cryptoFunctions": ["keygen", "encrypt", "decrypt"],
+      "classicalSecurityLevel": 128,
+      "nistQuantumSecurityLevel": 1
+    }
+  },
+  "evidence": {
+    "occurrences": [
+      {
+        "location": "examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java",
+        "line": 22,
+        "additionalContext": "jvm.jca.aes-128 (vulnerable)"
+      }
+    ]
+  }
+}
+```
+
+SARIF answers *what must be fixed and where*; the CBOM answers *what
+cryptography the system contains*. The CBOM is validated against the official
+CycloneDX 1.6 schema and is deterministic (no timestamp or random serial
+number). Today it inventories the quantum-vulnerable algorithms Shorwatch
+detects; quantum-safe algorithms are not listed yet.
 
 ### GitHub code scanning
 

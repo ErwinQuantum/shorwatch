@@ -56,5 +56,6 @@ fn build_finding(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact, matched: M
         location: fact.location,
         hybrid_evidence,
         fix: suggested_fix(rule, &matched),
+        crypto: spec.crypto.clone(),
     }
 }

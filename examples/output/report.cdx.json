@@ -1,0 +1,349 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "shorwatch",
+          "version": "0.1.0"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/rsa-jose-jwt",
+      "name": "RSA (JOSE/JWT)",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "cryptoFunctions": [
+            "sign",
+            "verify",
+            "encrypt",
+            "decrypt"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java",
+            "line": 23,
+            "additionalContext": "jvm.nimbus.jose-rsa (vulnerable)"
+          },
+          {
+            "location": "examples/spring-service/src/main/resources/application.yml",
+            "line": 8,
+            "additionalContext": "config.spring-boot.jose-rsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/rsa",
+      "name": "RSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "cryptoFunctions": [
+            "keygen",
+            "encrypt",
+            "decrypt",
+            "sign",
+            "verify"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java",
+            "line": 32,
+            "additionalContext": "jvm.jca.rsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ecdsa-jose-jwt",
+      "name": "ECDSA (JOSE/JWT)",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "cryptoFunctions": [
+            "sign",
+            "verify"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/auth/TokenSigner.java",
+            "line": 14,
+            "additionalContext": "jvm.nimbus.jose-ecdsa (vulnerable)"
+          },
+          {
+            "location": "examples/spring-service/src/main/resources/application-prod.yml",
+            "line": 4,
+            "additionalContext": "config.app.jose-ecdsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/sha-1",
+      "name": "SHA-1",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "cryptoFunctions": [
+            "digest"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java",
+            "line": 13,
+            "additionalContext": "jvm.jca.sha1 (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "grover"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "medium"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/3des",
+      "name": "3DES",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "block-cipher",
+          "parameterSetIdentifier": "168",
+          "cryptoFunctions": [
+            "keygen",
+            "encrypt",
+            "decrypt"
+          ],
+          "classicalSecurityLevel": 112,
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java",
+            "line": 17,
+            "additionalContext": "jvm.jca.3des (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "grover"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "medium"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/aes-128",
+      "name": "AES-128",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "block-cipher",
+          "parameterSetIdentifier": "128",
+          "cryptoFunctions": [
+            "keygen",
+            "encrypt",
+            "decrypt"
+          ],
+          "classicalSecurityLevel": 128,
+          "nistQuantumSecurityLevel": 1
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java",
+            "line": 22,
+            "additionalContext": "jvm.jca.aes-128 (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "grover"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "low"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ecdh",
+      "name": "ECDH",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "key-agree",
+          "cryptoFunctions": [
+            "keygen",
+            "keyderive"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/tls/HybridKeyExchange.java",
+            "line": 9,
+            "additionalContext": "jvm.jca.ecdh (in transition)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "in_transition"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/tls-key-exchange",
+      "name": "TLS key exchange",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "key-agree",
+          "cryptoFunctions": [
+            "keyderive"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/resources/application.yml",
+            "line": 14,
+            "additionalContext": "config.spring-boot.tls-key-exchange (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    }
+  ]
+}

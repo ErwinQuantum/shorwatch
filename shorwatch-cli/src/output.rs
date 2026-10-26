@@ -5,7 +5,7 @@ use std::io::{IsTerminal, Write};
 use std::path::Path;
 
 use anyhow::{Context, Result};
-use shorwatch_report::{Scan, json, markdown, sarif, terminal};
+use shorwatch_report::{Scan, cbom, json, markdown, sarif, terminal};
 
 use crate::args::{Format, ScanArgs};
 
@@ -33,6 +33,7 @@ pub fn write(scan: &Scan, args: &ScanArgs) -> Result<()> {
             },
         ),
         Format::Sarif => sarif::render(scan),
+        Format::Cbom => cbom::render(scan),
         Format::Json => json::render(scan),
         Format::Markdown => markdown::render(scan),
     };

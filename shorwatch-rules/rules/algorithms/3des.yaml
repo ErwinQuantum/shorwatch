@@ -18,3 +18,10 @@ references:
     url: https://csrc.nist.gov/pubs/sp/800/67/r2/final
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
     url: https://csrc.nist.gov/pubs/ir/8547/ipd
+crypto:
+  # Three-key 3DES: 112 bits classically, below NIST category 1.
+  primitive: block-cipher
+  functions: [keygen, encrypt, decrypt]
+  parameter_set: '168'
+  classical_security_level: 112
+  nist_quantum_security_level: 0

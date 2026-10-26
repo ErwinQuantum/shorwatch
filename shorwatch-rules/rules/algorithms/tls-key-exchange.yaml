@@ -25,3 +25,7 @@ references:
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
     url: https://csrc.nist.gov/pubs/ir/8547/ipd
 hybrid: pqc
+crypto:
+  primitive: key-agree
+  functions: [keyderive]
+  nist_quantum_security_level: 0

@@ -170,3 +170,29 @@ fn examples_keep_showing_what_their_readme_describes() {
         "every example file is flagged"
     );
 }
+
+#[test]
+fn cbom_inventories_algorithms_with_their_occurrences() {
+    let output = shorwatch(&["scan", &examples("spring-service"), "--format", "cbom"]);
+    let bom: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(bom["bomFormat"], "CycloneDX");
+    assert_eq!(bom["specVersion"], "1.6");
+    let components = bom["components"].as_array().unwrap();
+    for component in components {
+        assert_eq!(component["type"], "cryptographic-asset");
+        let level =
+            &component["cryptoProperties"]["algorithmProperties"]["nistQuantumSecurityLevel"];
+        assert!(level.is_u64(), "{component}");
+        assert!(
+            !component["evidence"]["occurrences"]
+                .as_array()
+                .unwrap()
+                .is_empty()
+        );
+    }
+    let rsa = components.iter().find(|c| c["name"] == "RSA").unwrap();
+    assert_eq!(
+        rsa["cryptoProperties"]["algorithmProperties"]["primitive"],
+        "pke"
+    );
+}

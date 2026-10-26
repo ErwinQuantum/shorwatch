@@ -35,9 +35,9 @@ cargo run --release -- scan examples/spring-service --format sarif --output repo
 Regenerate `output/` after changing rules or examples:
 
 ```sh
-for f in sarif json markdown; do
-  cargo run -q -- scan examples/spring-service --format $f \
-    --output examples/output/report.$([ $f = markdown ] && echo md || echo $f)
+for f in sarif cbom json markdown; do
+  ext=$f; [ $f = markdown ] && ext=md; [ $f = cbom ] && ext=cdx.json
+  cargo run -q -- scan examples/spring-service --format $f --output examples/output/report.$ext
 done
 cargo run -q -- scan examples/spring-service --output examples/output/report.txt
 ```

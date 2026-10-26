@@ -20,3 +20,8 @@ references:
     url: https://csrc.nist.gov/pubs/fips/180-4/upd1/final
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
     url: https://csrc.nist.gov/pubs/ir/8547/ipd
+crypto:
+  # Collision resistance is broken classically; no meaningful level.
+  primitive: hash
+  functions: [digest]
+  nist_quantum_security_level: 0

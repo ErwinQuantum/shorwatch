@@ -1,0 +1,180 @@
+---
+source: shorwatch-report/src/cbom.rs
+expression: render(&scan())
+---
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "shorwatch",
+          "version": "0.1.0"
+        }
+      ]
+    }
+  },
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/rsa",
+      "name": "RSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "cryptoFunctions": [
+            "keygen",
+            "encrypt"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/main/java/com/acme/auth/AuthConfig.java",
+            "line": 5,
+            "additionalContext": "jvm.jca.rsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/aes-128",
+      "name": "AES-128",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "block-cipher",
+          "parameterSetIdentifier": "128",
+          "cryptoFunctions": [
+            "keygen",
+            "encrypt"
+          ],
+          "classicalSecurityLevel": 128,
+          "nistQuantumSecurityLevel": 1
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/main/java/com/acme/auth/AuthConfig.java",
+            "line": 11,
+            "additionalContext": "jvm.jca.aes-128 (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "grover"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "low"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ecdsa",
+      "name": "ECDSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "cryptoFunctions": [
+            "keygen",
+            "encrypt"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/main/java/com/acme/auth/Signer.java",
+            "line": 3,
+            "additionalContext": "jvm.jca.ecdsa (in transition)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "in_transition"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/rsa-jose-jwt",
+      "name": "RSA (JOSE/JWT)",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "cryptoFunctions": [
+            "keygen",
+            "encrypt"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "src/main/resources/application.yml",
+            "line": 4,
+            "additionalContext": "config.spring-boot.jose-rsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    }
+  ]
+}

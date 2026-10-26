@@ -40,6 +40,7 @@ pub(crate) fn rsa_rule() -> Rule {
             ],
         }),
         fix: None,
+        crypto: None,
     }
 }
 

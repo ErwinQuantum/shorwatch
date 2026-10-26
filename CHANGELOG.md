@@ -25,6 +25,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Values injected with `@Value("${key:default}")` are resolved across files (`shorwatch_core::link`) against every profile's config, with Spring relaxed binding.
 - `shorwatch` CLI: `scan` (parallel, `.gitignore`-aware, `--format text|sarif|json|markdown`, `--output`, `--min-severity`, `--fail-on`, `--compact`, `--rules`) and `rules`. Exit codes 0/1/2 for CI gates.
 - Reports: rustc-style terminal output with the matched span underlined and a gradient banner on interactive terminals, SARIF 2.1.0 (rule descriptors, `security-severity`, fixes), JSON and Markdown.
+- CycloneDX 1.6 CBOM output (`--format cbom`): one `cryptographic-asset` per algorithm with primitive, parameters and NIST quantum security level, and every occurrence as evidence. Validated against the official schema. Profiles gain a `crypto:` block, enforced by tests.
 - `examples/`: one file per algorithm, a Spring Boot service and its reports in every format.
 - `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
 

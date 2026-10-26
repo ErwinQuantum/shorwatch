@@ -85,6 +85,8 @@ pub enum Format {
     Text,
     /// SARIF 2.1.0 (GitHub code scanning, GitLab, IDEs).
     Sarif,
+    /// CycloneDX 1.6 CBOM: an inventory of the cryptography found.
+    Cbom,
     /// JSON, for scripts and other tools.
     Json,
     /// Markdown summary (CI job summaries, PR comments).

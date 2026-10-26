@@ -19,3 +19,9 @@ references:
     url: https://csrc.nist.gov/pubs/ir/8547/ipd
   - title: "NSA CNSA 2.0 Algorithms (AES-256 required)"
     url: https://media.defense.gov/2022/Sep/07/2003071834/-1/-1/0/CSA_CNSA_2.0_ALGORITHMS_.PDF
+crypto:
+  primitive: ae
+  functions: [encrypt, decrypt]
+  parameter_set: '128'
+  classical_security_level: 128
+  nist_quantum_security_level: 1

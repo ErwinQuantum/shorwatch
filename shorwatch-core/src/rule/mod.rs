@@ -11,12 +11,14 @@ use serde::{Deserialize, Serialize};
 use crate::ir::{Platform, ScopeKind};
 
 mod compile;
+mod crypto;
 mod error;
 #[cfg(test)]
 pub(crate) mod tests;
 
 pub use compile::RuleSet;
 pub(crate) use compile::{CompiledMarker, CompiledPattern, CompiledRule};
+pub use crypto::{CryptoFunction, CryptoProperties, Primitive};
 pub use error::RuleError;
 
 /// Which quantum attack weakens the algorithm. This decides what kind of
@@ -72,6 +74,9 @@ pub struct Rule {
     /// Mechanical fix. Only accepted for [`Category::Grover`] rules.
     #[serde(default)]
     pub fix: Option<FixSpec>,
+    /// What kind of cryptography this is, for inventories (CBOM).
+    #[serde(default)]
+    pub crypto: Option<CryptoProperties>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

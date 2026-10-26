@@ -2,7 +2,9 @@
 //! YAML, one in transition, one with a fix.
 
 use shorwatch_core::ir::{Location, Position};
-use shorwatch_core::rule::{Category, Reference, Severity};
+use shorwatch_core::rule::{
+    Category, CryptoFunction, CryptoProperties, Primitive, Reference, Severity,
+};
 use shorwatch_core::{Finding, HybridEvidence, Status, SuggestedFix};
 
 use crate::Scan;
@@ -85,6 +87,17 @@ fn shor(rule_id: &str, algorithm: &str, path: &str, at: Location) -> Finding {
         location: at,
         hybrid_evidence: None,
         fix: None,
+        crypto: Some(crypto(Primitive::Pke, None, 0)),
+    }
+}
+
+fn crypto(primitive: Primitive, parameter_set: Option<&str>, level: u8) -> CryptoProperties {
+    CryptoProperties {
+        primitive,
+        functions: vec![CryptoFunction::Keygen, CryptoFunction::Encrypt],
+        parameter_set: parameter_set.map(str::to_owned),
+        classical_security_level: parameter_set.and_then(|p| p.parse().ok()),
+        nist_quantum_security_level: level,
     }
 }
 
@@ -106,6 +119,7 @@ pub(crate) fn scan() -> Scan {
             "FIPS 197: AES",
             "https://csrc.nist.gov/pubs/fips/197/final",
         )],
+        crypto: Some(crypto(Primitive::BlockCipher, Some("128"), 1)),
         fix: Some(SuggestedFix {
             description: "Use a 256-bit AES key".into(),
             location: location(11, 17, 20),

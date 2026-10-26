@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::ir::Location;
-use crate::rule::{Category, Reference, Severity};
+use crate::rule::{Category, CryptoProperties, Reference, Severity};
 
 /// Whether the project still depends solely on the vulnerable algorithm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
@@ -46,4 +46,6 @@ pub struct Finding {
     pub hybrid_evidence: Option<HybridEvidence>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fix: Option<SuggestedFix>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub crypto: Option<CryptoProperties>,
 }

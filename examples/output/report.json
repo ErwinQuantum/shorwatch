@@ -54,6 +54,18 @@
         },
         "start_byte": 816,
         "end_byte": 870
+      },
+      "crypto": {
+        "primitive": "signature",
+        "functions": [
+          "sign",
+          "verify",
+          "encrypt",
+          "decrypt"
+        ],
+        "parameter_set": null,
+        "classical_security_level": null,
+        "nist_quantum_security_level": 0
       }
     },
     {
@@ -91,6 +103,19 @@
         },
         "start_byte": 1182,
         "end_byte": 1217
+      },
+      "crypto": {
+        "primitive": "pke",
+        "functions": [
+          "keygen",
+          "encrypt",
+          "decrypt",
+          "sign",
+          "verify"
+        ],
+        "parameter_set": null,
+        "classical_security_level": null,
+        "nist_quantum_security_level": 0
       }
     },
     {
@@ -128,6 +153,16 @@
         },
         "start_byte": 417,
         "end_byte": 446
+      },
+      "crypto": {
+        "primitive": "signature",
+        "functions": [
+          "sign",
+          "verify"
+        ],
+        "parameter_set": null,
+        "classical_security_level": null,
+        "nist_quantum_security_level": 0
       }
     },
     {
@@ -165,6 +200,15 @@
         },
         "start_byte": 389,
         "end_byte": 423
+      },
+      "crypto": {
+        "primitive": "hash",
+        "functions": [
+          "digest"
+        ],
+        "parameter_set": null,
+        "classical_security_level": null,
+        "nist_quantum_security_level": 0
       }
     },
     {
@@ -202,6 +246,17 @@
         },
         "start_byte": 511,
         "end_byte": 543
+      },
+      "crypto": {
+        "primitive": "block-cipher",
+        "functions": [
+          "keygen",
+          "encrypt",
+          "decrypt"
+        ],
+        "parameter_set": "168",
+        "classical_security_level": 112,
+        "nist_quantum_security_level": 0
       }
     },
     {
@@ -255,6 +310,17 @@
           "end_byte": 697
         },
         "replacement": "256"
+      },
+      "crypto": {
+        "primitive": "block-cipher",
+        "functions": [
+          "keygen",
+          "encrypt",
+          "decrypt"
+        ],
+        "parameter_set": "128",
+        "classical_security_level": 128,
+        "nist_quantum_security_level": 1
       }
     },
     {
@@ -307,6 +373,16 @@
           "start_byte": 390,
           "end_byte": 398
         }
+      },
+      "crypto": {
+        "primitive": "key-agree",
+        "functions": [
+          "keygen",
+          "keyderive"
+        ],
+        "parameter_set": null,
+        "classical_security_level": null,
+        "nist_quantum_security_level": 0
       }
     },
     {
@@ -344,6 +420,16 @@
         },
         "start_byte": 104,
         "end_byte": 109
+      },
+      "crypto": {
+        "primitive": "signature",
+        "functions": [
+          "sign",
+          "verify"
+        ],
+        "parameter_set": null,
+        "classical_security_level": null,
+        "nist_quantum_security_level": 0
       }
     },
     {
@@ -385,6 +471,18 @@
         },
         "start_byte": 128,
         "end_byte": 133
+      },
+      "crypto": {
+        "primitive": "signature",
+        "functions": [
+          "sign",
+          "verify",
+          "encrypt",
+          "decrypt"
+        ],
+        "parameter_set": null,
+        "classical_security_level": null,
+        "nist_quantum_security_level": 0
       }
     },
     {
@@ -426,6 +524,15 @@
         },
         "start_byte": 215,
         "end_byte": 275
+      },
+      "crypto": {
+        "primitive": "key-agree",
+        "functions": [
+          "keyderive"
+        ],
+        "parameter_set": null,
+        "classical_security_level": null,
+        "nist_quantum_security_level": 0
       }
     }
   ]
