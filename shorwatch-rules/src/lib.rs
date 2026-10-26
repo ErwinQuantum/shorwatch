@@ -37,6 +37,7 @@ const BUILTIN: &[(&str, &str)] = builtin![
     "java/jwt-ecdsa.yaml",
     "java/jwt-eddsa.yaml",
     "java/jwt-ecdh.yaml",
+    "java/jwt-aes-128.yaml",
 ];
 
 #[derive(Debug, Error)]
