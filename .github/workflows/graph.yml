@@ -1,0 +1,54 @@
+# Publishes the knowledge graph of the codebase (graphify, code/AST part only:
+# no LLM, no secrets) to GitHub Pages. The graph is never committed back.
+name: Graph
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Pages needs a public repository on a free plan.
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install graphifyy==0.9.92
+      - name: Build the code graph
+        env:
+          # Deterministic community detection between runs.
+          PYTHONHASHSEED: "0"
+        run: graphify update .
+      - name: Assemble the site
+        run: |
+          mkdir site
+          cp graphify-out/graph.html site/index.html
+          cp graphify-out/GRAPH_REPORT.md site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
