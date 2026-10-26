@@ -26,6 +26,7 @@ pub(crate) fn rsa_rule() -> Rule {
                     index: 0,
                     matches: "(?i)^RSA$".into(),
                 }),
+                origin: None,
             },
             Pattern::Construct {
                 ty: "org.bouncycastle.crypto.engines.RSAEngine".into(),

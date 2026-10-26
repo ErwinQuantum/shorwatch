@@ -1,7 +1,7 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/aes-128/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/aes-128/Vulnerable.java
 ---
 - rule: jvm.jca.aes-128
   at: "12:9"
@@ -17,3 +17,7 @@ input_file: shorwatch-rules/tests/fixtures/java/aes-128/Vulnerable.java
 - rule: jvm.jca.aes-128
   at: "30:9"
   status: vulnerable
+- rule: jvm.jca.aes-128
+  at: "36:9"
+  status: vulnerable
+  fix: 256 @ 36

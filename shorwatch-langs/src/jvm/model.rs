@@ -11,6 +11,9 @@ pub(crate) struct Symbol {
     /// Literal initializer of a `final` declaration, or the property injected
     /// by `@Value("${...}")`.
     pub(crate) constant: Option<ArgValue>,
+    /// Arguments of the factory call that initialized it:
+    /// `KeyGenerator.getInstance("AES")` -> `["AES"]`.
+    pub(crate) origin: Option<Vec<PendingArg>>,
 }
 
 #[derive(Debug, Clone)]
@@ -20,11 +23,15 @@ pub(crate) enum Receiver {
     /// `a.b.C.m()` or `this.x.m()`.
     Path(String),
     /// A type known from the syntax, such as the implicit receiver inside
-    /// Kotlin's `KeyGenerator.getInstance("AES").apply { init(128) }`.
-    Type(String),
+    /// Kotlin's `KeyGenerator.getInstance("AES").apply { init(128) }`, with the
+    /// arguments of the factory that created it when known.
+    Type {
+        ty: String,
+        origin: Option<Vec<PendingArg>>,
+    },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) enum ArgSource {
     Value(ArgValue),
     /// `m(NAME)`.
@@ -36,7 +43,7 @@ pub(crate) enum ArgSource {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct PendingArg {
     pub(crate) source: ArgSource,
     pub(crate) raw: String,

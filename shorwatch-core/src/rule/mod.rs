@@ -17,7 +17,7 @@ mod error;
 pub(crate) mod tests;
 
 pub use compile::RuleSet;
-pub(crate) use compile::{CompiledMarker, CompiledPattern, CompiledRule};
+pub(crate) use compile::{CompiledArg, CompiledMarker, CompiledPattern, CompiledRule};
 pub use crypto::{CryptoFunction, CryptoProperties, Primitive};
 pub use error::RuleError;
 
@@ -89,6 +89,11 @@ pub enum Pattern {
         method: String,
         #[serde(default)]
         arg: Option<ArgPattern>,
+        /// Constrains the factory call that created the receiver
+        /// (`KeyGenerator.getInstance("AES")`). A receiver of unknown origin
+        /// still matches: the rule errs on the side of reporting.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        origin: Option<ArgPattern>,
     },
     /// `new Type(...)`.
     Construct {

@@ -17,6 +17,7 @@ fn calls(unit: &SourceUnit) -> Vec<(Option<TypeRef>, String, Vec<ArgValue>)> {
                 receiver,
                 method,
                 args,
+                ..
             } => Some((
                 receiver.clone(),
                 method.clone(),
@@ -295,4 +296,48 @@ fn local_methods_shadow_static_imports() {
             "#,
     );
     assert_eq!(calls(&unit)[0].0, None);
+}
+
+/// `(method, first factory argument)` of every call whose receiver origin is known.
+fn origins(unit: &SourceUnit) -> Vec<(String, ArgValue)> {
+    unit.facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Call {
+                method,
+                receiver_origin: Some(origin),
+                ..
+            } => Some((method.clone(), origin.first()?.value.clone())),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn calls_on_factory_made_variables_know_their_origin() {
+    let unit = lower(
+        r#"
+            import javax.crypto.KeyGenerator;
+            class A {
+                private static final String HMAC = "HmacSHA256";
+                private final KeyGenerator field = KeyGenerator.getInstance("AES");
+                void run(KeyGenerator injected) throws Exception {
+                    KeyGenerator aes = KeyGenerator.getInstance("AES");
+                    aes.init(128);
+                    var mac = KeyGenerator.getInstance(HMAC);
+                    mac.init(128);
+                    this.field.init(192);
+                    injected.init(128);
+                }
+            }
+            "#,
+    );
+    assert_eq!(
+        origins(&unit),
+        [
+            ("init".to_owned(), ArgValue::Str("AES".into())),
+            ("init".to_owned(), ArgValue::Str("HmacSHA256".into())),
+            ("init".to_owned(), ArgValue::Str("AES".into())),
+        ]
+    );
 }

@@ -17,6 +17,7 @@ fn get_instance(unit: &mut SourceUnit, scope: crate::ir::ScopeId, ty: &str, alg:
             receiver: Some(TypeRef::qualified(ty)),
             method: "getInstance".into(),
             args: vec![Arg::str(alg, loc(line))],
+            receiver_origin: None,
         },
         scope,
         loc(line),
@@ -87,6 +88,7 @@ fn unknown_argument_value_does_not_match() {
                 resolved_via: None,
                 location: loc(3),
             }],
+            receiver_origin: None,
         },
         method,
         loc(3),
@@ -190,6 +192,10 @@ fn aes_rule() -> Rule {
                 index: 0,
                 matches: "^128$".into(),
             }),
+            origin: Some(ArgPattern {
+                index: 0,
+                matches: "(?i)^AES".into(),
+            }),
         }],
         hybrid: None,
         fix: Some(FixSpec {
@@ -202,12 +208,18 @@ fn aes_rule() -> Rule {
 }
 
 fn key_generator_init(arg: Arg) -> SourceUnit {
+    key_generator_init_from(arg, None)
+}
+
+/// `generator.init(arg)`, `generator` created by a factory called with `origin`.
+fn key_generator_init_from(arg: Arg, origin: Option<Vec<Arg>>) -> SourceUnit {
     let (mut unit, _, method) = unit_with_method();
     unit.push(
         FactKind::Call {
             receiver: Some(TypeRef::simple("KeyGenerator")),
             method: "init".into(),
             args: vec![arg],
+            receiver_origin: origin,
         },
         method,
         loc(4),
@@ -317,6 +329,7 @@ fn pqc_field_owner_is_hybrid_evidence() {
         receiver: "java.security.Signature".into(),
         method: "getInstance".into(),
         arg: None,
+        origin: None,
     });
     rule.hybrid.as_mut().unwrap().markers = vec![crate::rule::Marker::Type("(?i)ml-?dsa".into())];
     let set = RuleSet::compile([rule]).unwrap();
@@ -347,4 +360,27 @@ fn findings_are_sorted_by_position() {
         .map(|f| f.location.start.line)
         .collect();
     assert_eq!(lines, [2, 9]);
+}
+
+#[test]
+fn receiver_origin_tells_aes_from_hmac_key_generators() {
+    let set = RuleSet::compile([aes_rule()]).unwrap();
+    let found = |origin: Option<Vec<Arg>>| {
+        analyze(
+            &key_generator_init_from(Arg::int(128, loc(4)), origin),
+            &set,
+        )
+        .len()
+    };
+    let unknown = Arg {
+        value: crate::ir::ArgValue::Unknown,
+        raw: "configured".into(),
+        resolved_via: None,
+        location: loc(2),
+    };
+    assert_eq!(found(Some(vec![Arg::str("AES", loc(2))])), 1);
+    assert_eq!(found(Some(vec![Arg::str("HmacSHA256", loc(2))])), 0);
+    // Unknown origins keep the finding: better a false positive than a miss.
+    assert_eq!(found(None), 1);
+    assert_eq!(found(Some(vec![unknown])), 1);
 }

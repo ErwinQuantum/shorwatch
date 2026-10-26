@@ -30,4 +30,10 @@ public class Vulnerable {
         generator.init(0x80, random);
         return generator.generateKey();
     }
+
+    /** Created elsewhere: the algorithm is unknown, so it is still reported. */
+    SecretKey injected(KeyGenerator generator) {
+        generator.init(128);
+        return generator.generateKey();
+    }
 }

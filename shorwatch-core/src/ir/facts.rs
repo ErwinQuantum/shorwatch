@@ -78,6 +78,12 @@ pub enum FactKind {
         receiver: Option<TypeRef>,
         method: String,
         args: Vec<Arg>,
+        /// Arguments of the factory call that created the receiver, when the
+        /// receiver is a variable initialized by one: `["AES"]` for
+        /// `g.init(128)` after `g = KeyGenerator.getInstance("AES")`. Lets a
+        /// rule tell an AES key generator from an HMAC one. `None` when unknown.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        receiver_origin: Option<Vec<Arg>>,
     },
     /// An object instantiation.
     Construct { ty: TypeRef, args: Vec<Arg> },

@@ -73,13 +73,20 @@ const RECEIVER_SCOPE_FUNCTIONS: [&str; 2] = ["apply", "run"];
 /// Scope functions whose lambda gets the receiver as its parameter (`it`).
 const PARAMETER_SCOPE_FUNCTIONS: [&str; 2] = ["also", "let"];
 
+fn is_scope_function(name: &str) -> bool {
+    RECEIVER_SCOPE_FUNCTIONS.contains(&name) || PARAMETER_SCOPE_FUNCTIONS.contains(&name)
+}
+
 /// What a scope function's lambda knows about its receiver.
 #[derive(Debug)]
 enum LambdaContext {
     /// `x.apply { m() }`, `with(x) { m() }`: unqualified calls go to `x`.
     Receiver(Receiver),
-    /// `x.also { it.m() }`: the lambda's parameter has `x`'s type.
-    Parameter(Option<String>),
+    /// `x.also { it.m() }`: the lambda's parameter is `x`.
+    Parameter {
+        ty: Option<String>,
+        origin: Option<Vec<PendingArg>>,
+    },
 }
 
 struct Lowering<'s> {
@@ -236,9 +243,15 @@ impl<'s> Lowering<'s> {
                 .then(|| value.and_then(|v| self.literal(v)))
                 .flatten()
         });
-        self.file
-            .symbols
-            .insert((scope, name.to_owned()), Symbol { ty, constant });
+        let origin = value.and_then(|v| self.origin(v, scope));
+        self.file.symbols.insert(
+            (scope, name.to_owned()),
+            Symbol {
+                ty,
+                constant,
+                origin,
+            },
+        );
     }
 
     /// The expression after `=` in a property declaration.
@@ -270,6 +283,7 @@ impl<'s> Lowering<'s> {
         let symbol = Symbol {
             ty: declared_type(node, self.src),
             constant: injected,
+            origin: None,
         };
         self.file.symbols.insert((scope, name.to_owned()), symbol);
     }
@@ -343,9 +357,7 @@ impl<'s> Lowering<'s> {
                     "navigation_expression" => {
                         let (object, member) = navigation_parts(callee)?;
                         let member = self.text(member);
-                        if RECEIVER_SCOPE_FUNCTIONS.contains(&member)
-                            || PARAMETER_SCOPE_FUNCTIONS.contains(&member)
-                        {
+                        if is_scope_function(member) {
                             // `apply` and `also` return their receiver.
                             return self.infer_type(object, scope);
                         }
@@ -382,7 +394,33 @@ impl<'s> Lowering<'s> {
         match object.kind() {
             "identifier" => Some(Receiver::Name(self.text(object).to_owned())),
             _ if is_name_path(object) => Some(Receiver::Path(name_path(object, self.src))),
-            _ => self.infer_type(object, scope).map(Receiver::Type),
+            _ => self.infer_type(object, scope).map(|ty| Receiver::Type {
+                ty,
+                origin: self.origin(object, scope),
+            }),
+        }
+    }
+
+    /// Arguments of the factory call `value` comes from
+    /// (`KeyGenerator.getInstance("AES")`), also through scope functions
+    /// (`...getInstance("AES").apply { }`) and variables initialized by one.
+    fn origin(&self, value: Node<'_>, scope: ScopeId) -> Option<Vec<PendingArg>> {
+        match value.kind() {
+            "call_expression" => {
+                let (object, member) = navigation_parts(value.named_child(0)?)?;
+                let member = self.text(member);
+                if is_scope_function(member) {
+                    return self.origin(object, scope);
+                }
+                if !is_name_path(object) || looks_like_type(member) {
+                    return None;
+                }
+                let path = name_path(object, self.src);
+                let owner = path.rsplit('.').next().unwrap_or(&path);
+                starts_uppercase(owner).then(|| self.args(value))
+            }
+            "identifier" => self.file.lookup(scope, self.text(value))?.origin.clone(),
+            _ => None,
         }
     }
 
@@ -395,14 +433,19 @@ impl<'s> Lowering<'s> {
             Some(LambdaContext::Receiver(receiver)) => {
                 self.implicit.insert(id, receiver);
             }
-            Some(LambdaContext::Parameter(ty)) => {
+            Some(LambdaContext::Parameter { ty, origin }) => {
                 let name = child_of_kind(node, "lambda_parameters")
                     .and_then(|p| child_of_kind(p, "variable_declaration"))
                     .and_then(|v| child_of_kind(v, "identifier"))
                     .map_or("it", |n| self.text(n));
-                self.file
-                    .symbols
-                    .insert((id, name.to_owned()), Symbol { ty, constant: None });
+                self.file.symbols.insert(
+                    (id, name.to_owned()),
+                    Symbol {
+                        ty,
+                        constant: None,
+                        origin,
+                    },
+                );
             }
             None => {}
         }
@@ -483,8 +526,11 @@ impl<'s> Lowering<'s> {
                     return;
                 }
                 if has_lambda && PARAMETER_SCOPE_FUNCTIONS.contains(&method.as_str()) {
-                    let ty = self.infer_type(object, scope);
-                    self.scope_function(node, LambdaContext::Parameter(ty));
+                    let context = LambdaContext::Parameter {
+                        ty: self.infer_type(object, scope),
+                        origin: self.origin(object, scope),
+                    };
+                    self.scope_function(node, context);
                     return;
                 }
                 let args = self.args(node);

@@ -3,13 +3,16 @@ profile: aes-128
 platform: jvm
 
 patterns:
-  # Key size requested from a JCA KeyGenerator. The receiver's algorithm is not
-  # tracked yet (that needs data flow), so a 128-bit HMAC/Blowfish key would
-  # also match; in practice `KeyGenerator.init(128)` is overwhelmingly AES.
+  # Key size requested from a JCA KeyGenerator. `origin` checks the algorithm
+  # the generator was created with, so `KeyGenerator.getInstance("HmacSHA256")`
+  # followed by `init(128)` is not reported. A generator of unknown origin
+  # (a parameter, a field set elsewhere) is still reported: in practice
+  # `KeyGenerator.init(128)` is overwhelmingly AES.
   - call:
       type: javax.crypto.KeyGenerator
       method: init
       arg: { index: 0, matches: '^128$' }
+      origin: { index: 0, matches: '(?i)^AES' }
   # Size-pinned JCA transformations: `AES_128/GCM/NoPadding`.
   - call:
       type: javax.crypto.Cipher

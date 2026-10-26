@@ -17,6 +17,7 @@ fn calls(unit: &SourceUnit) -> Vec<(Option<TypeRef>, String, Vec<ArgValue>)> {
                 receiver,
                 method,
                 args,
+                ..
             } => Some((
                 receiver.clone(),
                 method.clone(),
@@ -416,4 +417,45 @@ fn records_scopes_imports_and_literals() {
         "#,
     );
     insta::assert_yaml_snapshot!(unit);
+}
+
+/// `(method, first factory argument)` of every call whose receiver origin is known.
+fn origins(unit: &SourceUnit) -> Vec<(String, ArgValue)> {
+    unit.facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Call {
+                method,
+                receiver_origin: Some(origin),
+                ..
+            } => Some((method.clone(), origin.first()?.value.clone())),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn calls_on_factory_made_receivers_know_their_origin() {
+    let unit = lower(
+        r#"
+        import javax.crypto.KeyGenerator
+        fun run(injected: KeyGenerator) {
+            KeyGenerator.getInstance("AES").apply { init(128) }
+            KeyGenerator.getInstance("HmacSHA256").also { it.init(128) }
+            val kg = KeyGenerator.getInstance("DESede")
+            kg.init(168)
+            with(kg) { init(112) }
+            injected.init(128)
+        }
+        "#,
+    );
+    assert_eq!(
+        origins(&unit),
+        [
+            ("init".to_owned(), str("AES")),
+            ("init".to_owned(), str("HmacSHA256")),
+            ("init".to_owned(), str("DESede")),
+            ("init".to_owned(), str("DESede")),
+        ]
+    );
 }

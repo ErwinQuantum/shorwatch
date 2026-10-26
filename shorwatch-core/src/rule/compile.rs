@@ -20,6 +20,7 @@ pub(crate) enum CompiledPattern {
         receiver: String,
         method: String,
         arg: Option<CompiledArg>,
+        origin: Option<CompiledArg>,
     },
     Construct {
         ty: String,
@@ -135,10 +136,12 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     receiver,
                     method,
                     arg: a,
+                    origin,
                 } => CompiledPattern::Call {
                     receiver: receiver.clone(),
                     method: method.clone(),
                     arg: arg(a)?,
+                    origin: arg(origin)?,
                 },
                 Pattern::Construct { ty, arg: a } => CompiledPattern::Construct {
                     ty: ty.clone(),

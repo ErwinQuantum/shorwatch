@@ -25,6 +25,12 @@ class Vulnerable {
         return generator.generateKey()
     }
 
+    /** Created elsewhere: the algorithm is unknown, so it is still reported. */
+    fun injected(generator: KeyGenerator): SecretKey {
+        generator.init(128)
+        return generator.generateKey()
+    }
+
     companion object {
         private const val KEY_BITS = 128
     }

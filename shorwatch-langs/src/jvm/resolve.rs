@@ -14,6 +14,10 @@ impl JvmFile {
                     method,
                     args,
                 } => FactKind::Call {
+                    receiver_origin: receiver
+                        .as_ref()
+                        .and_then(|r| self.receiver_origin(r, scope))
+                        .map(|origin| self.resolve_args(origin, scope)),
                     receiver: match receiver {
                         Some(r) => self.resolve_receiver(&r, scope),
                         None => self.static_method_owner(&method),
@@ -58,8 +62,19 @@ impl JvmFile {
                 Some(_) => None,
                 None => Some(self.type_ref(path)),
             },
-            Receiver::Type(ty) => Some(self.type_ref(ty)),
+            Receiver::Type { ty, .. } => Some(self.type_ref(ty)),
         }
+    }
+
+    /// Arguments of the factory call that created a receiver variable. Not
+    /// data flow: only the variable's own initializer counts.
+    fn receiver_origin(&self, receiver: &Receiver, scope: ScopeId) -> Option<Vec<PendingArg>> {
+        let variable = match receiver {
+            Receiver::Type { origin, .. } => return origin.clone(),
+            Receiver::Name(name) => name.as_str(),
+            Receiver::Path(path) => path.strip_prefix("this.").filter(|f| !f.contains('.'))?,
+        };
+        self.lookup(scope, variable)?.origin.clone()
     }
 
     /// Owner of an unqualified call such as `RSA256(...)`, when it comes from a

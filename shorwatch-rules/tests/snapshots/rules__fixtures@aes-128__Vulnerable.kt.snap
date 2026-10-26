@@ -17,3 +17,7 @@ input_file: shorwatch-rules/tests/fixtures/aes-128/Vulnerable.kt
 - rule: jvm.jca.aes-128
   at: "24:9"
   status: vulnerable
+- rule: jvm.jca.aes-128
+  at: "30:9"
+  status: vulnerable
+  fix: 256 @ 30

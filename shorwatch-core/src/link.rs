@@ -31,8 +31,16 @@ pub fn link(units: &mut [SourceUnit]) {
 
     for unit in units.iter_mut() {
         for fact in &mut unit.facts {
-            let args = match &mut fact.kind {
-                FactKind::Call { args, .. } | FactKind::Construct { args, .. } => args,
+            let args: Vec<_> = match &mut fact.kind {
+                FactKind::Call {
+                    args,
+                    receiver_origin,
+                    ..
+                } => args
+                    .iter_mut()
+                    .chain(receiver_origin.iter_mut().flatten())
+                    .collect(),
+                FactKind::Construct { args, .. } => args.iter_mut().collect(),
                 _ => continue,
             };
             for arg in args {
@@ -105,6 +113,7 @@ mod tests {
                     resolved_via: Some(format!("${{{key}}}")),
                     location: Location::line(3, 1, 4),
                 }],
+                receiver_origin: None,
             },
             SourceUnit::ROOT,
             Location::line(3, 1, 10),

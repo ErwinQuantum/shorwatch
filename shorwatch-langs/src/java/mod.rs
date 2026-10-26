@@ -140,6 +140,7 @@ impl<'s> Lowering<'s> {
                     let symbol = Symbol {
                         ty: Some(type_name(self.text(ty))),
                         constant: self.injected(node),
+                        origin: None,
                     };
                     self.file.symbols.insert((scope, name.to_owned()), symbol);
                 }
@@ -224,9 +225,15 @@ impl<'s> Lowering<'s> {
                 (None, true) => value.and_then(|v| self.literal(v)),
                 (None, false) => None,
             };
-            self.file
-                .symbols
-                .insert((scope, name.to_owned()), Symbol { ty, constant });
+            let origin = value.and_then(|v| self.origin(v));
+            self.file.symbols.insert(
+                (scope, name.to_owned()),
+                Symbol {
+                    ty,
+                    constant,
+                    origin,
+                },
+            );
         }
     }
 
@@ -276,6 +283,16 @@ impl<'s> Lowering<'s> {
             }
             _ => None,
         }
+    }
+
+    /// Arguments of a `Type.factory(...)` initializer, the same calls that
+    /// [`Self::infer_type`] takes the type from.
+    fn origin(&self, value: Node<'_>) -> Option<Vec<PendingArg>> {
+        let object = value.child_by_field_name("object")?;
+        (value.kind() == "method_invocation"
+            && object.kind() == "identifier"
+            && starts_uppercase(self.text(object)))
+        .then(|| self.args(value))
     }
 
     fn call(&mut self, node: Node<'_>, scope: ScopeId) {
