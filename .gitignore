@@ -18,3 +18,6 @@ Thumbs.db
 
 # graphify knowledge graph (local tooling, rebuilt by a git hook)
 graphify-out/
+
+# Personal Claude Code notes
+CLAUDE.local.md
