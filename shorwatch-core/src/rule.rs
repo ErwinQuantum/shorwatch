@@ -87,12 +87,21 @@ pub enum Pattern {
         #[serde(default)]
         arg: Option<ArgPattern>,
     },
+    /// `Type.FIELD`: a static field or enum constant of `type` whose name
+    /// matches the `matches` regex (any field when absent).
+    Field {
+        #[serde(rename = "type")]
+        owner: String,
+        #[serde(default)]
+        matches: Option<String>,
+    },
 }
 
 impl Pattern {
     fn arg(&self) -> Option<&ArgPattern> {
         match self {
             Pattern::Call { arg, .. } | Pattern::Construct { arg, .. } => arg.as_ref(),
+            Pattern::Field { .. } => None,
         }
     }
 }
@@ -180,6 +189,10 @@ pub(crate) enum CompiledPattern {
     Construct {
         ty: String,
         arg: Option<CompiledArg>,
+    },
+    Field {
+        owner: String,
+        name: Option<Regex>,
     },
 }
 
@@ -291,6 +304,10 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                 Pattern::Construct { ty, arg: a } => CompiledPattern::Construct {
                     ty: ty.clone(),
                     arg: arg(a)?,
+                },
+                Pattern::Field { owner, matches } => CompiledPattern::Field {
+                    owner: owner.clone(),
+                    name: matches.as_deref().map(regex).transpose()?,
                 },
             })
         })

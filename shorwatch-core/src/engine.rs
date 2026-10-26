@@ -28,6 +28,18 @@ struct Match<'a> {
 }
 
 fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Option<Match<'a>> {
+    if let (
+        CompiledPattern::Field { owner, name },
+        FactKind::Field {
+            owner: actual,
+            name: actual_name,
+        },
+    ) = (pattern, &fact.kind)
+    {
+        let name_ok = name.as_ref().is_none_or(|re| re.is_match(actual_name));
+        return (actual.is(owner) && name_ok).then_some(Match { arg: None });
+    }
+
     let (args, arg_pattern) = match (pattern, &fact.kind) {
         (
             CompiledPattern::Call {
@@ -102,7 +114,10 @@ fn hybrid_evidence(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact) -> Optio
                 (CompiledMarker::Literal(re), FactKind::Literal { value }) if in_region => {
                     re.is_match(value).then_some(value.as_str())
                 }
-                (CompiledMarker::Type(re), FactKind::Construct { ty, .. }) if in_region => {
+                (CompiledMarker::Type(re), FactKind::Construct { ty, .. })
+                | (CompiledMarker::Type(re), FactKind::Field { owner: ty, .. })
+                    if in_region =>
+                {
                     re.is_match(ty.best_name()).then_some(ty.best_name())
                 }
                 (
@@ -380,6 +395,91 @@ mod tests {
         let findings = analyze(&unit, &set);
         assert_eq!(findings.len(), 1);
         assert!(findings[0].fix.is_none());
+    }
+
+    fn jws_rule(matches: Option<&str>) -> Rule {
+        Rule {
+            id: "java.jwt.rsa".into(),
+            patterns: vec![Pattern::Field {
+                owner: "com.nimbusds.jose.JWSAlgorithm".into(),
+                matches: matches.map(str::to_owned),
+            }],
+            ..rsa_rule()
+        }
+    }
+
+    fn field(unit: &mut SourceUnit, scope: crate::ir::ScopeId, owner: TypeRef, name: &str) {
+        unit.push(
+            FactKind::Field {
+                owner,
+                name: name.into(),
+            },
+            scope,
+            loc(4),
+        );
+    }
+
+    #[test]
+    fn field_pattern_matches_owner_and_name() {
+        let (mut unit, _, method) = unit_with_method();
+        let jws = TypeRef::qualified("com.nimbusds.jose.JWSAlgorithm");
+        field(&mut unit, method, jws.clone(), "RS256");
+        field(&mut unit, method, jws, "HS256");
+        let set = RuleSet::compile([jws_rule(Some("^(RS|PS)[0-9]+$"))]).unwrap();
+
+        let findings = analyze(&unit, &set);
+        assert_eq!(findings.len(), 1);
+        assert!(findings[0].fix.is_none());
+    }
+
+    #[test]
+    fn field_pattern_requires_the_owner_type() {
+        let (mut unit, _, method) = unit_with_method();
+        field(
+            &mut unit,
+            method,
+            TypeRef::qualified("com.acme.JWSAlgorithm"),
+            "RS256",
+        );
+        let set = RuleSet::compile([jws_rule(Some("^RS256$"))]).unwrap();
+        assert!(analyze(&unit, &set).is_empty());
+    }
+
+    #[test]
+    fn field_pattern_without_name_matches_any_field() {
+        let (mut unit, _, method) = unit_with_method();
+        field(&mut unit, method, TypeRef::simple("JWSAlgorithm"), "ES256K");
+        let set = RuleSet::compile([jws_rule(None)]).unwrap();
+        assert_eq!(analyze(&unit, &set).len(), 1);
+    }
+
+    #[test]
+    fn pqc_field_owner_is_hybrid_evidence() {
+        let (mut unit, _, method) = unit_with_method();
+        get_instance(
+            &mut unit,
+            method,
+            "java.security.Signature",
+            "SHA256withRSA",
+            3,
+        );
+        field(
+            &mut unit,
+            method,
+            TypeRef::qualified("org.bouncycastle.jcajce.spec.MLDSAParameterSpec"),
+            "ml_dsa_65",
+        );
+        let mut rule = rsa_rule();
+        rule.patterns.push(Pattern::Call {
+            receiver: "java.security.Signature".into(),
+            method: "getInstance".into(),
+            arg: None,
+        });
+        rule.hybrid.as_mut().unwrap().markers =
+            vec![crate::rule::Marker::Type("(?i)ml-?dsa".into())];
+        let set = RuleSet::compile([rule]).unwrap();
+
+        assert_eq!(analyze(&unit, &set)[0].status, Status::InTransition);
     }
 
     #[test]

@@ -93,6 +93,13 @@ enum Pending {
         ty: String,
         args: Vec<PendingArg>,
     },
+    /// `Owner.NAME`, where `Owner` may turn out to be a variable, not a type.
+    Field {
+        owner: String,
+        name: String,
+    },
+    /// A bare name that a static import may refer to, unless shadowed.
+    StaticMember(String),
     Ready(FactKind),
 }
 
@@ -101,6 +108,10 @@ struct Lowering<'s> {
     unit: SourceUnit,
     /// Simple name -> fully qualified name, from single-type imports.
     imports: HashMap<String, String>,
+    /// Member name -> fully qualified owner type, from single static imports.
+    static_imports: HashMap<String, String>,
+    /// Methods declared in this file, which shadow statically imported ones.
+    methods: HashSet<String>,
     symbols: HashMap<(ScopeId, String), Symbol>,
     /// Interfaces and annotation types, whose fields are implicitly constant.
     interfaces: HashSet<ScopeId>,
@@ -113,6 +124,8 @@ impl<'s> Lowering<'s> {
             src,
             unit: SourceUnit::new(path, Language::Java),
             imports: HashMap::new(),
+            static_imports: HashMap::new(),
+            methods: HashSet::new(),
             symbols: HashMap::new(),
             interfaces: HashSet::new(),
             pending: Vec::new(),
@@ -161,6 +174,9 @@ impl<'s> Lowering<'s> {
             | "constructor_declaration"
             | "compact_constructor_declaration" => {
                 let name = self.field_text(node, "name").map(str::to_owned);
+                if let Some(name) = &name {
+                    self.methods.insert(name.clone());
+                }
                 Some(self.unit.add_scope(ScopeKind::Method, name, scope))
             }
             "static_initializer" => Some(self.unit.add_scope(
@@ -198,6 +214,14 @@ impl<'s> Lowering<'s> {
                 self.construct(node, scope);
                 Some(scope)
             }
+            "field_access" => self.field_access(node, scope),
+            "identifier" => {
+                let name = self.text(node);
+                if self.static_imports.contains_key(name) && !is_name_slot(node) {
+                    self.defer(Pending::StaticMember(name.to_owned()), scope, node);
+                }
+                None
+            }
             "string_literal" => {
                 if let Some(value) = string_value(self.text(node)) {
                     self.ready(FactKind::Literal { value }, scope, node);
@@ -220,9 +244,14 @@ impl<'s> Lowering<'s> {
             return;
         };
         let name = self.text(*name).to_owned();
-        if !is_static && !is_wildcard {
-            if let Some((_, simple)) = name.rsplit_once('.') {
-                self.imports.insert(simple.to_owned(), name.clone());
+        if !is_wildcard {
+            if let Some((owner, simple)) = name.rsplit_once('.') {
+                if is_static {
+                    self.static_imports
+                        .insert(simple.to_owned(), owner.to_owned());
+                } else {
+                    self.imports.insert(simple.to_owned(), name.clone());
+                }
             }
         }
         let path = if is_wildcard {
@@ -312,6 +341,22 @@ impl<'s> Lowering<'s> {
         self.defer(Pending::Construct { ty, args }, scope, node);
     }
 
+    /// `Owner.NAME`. A pure name path (`a.b.C.NAME`) has nothing else inside
+    /// to visit; anything else (`call().x`) keeps being traversed.
+    fn field_access(&mut self, node: Node<'_>, scope: ScopeId) -> Option<ScopeId> {
+        let (object, name) = (
+            node.child_by_field_name("object")?,
+            self.field_text(node, "field")?,
+        );
+        if !is_name_path(object) {
+            return Some(scope);
+        }
+        let owner: String = self.text(object).split_whitespace().collect();
+        let name = name.to_owned();
+        self.defer(Pending::Field { owner, name }, scope, node);
+        None
+    }
+
     fn args(&self, node: Node<'_>) -> Vec<PendingArg> {
         let Some(list) = node.child_by_field_name("arguments") else {
             return Vec::new();
@@ -373,7 +418,10 @@ impl<'s> Lowering<'s> {
                     method,
                     args,
                 } => FactKind::Call {
-                    receiver: receiver.and_then(|r| self.resolve_receiver(&r, scope)),
+                    receiver: match receiver {
+                        Some(r) => self.resolve_receiver(&r, scope),
+                        None => self.static_method_owner(&method),
+                    },
                     method,
                     args: self.resolve_args(args, scope),
                 },
@@ -381,6 +429,17 @@ impl<'s> Lowering<'s> {
                     ty: self.type_ref(&ty),
                     args: self.resolve_args(args, scope),
                 },
+                Pending::Field { owner, name } => match self.field_owner(&owner, scope) {
+                    Some(owner) => FactKind::Field { owner, name },
+                    None => continue,
+                },
+                Pending::StaticMember(name) => {
+                    if self.lookup(scope, &name).is_some() {
+                        continue;
+                    }
+                    let owner = TypeRef::qualified(self.static_imports[&name].clone());
+                    FactKind::Field { owner, name }
+                }
                 Pending::Ready(kind) => kind,
             };
             self.unit.push(kind, scope, location);
@@ -412,6 +471,30 @@ impl<'s> Lowering<'s> {
                 None => Some(self.type_ref(path)),
             },
         }
+    }
+
+    /// Owner of an unqualified call such as `RSA256(...)`, when it comes from a
+    /// static import and no method of this file shadows it.
+    fn static_method_owner(&self, method: &str) -> Option<TypeRef> {
+        if self.methods.contains(method) {
+            return None;
+        }
+        self.static_imports
+            .get(method)
+            .map(|owner| TypeRef::qualified(owner.clone()))
+    }
+
+    /// The type named by `owner` in `owner.NAME`, or `None` when `owner` is a
+    /// variable or `this`: then it is an instance field, not a static constant.
+    fn field_owner(&self, owner: &str, scope: ScopeId) -> Option<TypeRef> {
+        let first = owner.split('.').next().unwrap_or(owner);
+        if matches!(first, "this" | "super") || self.lookup(scope, first).is_some() {
+            return None;
+        }
+        owner
+            .split('.')
+            .any(starts_uppercase)
+            .then(|| self.type_ref(owner))
     }
 
     /// Resolves a type name as written to the most precise [`TypeRef`] possible.
@@ -529,6 +612,25 @@ fn has_modifier(node: Node<'_>, modifier: &str) -> bool {
             let mut inner = modifiers.walk();
             modifiers.children(&mut inner).any(|m| m.kind() == modifier)
         })
+}
+
+/// `a`, `this.x`, `a.b.C`: nothing but names, so nothing inside to analyze.
+fn is_name_path(node: Node<'_>) -> bool {
+    match node.kind() {
+        "identifier" | "this" | "super" => true,
+        "field_access" => node.child_by_field_name("object").is_some_and(is_name_path),
+        _ => false,
+    }
+}
+
+/// Whether `node` is the name slot of its parent (a declaration, an invoked
+/// method, a selected field) rather than an expression with a value.
+fn is_name_slot(node: Node<'_>) -> bool {
+    node.parent().is_some_and(|parent| {
+        ["name", "field"]
+            .iter()
+            .any(|field| parent.child_by_field_name(field) == Some(node))
+    })
 }
 
 /// `Map<String, Cipher>[]` -> `Map`. Annotations and generics are dropped.
@@ -758,5 +860,111 @@ mod tests {
         assert_eq!(string_value(r#""a\"b\\cA""#).as_deref(), Some("a\"b\\cA"));
         assert_eq!(int_value("0x80"), Some(128));
         assert_eq!(int_value("1_024L"), Some(1024));
+    }
+
+    fn fields(unit: &SourceUnit) -> Vec<(TypeRef, String)> {
+        unit.facts()
+            .iter()
+            .filter_map(|f| match &f.kind {
+                FactKind::Field { owner, name } => Some((owner.clone(), name.clone())),
+                _ => None,
+            })
+            .collect()
+    }
+
+    #[test]
+    fn records_static_field_reads() {
+        let unit = lower(
+            r#"
+            import com.nimbusds.jose.JWSAlgorithm;
+            import io.jsonwebtoken.Jwts;
+            class A {
+                void run() {
+                    sign(JWSAlgorithm.RS256);
+                    Jwts.SIG.ES256.keyPair().build();
+                    sign(com.nimbusds.jose.JWEAlgorithm.RSA_OAEP_256);
+                }
+            }
+            "#,
+        );
+        assert_eq!(
+            fields(&unit),
+            [
+                (
+                    TypeRef::qualified("com.nimbusds.jose.JWSAlgorithm"),
+                    "RS256".into()
+                ),
+                (
+                    TypeRef::qualified("io.jsonwebtoken.Jwts.SIG"),
+                    "ES256".into()
+                ),
+                (
+                    TypeRef::qualified("com.nimbusds.jose.JWEAlgorithm"),
+                    "RSA_OAEP_256".into()
+                ),
+            ]
+        );
+    }
+
+    #[test]
+    fn instance_fields_are_not_static_reads() {
+        let unit = lower(
+            r#"
+            class A {
+                Config config;
+                void run(Options options) {
+                    use(this.alg, config.alg, options.Alg, config.inner.Alg);
+                }
+            }
+            "#,
+        );
+        assert!(fields(&unit).is_empty(), "{:?}", fields(&unit));
+    }
+
+    #[test]
+    fn resolves_static_imports() {
+        let unit = lower(
+            r#"
+            import static com.nimbusds.jose.JWSAlgorithm.RS256;
+            import static com.auth0.jwt.algorithms.Algorithm.RSA256;
+            class A {
+                void run(Object pub, Object priv) {
+                    sign(RS256);
+                    RSA256(pub, priv);
+                }
+                void shadowed() {
+                    String RS256 = "local";
+                    use(RS256);
+                }
+            }
+            "#,
+        );
+        assert_eq!(
+            fields(&unit),
+            [(
+                TypeRef::qualified("com.nimbusds.jose.JWSAlgorithm"),
+                "RS256".into()
+            )]
+        );
+        let algorithm = TypeRef::qualified("com.auth0.jwt.algorithms.Algorithm");
+        assert!(
+            calls(&unit)
+                .iter()
+                .any(|(r, m, _)| m == "RSA256" && r.as_ref() == Some(&algorithm))
+        );
+    }
+
+    #[test]
+    fn local_methods_shadow_static_imports() {
+        let unit = lower(
+            r#"
+            import static com.auth0.jwt.algorithms.Algorithm.RSA256;
+            class A {
+                void run() { RSA256(); }
+                void RSA256() {}
+            }
+            "#,
+        );
+        assert_eq!(calls(&unit)[0].0, None);
     }
 }

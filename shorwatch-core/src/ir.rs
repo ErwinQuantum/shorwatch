@@ -182,6 +182,9 @@ pub enum FactKind {
     },
     /// An object instantiation.
     Construct { ty: TypeRef, args: Vec<Arg> },
+    /// A read of a static field or enum constant, e.g. `JWSAlgorithm.RS256`.
+    /// Crypto libraries often name algorithms this way instead of by string.
+    Field { owner: TypeRef, name: String },
     /// An import (or equivalent). Imports apply to the whole file.
     Import { path: String },
     /// A string literal anywhere in the code.

@@ -166,6 +166,17 @@ patterns:
     }
 
     #[test]
+    fn parses_field_patterns() {
+        let yaml = MINIMAL.replace(
+            "  - call: { type: a.B, method: c }",
+            "  - field: { type: a.B, matches: '^RS' }\n  - field: { type: a.C }",
+        );
+        let rule = parse("test", &yaml).unwrap();
+        assert_eq!(rule.patterns.len(), 2);
+        assert!(RuleSet::compile([rule]).is_ok());
+    }
+
+    #[test]
     fn rejects_unknown_fields() {
         let yaml = format!("{MINIMAL}autofix: true\n");
         let err = parse("test", &yaml).unwrap_err();
