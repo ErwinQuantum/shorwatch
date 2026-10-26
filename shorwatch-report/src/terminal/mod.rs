@@ -48,8 +48,8 @@ fn summary(scan: &Scan) -> String {
     if summary.findings == 0 {
         let _ = writeln!(
             out,
-            "\n{label} no quantum-vulnerable cryptography found in {} files",
-            summary.files_scanned
+            "\n{label} no quantum-vulnerable cryptography found in {}",
+            plural(summary.files_scanned, "file")
         );
         return out;
     }

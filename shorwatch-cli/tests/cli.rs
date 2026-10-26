@@ -1,0 +1,146 @@
+//! End-to-end tests: run the real `shorwatch` binary on the rule fixtures.
+
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+
+fn fixtures(folder: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../shorwatch-rules/tests/fixtures")
+        .join(folder)
+}
+
+fn shorwatch(args: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_shorwatch"))
+        .args(args)
+        .env("NO_COLOR", "1")
+        .output()
+        .unwrap()
+}
+
+fn stdout(output: &Output) -> String {
+    String::from_utf8(output.stdout.clone()).unwrap()
+}
+
+fn path(folder: &str) -> String {
+    fixtures(folder).display().to_string()
+}
+
+#[test]
+fn vulnerable_project_exits_with_1_and_reports_locations() {
+    let output = shorwatch(&["scan", &path("spring-app")]);
+    assert_eq!(output.status.code(), Some(1));
+    let text = stdout(&output);
+    assert!(text.contains("jvm.jca.rsa"), "{text}");
+    assert!(
+        text.contains("AuthorizationServerConfig.java:40:49"),
+        "{text}"
+    );
+    assert!(text.contains("7 findings in 5 files"), "{text}");
+    assert!(!text.contains('\x1b'), "piped output must not be coloured");
+}
+
+#[test]
+fn clean_files_exit_with_0() {
+    let output = shorwatch(&["scan", &path("dh/Clean.java")]);
+    assert_eq!(output.status.code(), Some(0));
+    assert!(stdout(&output).contains("no quantum-vulnerable cryptography found in 1 file"));
+}
+
+#[test]
+fn fail_on_controls_the_exit_code() {
+    let never = shorwatch(&["scan", &path("spring-app"), "--fail-on", "never"]);
+    assert_eq!(never.status.code(), Some(0));
+
+    // Only in-transition findings: fine for `vulnerable`, a failure for `any`.
+    let hybrid = path("ecdh/Hybrid.java");
+    assert_eq!(shorwatch(&["scan", &hybrid]).status.code(), Some(0));
+    let any = shorwatch(&["scan", &hybrid, "--fail-on", "any"]);
+    assert_eq!(any.status.code(), Some(1));
+}
+
+#[test]
+fn sarif_output_is_valid_and_uses_relative_uris() {
+    let output = shorwatch(&["scan", &path("spring-injected"), "--format", "sarif"]);
+    let log: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(log["version"], "2.1.0");
+    let results = log["runs"][0]["results"].as_array().unwrap();
+    assert!(!results.is_empty());
+    for result in results {
+        let uri = result["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+            .as_str()
+            .unwrap();
+        assert!(!uri.contains('\\') && !uri.contains(':'), "{uri}");
+    }
+}
+
+#[test]
+fn injected_config_values_are_resolved_across_files() {
+    let output = shorwatch(&["scan", &path("spring-injected"), "--format", "json"]);
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let rules: Vec<_> = report["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["rule_id"].as_str().unwrap().to_owned())
+        .collect();
+    assert!(
+        rules.contains(&"jvm.nimbus.jose-rsa".to_owned()),
+        "{rules:?}"
+    );
+    assert!(
+        rules.contains(&"config.app.jose-rsa".to_owned()),
+        "{rules:?}"
+    );
+}
+
+#[test]
+fn min_severity_filters_findings() {
+    let output = shorwatch(&[
+        "scan",
+        &path("spring-app"),
+        "--min-severity",
+        "high",
+        "--format",
+        "json",
+    ]);
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    for finding in report["findings"].as_array().unwrap() {
+        assert!(matches!(
+            finding["severity"].as_str(),
+            Some("high" | "critical")
+        ));
+    }
+}
+
+#[test]
+fn output_file_is_plain_text() {
+    let file = std::env::temp_dir().join(format!("shorwatch-test-{}.txt", std::process::id()));
+    let output = shorwatch(&[
+        "scan",
+        &path("spring-app"),
+        "--output",
+        &file.display().to_string(),
+    ]);
+    assert_eq!(output.status.code(), Some(1));
+    let text = std::fs::read_to_string(&file).unwrap();
+    std::fs::remove_file(&file).unwrap();
+    assert!(text.contains("jvm.jca.rsa") && !text.contains('\x1b'));
+}
+
+#[test]
+fn missing_path_is_an_error() {
+    let output = shorwatch(&["scan", "definitely/not/here"]);
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("does not exist"));
+}
+
+#[test]
+fn rules_lists_every_builtin_rule() {
+    let output = shorwatch(&["rules"]);
+    assert_eq!(output.status.code(), Some(0));
+    let text = stdout(&output);
+    assert!(
+        text.contains("jvm.jca.aes-128") && text.contains("config.spring-boot.tls-key-exchange")
+    );
+    assert!(text.trim_end().ends_with("50 rules"), "{text}");
+}

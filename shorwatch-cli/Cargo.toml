@@ -22,6 +22,10 @@ clap.workspace = true
 ignore.workspace = true
 rayon.workspace = true
 anyhow.workspace = true
+anstream.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
 
 [lints]
 workspace = true
