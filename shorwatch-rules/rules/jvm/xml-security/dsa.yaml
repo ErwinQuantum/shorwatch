@@ -1,0 +1,11 @@
+id: jvm.xml-security.dsa
+profile: dsa
+platform: jvm
+
+patterns:
+  - field:
+      type: javax.xml.crypto.dsig.SignatureMethod
+      matches: '^DSA_'
+  - field:
+      type: org.apache.xml.security.signature.XMLSignature
+      matches: '^ALGO_ID_SIGNATURE_DSA'

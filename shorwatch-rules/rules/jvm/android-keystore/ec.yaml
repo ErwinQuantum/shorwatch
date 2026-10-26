@@ -1,0 +1,8 @@
+id: jvm.android-keystore.ec
+profile: ec
+platform: jvm
+
+patterns:
+  - field:
+      type: android.security.keystore.KeyProperties
+      matches: '^KEY_ALGORITHM_EC$'

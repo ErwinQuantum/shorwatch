@@ -1,0 +1,11 @@
+id: jvm.bouncycastle-pkix.rsa
+profile: rsa
+platform: jvm
+
+# Certificate and CMS signing with BouncyCastle PKIX (bcpkix), e.g. issuing
+# X.509 certificates: `new JcaContentSignerBuilder("SHA256withRSA")`.
+patterns:
+  - construct:
+      type: org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+      arg: { index: 0, matches: '(?i)^(RSASSA-PSS|.+withRSA(andMGF1|/PSS)?)$' }
+  - construct: { type: org.bouncycastle.operator.bc.BcRSAContentSignerBuilder }

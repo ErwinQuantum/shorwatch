@@ -16,3 +16,6 @@ patterns:
       matches: '^Ed(25519|448)$'
   - construct: { type: com.nimbusds.jose.crypto.Ed25519Signer }
   - construct: { type: com.nimbusds.jose.crypto.Ed25519Verifier }
+  # Algorithm families, e.g. `JWSAlgorithm.Family.RSA.contains(alg)`: accepting
+  # any of them means depending on EdDSA.
+  - field: { type: com.nimbusds.jose.JWSAlgorithm.Family, matches: '^ED$' }

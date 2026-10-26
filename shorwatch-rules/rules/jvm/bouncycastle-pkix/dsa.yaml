@@ -1,0 +1,9 @@
+id: jvm.bouncycastle-pkix.dsa
+profile: dsa
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+      arg: { index: 0, matches: '(?i)^.+withDSA$' }
+  - construct: { type: org.bouncycastle.operator.bc.BcDSAContentSignerBuilder }

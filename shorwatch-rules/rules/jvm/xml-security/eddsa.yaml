@@ -1,0 +1,11 @@
+id: jvm.xml-security.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  - field:
+      type: javax.xml.crypto.dsig.SignatureMethod
+      matches: '^ED(25519|448)$'
+  - field:
+      type: org.apache.xml.security.signature.XMLSignature
+      matches: '^ALGO_ID_SIGNATURE_EDDSA_'

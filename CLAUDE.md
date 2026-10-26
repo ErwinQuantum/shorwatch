@@ -114,8 +114,10 @@ Profiles (17): `rsa dh ecdh ecdsa ec eddsa dsa elgamal` (shor, high),
 medium, no fix), `jose-rsa jose-ecdsa jose-eddsa jose-ecdh` (shor, JWT advice),
 `jose-aes-128` (grover), `tls-key-exchange` (shor, TLS suites).
 
-Libraries (50 rules): `jvm/` jca, bouncycastle, spring-security, jjwt,
-nimbus, auth0, i2p-eddsa, commons-codec, guava · `config/` spring-boot
+Libraries (64 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix,
+xml-security (JSR 105 + Santuario), android-keystore, spring-security, jjwt,
+nimbus (incl. `JWSAlgorithm.Family`), auth0, i2p-eddsa, commons-codec, guava
+· `config/` spring-boot
 (jws-algorithms, public-key-location, `*.ssl.ciphers`), spring-cloud-config
 (`encrypt.key-store`, `encrypt.rsa`), app (custom `*.alg`/`*.algorithm`
 keys with exact JOSE names).

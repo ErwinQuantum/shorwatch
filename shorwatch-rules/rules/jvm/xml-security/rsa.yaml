@@ -1,0 +1,16 @@
+id: jvm.xml-security.rsa
+profile: rsa
+platform: jvm
+
+# XML Signature and Encryption (SAML, WS-Security): the JSR 105 API
+# (`javax.xml.crypto.dsig`) and Apache Santuario.
+patterns:
+  - field:
+      type: javax.xml.crypto.dsig.SignatureMethod
+      matches: '^(RSA_.+|SHA\d+_RSA_MGF1)$'
+  - field:
+      type: org.apache.xml.security.signature.XMLSignature
+      matches: '^ALGO_ID_SIGNATURE_(NOT_RECOMMENDED_)?RSA'
+  - field:
+      type: org.apache.xml.security.encryption.XMLCipher
+      matches: '^RSA_'

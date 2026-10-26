@@ -1,0 +1,9 @@
+id: jvm.bouncycastle-pkix.sha1
+profile: sha1
+platform: jvm
+
+# SHA-1 certificate signatures: certificate forgery needs only a collision.
+patterns:
+  - construct:
+      type: org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+      arg: { index: 0, matches: '(?i)^SHA-?1with.+$' }

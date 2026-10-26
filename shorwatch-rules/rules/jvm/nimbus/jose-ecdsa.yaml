@@ -12,3 +12,6 @@ patterns:
       arg: { index: 0, matches: '^ES(256K?|384|512)$' }
   - construct: { type: com.nimbusds.jose.crypto.ECDSASigner }
   - construct: { type: com.nimbusds.jose.crypto.ECDSAVerifier }
+  # Algorithm families, e.g. `JWSAlgorithm.Family.RSA.contains(alg)`: accepting
+  # any of them means depending on ECDSA.
+  - field: { type: com.nimbusds.jose.JWSAlgorithm.Family, matches: '^EC$' }

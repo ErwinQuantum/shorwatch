@@ -1,0 +1,23 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/bc-pkix/Vulnerable.java
+---
+- rule: jvm.bouncycastle-pkix.rsa
+  at: "23:32"
+  status: vulnerable
+- rule: jvm.bouncycastle-pkix.ecdsa
+  at: "28:16"
+  status: vulnerable
+- rule: jvm.bouncycastle-pkix.eddsa
+  at: "32:16"
+  status: vulnerable
+- rule: jvm.bouncycastle-pkix.rsa
+  at: "37:16"
+  status: vulnerable
+- rule: jvm.bouncycastle-pkix.sha1
+  at: "37:16"
+  status: vulnerable
+- rule: jvm.bouncycastle-pkix.ecdsa
+  at: "41:16"
+  status: vulnerable

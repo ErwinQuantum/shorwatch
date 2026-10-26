@@ -1,0 +1,11 @@
+id: jvm.xml-security.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: javax.xml.crypto.dsig.SignatureMethod
+      matches: '^ECDSA_'
+  - field:
+      type: org.apache.xml.security.signature.XMLSignature
+      matches: '^ALGO_ID_SIGNATURE_ECDSA_'

@@ -1,0 +1,9 @@
+id: jvm.bouncycastle-pkix.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+      arg: { index: 0, matches: '(?i)^.+with(PLAIN-|CVC-)?ECDSA$' }
+  - construct: { type: org.bouncycastle.operator.bc.BcECContentSignerBuilder }

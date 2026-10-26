@@ -1,0 +1,19 @@
+id: jvm.xml-security.sha1
+profile: sha1
+platform: jvm
+
+# SHA-1 digests and SHA-1 based signatures. Santuario's plain `RSA` and `DSA`
+# signature ids are SHA-1 based. HMAC-SHA1 is deliberately not matched.
+patterns:
+  - field:
+      type: javax.xml.crypto.dsig.DigestMethod
+      matches: '^SHA1$'
+  - field:
+      type: javax.xml.crypto.dsig.SignatureMethod
+      matches: '^((RSA|DSA|ECDSA)_SHA1|SHA1_RSA_MGF1)$'
+  - field:
+      type: org.apache.xml.security.signature.XMLSignature
+      matches: '^ALGO_ID_SIGNATURE_(RSA|DSA|(RSA|ECDSA)_SHA1|RSA_SHA1_MGF1)$'
+  - field:
+      type: org.apache.xml.security.algorithms.MessageDigestAlgorithm
+      matches: '^ALGO_ID_DIGEST_SHA1$'

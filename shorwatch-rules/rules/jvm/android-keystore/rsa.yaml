@@ -1,0 +1,9 @@
+id: jvm.android-keystore.rsa
+profile: rsa
+platform: jvm
+
+# Android Keystore keys: `KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore")`.
+patterns:
+  - field:
+      type: android.security.keystore.KeyProperties
+      matches: '^KEY_ALGORITHM_RSA$'

@@ -1,0 +1,26 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/xml-security/Vulnerable.java
+---
+- rule: jvm.xml-security.rsa
+  at: "18:44"
+  status: vulnerable
+- rule: jvm.xml-security.sha1
+  at: "24:33"
+  status: vulnerable
+- rule: jvm.xml-security.ecdsa
+  at: "25:43"
+  status: vulnerable
+- rule: jvm.xml-security.sha1
+  at: "25:43"
+  status: vulnerable
+- rule: jvm.xml-security.ecdsa
+  at: "29:16"
+  status: vulnerable
+- rule: jvm.xml-security.aes-128
+  at: "33:31"
+  status: vulnerable
+- rule: jvm.xml-security.rsa
+  at: "34:38"
+  status: vulnerable

@@ -1,0 +1,8 @@
+id: jvm.xml-security.aes-128
+profile: aes-128
+platform: jvm
+
+patterns:
+  - field:
+      type: org.apache.xml.security.encryption.XMLCipher
+      matches: '^AES_128'

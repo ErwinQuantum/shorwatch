@@ -1,0 +1,8 @@
+id: jvm.bouncycastle-pkix.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+      arg: { index: 0, matches: '(?i)^(EdDSA|Ed25519|Ed448)$' }

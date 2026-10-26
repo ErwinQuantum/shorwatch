@@ -19,3 +19,7 @@ patterns:
   - construct: { type: com.nimbusds.jose.crypto.RSADecrypter }
   - construct: { type: com.nimbusds.jose.jwk.gen.RSAKeyGenerator }
   - construct: { type: com.nimbusds.jose.jwk.RSAKey.Builder }
+  # Algorithm families, e.g. `JWSAlgorithm.Family.RSA.contains(alg)`: accepting
+  # any of them means depending on RSA.
+  - field: { type: com.nimbusds.jose.JWSAlgorithm.Family, matches: '^RSA$' }
+  - field: { type: com.nimbusds.jose.JWEAlgorithm.Family, matches: '^RSA$' }

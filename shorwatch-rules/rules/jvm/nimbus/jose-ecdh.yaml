@@ -13,3 +13,6 @@ patterns:
   - construct: { type: com.nimbusds.jose.crypto.ECDHDecrypter }
   - construct: { type: com.nimbusds.jose.crypto.X25519Encrypter }
   - construct: { type: com.nimbusds.jose.crypto.X25519Decrypter }
+  # Algorithm families, e.g. `JWSAlgorithm.Family.RSA.contains(alg)`: accepting
+  # any of them means depending on ECDH.
+  - field: { type: com.nimbusds.jose.JWEAlgorithm.Family, matches: '^ECDH_(ES|1PU)$' }

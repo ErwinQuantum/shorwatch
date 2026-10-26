@@ -1,0 +1,8 @@
+id: jvm.xml-security.3des
+profile: 3des
+platform: jvm
+
+patterns:
+  - field:
+      type: org.apache.xml.security.encryption.XMLCipher
+      matches: '^TRIPLEDES'
