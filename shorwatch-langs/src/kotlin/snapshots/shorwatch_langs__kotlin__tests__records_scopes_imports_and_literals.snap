@@ -1,6 +1,5 @@
 ---
 source: shorwatch-langs/src/kotlin/tests.rs
-assertion_line: 418
 expression: unit
 ---
 path: Test.kt
@@ -89,6 +88,8 @@ facts:
   - kind:
       literal:
         value: ready
+        calls:
+          - println
     scope: 3
     location:
       start:

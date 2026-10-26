@@ -33,8 +33,8 @@ use crate::jvm::{ArgSource, JvmFile, Pending, PendingArg, Receiver, Symbol, star
 use crate::{Frontend, LangError, span};
 use literals::{int_value, string_value};
 use syntax::{
-    child_of_kind, declared_type, has_child, is_name_path, is_value, looks_like_type, name_path,
-    navigation_parts, text,
+    child_of_kind, declared_type, enclosing_calls, has_child, is_name_path, is_value,
+    looks_like_type, name_path, navigation_parts, text,
 };
 
 mod literals;
@@ -189,7 +189,8 @@ impl<'s> Lowering<'s> {
             }
             "string_literal" | "multiline_string_literal" => {
                 if let Some(value) = string_value(node, self.src) {
-                    self.ready(FactKind::Literal { value }, scope, node);
+                    let calls = enclosing_calls(node, self.src);
+                    self.ready(FactKind::Literal { value, calls }, scope, node);
                 }
                 // Interpolations may hold calls.
                 Some(scope)

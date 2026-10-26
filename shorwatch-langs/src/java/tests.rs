@@ -377,3 +377,39 @@ class A { Object t() { return KeyType.RSA; } }",
     let (receiver, ..) = &calls(&module)[0];
     assert!(receiver.as_ref().unwrap().is("java.security.KeyFactory"));
 }
+
+#[test]
+fn literals_know_the_calls_they_are_passed_to() {
+    let unit = lower(
+        r#"
+            class A {
+                void run(Factory f) {
+                    f.setExcludeCipherSuites(List.of("TLS_RSA_WITH_AES_128_CBC_SHA"));
+                    f.apply(() -> log("inner"));
+                    String s = "alone";
+                }
+            }
+        "#,
+    );
+    let literals: Vec<(String, Vec<String>)> = unit
+        .facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Literal { value, calls } => Some((value.clone(), calls.clone())),
+            _ => None,
+        })
+        .collect();
+    let owned = |calls: &[&str]| calls.iter().map(|c| (*c).to_owned()).collect::<Vec<_>>();
+    assert_eq!(
+        literals,
+        [
+            (
+                "TLS_RSA_WITH_AES_128_CBC_SHA".to_owned(),
+                owned(&["of", "setExcludeCipherSuites"])
+            ),
+            // A lambda body is its own context.
+            ("inner".to_owned(), owned(&["log"])),
+            ("alone".to_owned(), owned(&[])),
+        ]
+    );
+}

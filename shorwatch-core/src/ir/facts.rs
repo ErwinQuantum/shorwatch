@@ -93,7 +93,14 @@ pub enum FactKind {
     /// An import (or equivalent). Imports apply to the whole file.
     Import { path: String },
     /// A string literal anywhere in the code.
-    Literal { value: String },
+    Literal {
+        value: String,
+        /// The methods of the calls the literal is an argument of, innermost
+        /// first and within one expression: `["of", "setExcludeCipherSuites"]`
+        /// for `setExcludeCipherSuites(List.of("..."))`.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        calls: Vec<String>,
+    },
     /// A configuration entry. `key` is flattened with dots and list indexes as
     /// written (`a.b[0].c`); `value` is the scalar as text.
     Property { key: String, value: String },

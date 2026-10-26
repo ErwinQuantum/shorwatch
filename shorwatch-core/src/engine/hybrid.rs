@@ -23,7 +23,7 @@ pub(super) fn hybrid_evidence(
                 (CompiledMarker::Import(re), FactKind::Import { path }) => {
                     re.is_match(path).then_some(path.as_str())
                 }
-                (CompiledMarker::Literal(re), FactKind::Literal { value })
+                (CompiledMarker::Literal(re), FactKind::Literal { value, .. })
                 | (CompiledMarker::Literal(re), FactKind::Property { value, .. })
                     if in_region =>
                 {

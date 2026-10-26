@@ -113,3 +113,32 @@ pub(super) fn child_of_kind<'t>(node: Node<'t>, kind: &str) -> Option<Node<'t>> 
 pub(super) fn text<'s>(node: Node<'_>, src: &'s str) -> &'s str {
     &src[node.byte_range()]
 }
+
+/// The methods of the calls `literal` is an argument of, innermost first,
+/// up to the enclosing block or lambda.
+pub(super) fn enclosing_calls(literal: Node<'_>, src: &str) -> Vec<String> {
+    let mut calls = Vec::new();
+    let mut child = literal;
+    while let Some(parent) = child.parent() {
+        match parent.kind() {
+            "call_expression" if child.kind() == "value_arguments" => {
+                let method = parent
+                    .named_child(0)
+                    .and_then(|callee| match callee.kind() {
+                        "identifier" => Some(callee),
+                        "navigation_expression" => {
+                            navigation_parts(callee).map(|(_, member)| member)
+                        }
+                        _ => None,
+                    });
+                if let Some(method) = method {
+                    calls.push(text(method, src).to_owned());
+                }
+            }
+            "block" | "class_body" | "lambda_literal" | "function_body" | "source_file" => break,
+            _ => {}
+        }
+        child = parent;
+    }
+    calls
+}

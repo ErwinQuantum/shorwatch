@@ -46,6 +46,18 @@ pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Op
         ) => {
             return (actual.is(owner) && optional(name, field)).then_some(Match { arg: None });
         }
+        (
+            CompiledPattern::Literal { value, unless_call },
+            FactKind::Literal {
+                value: literal,
+                calls,
+            },
+        ) => {
+            let excluded = unless_call
+                .as_ref()
+                .is_some_and(|re| calls.iter().any(|call| re.is_match(call)));
+            return (value.is_match(literal) && !excluded).then_some(Match { arg: None });
+        }
         (CompiledPattern::Property { key, value }, FactKind::Property { key: k, value: v }) => {
             return (key.is_match(k) && optional(value, v)).then_some(Match { arg: None });
         }

@@ -110,6 +110,16 @@ pub enum Pattern {
         #[serde(default)]
         matches: Option<String>,
     },
+    /// A string literal anywhere in the code whose value matches `matches`.
+    /// Only for names specific enough to stand alone (`TLS_ECDHE_RSA_...`):
+    /// they reach their API through arrays, lists or constants that argument
+    /// patterns cannot see. `unless_call` skips literals passed to a method
+    /// whose name matches it, such as `setExcludeCipherSuites`.
+    Literal {
+        matches: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        unless_call: Option<String>,
+    },
     /// A configuration entry whose key matches the `key` regex and whose value
     /// matches `matches` (any value when absent).
     Property {
@@ -123,7 +133,7 @@ impl Pattern {
     fn arg(&self) -> Option<&ArgPattern> {
         match self {
             Pattern::Call { arg, .. } | Pattern::Construct { arg, .. } => arg.as_ref(),
-            Pattern::Field { .. } | Pattern::Property { .. } => None,
+            Pattern::Field { .. } | Pattern::Literal { .. } | Pattern::Property { .. } => None,
         }
     }
 }

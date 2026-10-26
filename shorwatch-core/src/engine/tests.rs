@@ -124,6 +124,7 @@ fn pqc_literal_in_same_class_marks_in_transition() {
     unit.push(
         FactKind::Literal {
             value: "ML-KEM-768".into(),
+            calls: Vec::new(),
         },
         other,
         loc(8),
@@ -151,6 +152,7 @@ fn pqc_literal_in_another_class_does_not_count() {
     unit.push(
         FactKind::Literal {
             value: "Kyber".into(),
+            calls: Vec::new(),
         },
         other_class,
         loc(12),
@@ -305,6 +307,62 @@ fn field_pattern_without_name_matches_any_field() {
     let (mut unit, _, method) = unit_with_method();
     field(&mut unit, method, TypeRef::simple("JWSAlgorithm"), "ES256K");
     let set = RuleSet::compile([jws_rule(None)]).unwrap();
+    assert_eq!(analyze(&unit, &set).len(), 1);
+}
+
+#[test]
+fn literal_pattern_matches_string_literals_anywhere() {
+    let (mut unit, _, method) = unit_with_method();
+    for value in [
+        "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384",
+        "TLS_AES_256_GCM_SHA384",
+    ] {
+        unit.push(
+            FactKind::Literal {
+                value: value.into(),
+                calls: Vec::new(),
+            },
+            method,
+            loc(4),
+        );
+    }
+    let rule = Rule {
+        id: "jvm.tls.tls-key-exchange".into(),
+        patterns: vec![Pattern::Literal {
+            matches: "^TLS_(RSA|DHE?|ECDHE?)_".into(),
+            unless_call: None,
+        }],
+        ..rsa_rule()
+    };
+    let set = RuleSet::compile([rule]).unwrap();
+    assert_eq!(analyze(&unit, &set).len(), 1);
+}
+
+#[test]
+fn literal_pattern_skips_literals_passed_to_excluded_calls() {
+    let (mut unit, _, method) = unit_with_method();
+    for calls in [
+        vec!["setIncludeCipherSuites"],
+        vec!["of", "setExcludeCipherSuites"],
+    ] {
+        unit.push(
+            FactKind::Literal {
+                value: "TLS_RSA_WITH_AES_256_CBC_SHA".into(),
+                calls: calls.into_iter().map(str::to_owned).collect(),
+            },
+            method,
+            loc(4),
+        );
+    }
+    let rule = Rule {
+        id: "jvm.tls.tls-key-exchange".into(),
+        patterns: vec![Pattern::Literal {
+            matches: "^TLS_RSA_".into(),
+            unless_call: Some("(?i)exclude".into()),
+        }],
+        ..rsa_rule()
+    };
+    let set = RuleSet::compile([rule]).unwrap();
     assert_eq!(analyze(&unit, &set).len(), 1);
 }
 

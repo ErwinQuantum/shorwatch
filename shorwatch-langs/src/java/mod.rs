@@ -23,7 +23,7 @@ use tree_sitter::{Node, Parser};
 use crate::jvm::{ArgSource, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase};
 use crate::{Frontend, LangError, span};
 use literals::{int_value, string_value};
-use syntax::{has_modifier, is_name_path, is_name_slot, type_name};
+use syntax::{enclosing_calls, has_modifier, is_name_path, is_name_slot, type_name};
 
 mod literals;
 mod syntax;
@@ -174,7 +174,8 @@ impl<'s> Lowering<'s> {
             }
             "string_literal" => {
                 if let Some(value) = string_value(self.text(node)) {
-                    self.ready(FactKind::Literal { value }, scope, node);
+                    let calls = enclosing_calls(node, self.src);
+                    self.ready(FactKind::Literal { value, calls }, scope, node);
                 }
                 None
             }

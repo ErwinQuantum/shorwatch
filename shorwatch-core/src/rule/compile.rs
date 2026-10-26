@@ -30,6 +30,10 @@ pub(crate) enum CompiledPattern {
         owner: String,
         name: Option<Regex>,
     },
+    Literal {
+        value: Regex,
+        unless_call: Option<Regex>,
+    },
     Property {
         key: Regex,
         value: Option<Regex>,
@@ -150,6 +154,13 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                 Pattern::Field { owner, matches } => CompiledPattern::Field {
                     owner: owner.clone(),
                     name: matches.as_deref().map(regex).transpose()?,
+                },
+                Pattern::Literal {
+                    matches,
+                    unless_call,
+                } => CompiledPattern::Literal {
+                    value: regex(matches)?,
+                    unless_call: unless_call.as_deref().map(regex).transpose()?,
                 },
                 Pattern::Property { key, matches } => CompiledPattern::Property {
                     key: regex(key)?,

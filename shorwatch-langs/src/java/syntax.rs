@@ -36,3 +36,23 @@ pub(super) fn type_name(written: &str) -> String {
     let base = written.split(['<', '[']).next().unwrap_or(written);
     base.split_whitespace().last().unwrap_or(base).to_owned()
 }
+
+/// The methods of the calls `literal` is an argument of, innermost first,
+/// up to the enclosing statement block or lambda.
+pub(super) fn enclosing_calls(literal: Node<'_>, src: &str) -> Vec<String> {
+    let mut calls = Vec::new();
+    let mut child = literal;
+    while let Some(parent) = child.parent() {
+        match parent.kind() {
+            "method_invocation" if parent.child_by_field_name("arguments") == Some(child) => {
+                if let Some(name) = parent.child_by_field_name("name") {
+                    calls.push(src[name.byte_range()].to_owned());
+                }
+            }
+            "block" | "class_body" | "lambda_expression" | "program" => break,
+            _ => {}
+        }
+        child = parent;
+    }
+    calls
+}
