@@ -155,7 +155,8 @@ expression: render(&scan())
           ],
           "properties": {
             "algorithm": "RSA",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -211,7 +212,8 @@ expression: render(&scan())
           ],
           "properties": {
             "algorithm": "AES-128",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -239,7 +241,8 @@ expression: render(&scan())
           ],
           "properties": {
             "algorithm": "ECDSA",
-            "status": "in transition"
+            "status": "in transition",
+            "role": "production"
           }
         },
         {
@@ -267,7 +270,40 @@ expression: render(&scan())
           ],
           "properties": {
             "algorithm": "RSA (JOSE/JWT)",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
+          }
+        },
+        {
+          "ruleId": "jvm.jca.rsa",
+          "ruleIndex": 3,
+          "level": "error",
+          "message": {
+            "text": "RSA usage detected."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/test/java/com/acme/auth/SignerTest.java",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 16,
+                  "endLine": 3,
+                  "endColumn": 58
+                }
+              }
+            }
+          ],
+          "properties": {
+            "algorithm": "RSA",
+            "status": "vulnerable",
+            "role": "test",
+            "tags": [
+              "test"
+            ]
           }
         }
       ]

@@ -71,6 +71,14 @@ fn summary(scan: &Scan) -> String {
         "{indent} {} vulnerable · {} in transition · {} auto-fixable",
         summary.vulnerable, summary.in_transition, summary.fixable
     );
+    if summary.in_tests > 0 {
+        let _ = writeln!(
+            out,
+            "{indent} {} in production code · {} in test code",
+            summary.findings - summary.in_tests,
+            summary.in_tests
+        );
+    }
     let severities: Vec<_> = summary
         .severities()
         .map(|(severity, n)| format!("{n} {}", severity_label(severity)))

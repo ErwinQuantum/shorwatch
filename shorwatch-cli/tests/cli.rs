@@ -219,3 +219,43 @@ fn latin1_properties_are_scanned() {
     let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(report["findings"][0]["rule_id"], "config.app.jose-rsa");
 }
+
+#[test]
+fn test_code_is_labelled_and_can_be_excluded() {
+    let dir = std::env::temp_dir().join(format!("shorwatch-roles-{}", std::process::id()));
+    for (path, code) in [
+        (
+            "src/main/java/Keys.java",
+            "class Keys { Object k() throws Exception { return java.security.KeyPairGenerator.getInstance(\"RSA\"); } }",
+        ),
+        (
+            "src/test/java/KeysTest.java",
+            "class KeysTest { Object k() throws Exception { return java.security.KeyPairGenerator.getInstance(\"EC\"); } }",
+        ),
+    ] {
+        let file = dir.join(path);
+        std::fs::create_dir_all(file.parent().unwrap()).unwrap();
+        std::fs::write(file, code).unwrap();
+    }
+    let root = dir.display().to_string();
+
+    let all = shorwatch(&["scan", &root, "--format", "json"]);
+    let only_production = shorwatch(&["scan", &root, "--format", "json", "--exclude-tests"]);
+    std::fs::remove_dir_all(&dir).unwrap();
+
+    let all: serde_json::Value = serde_json::from_str(&stdout(&all)).unwrap();
+    assert_eq!(all["summary"]["findings"], 2);
+    assert_eq!(all["summary"]["in_tests"], 1);
+    let roles: Vec<_> = all["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["role"].clone())
+        .collect();
+    assert_eq!(roles, ["production", "test"]);
+
+    let only_production: serde_json::Value =
+        serde_json::from_str(&stdout(&only_production)).unwrap();
+    assert_eq!(only_production["summary"]["files_scanned"], 1);
+    assert_eq!(only_production["findings"][0]["rule_id"], "jvm.jca.rsa");
+}

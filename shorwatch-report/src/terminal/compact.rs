@@ -2,6 +2,8 @@
 
 use std::fmt::Write as _;
 
+use shorwatch_core::CodeRole;
+
 use super::style::{accent, bold, dim, paint, severity_badge, status};
 use crate::Scan;
 
@@ -14,6 +16,8 @@ pub(super) fn render(scan: &Scan) -> String {
         .map(|f| f.algorithm.chars().count())
         .max()
         .unwrap_or(0);
+    // The role column only appears when some findings are in test code.
+    let any_test = scan.findings.iter().any(|f| f.role == CodeRole::Test);
     let mut out = String::new();
     let mut current: Option<&str> = None;
     for finding in &scan.findings {
@@ -29,9 +33,14 @@ pub(super) fn render(scan: &Scan) -> String {
             .line(&finding.path, start.line)
             .map(|l| excerpt(l.trim()))
             .unwrap_or_default();
+        let role = match (any_test, finding.role) {
+            (false, _) => String::new(),
+            (true, CodeRole::Test) => format!("{}  ", paint("test", dim())),
+            (true, CodeRole::Production) => " ".repeat("test  ".len()),
+        };
         let _ = writeln!(
             out,
-            "  {} {} {:<width$}  {}  {}",
+            "  {} {} {:<width$}  {}  {role}{}",
             paint(format!("{:>5}:{:<3}", start.line, start.column), accent()),
             severity_badge(finding.severity, "CRITICAL".len()),
             finding.algorithm,

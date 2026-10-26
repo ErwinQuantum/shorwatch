@@ -99,6 +99,7 @@ shorwatch rules                              # list the rules in effect
 | `-o, --output FILE` | Write the report to a file |
 | `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
 | `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`) |
+| `--exclude-tests` | Skip test code (Maven/Gradle test source sets such as `src/test` or `src/jvmTest`, test directories, `*Test`/`*IT` classes). Without it, findings in test code are reported and labelled as such |
 | `--compact` | One line per finding |
 | `--rules DIR` | Extra rules directory (repeatable) |
 

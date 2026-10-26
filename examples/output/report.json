@@ -8,6 +8,7 @@
     "vulnerable": 12,
     "in_transition": 1,
     "fixable": 1,
+    "in_tests": 0,
     "by_severity": {
       "low": 1,
       "medium": 2,
@@ -43,6 +44,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java",
+      "role": "production",
       "location": {
         "start": {
           "line": 23,
@@ -92,6 +94,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java",
+      "role": "production",
       "location": {
         "start": {
           "line": 32,
@@ -142,6 +145,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/java/com/example/payments/auth/TokenSigner.java",
+      "role": "production",
       "location": {
         "start": {
           "line": 14,
@@ -189,6 +193,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java",
+      "role": "production",
       "location": {
         "start": {
           "line": 13,
@@ -235,6 +240,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java",
+      "role": "production",
       "location": {
         "start": {
           "line": 17,
@@ -283,6 +289,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java",
+      "role": "production",
       "location": {
         "start": {
           "line": 22,
@@ -347,6 +354,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/java/com/example/payments/tls/HybridKeyExchange.java",
+      "role": "production",
       "location": {
         "start": {
           "line": 9,
@@ -409,6 +417,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt",
+      "role": "production",
       "location": {
         "start": {
           "line": 16,
@@ -456,6 +465,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt",
+      "role": "production",
       "location": {
         "start": {
           "line": 19,
@@ -502,6 +512,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt",
+      "role": "production",
       "location": {
         "start": {
           "line": 20,
@@ -548,6 +559,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/resources/application-prod.yml",
+      "role": "production",
       "location": {
         "start": {
           "line": 4,
@@ -599,6 +611,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/resources/application.yml",
+      "role": "production",
       "location": {
         "start": {
           "line": 8,
@@ -652,6 +665,7 @@
         }
       ],
       "path": "examples/spring-service/src/main/resources/application.yml",
+      "role": "production",
       "location": {
         "start": {
           "line": 14,

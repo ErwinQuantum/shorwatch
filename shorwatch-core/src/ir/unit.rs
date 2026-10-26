@@ -26,12 +26,31 @@ pub struct Scope {
     pub parent: Option<ScopeId>,
 }
 
+/// What a file is for. Findings in test code are still real, but rarely what
+/// a migration starts with.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum CodeRole {
+    #[default]
+    Production,
+    Test,
+}
+
+impl CodeRole {
+    fn is_production(&self) -> bool {
+        *self == CodeRole::Production
+    }
+}
+
 /// One analyzed file. `path` is an opaque identifier (a relative path, a URI…);
-/// the core never touches the file system.
+/// the core never touches the file system, so whoever knows the project's
+/// layout sets the [`CodeRole`].
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SourceUnit {
     path: String,
     language: Language,
+    #[serde(skip_serializing_if = "CodeRole::is_production")]
+    role: CodeRole,
     scopes: Vec<Scope>,
     pub(crate) facts: Vec<Fact>,
 }
@@ -41,6 +60,7 @@ impl SourceUnit {
         Self {
             path: path.into(),
             language,
+            role: CodeRole::Production,
             scopes: vec![Scope {
                 kind: ScopeKind::File,
                 name: None,
@@ -58,6 +78,14 @@ impl SourceUnit {
 
     pub fn language(&self) -> Language {
         self.language
+    }
+
+    pub fn role(&self) -> CodeRole {
+        self.role
+    }
+
+    pub fn set_role(&mut self, role: CodeRole) {
+        self.role = role;
     }
 
     pub fn facts(&self) -> &[Fact] {

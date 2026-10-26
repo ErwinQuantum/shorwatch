@@ -11,7 +11,7 @@
 //! the same code always yields the same CBOM.
 
 use serde::Serialize;
-use shorwatch_core::{Category, CryptoProperties, Finding, Severity, Status};
+use shorwatch_core::{Category, CodeRole, CryptoProperties, Finding, Severity, Status};
 
 use crate::Scan;
 use crate::summary::severity_label;
@@ -81,11 +81,15 @@ fn component<'a>(name: &'a str, findings: &[&'a Finding]) -> Component<'a> {
                     location: &f.path,
                     line: f.location.start.line,
                     additional_context: format!(
-                        "{} ({})",
+                        "{} ({}{})",
                         f.rule_id,
                         match f.status {
                             Status::Vulnerable => "vulnerable",
                             Status::InTransition => "in transition",
+                        },
+                        match f.role {
+                            CodeRole::Production => "",
+                            CodeRole::Test => ", test code",
                         }
                     ),
                 })
@@ -238,9 +242,10 @@ mod tests {
         let components = bom["components"].as_array().unwrap();
         let rsa: Vec<_> = components.iter().filter(|c| c["name"] == "RSA").collect();
         assert_eq!(rsa.len(), 1);
+        // The fixture's RSA in production and in test code, plus the copy.
         assert_eq!(
             rsa[0]["evidence"]["occurrences"].as_array().unwrap().len(),
-            2
+            3
         );
     }
 

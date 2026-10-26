@@ -5,7 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
-use shorwatch_core::{Finding, RuleSet, Severity, SourceUnit, analyze, link};
+use shorwatch_core::{CodeRole, Finding, RuleSet, Severity, SourceUnit, analyze, link};
 use shorwatch_report::Scan;
 
 use crate::discover::display_path;
@@ -15,11 +15,15 @@ pub struct Options {
     pub tool_version: String,
 }
 
-pub fn scan(files: &[PathBuf], rules: &RuleSet, options: &Options) -> Scan {
+pub fn scan(files: &[(PathBuf, CodeRole)], rules: &RuleSet, options: &Options) -> Scan {
     let cwd = std::env::current_dir().unwrap_or_default();
     let mut lowered: Vec<(SourceUnit, String)> = files
         .par_iter()
-        .filter_map(|path| lower(path, &cwd))
+        .filter_map(|(path, role)| {
+            let (mut unit, source) = lower(path, &cwd)?;
+            unit.set_role(*role);
+            Some((unit, source))
+        })
         .collect();
     // par_iter + collect keeps the input order, so linking is deterministic.
     let (mut units, sources): (Vec<_>, Vec<_>) = lowered.drain(..).unzip();

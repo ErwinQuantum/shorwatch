@@ -46,6 +46,18 @@ expression: "plain(&render(&scan(), Options::default()))"
            during the transition.
    = ref: https://csrc.nist.gov/pubs/fips/203/final
 
- Summary  4 findings in 3 files (12 scanned)
-          3 vulnerable · 1 in transition · 1 auto-fixable
-          3 high · 1 low
+ HIGH  RSA · jvm.jca.rsa · vulnerable · test code
+  ──▶ src/test/java/com/acme/auth/SignerTest.java:3:16
+   │
+ 3 │         return KeyPairGenerator.getInstance("RSA").generateKeyPair();
+   │                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ RSA is broken by Shor's algorithm
+   = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and
+           ML-DSA (FIPS 204) for signatures; hybrid schemes keep classical security
+           during the transition.
+   = ref: https://csrc.nist.gov/pubs/fips/203/final
+
+ Summary  5 findings in 4 files (12 scanned)
+          4 vulnerable · 1 in transition · 1 auto-fixable
+          4 in production code · 1 in test code
+          4 high · 1 low

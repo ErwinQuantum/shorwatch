@@ -53,6 +53,7 @@ fn build_finding(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact, matched: M
         suggestion: spec.suggestion.clone(),
         references: spec.references.clone(),
         path: unit.path().to_owned(),
+        role: unit.role(),
         location: fact.location,
         hybrid_evidence,
         fix: suggested_fix(rule, &matched),

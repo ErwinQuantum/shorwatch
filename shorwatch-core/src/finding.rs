@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::ir::Location;
+use crate::ir::{CodeRole, Location};
 use crate::rule::{Category, CryptoProperties, Reference, Severity};
 
 /// Whether the project still depends solely on the vulnerable algorithm.
@@ -41,6 +41,8 @@ pub struct Finding {
     pub suggestion: String,
     pub references: Vec<Reference>,
     pub path: String,
+    /// Whether the finding is in production or test code.
+    pub role: CodeRole,
     pub location: Location,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hybrid_evidence: Option<HybridEvidence>,

@@ -2,16 +2,17 @@
 source: shorwatch-report/src/markdown.rs
 expression: render(&scan())
 ---
-## 🛡️ Shorwatch: 4 quantum-vulnerable findings
+## 🛡️ Shorwatch: 5 quantum-vulnerable findings
 
 | | Count |
 |---|---:|
-| Vulnerable | 3 |
+| Vulnerable | 4 |
 | In transition (hybrid) | 1 |
 | Auto-fixable | 1 |
-| Severity high | 3 |
+| In test code | 1 |
+| Severity high | 4 |
 | Severity low | 1 |
-| Files with findings / scanned | 3 / 12 |
+| Files with findings / scanned | 4 / 12 |
 
 ### Findings
 
@@ -21,3 +22,4 @@ expression: render(&scan())
 | low | AES-128 | `src/main/java/com/acme/auth/AuthConfig.java:11` | vulnerable | `jvm.jca.aes-128` |
 | high | ECDSA | `src/main/java/com/acme/auth/Signer.java:3` | in transition | `jvm.jca.ecdsa` |
 | high | RSA (JOSE/JWT) | `src/main/resources/application.yml:4` | vulnerable | `config.spring-boot.jose-rsa` |
+| high | RSA | `src/test/java/com/acme/auth/SignerTest.java:3` | vulnerable (test code) | `jvm.jca.rsa` |

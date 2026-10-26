@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use serde::Serialize;
 use shorwatch_core::ir::Location;
-use shorwatch_core::{Finding, Severity};
+use shorwatch_core::{CodeRole, Finding, Severity};
 
 use crate::Scan;
 use crate::summary::status_label;
@@ -139,6 +139,12 @@ fn result(finding: &Finding, rule_index: usize) -> SarifResult<'_> {
         properties: ResultProperties {
             algorithm: &finding.algorithm,
             status: status_label(finding.status),
+            role: finding.role,
+            // GitHub code scanning filters results by tag.
+            tags: match finding.role {
+                CodeRole::Test => vec!["test"],
+                CodeRole::Production => Vec::new(),
+            },
         },
     }
 }
@@ -311,6 +317,9 @@ struct Content {
 struct ResultProperties<'a> {
     algorithm: &'a str,
     status: &'static str,
+    role: CodeRole,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    tags: Vec<&'static str>,
 }
 
 #[cfg(test)]

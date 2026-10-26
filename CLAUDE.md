@@ -21,7 +21,7 @@ tree-sitter (no compiling, no binaries): **Java** and **Kotlin** sources plus
 | `shorwatch-rules` | Built-in YAML rules (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` for external rules | core |
 | `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng), both on the shared `jvm` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written). Nothing tree-sitter leaks out | core |
 | `shorwatch-report` | Pure renderers over a `Scan`: terminal (banner, detailed/compact), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown | core |
-| `shorwatch-cli` | `shorwatch scan` / `shorwatch rules`: clap args, `ignore` walker, rayon pipeline, output, exit codes | all |
+| `shorwatch-cli` | `shorwatch scan` / `shorwatch rules`: clap args, `ignore` walker, `layout` (test vs production code by path), rayon pipeline, output, exit codes | all |
 
 Pipeline (what the CLI does): lower every file with its frontend → `link`
 all units of the project → `analyze` each unit → report.
@@ -94,6 +94,10 @@ langs/src/ jvm/{mod: JvmFile, model, resolve}  java/{mod: traversal, syntax, lit
   binding (`signingAlgorithm` = `signing-algorithm`); list keys collect their
   elements; every profile's value is a candidate; default if unset.
 - Columns are Unicode code points (SARIF `unicodeCodePoints`).
+- `SourceUnit::role` (`CodeRole::Production | Test`) is set by whoever knows
+  the project layout (the CLI's `layout.rs`, from the path relative to the
+  scan root); `analyze` copies it to every `Finding`. Sources that are not
+  UTF-8 are decoded as ISO-8859-1 (`.properties` files often are).
 
 ## Rules (`shorwatch-rules/rules/`)
 

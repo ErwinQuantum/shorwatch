@@ -3,7 +3,7 @@
 
 use std::fmt::Write as _;
 
-use shorwatch_core::Finding;
+use shorwatch_core::{CodeRole, Finding};
 
 use super::style::{accent, bold, dim, paint, severity_badge, status};
 use super::wrap::wrap;
@@ -23,13 +23,18 @@ pub(super) fn render(scan: &Scan, finding: &Finding) -> String {
     // Writing to a String cannot fail.
     let _ = writeln!(
         out,
-        "{} {} {} {} {} {}",
+        "{} {} {} {} {} {}{}",
         severity_badge(finding.severity, 0),
         paint(&finding.algorithm, bold()),
         paint("·", dim()),
         paint(&finding.rule_id, dim()),
         paint("·", dim()),
         status(finding.status, 0),
+        if finding.role == CodeRole::Test {
+            format!(" {} {}", paint("·", dim()), paint("test code", dim()))
+        } else {
+            String::new()
+        },
     );
     let _ = writeln!(
         out,

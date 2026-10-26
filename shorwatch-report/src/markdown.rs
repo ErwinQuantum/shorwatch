@@ -1,6 +1,7 @@
 //! A Markdown summary for CI job summaries (`$GITHUB_STEP_SUMMARY`) and
 //! pull-request comments.
 
+use shorwatch_core::CodeRole;
 use std::fmt::Write as _;
 
 use crate::Scan;
@@ -32,6 +33,9 @@ pub fn render(scan: &Scan) -> String {
         summary.in_transition
     );
     let _ = writeln!(out, "| Auto-fixable | {} |", summary.fixable);
+    if summary.in_tests > 0 {
+        let _ = writeln!(out, "| In test code | {} |", summary.in_tests);
+    }
     for (severity, n) in summary.severities() {
         let _ = writeln!(out, "| Severity {} | {n} |", severity_label(severity));
     }
@@ -53,7 +57,10 @@ pub fn render(scan: &Scan) -> String {
             cell(&f.algorithm),
             cell(&f.path),
             f.location.start.line,
-            status_label(f.status),
+            match f.role {
+                CodeRole::Production => status_label(f.status).to_owned(),
+                CodeRole::Test => format!("{} (test code)", status_label(f.status)),
+            },
             f.rule_id,
         );
     }

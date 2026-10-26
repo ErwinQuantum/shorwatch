@@ -1,11 +1,11 @@
 //! A small, realistic scan shared by the renderer tests: findings in Java and
-//! YAML, one in transition, one with a fix.
+//! YAML, one in transition, one with a fix, one in test code.
 
 use shorwatch_core::ir::{Location, Position};
 use shorwatch_core::rule::{
     Category, CryptoFunction, CryptoProperties, Primitive, Reference, Severity,
 };
-use shorwatch_core::{Finding, HybridEvidence, Status, SuggestedFix};
+use shorwatch_core::{CodeRole, Finding, HybridEvidence, Status, SuggestedFix};
 
 use crate::Scan;
 
@@ -30,6 +30,14 @@ const SIGNER: &str = "\
 class Signer {
     Signature[] signers() throws Exception {
         return new Signature[] { Signature.getInstance(\"SHA256withECDSA\"), Signature.getInstance(\"ML-DSA-65\") };
+    }
+}
+";
+
+const SIGNER_TEST: &str = "\
+class SignerTest {
+    KeyPair fixture() throws Exception {
+        return KeyPairGenerator.getInstance(\"RSA\").generateKeyPair();
     }
 }
 ";
@@ -84,6 +92,7 @@ fn shor(rule_id: &str, algorithm: &str, path: &str, at: Location) -> Finding {
             ),
         ],
         path: path.into(),
+        role: CodeRole::Production,
         location: at,
         hybrid_evidence: None,
         fix: None,
@@ -105,6 +114,7 @@ pub(crate) fn scan() -> Scan {
     let config = "src/main/java/com/acme/auth/AuthConfig.java";
     let signer = "src/main/java/com/acme/auth/Signer.java";
     let yaml = "src/main/resources/application.yml";
+    let signer_test = "src/test/java/com/acme/auth/SignerTest.java";
 
     let rsa = shor("jvm.jca.rsa", "RSA", config, location(5, 25, 60));
     let aes = Finding {
@@ -141,14 +151,23 @@ pub(crate) fn scan() -> Scan {
         yaml,
         location(4, 24, 29),
     );
+    let test = Finding {
+        role: CodeRole::Test,
+        ..shor("jvm.jca.rsa", "RSA", signer_test, location(3, 16, 58))
+    };
 
     Scan {
         tool_version: "0.1.0".into(),
-        findings: vec![rsa, aes, ecdsa, jose],
-        sources: [(config, CONFIG), (signer, SIGNER), (yaml, YAML)]
-            .into_iter()
-            .map(|(p, s)| (p.to_owned(), s.to_owned()))
-            .collect(),
+        findings: vec![rsa, aes, ecdsa, jose, test],
+        sources: [
+            (config, CONFIG),
+            (signer, SIGNER),
+            (yaml, YAML),
+            (signer_test, SIGNER_TEST),
+        ]
+        .into_iter()
+        .map(|(p, s)| (p.to_owned(), s.to_owned()))
+        .collect(),
         files_scanned: 12,
     }
 }

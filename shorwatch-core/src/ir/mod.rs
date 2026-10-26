@@ -18,4 +18,4 @@ pub use facts::{Arg, ArgValue, Fact, FactKind};
 pub use language::{Language, Platform};
 pub use location::{Location, Position};
 pub use types::TypeRef;
-pub use unit::{Scope, ScopeId, ScopeKind, SourceUnit};
+pub use unit::{CodeRole, Scope, ScopeId, ScopeKind, SourceUnit};

@@ -347,7 +347,8 @@
           ],
           "properties": {
             "algorithm": "RSA (JOSE/JWT)",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -375,7 +376,8 @@
           ],
           "properties": {
             "algorithm": "RSA",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -403,7 +405,8 @@
           ],
           "properties": {
             "algorithm": "ECDSA (JOSE/JWT)",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -431,7 +434,8 @@
           ],
           "properties": {
             "algorithm": "SHA-1",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -459,7 +463,8 @@
           ],
           "properties": {
             "algorithm": "3DES",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -515,7 +520,8 @@
           ],
           "properties": {
             "algorithm": "AES-128",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -543,7 +549,8 @@
           ],
           "properties": {
             "algorithm": "ECDH",
-            "status": "in transition"
+            "status": "in transition",
+            "role": "production"
           }
         },
         {
@@ -571,7 +578,8 @@
           ],
           "properties": {
             "algorithm": "ECDSA (JOSE/JWT)",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -599,7 +607,8 @@
           ],
           "properties": {
             "algorithm": "ECC",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -627,7 +636,8 @@
           ],
           "properties": {
             "algorithm": "ECC",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -655,7 +665,8 @@
           ],
           "properties": {
             "algorithm": "ECDSA (JOSE/JWT)",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -683,7 +694,8 @@
           ],
           "properties": {
             "algorithm": "RSA (JOSE/JWT)",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         },
         {
@@ -711,7 +723,8 @@
           ],
           "properties": {
             "algorithm": "TLS key exchange",
-            "status": "vulnerable"
+            "status": "vulnerable",
+            "role": "production"
           }
         }
       ]

@@ -57,6 +57,12 @@ pub struct ScanArgs {
     #[arg(long, value_enum, default_value_t = FailOn::Vulnerable)]
     pub fail_on: FailOn,
 
+    /// Skip test code: Maven/Gradle test source sets (`src/test`,
+    /// `src/integrationTest`...), test directories and `*Test`/`*IT` classes.
+    /// Without it, findings in test code are reported and labelled.
+    #[arg(long)]
+    pub exclude_tests: bool,
+
     /// One line per finding (text format only).
     #[arg(long)]
     pub compact: bool,

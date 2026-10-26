@@ -3,6 +3,7 @@
 
 mod args;
 mod discover;
+mod layout;
 mod output;
 mod pipeline;
 mod rules;
@@ -11,7 +12,7 @@ use std::process::ExitCode;
 
 use anyhow::Result;
 use clap::Parser;
-use shorwatch_core::Status;
+use shorwatch_core::{CodeRole, Status};
 
 use args::{Cli, Command, FailOn, ScanArgs};
 
@@ -37,7 +38,10 @@ fn scan(args: &ScanArgs) -> Result<ExitCode> {
         output::banner(VERSION)?;
     }
     let rules = rules::load(&args.rules)?;
-    let files = discover::files(&args.paths)?;
+    let mut files = discover::files(&args.paths)?;
+    if args.exclude_tests {
+        files.retain(|(_, role)| *role == CodeRole::Production);
+    }
     let options = pipeline::Options {
         min_severity: args.min_severity.into(),
         tool_version: VERSION.to_owned(),

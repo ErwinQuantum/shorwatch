@@ -18,7 +18,7 @@ mod link;
 
 pub use engine::analyze;
 pub use finding::{Finding, HybridEvidence, Status, SuggestedFix};
-pub use ir::{Language, Platform, SourceUnit};
+pub use ir::{CodeRole, Language, Platform, SourceUnit};
 pub use link::link;
 pub use rule::{
     Category, CryptoFunction, CryptoProperties, Primitive, Rule, RuleError, RuleSet, Severity,

@@ -34,7 +34,9 @@ mod tests {
     #[test]
     fn json_round_trips_the_findings() {
         let value: serde_json::Value = serde_json::from_str(&render(&scan())).unwrap();
-        assert_eq!(value["summary"]["findings"], 4);
+        assert_eq!(value["summary"]["findings"], 5);
+        assert_eq!(value["summary"]["in_tests"], 1);
+        assert_eq!(value["findings"][4]["role"], "test");
         assert_eq!(value["findings"][0]["rule_id"], "jvm.jca.rsa");
         assert_eq!(value["findings"][0]["location"]["start"]["line"], 5);
         assert_eq!(value["findings"][2]["status"], "in_transition");

@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
-use shorwatch_core::{Severity, Status};
+use shorwatch_core::{CodeRole, Severity, Status};
 
 use crate::Scan;
 
@@ -17,6 +17,8 @@ pub struct Summary {
     pub in_transition: usize,
     /// Findings that come with a mechanical fix.
     pub fixable: usize,
+    /// Findings in test code (the rest are in production code).
+    pub in_tests: usize,
     /// Most severe first.
     pub by_severity: BTreeMap<Severity, usize>,
 }
@@ -40,6 +42,7 @@ impl Summary {
             vulnerable: count(Status::Vulnerable),
             in_transition: count(Status::InTransition),
             fixable: findings.iter().filter(|f| f.fix.is_some()).count(),
+            in_tests: findings.iter().filter(|f| f.role == CodeRole::Test).count(),
             by_severity,
         }
     }
@@ -75,14 +78,15 @@ mod tests {
     #[test]
     fn counts_findings_by_status_severity_and_file() {
         let summary = scan().summary();
-        assert_eq!(summary.findings, 4);
-        assert_eq!(summary.files_with_findings, 3);
-        assert_eq!(summary.vulnerable, 3);
+        assert_eq!(summary.findings, 5);
+        assert_eq!(summary.files_with_findings, 4);
+        assert_eq!(summary.vulnerable, 4);
         assert_eq!(summary.in_transition, 1);
         assert_eq!(summary.fixable, 1);
+        assert_eq!(summary.in_tests, 1);
         assert_eq!(
             summary.severities().collect::<Vec<_>>(),
-            [(Severity::High, 3), (Severity::Low, 1)]
+            [(Severity::High, 4), (Severity::Low, 1)]
         );
     }
 }

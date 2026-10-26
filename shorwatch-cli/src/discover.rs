@@ -1,10 +1,14 @@
 //! Finding the files to scan: walks the given paths respecting `.gitignore`,
-//! skips build output, and keeps files some frontend understands.
+//! skips build output, and keeps files some frontend understands, each with
+//! its role (production or test code).
 
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
 use ignore::WalkBuilder;
+use shorwatch_core::CodeRole;
+
+use crate::layout;
 
 /// Generated or vendored directories that are not worth scanning even when
 /// no `.gitignore` excludes them.
@@ -13,7 +17,7 @@ const SKIPPED_DIRS: &[&str] = &["target", "build", "node_modules", ".gradle"];
 /// Larger files are almost always generated; parsing them is slow and noisy.
 const MAX_FILE_BYTES: u64 = 4 * 1024 * 1024;
 
-pub fn files(paths: &[PathBuf]) -> Result<Vec<PathBuf>> {
+pub fn files(paths: &[PathBuf]) -> Result<Vec<(PathBuf, CodeRole)>> {
     for path in paths {
         if !path.exists() {
             bail!("`{}` does not exist", path.display());
@@ -37,12 +41,23 @@ pub fn files(paths: &[PathBuf]) -> Result<Vec<PathBuf>> {
         let path = entry.path();
         let is_file = entry.file_type().is_some_and(|t| t.is_file());
         if is_file && is_supported(path) && !too_large(path) {
-            files.push(path.to_owned());
+            files.push((path.to_owned(), role(path, paths)));
         }
     }
-    files.sort();
-    files.dedup();
+    files.sort_by(|a, b| a.0.cmp(&b.0));
+    files.dedup_by(|a, b| a.0 == b.0);
     Ok(files)
+}
+
+/// The role of `path`, judged by its path inside the scan root it was found
+/// under (the most specific one when roots nest).
+fn role(path: &Path, roots: &[PathBuf]) -> CodeRole {
+    let relative = roots
+        .iter()
+        .filter_map(|root| path.strip_prefix(root).ok())
+        .min_by_key(|relative| relative.components().count())
+        .unwrap_or(path);
+    layout::role(relative)
 }
 
 fn is_supported(path: &Path) -> bool {
