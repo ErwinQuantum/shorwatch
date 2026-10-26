@@ -30,9 +30,9 @@ Module map (one responsibility per file, tests in sibling `tests.rs`):
 
 ```
 core/src/  ir/{language, location, unit, types, facts}  rule/{mod: model, error, compile}
-           engine/{mod: analyze + findings, matching, hybrid, fix}  link.rs  finding.rs
+           engine/{mod: analyze + findings, matching, hybrid, fix}  link/{mod, config, flow}  finding.rs
 rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules)  error.rs  build.rs
-langs/src/ jvm/{mod: JvmFile, model, resolve}  java/{mod: traversal, syntax, literals}
+langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
 ```
 
