@@ -6,7 +6,7 @@ code changes.
 
 ## Setup
 
-Requires Rust 1.85 or later.
+Requires Rust 1.88 or later.
 
 ```sh
 cargo build
