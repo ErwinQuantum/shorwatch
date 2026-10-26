@@ -1,0 +1,11 @@
+id: jvm.spring-security.jose-ecdsa
+profile: jose-ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
+      matches: '^ES(256|384|512)$'
+  - field:
+      type: org.springframework.security.oauth2.jose.jws.JwsAlgorithms
+      matches: '^ES(256|384|512)$'

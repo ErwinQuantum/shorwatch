@@ -1,0 +1,8 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/java/spring-app/LegacyApiKeyHasher.java
+---
+- rule: jvm.jca.sha1
+  at: "15:32"
+  status: vulnerable

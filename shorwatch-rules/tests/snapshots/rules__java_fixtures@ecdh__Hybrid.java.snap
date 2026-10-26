@@ -1,9 +1,0 @@
----
-source: shorwatch-rules/tests/rules.rs
-expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/ecdh/Hybrid.java
----
-- rule: java.crypto.ecdh
-  at: "10:16"
-  status: in_transition
-  hybrid_evidence: X25519MLKEM768 @ 7

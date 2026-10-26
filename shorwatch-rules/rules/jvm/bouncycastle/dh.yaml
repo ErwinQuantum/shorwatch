@@ -1,0 +1,15 @@
+id: jvm.bouncycastle.dh
+profile: dh
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.agreement.DHBasicAgreement
+  - construct:
+      type: org.bouncycastle.crypto.agreement.DHAgreement
+  - construct:
+      type: org.bouncycastle.crypto.generators.DHKeyPairGenerator
+  - construct:
+      type: org.bouncycastle.crypto.generators.DHBasicKeyPairGenerator
+  - construct:
+      type: org.bouncycastle.crypto.generators.DHParametersGenerator

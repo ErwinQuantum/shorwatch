@@ -1,0 +1,23 @@
+algorithm: EdDSA
+category: shor
+severity: high
+title: EdDSA (Ed25519/Ed448) signatures are forgeable with Shor's algorithm
+message: >-
+  EdDSA signing or verification detected (Ed25519 or Ed448). Edwards curves
+  fix many implementation pitfalls of ECDSA, but their security still rests
+  on the elliptic-curve discrete logarithm problem, which Shor's algorithm
+  solves: a quantum attacker can derive the private key and forge signatures.
+suggestion: >-
+  Migrate signatures to ML-DSA (FIPS 204), or SLH-DSA (FIPS 205) for a
+  conservative hash-based alternative. Expect much larger keys and
+  signatures (ML-DSA-65: ~2 KB public key, ~3.3 KB signature, against 32 and
+  64 bytes for Ed25519). Composite Ed25519 + ML-DSA signatures keep existing
+  verifiers working during the transition.
+references:
+  - title: "FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)"
+    url: https://csrc.nist.gov/pubs/fips/204/final
+  - title: "FIPS 205: Stateless Hash-Based Digital Signature Standard (SLH-DSA)"
+    url: https://csrc.nist.gov/pubs/fips/205/final
+  - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
+    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+hybrid: pqc

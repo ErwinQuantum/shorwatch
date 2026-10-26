@@ -1,0 +1,22 @@
+id: jvm.jca.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  # JCA (Java 15+, JEP 339) and BouncyCastle provider names.
+  - call:
+      type: java.security.Signature
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(EdDSA|Ed25519(ph|ctx)?|Ed448(ph)?)$' }
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(EdDSA|Ed25519|Ed448)$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(EdDSA|Ed25519|Ed448)$' }
+  - construct:
+      type: java.security.spec.EdECPublicKeySpec
+  - construct:
+      type: java.security.spec.EdECPrivateKeySpec

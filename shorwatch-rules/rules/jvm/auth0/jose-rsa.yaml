@@ -1,0 +1,8 @@
+id: jvm.auth0.jose-rsa
+profile: jose-rsa
+platform: jvm
+
+patterns:
+  - call: { type: com.auth0.jwt.algorithms.Algorithm, method: RSA256 }
+  - call: { type: com.auth0.jwt.algorithms.Algorithm, method: RSA384 }
+  - call: { type: com.auth0.jwt.algorithms.Algorithm, method: RSA512 }

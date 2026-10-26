@@ -1,0 +1,21 @@
+id: jvm.nimbus.jose-rsa
+profile: jose-rsa
+platform: jvm
+
+patterns:
+  - field:
+      type: com.nimbusds.jose.JWSAlgorithm
+      matches: '^(RS|PS)(256|384|512)$'
+  - field:
+      type: com.nimbusds.jose.JWEAlgorithm
+      matches: '^RSA(1_5|_OAEP(_(256|384|512))?)$'
+  - call:
+      type: com.nimbusds.jose.JWSAlgorithm
+      method: parse
+      arg: { index: 0, matches: '^(RS|PS)(256|384|512)$' }
+  - construct: { type: com.nimbusds.jose.crypto.RSASSASigner }
+  - construct: { type: com.nimbusds.jose.crypto.RSASSAVerifier }
+  - construct: { type: com.nimbusds.jose.crypto.RSAEncrypter }
+  - construct: { type: com.nimbusds.jose.crypto.RSADecrypter }
+  - construct: { type: com.nimbusds.jose.jwk.gen.RSAKeyGenerator }
+  - construct: { type: com.nimbusds.jose.jwk.RSAKey.Builder }

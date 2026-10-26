@@ -1,0 +1,24 @@
+algorithm: ECDH (JOSE/JWE)
+category: shor
+severity: high
+title: ECDH-based JWE key agreement is broken by Shor's algorithm
+message: >-
+  An encrypted JWT/JWE uses elliptic-curve key agreement (ECDH-ES and its
+  key-wrapping variants, ECDH-1PU, or X25519/X448 keys). Shor's algorithm
+  solves the elliptic-curve discrete logarithm problem, so tokens recorded
+  today can be decrypted once a large quantum computer exists (harvest now,
+  decrypt later).
+suggestion: >-
+  Move JWE key management to a post-quantum KEM based on ML-KEM (FIPS 203);
+  the IETF JOSE working group is defining how ML-KEM plugs into JWE. Until
+  then, prefer short-lived tokens and avoid putting long-lived secrets inside
+  encrypted JWTs. This changes the JWE key-management algorithm, so all
+  producers and consumers must be migrated together.
+references:
+  - title: "FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)"
+    url: https://csrc.nist.gov/pubs/fips/203/final
+  - title: "NIST SP 800-227: Recommendations for Key-Encapsulation Mechanisms"
+    url: https://csrc.nist.gov/pubs/sp/800/227/final
+  - title: "RFC 7518: JSON Web Algorithms (JWA)"
+    url: https://www.rfc-editor.org/rfc/rfc7518
+hybrid: pqc

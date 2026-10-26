@@ -1,0 +1,7 @@
+id: jvm.bouncycastle.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.signers.ECDSASigner

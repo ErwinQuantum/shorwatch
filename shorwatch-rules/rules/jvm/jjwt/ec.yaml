@@ -1,0 +1,8 @@
+id: jvm.jjwt.ec
+profile: ec
+platform: jvm
+
+patterns:
+  - field:
+      type: io.jsonwebtoken.security.Jwks.CRV
+      matches: '^P(256|384|521)$'

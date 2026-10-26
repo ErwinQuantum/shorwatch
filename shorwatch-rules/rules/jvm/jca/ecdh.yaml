@@ -1,0 +1,27 @@
+id: jvm.jca.ecdh
+profile: ecdh
+platform: jvm
+
+patterns:
+  # JCA / JCE. "EC" key pairs are covered by the `ec` profile, since the same
+  # key can serve ECDH or ECDSA; here only unambiguous key-agreement names.
+  - call:
+      type: javax.crypto.KeyAgreement
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^((ECDHC?|ECCDH|ECMQV)(with.+)?|XDH|X25519|X448)$' }
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(ECDHC?|ECMQV|XDH|X25519|X448)$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(ECDHC?|ECMQV|XDH|X25519|X448)$' }
+  - call:
+      type: javax.crypto.Cipher
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^ECIES(with[^/]+)?(/|$)' }
+  - construct:
+      type: java.security.spec.XECPublicKeySpec
+  - construct:
+      type: java.security.spec.XECPrivateKeySpec

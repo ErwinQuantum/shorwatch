@@ -1,0 +1,9 @@
+id: jvm.bouncycastle.3des
+profile: 3des
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.engines.DESedeEngine
+  - construct:
+      type: org.bouncycastle.crypto.engines.DESedeWrapEngine

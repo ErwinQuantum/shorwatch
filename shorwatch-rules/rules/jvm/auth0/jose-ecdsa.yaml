@@ -1,0 +1,9 @@
+id: jvm.auth0.jose-ecdsa
+profile: jose-ecdsa
+platform: jvm
+
+patterns:
+  - call: { type: com.auth0.jwt.algorithms.Algorithm, method: ECDSA256 }
+  - call: { type: com.auth0.jwt.algorithms.Algorithm, method: ECDSA256K }
+  - call: { type: com.auth0.jwt.algorithms.Algorithm, method: ECDSA384 }
+  - call: { type: com.auth0.jwt.algorithms.Algorithm, method: ECDSA512 }

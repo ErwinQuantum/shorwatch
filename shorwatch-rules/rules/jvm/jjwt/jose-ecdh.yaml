@@ -1,0 +1,12 @@
+id: jvm.jjwt.jose-ecdh
+profile: jose-ecdh
+platform: jvm
+
+patterns:
+  # jjwt 0.12+
+  - field:
+      type: io.jsonwebtoken.Jwts.KEY
+      matches: '^ECDH_ES'
+  - field:
+      type: io.jsonwebtoken.security.Jwks.CRV
+      matches: '^X(25519|448)$'

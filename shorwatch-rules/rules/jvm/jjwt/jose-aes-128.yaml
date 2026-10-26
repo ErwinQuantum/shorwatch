@@ -1,0 +1,12 @@
+id: jvm.jjwt.jose-aes-128
+profile: jose-aes-128
+platform: jvm
+
+patterns:
+  # jjwt 0.12+
+  - field:
+      type: io.jsonwebtoken.Jwts.ENC
+      matches: '^A128(GCM|CBC_HS256)$'
+  - field:
+      type: io.jsonwebtoken.Jwts.KEY
+      matches: '(^|_)A128(GCM)?KW$'

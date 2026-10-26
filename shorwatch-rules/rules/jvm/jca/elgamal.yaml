@@ -1,0 +1,18 @@
+id: jvm.jca.elgamal
+profile: elgamal
+platform: jvm
+
+patterns:
+  # Provider-based (BouncyCastle registers ElGamal in the JCA).
+  - call:
+      type: javax.crypto.Cipher
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^ElGamal(/|$)' }
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^ElGamal$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^ElGamal$' }

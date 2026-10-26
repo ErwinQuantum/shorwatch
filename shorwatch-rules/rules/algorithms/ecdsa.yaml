@@ -1,0 +1,24 @@
+algorithm: ECDSA
+category: shor
+severity: high
+title: ECDSA signatures are forgeable with Shor's algorithm
+message: >-
+  ECDSA signing or verification detected. Shor's algorithm recovers the
+  private key from a public key, which lets an attacker forge signatures.
+  Long-lived trust anchors (firmware signing keys, root certificates,
+  code-signing identities) are the most exposed, because they must stay valid
+  for years.
+suggestion: >-
+  Migrate signatures to ML-DSA (FIPS 204), or SLH-DSA (FIPS 205) where a
+  conservative hash-based scheme is preferred. ML-DSA keys and signatures are
+  much larger than ECDSA ones, so check certificate sizes, wire formats and
+  storage. During the transition, dual (composite) signatures with ECDSA and
+  ML-DSA keep classical verifiers working.
+references:
+  - title: "FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)"
+    url: https://csrc.nist.gov/pubs/fips/204/final
+  - title: "FIPS 205: Stateless Hash-Based Digital Signature Standard (SLH-DSA)"
+    url: https://csrc.nist.gov/pubs/fips/205/final
+  - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
+    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+hybrid: pqc

@@ -1,0 +1,11 @@
+id: jvm.nimbus.jose-aes-128
+profile: jose-aes-128
+platform: jvm
+
+patterns:
+  - field:
+      type: com.nimbusds.jose.EncryptionMethod
+      matches: '^A128(GCM|CBC_HS256)$'
+  - field:
+      type: com.nimbusds.jose.JWEAlgorithm
+      matches: '(^|_)A128(GCM)?KW$'

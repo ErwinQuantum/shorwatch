@@ -1,0 +1,7 @@
+id: jvm.bouncycastle.sha1
+profile: sha1
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.digests.SHA1Digest

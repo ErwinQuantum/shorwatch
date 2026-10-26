@@ -1,0 +1,7 @@
+id: jvm.bouncycastle.ec
+profile: ec
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.generators.ECKeyPairGenerator

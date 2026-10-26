@@ -1,0 +1,24 @@
+id: jvm.jca.3des
+profile: 3des
+platform: jvm
+
+patterns:
+  # JCA / JCE. Single DES ("DES") is a different, already broken algorithm
+  # and does not match here.
+  - call:
+      type: javax.crypto.Cipher
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DESede|TripleDES|3DES)(/|$)' }
+  - call:
+      type: javax.crypto.KeyGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DESede|TripleDES|3DES)$' }
+  - call:
+      type: javax.crypto.SecretKeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DESede|TripleDES|3DES)$' }
+  - construct:
+      type: javax.crypto.spec.SecretKeySpec
+      arg: { index: 1, matches: '(?i)^(DESede|TripleDES|3DES)$' }
+  - construct:
+      type: javax.crypto.spec.DESedeKeySpec

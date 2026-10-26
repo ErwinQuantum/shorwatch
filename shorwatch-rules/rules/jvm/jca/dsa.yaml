@@ -1,0 +1,29 @@
+id: jvm.jca.dsa
+profile: dsa
+platform: jvm
+
+patterns:
+  # JCA. `SHA256withDSA`, `NONEwithDSA`, BouncyCastle's deterministic `DDSA`.
+  # `withECDSA` does not contain `withDSA`, so ECDSA names never match here.
+  - call:
+      type: java.security.Signature
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(D?DSA|.+withD?DSA(inP1363Format)?)$' }
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^DSA$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^DSA$' }
+  - call:
+      type: java.security.AlgorithmParameterGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^DSA$' }
+  - construct:
+      type: java.security.spec.DSAParameterSpec
+  - construct:
+      type: java.security.spec.DSAPublicKeySpec
+  - construct:
+      type: java.security.spec.DSAPrivateKeySpec

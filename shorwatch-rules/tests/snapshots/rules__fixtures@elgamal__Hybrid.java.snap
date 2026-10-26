@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/java/elgamal/Hybrid.java
+---
+- rule: jvm.jca.elgamal
+  at: "8:16"
+  status: in_transition
+  hybrid_evidence: org.bouncycastle.pqc.jcajce.spec.KyberParameterSpec @ 4

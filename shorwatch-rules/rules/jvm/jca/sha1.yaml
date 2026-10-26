@@ -1,0 +1,17 @@
+id: jvm.jca.sha1
+profile: sha1
+platform: jvm
+
+# Deliberately not matched: HMAC-SHA1, PBKDF2WithHmacSHA1 and OAEP with SHA-1.
+# Their security does not depend on collision resistance, and flagging them
+# would bury real findings under noise.
+patterns:
+  # JCA. "SHA" is the standard alias of "SHA-1".
+  - call:
+      type: java.security.MessageDigest
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^SHA(-?1)?$' }
+  - call:
+      type: java.security.Signature
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^SHA-?1with.+$' }

@@ -1,0 +1,11 @@
+id: jvm.bouncycastle.rsa
+profile: rsa
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.engines.RSAEngine
+  - construct:
+      type: org.bouncycastle.crypto.engines.RSABlindedEngine
+  - construct:
+      type: org.bouncycastle.crypto.generators.RSAKeyPairGenerator

@@ -1,0 +1,27 @@
+id: jvm.jca.ec
+profile: ec
+platform: jvm
+
+patterns:
+  # JCA. Only the ambiguous "EC" name; ECDH/ECDSA-specific names belong to
+  # the `ecdh` and `ecdsa` profiles.
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^EC$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^EC$' }
+  - call:
+      type: java.security.AlgorithmParameters
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^EC$' }
+  - construct:
+      type: java.security.spec.ECGenParameterSpec
+  - construct:
+      type: java.security.spec.ECParameterSpec
+  - construct:
+      type: java.security.spec.ECPublicKeySpec
+  - construct:
+      type: java.security.spec.ECPrivateKeySpec

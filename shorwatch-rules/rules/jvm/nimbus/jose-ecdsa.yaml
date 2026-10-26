@@ -1,0 +1,14 @@
+id: jvm.nimbus.jose-ecdsa
+profile: jose-ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: com.nimbusds.jose.JWSAlgorithm
+      matches: '^ES(256K?|384|512)$'
+  - call:
+      type: com.nimbusds.jose.JWSAlgorithm
+      method: parse
+      arg: { index: 0, matches: '^ES(256K?|384|512)$' }
+  - construct: { type: com.nimbusds.jose.crypto.ECDSASigner }
+  - construct: { type: com.nimbusds.jose.crypto.ECDSAVerifier }

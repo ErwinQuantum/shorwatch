@@ -1,0 +1,19 @@
+id: jvm.bouncycastle.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.signers.Ed25519Signer
+  - construct:
+      type: org.bouncycastle.crypto.signers.Ed25519ctxSigner
+  - construct:
+      type: org.bouncycastle.crypto.signers.Ed25519phSigner
+  - construct:
+      type: org.bouncycastle.crypto.signers.Ed448Signer
+  - construct:
+      type: org.bouncycastle.crypto.signers.Ed448phSigner
+  - construct:
+      type: org.bouncycastle.crypto.generators.Ed25519KeyPairGenerator
+  - construct:
+      type: org.bouncycastle.crypto.generators.Ed448KeyPairGenerator

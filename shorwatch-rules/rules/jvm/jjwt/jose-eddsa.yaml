@@ -1,0 +1,12 @@
+id: jvm.jjwt.jose-eddsa
+profile: jose-eddsa
+platform: jvm
+
+patterns:
+  # jjwt 0.12+
+  - field:
+      type: io.jsonwebtoken.Jwts.SIG
+      matches: '^EdDSA$'
+  - field:
+      type: io.jsonwebtoken.security.Jwks.CRV
+      matches: '^Ed(25519|448)$'

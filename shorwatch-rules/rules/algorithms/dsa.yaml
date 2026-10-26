@@ -1,0 +1,22 @@
+algorithm: DSA
+category: shor
+severity: high
+title: DSA signatures are forgeable with Shor's algorithm
+message: >-
+  DSA signing, verification or key generation detected. DSA rests on the
+  finite-field discrete logarithm problem, which Shor's algorithm solves, so a
+  quantum attacker can derive the private key and forge signatures. FIPS 186-5
+  already withdrew DSA for generating new signatures, even before quantum
+  concerns.
+suggestion: >-
+  Migrate signatures to ML-DSA (FIPS 204), or SLH-DSA (FIPS 205) for a
+  conservative hash-based alternative. Keep DSA only to verify legacy
+  signatures, and plan to re-sign long-lived artifacts with the new scheme.
+references:
+  - title: "FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)"
+    url: https://csrc.nist.gov/pubs/fips/204/final
+  - title: "FIPS 186-5: Digital Signature Standard (DSA withdrawn for signature generation)"
+    url: https://csrc.nist.gov/pubs/fips/186-5/final
+  - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
+    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+hybrid: pqc

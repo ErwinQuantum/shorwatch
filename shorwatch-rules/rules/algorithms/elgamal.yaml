@@ -1,0 +1,23 @@
+algorithm: ElGamal
+category: shor
+severity: high
+title: ElGamal is broken by Shor's algorithm
+message: >-
+  ElGamal encryption or key generation detected. ElGamal rests on the discrete
+  logarithm problem, which Shor's algorithm solves, so ciphertexts recorded
+  today can be decrypted once a large quantum computer exists (harvest now,
+  decrypt later). ElGamal mostly survives in OpenPGP keys and legacy
+  BouncyCastle code.
+suggestion: >-
+  Replace public-key encryption with ML-KEM (FIPS 203) plus a symmetric AEAD
+  (for example AES-256-GCM) to encrypt the payload under the encapsulated key.
+  For OpenPGP, follow the post-quantum OpenPGP work (ML-KEM composite keys)
+  rather than generating new ElGamal subkeys.
+references:
+  - title: "FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)"
+    url: https://csrc.nist.gov/pubs/fips/203/final
+  - title: "NIST SP 800-227: Recommendations for Key-Encapsulation Mechanisms"
+    url: https://csrc.nist.gov/pubs/sp/800/227/final
+  - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
+    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+hybrid: pqc

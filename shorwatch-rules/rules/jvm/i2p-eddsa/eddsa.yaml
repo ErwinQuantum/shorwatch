@@ -1,0 +1,8 @@
+id: jvm.i2p-eddsa.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  # net.i2p.crypto:eddsa, still common in SSH libraries.
+  - construct:
+      type: net.i2p.crypto.eddsa.EdDSAEngine

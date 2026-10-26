@@ -1,0 +1,10 @@
+# Signs that classical crypto sits next to post-quantum code, which turns a
+# finding into `in_transition`. Imports count for the whole file; the other
+# markers only within the finding's class (or the whole file, for config).
+scope: type
+markers:
+  - import: '^org\.bouncycastle\.pqc\.'
+  - import: '^org\.openquantumsafe\.'
+  - type: '(?i)(kyber|dilithium|ml-?kem|ml-?dsa)'
+  # Not `\b`: hybrid group names glue the parts together (X25519MLKEM768).
+  - literal: '(?i)(^|[^a-z])(kyber|dilithium|ml-?kem|ml-?dsa)'

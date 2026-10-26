@@ -1,0 +1,21 @@
+id: jvm.jca.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  # JCA. `SHA256withECDSA`, `SHA384withECDSAinP1363Format`, BouncyCastle's
+  # `ECDSA`, deterministic `ECDDSA` and the PLAIN-/CVC- encodings.
+  - call:
+      type: java.security.Signature
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(ECD?DSA|.+with(PLAIN-|CVC-)?ECD?DSA(inP1363Format)?)$' }
+  # BouncyCastle registers ECDSA-specific key pair names. Plain "EC" key pairs
+  # are covered by the `ec` profile.
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^ECDSA$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^ECDSA$' }

@@ -1,0 +1,8 @@
+id: jvm.commons-codec.sha1
+profile: sha1
+platform: jvm
+
+patterns:
+  - call: { type: org.apache.commons.codec.digest.DigestUtils, method: sha1 }
+  - call: { type: org.apache.commons.codec.digest.DigestUtils, method: sha1Hex }
+  - call: { type: org.apache.commons.codec.digest.DigestUtils, method: getSha1Digest }

@@ -1,0 +1,6 @@
+id: jvm.guava.sha1
+profile: sha1
+platform: jvm
+
+patterns:
+  - call: { type: com.google.common.hash.Hashing, method: sha1 }

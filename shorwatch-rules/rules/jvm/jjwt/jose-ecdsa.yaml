@@ -1,0 +1,16 @@
+id: jvm.jjwt.jose-ecdsa
+profile: jose-ecdsa
+platform: jvm
+
+patterns:
+  # jjwt 0.12+ and the legacy SignatureAlgorithm enum.
+  - field:
+      type: io.jsonwebtoken.Jwts.SIG
+      matches: '^ES(256|384|512)$'
+  - field:
+      type: io.jsonwebtoken.SignatureAlgorithm
+      matches: '^ES(256|384|512)$'
+  - call:
+      type: io.jsonwebtoken.SignatureAlgorithm
+      method: forName
+      arg: { index: 0, matches: '^ES(256|384|512)$' }

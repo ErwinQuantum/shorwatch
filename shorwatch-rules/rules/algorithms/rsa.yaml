@@ -1,0 +1,22 @@
+algorithm: RSA
+category: shor
+severity: high
+title: RSA is broken by Shor's algorithm
+message: >-
+  RSA key generation, encryption or signing detected. A cryptographically
+  relevant quantum computer running Shor's algorithm recovers RSA private keys,
+  and data encrypted today can be harvested now and decrypted later.
+suggestion: >-
+  Plan a protocol migration, not a drop-in swap. For key establishment and
+  encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA
+  (FIPS 204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or
+  RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding
+  post-quantum protection.
+references:
+  - title: "FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)"
+    url: https://csrc.nist.gov/pubs/fips/203/final
+  - title: "FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)"
+    url: https://csrc.nist.gov/pubs/fips/204/final
+  - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
+    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+hybrid: pqc

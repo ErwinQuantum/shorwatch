@@ -1,0 +1,17 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/java/3des/Vulnerable.java
+---
+- rule: jvm.jca.3des
+  at: "13:16"
+  status: vulnerable
+- rule: jvm.jca.3des
+  at: "17:16"
+  status: vulnerable
+- rule: jvm.jca.3des
+  at: "21:16"
+  status: vulnerable
+- rule: jvm.bouncycastle.3des
+  at: "25:16"
+  status: vulnerable

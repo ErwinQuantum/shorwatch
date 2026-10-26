@@ -207,7 +207,7 @@ mod tests {
 
         let findings = analyze(&unit, &rules());
         assert_eq!(findings.len(), 1);
-        assert_eq!(findings[0].rule_id, "java.crypto.rsa");
+        assert_eq!(findings[0].rule_id, "jvm.jca.rsa");
         assert_eq!(findings[0].status, Status::Vulnerable);
         assert_eq!(findings[0].location.start.line, 3);
         assert!(findings[0].fix.is_none());
@@ -339,7 +339,7 @@ mod tests {
 
     fn aes_rule() -> Rule {
         Rule {
-            id: "java.crypto.aes-128".into(),
+            id: "jvm.jca.aes-128".into(),
             algorithm: "AES-128".into(),
             category: Category::Grover,
             patterns: vec![Pattern::Call {
@@ -401,7 +401,7 @@ mod tests {
 
     fn jws_rule(matches: Option<&str>) -> Rule {
         Rule {
-            id: "java.jwt.rsa".into(),
+            id: "jvm.nimbus.jose-rsa".into(),
             patterns: vec![Pattern::Field {
                 owner: "com.nimbusds.jose.JWSAlgorithm".into(),
                 matches: matches.map(str::to_owned),

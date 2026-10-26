@@ -1,0 +1,15 @@
+id: jvm.nimbus.jose-ecdh
+profile: jose-ecdh
+platform: jvm
+
+patterns:
+  - field:
+      type: com.nimbusds.jose.JWEAlgorithm
+      matches: '^ECDH_(ES|1PU)'
+  - field:
+      type: com.nimbusds.jose.jwk.Curve
+      matches: '^X(25519|448)$'
+  - construct: { type: com.nimbusds.jose.crypto.ECDHEncrypter }
+  - construct: { type: com.nimbusds.jose.crypto.ECDHDecrypter }
+  - construct: { type: com.nimbusds.jose.crypto.X25519Encrypter }
+  - construct: { type: com.nimbusds.jose.crypto.X25519Decrypter }

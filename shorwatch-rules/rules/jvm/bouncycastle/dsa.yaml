@@ -1,0 +1,11 @@
+id: jvm.bouncycastle.dsa
+profile: dsa
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.signers.DSASigner
+  - construct:
+      type: org.bouncycastle.crypto.generators.DSAKeyPairGenerator
+  - construct:
+      type: org.bouncycastle.crypto.generators.DSAParametersGenerator

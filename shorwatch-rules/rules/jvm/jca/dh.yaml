@@ -1,0 +1,26 @@
+id: jvm.jca.dh
+profile: dh
+platform: jvm
+
+patterns:
+  # JCA / JCE. "DiffieHellman" is the standard alias of "DH".
+  - call:
+      type: javax.crypto.KeyAgreement
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DH|DiffieHellman)$' }
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DH|DiffieHellman)$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DH|DiffieHellman)$' }
+  - call:
+      type: java.security.AlgorithmParameterGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(DH|DiffieHellman)$' }
+  - construct:
+      type: javax.crypto.spec.DHParameterSpec
+  - construct:
+      type: javax.crypto.spec.DHGenParameterSpec

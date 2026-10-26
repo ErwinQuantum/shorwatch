@@ -1,0 +1,13 @@
+id: jvm.bouncycastle.elgamal
+profile: elgamal
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.engines.ElGamalEngine
+  - construct:
+      type: org.bouncycastle.crypto.generators.ElGamalKeyPairGenerator
+  - construct:
+      type: org.bouncycastle.crypto.generators.ElGamalParametersGenerator
+  - construct:
+      type: org.bouncycastle.crypto.params.ElGamalParameters

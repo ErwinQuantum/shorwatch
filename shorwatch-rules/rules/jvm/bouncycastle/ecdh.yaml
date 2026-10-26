@@ -1,0 +1,19 @@
+id: jvm.bouncycastle.ecdh
+profile: ecdh
+platform: jvm
+
+patterns:
+  - construct:
+      type: org.bouncycastle.crypto.agreement.ECDHBasicAgreement
+  - construct:
+      type: org.bouncycastle.crypto.agreement.ECDHCBasicAgreement
+  - construct:
+      type: org.bouncycastle.crypto.agreement.ECMQVBasicAgreement
+  - construct:
+      type: org.bouncycastle.crypto.agreement.X25519Agreement
+  - construct:
+      type: org.bouncycastle.crypto.agreement.X448Agreement
+  - construct:
+      type: org.bouncycastle.crypto.generators.X25519KeyPairGenerator
+  - construct:
+      type: org.bouncycastle.crypto.generators.X448KeyPairGenerator

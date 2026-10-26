@@ -376,7 +376,7 @@ pub(crate) mod tests {
 
     pub(crate) fn rsa_rule() -> Rule {
         Rule {
-            id: "java.crypto.rsa".into(),
+            id: "jvm.jca.rsa".into(),
             platform: Platform::Jvm,
             algorithm: "RSA".into(),
             category: Category::Shor,
@@ -435,7 +435,7 @@ pub(crate) mod tests {
         };
         assert_eq!(
             RuleSet::compile([rule]).unwrap_err(),
-            RuleError::FixNotAllowed("java.crypto.rsa".into())
+            RuleError::FixNotAllowed("jvm.jca.rsa".into())
         );
     }
 
@@ -462,14 +462,14 @@ pub(crate) mod tests {
         };
         assert_eq!(
             RuleSet::compile([rule]).unwrap_err(),
-            RuleError::FixWithoutArg("java.crypto.rsa".into())
+            RuleError::FixWithoutArg("jvm.jca.rsa".into())
         );
     }
 
     #[test]
     fn rejects_duplicate_ids() {
         let err = RuleSet::compile([rsa_rule(), rsa_rule()]).unwrap_err();
-        assert_eq!(err, RuleError::DuplicateId("java.crypto.rsa".into()));
+        assert_eq!(err, RuleError::DuplicateId("jvm.jca.rsa".into()));
     }
 
     #[test]

@@ -1,0 +1,23 @@
+id: jvm.jca.rsa
+profile: rsa
+platform: jvm
+
+patterns:
+  - call:
+      type: java.security.KeyPairGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^RSA(SSA-PSS)?$' }
+  - call:
+      type: java.security.KeyFactory
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^RSA(SSA-PSS)?$' }
+  - call:
+      type: javax.crypto.Cipher
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^RSA(/|$)' }
+  - call:
+      type: java.security.Signature
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(RSASSA-PSS|.+withRSA(andMGF1|/PSS|/ISO9796-2|/X9\.31)?)$' }
+  - construct:
+      type: java.security.spec.RSAKeyGenParameterSpec

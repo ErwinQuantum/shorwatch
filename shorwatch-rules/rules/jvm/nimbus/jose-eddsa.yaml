@@ -1,0 +1,18 @@
+id: jvm.nimbus.jose-eddsa
+profile: jose-eddsa
+platform: jvm
+
+patterns:
+  # Nimbus JOSE + JWT. X25519/X448 OKP keys belong to the `jose-ecdh` profile.
+  - field:
+      type: com.nimbusds.jose.JWSAlgorithm
+      matches: '^(EdDSA|Ed25519|Ed448)$'
+  - call:
+      type: com.nimbusds.jose.JWSAlgorithm
+      method: parse
+      arg: { index: 0, matches: '^(EdDSA|Ed25519|Ed448)$' }
+  - field:
+      type: com.nimbusds.jose.jwk.Curve
+      matches: '^Ed(25519|448)$'
+  - construct: { type: com.nimbusds.jose.crypto.Ed25519Signer }
+  - construct: { type: com.nimbusds.jose.crypto.Ed25519Verifier }

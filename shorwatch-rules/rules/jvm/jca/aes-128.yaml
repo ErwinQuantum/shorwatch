@@ -1,0 +1,25 @@
+id: jvm.jca.aes-128
+profile: aes-128
+platform: jvm
+
+patterns:
+  # Key size requested from a JCA KeyGenerator. The receiver's algorithm is not
+  # tracked yet (that needs data flow), so a 128-bit HMAC/Blowfish key would
+  # also match; in practice `KeyGenerator.init(128)` is overwhelmingly AES.
+  - call:
+      type: javax.crypto.KeyGenerator
+      method: init
+      arg: { index: 0, matches: '^128$' }
+  # Size-pinned JCA transformations: `AES_128/GCM/NoPadding`.
+  - call:
+      type: javax.crypto.Cipher
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^AES_128(/|$)' }
+
+# Applied to the argument as written: `128` -> `256`,
+# `"AES_128/GCM/NoPadding"` -> `"AES_256/GCM/NoPadding"`. Values written in
+# other forms (`0x80`, `128L`) or coming from a constant get no fix.
+fix:
+  description: Use a 256-bit AES key
+  replace: '(?i)(^|AES_)128\b'
+  with: '${1}256'

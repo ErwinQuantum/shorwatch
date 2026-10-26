@@ -1,0 +1,22 @@
+algorithm: SHA-1
+category: grover
+severity: medium
+title: SHA-1 is broken classically and weakened further by quantum search
+message: >-
+  SHA-1 used as a hash or inside a signature detected. Practical SHA-1
+  collisions have been public since 2017 (SHAttered) and chosen-prefix
+  collisions since 2020, so it must not protect signatures, certificates or
+  integrity checks today. Quantum search only widens the margin further. NIST
+  plans to retire SHA-1 entirely by 2030.
+suggestion: >-
+  Use SHA-256 or SHA-384 (SHA-2), or SHA3-256. No automatic fix is offered:
+  digests are usually stored, compared or sent to other systems, so changing
+  the algorithm silently would break existing values and interoperability.
+  Migrate the data and its consumers together.
+references:
+  - title: "NIST: Retiring SHA-1 (transition by December 31, 2030)"
+    url: https://www.nist.gov/news-events/news/2022/12/nist-retires-sha-1-cryptographic-algorithm
+  - title: "FIPS 180-4: Secure Hash Standard (SHS)"
+    url: https://csrc.nist.gov/pubs/fips/180-4/upd1/final
+  - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
+    url: https://csrc.nist.gov/pubs/ir/8547/ipd
