@@ -1,0 +1,16 @@
+id: jvm.jsch.dsa
+profile: dsa
+platform: jvm
+
+patterns:
+  - field:
+      type: com.jcraft.jsch.KeyPair
+      matches: '^DSA$'
+  - call:
+      type: com.jcraft.jsch.JSch
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)ssh-dss(,|$)' }
+  - call:
+      type: com.jcraft.jsch.Session
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)ssh-dss(,|$)' }

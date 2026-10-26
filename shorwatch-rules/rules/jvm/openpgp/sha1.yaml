@@ -1,0 +1,9 @@
+id: jvm.openpgp.sha1
+profile: sha1
+platform: jvm
+
+# SHA-1 for OpenPGP signatures (`new JcaPGPContentSignerBuilder(keyAlg, HashAlgorithmTags.SHA1)`).
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.HashAlgorithmTags
+      matches: '^SHA1$'

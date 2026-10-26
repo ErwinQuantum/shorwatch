@@ -1,0 +1,11 @@
+id: jvm.openpgp.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+      matches: '^(EDDSA|EDDSA_LEGACY|Ed25519|Ed448)$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPPublicKey
+      matches: '^(EDDSA|EDDSA_LEGACY|Ed25519|Ed448)$'

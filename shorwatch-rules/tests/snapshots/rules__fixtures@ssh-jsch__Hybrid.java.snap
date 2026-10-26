@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/ssh-jsch/Hybrid.java
+---
+- rule: jvm.jsch.ecdh
+  at: "8:9"
+  status: in_transition
+  hybrid_evidence: "mlkem768x25519-sha256,curve25519-sha256 @ 8"

@@ -1,0 +1,12 @@
+id: jvm.openpgp.aes-128
+profile: aes-128
+platform: jvm
+
+# Symmetric algorithm tags; `PGPEncryptedData` implements the tag interface.
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags
+      matches: '^AES_128$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPEncryptedData
+      matches: '^AES_128$'

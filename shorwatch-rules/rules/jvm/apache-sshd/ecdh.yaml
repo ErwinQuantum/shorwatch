@@ -1,0 +1,8 @@
+id: jvm.apache-sshd.ecdh
+profile: ecdh
+platform: jvm
+
+patterns:
+  - field:
+      type: org.apache.sshd.common.kex.BuiltinDHFactories
+      matches: '^(ecdhp(256|384|521)|curve(25519|448))'

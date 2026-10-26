@@ -1,0 +1,23 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/openpgp/Vulnerable.java
+---
+- rule: jvm.openpgp.rsa
+  at: "18:34"
+  status: vulnerable
+- rule: jvm.openpgp.ecdh
+  at: "22:34"
+  status: vulnerable
+- rule: jvm.openpgp.ecdsa
+  at: "27:47"
+  status: vulnerable
+- rule: jvm.openpgp.sha1
+  at: "27:77"
+  status: vulnerable
+- rule: jvm.openpgp.3des
+  at: "31:40"
+  status: vulnerable
+- rule: jvm.openpgp.aes-128
+  at: "32:47"
+  status: vulnerable

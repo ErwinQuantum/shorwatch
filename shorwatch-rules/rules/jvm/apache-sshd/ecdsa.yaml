@@ -1,0 +1,8 @@
+id: jvm.apache-sshd.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.apache.sshd.common.signature.BuiltinSignatures
+      matches: '^(nistp(256|384|521)|sk_ecdsa)'

@@ -1,0 +1,16 @@
+id: jvm.jsch.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  - field:
+      type: com.jcraft.jsch.KeyPair
+      matches: '^ED(25519|448)$'
+  - call:
+      type: com.jcraft.jsch.JSch
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)ssh-ed(25519|448)(,|$)' }
+  - call:
+      type: com.jcraft.jsch.Session
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)ssh-ed(25519|448)(,|$)' }

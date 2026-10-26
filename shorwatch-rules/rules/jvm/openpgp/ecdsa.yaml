@@ -1,0 +1,11 @@
+id: jvm.openpgp.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+      matches: '^ECDSA$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPPublicKey
+      matches: '^ECDSA$'

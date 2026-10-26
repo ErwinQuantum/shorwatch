@@ -1,0 +1,14 @@
+id: jvm.openpgp.rsa
+profile: rsa
+platform: jvm
+
+# OpenPGP through BouncyCastle (bcpg): the key algorithm tags used to build
+# keys (`new JcaPGPKeyPair(PGPPublicKey.RSA_GENERAL, ...)`) and signers.
+# `PGPPublicKey` implements the tag interface, so its constants count too.
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+      matches: '^RSA_(GENERAL|ENCRYPT|SIGN)$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPPublicKey
+      matches: '^RSA_(GENERAL|ENCRYPT|SIGN)$'

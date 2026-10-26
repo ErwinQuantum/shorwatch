@@ -1,0 +1,16 @@
+id: jvm.apache-sshd.rsa
+profile: rsa
+platform: jvm
+
+# Apache MINA SSHD: built-in signature and key-exchange factories and key types.
+patterns:
+  - field:
+      type: org.apache.sshd.common.signature.BuiltinSignatures
+      matches: '^rsa'
+  - field:
+      type: org.apache.sshd.common.config.keys.KeyUtils
+      matches: '^RSA_ALGORITHM$'
+  - call:
+      type: org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
+      method: setAlgorithm
+      arg: { index: 0, matches: '(?i)^RSA$' }

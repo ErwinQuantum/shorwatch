@@ -119,7 +119,8 @@ Profiles (17): `rsa dh ecdh ecdsa ec eddsa dsa elgamal` (shor, high),
 medium, no fix), `jose-rsa jose-ecdsa jose-eddsa jose-ecdh` (shor, JWT advice),
 `jose-aes-128` (grover), `tls-key-exchange` (shor, TLS suites).
 
-Libraries (64 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix,
+Libraries (87 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
+jsch, apache-sshd,
 xml-security (JSR 105 + Santuario), android-keystore, spring-security, jjwt,
 nimbus (incl. `JWSAlgorithm.Family`), auth0, i2p-eddsa, commons-codec, guava
 · `config/` spring-boot

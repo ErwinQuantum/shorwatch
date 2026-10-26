@@ -1,0 +1,12 @@
+id: jvm.openpgp.3des
+profile: 3des
+platform: jvm
+
+# Symmetric algorithm tags; `PGPEncryptedData` implements the tag interface.
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.SymmetricKeyAlgorithmTags
+      matches: '^TRIPLE_DES$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPEncryptedData
+      matches: '^TRIPLE_DES$'

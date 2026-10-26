@@ -1,0 +1,11 @@
+id: jvm.openpgp.dh
+profile: dh
+platform: jvm
+
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+      matches: '^DIFFIE_HELLMAN$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPPublicKey
+      matches: '^DIFFIE_HELLMAN$'

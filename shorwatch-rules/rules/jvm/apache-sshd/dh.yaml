@@ -1,0 +1,10 @@
+id: jvm.apache-sshd.dh
+profile: dh
+platform: jvm
+
+# Classical key exchange. The hybrid `mlkem768x25519` and `sntrup761x25519`
+# factories are not matched.
+patterns:
+  - field:
+      type: org.apache.sshd.common.kex.BuiltinDHFactories
+      matches: '^dhg'

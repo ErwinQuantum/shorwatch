@@ -1,0 +1,11 @@
+id: jvm.openpgp.dsa
+profile: dsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+      matches: '^DSA$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPPublicKey
+      matches: '^DSA$'

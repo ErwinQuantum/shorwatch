@@ -1,0 +1,13 @@
+id: jvm.jsch.dh
+profile: dh
+platform: jvm
+
+patterns:
+  - call:
+      type: com.jcraft.jsch.JSch
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)diffie-hellman-group' }
+  - call:
+      type: com.jcraft.jsch.Session
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)diffie-hellman-group' }

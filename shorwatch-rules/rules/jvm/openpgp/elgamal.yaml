@@ -1,0 +1,11 @@
+id: jvm.openpgp.elgamal
+profile: elgamal
+platform: jvm
+
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+      matches: '^ELGAMAL_(ENCRYPT|GENERAL)$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPPublicKey
+      matches: '^ELGAMAL_(ENCRYPT|GENERAL)$'

@@ -1,0 +1,18 @@
+id: jvm.jsch.rsa
+profile: rsa
+platform: jvm
+
+# JSch (and its maintained fork com.github.mwiede:jsch): key pair types and
+# algorithm lists set with `setConfig("kex" | "server_host_key" | ..., "...")`.
+patterns:
+  - field:
+      type: com.jcraft.jsch.KeyPair
+      matches: '^RSA$'
+  - call:
+      type: com.jcraft.jsch.JSch
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)(ssh-rsa|rsa-sha2-(256|512))(,|$)' }
+  - call:
+      type: com.jcraft.jsch.Session
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)(ssh-rsa|rsa-sha2-(256|512))(,|$)' }

@@ -1,0 +1,13 @@
+id: jvm.jsch.ecdh
+profile: ecdh
+platform: jvm
+
+patterns:
+  - call:
+      type: com.jcraft.jsch.JSch
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)(ecdh-sha2-nistp(256|384|521)|curve(25519|448)-sha(256|512)(@libssh\.org)?)(,|$)' }
+  - call:
+      type: com.jcraft.jsch.Session
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)(ecdh-sha2-nistp(256|384|521)|curve(25519|448)-sha(256|512)(@libssh\.org)?)(,|$)' }

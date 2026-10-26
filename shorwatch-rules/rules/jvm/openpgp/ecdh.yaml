@@ -1,0 +1,11 @@
+id: jvm.openpgp.ecdh
+profile: ecdh
+platform: jvm
+
+patterns:
+  - field:
+      type: org.bouncycastle.bcpg.PublicKeyAlgorithmTags
+      matches: '^(ECDH|X25519|X448)$'
+  - field:
+      type: org.bouncycastle.openpgp.PGPPublicKey
+      matches: '^(ECDH|X25519|X448)$'

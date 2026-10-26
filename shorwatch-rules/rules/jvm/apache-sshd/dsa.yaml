@@ -1,0 +1,15 @@
+id: jvm.apache-sshd.dsa
+profile: dsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.apache.sshd.common.signature.BuiltinSignatures
+      matches: '^dsa'
+  - field:
+      type: org.apache.sshd.common.config.keys.KeyUtils
+      matches: '^DSS_ALGORITHM$'
+  - call:
+      type: org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
+      method: setAlgorithm
+      arg: { index: 0, matches: '(?i)^DSA$' }

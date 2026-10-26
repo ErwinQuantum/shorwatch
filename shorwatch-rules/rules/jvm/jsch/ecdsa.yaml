@@ -1,0 +1,16 @@
+id: jvm.jsch.ecdsa
+profile: ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: com.jcraft.jsch.KeyPair
+      matches: '^ECDSA$'
+  - call:
+      type: com.jcraft.jsch.JSch
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)ecdsa-sha2-nistp(256|384|521)(,|$)' }
+  - call:
+      type: com.jcraft.jsch.Session
+      method: setConfig
+      arg: { index: 1, matches: '(^|,)ecdsa-sha2-nistp(256|384|521)(,|$)' }

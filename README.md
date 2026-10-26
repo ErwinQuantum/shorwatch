@@ -231,7 +231,9 @@ the same findings.
 | Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Quarkus and Micronaut configuration keys |
 | Spring Boot config: `jws-algorithms`, `public-key-location`, TLS cipher suites (`*.ssl.ciphers`); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Compiled `.jar` dependencies |
 | Values injected with `@Value("${key:default}")`, resolved against every profile's config file | |
-| Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | OpenPGP, SSH (JSch, Apache MINA SSHD) |
+| Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
+| OpenPGP (BouncyCastle `bcpg`): key, hash and symmetric algorithm tags | The algorithm of keys read from existing key rings |
+| SSH: JSch key types and `setConfig` algorithm lists, Apache MINA SSHD signature and key-exchange factories, host key algorithms | Library defaults when nothing is configured |
 | XML Signature and Encryption (SAML, WS-Security): JSR 105 `SignatureMethod`/`DigestMethod`, Apache Santuario | Algorithm URIs written as strings |
 | Android Keystore (`KeyProperties.KEY_ALGORITHM_RSA/EC`) | |
 | Algorithm names as literals, same-file `final` constants, enum/static constants and static imports | |

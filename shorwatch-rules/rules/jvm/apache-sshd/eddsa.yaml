@@ -1,0 +1,15 @@
+id: jvm.apache-sshd.eddsa
+profile: eddsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.apache.sshd.common.signature.BuiltinSignatures
+      matches: '^(ed25519|sk_ssh_ed25519)'
+  - field:
+      type: org.apache.sshd.common.config.keys.KeyUtils
+      matches: '^EDDSA$'
+  - call:
+      type: org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
+      method: setAlgorithm
+      arg: { index: 0, matches: '(?i)^(EdDSA|Ed25519)$' }
