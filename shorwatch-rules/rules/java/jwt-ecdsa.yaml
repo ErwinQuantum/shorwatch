@@ -54,6 +54,14 @@ patterns:
   - call: { type: com.auth0.jwt.algorithms.Algorithm, method: ECDSA384 }
   - call: { type: com.auth0.jwt.algorithms.Algorithm, method: ECDSA512 }
 
+  # Spring Security OAuth2 resource server / authorization server
+  - field:
+      type: org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
+      matches: '^ES(256|384|512)$'
+  - field:
+      type: org.springframework.security.oauth2.jose.jws.JwsAlgorithms
+      matches: '^ES(256|384|512)$'
+
 hybrid:
   scope: type
   markers:

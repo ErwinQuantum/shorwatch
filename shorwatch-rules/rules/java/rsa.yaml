@@ -51,6 +51,14 @@ patterns:
   - construct:
       type: org.bouncycastle.crypto.generators.RSAKeyPairGenerator
 
+  # Spring Security: PEM key loading and spring-security-rsa encryption.
+  - call: { type: org.springframework.security.converter.RsaKeyConverters, method: pkcs8 }
+  - call: { type: org.springframework.security.converter.RsaKeyConverters, method: x509 }
+  - construct: { type: org.springframework.security.rsa.crypto.RsaSecretEncryptor }
+  - construct: { type: org.springframework.security.rsa.crypto.RsaRawEncryptor }
+  # Loads the RSA key pair the encryptors above (and Spring Cloud Config) use.
+  - construct: { type: org.springframework.security.rsa.crypto.KeyStoreKeyFactory }
+
 hybrid:
   scope: type
   markers:

@@ -67,6 +67,17 @@ patterns:
   - call: { type: com.auth0.jwt.algorithms.Algorithm, method: RSA384 }
   - call: { type: com.auth0.jwt.algorithms.Algorithm, method: RSA512 }
 
+  # Spring Security OAuth2 resource server / authorization server
+  - field:
+      type: org.springframework.security.oauth2.jose.jws.SignatureAlgorithm
+      matches: '^(RS|PS)(256|384|512)$'
+  - field:
+      type: org.springframework.security.oauth2.jose.jws.JwsAlgorithms
+      matches: '^(RS|PS)(256|384|512)$'
+  # Decoders built from an RSA public key verify RS256 by default.
+  - call: { type: org.springframework.security.oauth2.jwt.NimbusJwtDecoder, method: withPublicKey }
+  - call: { type: org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder, method: withPublicKey }
+
 hybrid:
   scope: type
   markers:
