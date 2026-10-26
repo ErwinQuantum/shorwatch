@@ -1,0 +1,55 @@
+id: java.jwt.ecdh
+language: java
+algorithm: ECDH (JOSE/JWE)
+category: shor
+severity: high
+title: ECDH-based JWE key agreement is broken by Shor's algorithm
+message: >-
+  An encrypted JWT/JWE uses elliptic-curve key agreement (ECDH-ES and its
+  key-wrapping variants, ECDH-1PU, or X25519/X448 keys). Shor's algorithm
+  solves the elliptic-curve discrete logarithm problem, so tokens recorded
+  today can be decrypted once a large quantum computer exists (harvest now,
+  decrypt later).
+suggestion: >-
+  Move JWE key management to a post-quantum KEM based on ML-KEM (FIPS 203);
+  the IETF JOSE working group is defining how ML-KEM plugs into JWE. Until
+  then, prefer short-lived tokens and avoid putting long-lived secrets inside
+  encrypted JWTs. This changes the JWE key-management algorithm, so all
+  producers and consumers must be migrated together.
+references:
+  - title: "FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)"
+    url: https://csrc.nist.gov/pubs/fips/203/final
+  - title: "NIST SP 800-227: Recommendations for Key-Encapsulation Mechanisms"
+    url: https://csrc.nist.gov/pubs/sp/800/227/final
+  - title: "RFC 7518: JSON Web Algorithms (JWA)"
+    url: https://www.rfc-editor.org/rfc/rfc7518
+
+patterns:
+  # jjwt 0.12+
+  - field:
+      type: io.jsonwebtoken.Jwts.KEY
+      matches: '^ECDH_ES'
+  - field:
+      type: io.jsonwebtoken.security.Jwks.CRV
+      matches: '^X(25519|448)$'
+
+  # Nimbus JOSE + JWT
+  - field:
+      type: com.nimbusds.jose.JWEAlgorithm
+      matches: '^ECDH_(ES|1PU)'
+  - field:
+      type: com.nimbusds.jose.jwk.Curve
+      matches: '^X(25519|448)$'
+  - construct: { type: com.nimbusds.jose.crypto.ECDHEncrypter }
+  - construct: { type: com.nimbusds.jose.crypto.ECDHDecrypter }
+  - construct: { type: com.nimbusds.jose.crypto.X25519Encrypter }
+  - construct: { type: com.nimbusds.jose.crypto.X25519Decrypter }
+
+hybrid:
+  scope: type
+  markers:
+    - import: '^org\.bouncycastle\.pqc\.'
+    - import: '^org\.openquantumsafe\.'
+    - type: '(?i)(kyber|dilithium|ml-?kem|ml-?dsa)'
+    # Not `\b`: hybrid group names glue the parts together (X25519MLKEM768).
+    - literal: '(?i)(^|[^a-z])(kyber|dilithium|ml-?kem|ml-?dsa)'
