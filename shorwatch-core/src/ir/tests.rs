@@ -1,0 +1,40 @@
+use super::*;
+
+#[test]
+fn type_ref_matches_by_qualified_name_when_known() {
+    assert!(TypeRef::qualified("javax.crypto.Cipher").is("javax.crypto.Cipher"));
+    assert!(!TypeRef::qualified("com.acme.Cipher").is("javax.crypto.Cipher"));
+}
+
+#[test]
+fn type_ref_falls_back_to_simple_name() {
+    assert!(TypeRef::simple("Cipher").is("javax.crypto.Cipher"));
+    assert!(!TypeRef::simple("Signature").is("javax.crypto.Cipher"));
+}
+
+#[test]
+fn enclosing_walks_up_to_requested_kind() {
+    let mut unit = SourceUnit::new("A.java", Language::Java);
+    let class = unit.add_scope(ScopeKind::Type, Some("A".into()), SourceUnit::ROOT);
+    let method = unit.add_scope(ScopeKind::Method, Some("run".into()), class);
+
+    assert_eq!(unit.enclosing(method, ScopeKind::Type), class);
+    assert_eq!(unit.enclosing(method, ScopeKind::Method), method);
+    assert_eq!(unit.enclosing(method, ScopeKind::File), SourceUnit::ROOT);
+    assert_eq!(
+        unit.enclosing(SourceUnit::ROOT, ScopeKind::Type),
+        SourceUnit::ROOT
+    );
+}
+
+#[test]
+fn is_within_follows_parents() {
+    let mut unit = SourceUnit::new("A.java", Language::Java);
+    let a = unit.add_scope(ScopeKind::Type, Some("A".into()), SourceUnit::ROOT);
+    let b = unit.add_scope(ScopeKind::Type, Some("B".into()), SourceUnit::ROOT);
+    let m = unit.add_scope(ScopeKind::Method, None, a);
+
+    assert!(unit.is_within(m, a));
+    assert!(unit.is_within(m, SourceUnit::ROOT));
+    assert!(!unit.is_within(m, b));
+}
