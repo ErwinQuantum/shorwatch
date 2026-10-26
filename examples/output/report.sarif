@@ -206,6 +206,34 @@
               }
             },
             {
+              "id": "jvm.jca.ecdsa",
+              "name": "ECDSA",
+              "shortDescription": {
+                "text": "ECDSA signatures are forgeable with Shor's algorithm"
+              },
+              "fullDescription": {
+                "text": "ECDSA signing or verification detected. Shor's algorithm recovers the private key from a public key, which lets an attacker forge signatures. Long-lived trust anchors (firmware signing keys, root certificates, code-signing identities) are the most exposed, because they must stay valid for years."
+              },
+              "help": {
+                "text": "Migrate signatures to ML-DSA (FIPS 204), or SLH-DSA (FIPS 205) where a conservative hash-based scheme is preferred. ML-DSA keys and signatures are much larger than ECDSA ones, so check certificate sizes, wire formats and storage. During the transition, dual (composite) signatures with ECDSA and ML-DSA keep classical verifiers working.",
+                "markdown": "Migrate signatures to ML-DSA (FIPS 204), or SLH-DSA (FIPS 205) where a conservative hash-based scheme is preferred. ML-DSA keys and signatures are much larger than ECDSA ones, so check certificate sizes, wire formats and storage. During the transition, dual (composite) signatures with ECDSA and ML-DSA keep classical verifiers working.\n\n**References**\n\n- [FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)](https://csrc.nist.gov/pubs/fips/204/final)\n- [FIPS 205: Stateless Hash-Based Digital Signature Standard (SLH-DSA)](https://csrc.nist.gov/pubs/fips/205/final)\n- [NIST IR 8547: Transition to Post-Quantum Cryptography Standards](https://csrc.nist.gov/pubs/ir/8547/ipd)"
+              },
+              "helpUri": "https://csrc.nist.gov/pubs/fips/204/final",
+              "defaultConfiguration": {
+                "level": "error"
+              },
+              "properties": {
+                "tags": [
+                  "security",
+                  "cryptography",
+                  "post-quantum",
+                  "shor"
+                ],
+                "security-severity": "8.0",
+                "precision": "high"
+              }
+            },
+            {
               "id": "jvm.jca.rsa",
               "name": "RSA",
               "shortDescription": {
@@ -324,7 +352,7 @@
       "results": [
         {
           "ruleId": "jvm.nimbus.jose-rsa",
-          "ruleIndex": 10,
+          "ruleIndex": 11,
           "level": "error",
           "message": {
             "text": "A JWT or JOSE object is signed (RS256/384/512, PS256/384/512) or encrypted (RSA-OAEP, RSA1_5) with RSA. Shor's algorithm recovers the RSA private key from the public key, which is usually published in a JWKS endpoint: anyone could then mint valid tokens for your users, and encrypted tokens recorded today could be opened later."
@@ -353,7 +381,7 @@
         },
         {
           "ruleId": "jvm.jca.rsa",
-          "ruleIndex": 7,
+          "ruleIndex": 8,
           "level": "error",
           "message": {
             "text": "RSA key generation, encryption or signing detected. A cryptographically relevant quantum computer running Shor's algorithm recovers RSA private keys, and data encrypted today can be harvested now and decrypted later."
@@ -382,7 +410,7 @@
         },
         {
           "ruleId": "jvm.nimbus.jose-ecdsa",
-          "ruleIndex": 9,
+          "ruleIndex": 10,
           "level": "error",
           "message": {
             "text": "A JWT or JOSE object is signed with ECDSA (ES256, ES256K, ES384, ES512). Shor's algorithm recovers the private key from the public key, which is usually published in a JWKS endpoint, so a quantum attacker could mint valid tokens for any user."
@@ -411,7 +439,7 @@
         },
         {
           "ruleId": "jvm.jca.sha1",
-          "ruleIndex": 8,
+          "ruleIndex": 9,
           "level": "warning",
           "message": {
             "text": "SHA-1 used as a hash or inside a signature detected. Practical SHA-1 collisions have been public since 2017 (SHAttered) and chosen-prefix collisions since 2020, so it must not protect signatures, certificates or integrity checks today. Quantum search only widens the margin further. NIST plans to retire SHA-1 entirely by 2030."
@@ -525,6 +553,294 @@
           }
         },
         {
+          "ruleId": "jvm.jca.ecdsa",
+          "ruleIndex": 7,
+          "level": "error",
+          "message": {
+            "text": "ECDSA signing or verification detected. Shor's algorithm recovers the private key from a public key, which lets an attacker forge signatures. Long-lived trust anchors (firmware signing keys, root certificates, code-signing identities) are the most exposed, because they must stay valid for years."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 28,
+                  "endLine": 9,
+                  "endColumn": 76
+                }
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 19,
+                            "startColumn": 24,
+                            "endLine": 19,
+                            "endColumn": 41
+                          }
+                        },
+                        "message": {
+                          "text": "\"SHA256withECDSA\" is written here"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17,
+                            "startColumn": 16,
+                            "endLine": 20,
+                            "endColumn": 10
+                          }
+                        },
+                        "message": {
+                          "text": "returned by algorithmFor(...)"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9,
+                            "startColumn": 28,
+                            "endLine": 9,
+                            "endColumn": 76
+                          }
+                        },
+                        "message": {
+                          "text": "used here"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "algorithm": "ECDSA",
+            "status": "vulnerable",
+            "role": "production"
+          }
+        },
+        {
+          "ruleId": "jvm.jca.rsa",
+          "ruleIndex": 8,
+          "level": "error",
+          "message": {
+            "text": "RSA key generation, encryption or signing detected. A cryptographically relevant quantum computer running Shor's algorithm recovers RSA private keys, and data encrypted today can be harvested now and decrypted later."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 28,
+                  "endLine": 9,
+                  "endColumn": 76
+                }
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 18,
+                            "startColumn": 30,
+                            "endLine": 18,
+                            "endColumn": 43
+                          }
+                        },
+                        "message": {
+                          "text": "\"SHA1withRSA\" is written here"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17,
+                            "startColumn": 16,
+                            "endLine": 20,
+                            "endColumn": 10
+                          }
+                        },
+                        "message": {
+                          "text": "returned by algorithmFor(...)"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9,
+                            "startColumn": 28,
+                            "endLine": 9,
+                            "endColumn": 76
+                          }
+                        },
+                        "message": {
+                          "text": "used here"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "algorithm": "RSA",
+            "status": "vulnerable",
+            "role": "production"
+          }
+        },
+        {
+          "ruleId": "jvm.jca.sha1",
+          "ruleIndex": 9,
+          "level": "warning",
+          "message": {
+            "text": "SHA-1 used as a hash or inside a signature detected. Practical SHA-1 collisions have been public since 2017 (SHAttered) and chosen-prefix collisions since 2020, so it must not protect signatures, certificates or integrity checks today. Quantum search only widens the margin further. NIST plans to retire SHA-1 entirely by 2030."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                  "uriBaseId": "%SRCROOT%"
+                },
+                "region": {
+                  "startLine": 9,
+                  "startColumn": 28,
+                  "endLine": 9,
+                  "endColumn": 76
+                }
+              }
+            }
+          ],
+          "codeFlows": [
+            {
+              "threadFlows": [
+                {
+                  "locations": [
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 18,
+                            "startColumn": 30,
+                            "endLine": 18,
+                            "endColumn": 43
+                          }
+                        },
+                        "message": {
+                          "text": "\"SHA1withRSA\" is written here"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 17,
+                            "startColumn": 16,
+                            "endLine": 20,
+                            "endColumn": 10
+                          }
+                        },
+                        "message": {
+                          "text": "returned by algorithmFor(...)"
+                        }
+                      }
+                    },
+                    {
+                      "location": {
+                        "physicalLocation": {
+                          "artifactLocation": {
+                            "uri": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+                            "uriBaseId": "%SRCROOT%"
+                          },
+                          "region": {
+                            "startLine": 9,
+                            "startColumn": 28,
+                            "endLine": 9,
+                            "endColumn": 76
+                          }
+                        },
+                        "message": {
+                          "text": "used here"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "properties": {
+            "algorithm": "SHA-1",
+            "status": "vulnerable",
+            "role": "production"
+          }
+        },
+        {
           "ruleId": "jvm.jca.ecdh",
           "ruleIndex": 6,
           "level": "error",
@@ -555,7 +871,7 @@
         },
         {
           "ruleId": "jvm.nimbus.jose-ecdsa",
-          "ruleIndex": 9,
+          "ruleIndex": 10,
           "level": "error",
           "message": {
             "text": "A JWT or JOSE object is signed with ECDSA (ES256, ES256K, ES384, ES512). Shor's algorithm recovers the private key from the public key, which is usually published in a JWKS endpoint, so a quantum attacker could mint valid tokens for any user."

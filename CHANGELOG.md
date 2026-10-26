@@ -40,6 +40,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 - Data flow within a file: an algorithm reaching the crypto API through a variable, a field, a parameter fed by a call in the same file, a method's return value, a concatenation or a conditional is resolved, and the finding carries its path (`flow`: where the value is written, then each assignment, call or return). Shown in the terminal, as SARIF `codeFlows`, in JSON and in Markdown. On the field-test projects: 9 new findings, all true positives.
 
+- `--format html`: a self-contained HTML report (styles, script and data embedded, nothing loaded from the network) with a summary, post-quantum readiness, findings by severity and algorithm, filters, and every finding with its code, explanation, advice and data-flow path. Light and dark themes, print styles.
+- The example Spring service gains a statement signer whose algorithm comes from a `switch`, to show data flow; `examples/output/` includes the HTML report.
+
+### Fixed
+- Absolute paths outside the working directory were shown as `C:/\/Users/...` on Windows.
+
 ### Changed
 - A type name without an import only matches types of the file's package, its on-demand imports and the implicit ones (`java.lang`, Kotlin's defaults); Java 25 `import module` keeps any match. Fixes same-package classes mistaken for library types (Keycloak's `KeyType` for Azure's).
 - The Spring Security RSA rule also covers `org.springframework.security.crypto.encrypt`, where Spring Security 6.3 moved spring-security-rsa.

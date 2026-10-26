@@ -161,7 +161,7 @@ fn examples(folder: &str) -> String {
 fn examples_keep_showing_what_their_readme_describes() {
     let output = shorwatch(&["scan", &examples("spring-service"), "--format", "json"]);
     let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(report["summary"]["findings"], 13);
+    assert_eq!(report["summary"]["findings"], 16);
     assert_eq!(report["summary"]["in_transition"], 1);
     assert_eq!(report["summary"]["fixable"], 1);
 

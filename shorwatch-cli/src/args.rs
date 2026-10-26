@@ -97,6 +97,9 @@ pub enum Format {
     Json,
     /// Markdown summary (CI job summaries, PR comments).
     Markdown,
+    /// A self-contained HTML page with charts, filters, code and data-flow
+    /// paths (offline, nothing loaded from the network).
+    Html,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]

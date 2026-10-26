@@ -84,6 +84,11 @@
             "location": "examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java",
             "line": 32,
             "additionalContext": "jvm.jca.rsa (vulnerable)"
+          },
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+            "line": 9,
+            "additionalContext": "jvm.jca.rsa (vulnerable)"
           }
         ]
       },
@@ -170,6 +175,11 @@
           {
             "location": "examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java",
             "line": 13,
+            "additionalContext": "jvm.jca.sha1 (vulnerable)"
+          },
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+            "line": 9,
             "additionalContext": "jvm.jca.sha1 (vulnerable)"
           }
         ]
@@ -266,6 +276,46 @@
         {
           "name": "shorwatch:severity",
           "value": "low"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ecdsa",
+      "name": "ECDSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "cryptoFunctions": [
+            "keygen",
+            "sign",
+            "verify"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+            "line": 9,
+            "additionalContext": "jvm.jca.ecdsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
         },
         {
           "name": "shorwatch:status",

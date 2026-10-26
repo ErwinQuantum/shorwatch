@@ -84,6 +84,7 @@ shorwatch scan .                             # scan the current project
 shorwatch scan src/ config/ --compact        # several paths, one line per finding
 shorwatch scan . --format sarif -o shorwatch.sarif
 shorwatch scan . --format cbom -o crypto.cdx.json # CycloneDX CBOM inventory
+shorwatch scan . --format html -o shorwatch.html   # a report to open in a browser
 shorwatch scan . --min-severity medium --fail-on any
 shorwatch scan . --rules ./company-rules/    # add your own YAML rules
 shorwatch rules                              # list the rules in effect
@@ -95,7 +96,7 @@ shorwatch rules                              # list the rules in effect
 
 | Option | |
 |---|---|
-| `--format text\|sarif\|cbom\|json\|markdown` | Output format (default `text`, coloured on terminals) |
+| `--format text\|sarif\|cbom\|json\|markdown\|html` | Output format (default `text`, coloured on terminals) |
 | `-o, --output FILE` | Write the report to a file |
 | `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
 | `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`) |
@@ -141,15 +142,27 @@ Boot service:
    │ Elliptic-curve keys are broken by Shor's algorithm
    ...
 
- Summary  13 findings in 7 files (7 scanned)
-          12 vulnerable · 1 in transition · 1 auto-fixable
-          10 high · 2 medium · 1 low
+ Summary  16 findings in 8 files (8 scanned)
+          15 vulnerable · 1 in transition · 1 auto-fixable
+          12 high · 3 medium · 1 low
 ```
 
 Every format for that scan is in [`examples/output/`](examples/output/):
 [text](examples/output/report.txt), [SARIF](examples/output/report.sarif),
 [CBOM](examples/output/report.cdx.json), [JSON](examples/output/report.json),
-[Markdown](examples/output/report.md).
+[Markdown](examples/output/report.md), [HTML](examples/output/report.html).
+
+### HTML report
+
+`--format html` writes one self-contained page to open in a browser or keep
+as a CI artifact (Jenkins `publishHTML`, Azure DevOps, GitLab): a summary,
+the post-quantum readiness of the project, findings by severity and
+algorithm, filters, and every finding with its code, an explanation, the
+migration advice and, when the algorithm was written elsewhere, the path the
+value takes to the crypto call. Styles, script and data are embedded; the
+page loads nothing from the network.
+
+![Shorwatch HTML report](docs/images/html-report.png)
 
 ### Cryptography Bill of Materials (CBOM)
 
@@ -356,7 +369,7 @@ shorwatch-langs    Frontends that lower files into the core's intermediate
                    model: Java and Kotlin (tree-sitter, sharing one JVM
                    name resolver), YAML (tree-sitter), .properties.
 shorwatch-report   Output adapters: terminal, SARIF 2.1.0, CycloneDX CBOM,
-                   JSON and Markdown.
+                   JSON, Markdown and a self-contained HTML report.
 shorwatch-cli      The `shorwatch` binary.
 ```
 

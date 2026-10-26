@@ -20,7 +20,7 @@ tree-sitter (no compiling, no binaries): **Java** and **Kotlin** sources plus
 | `shorwatch-core` | Pure domain: IR (`SourceUnit`, `Fact`, `Scope`), rule model + validation, engine (`analyze`), cross-file `link`, `Finding`. **No I/O.** | serde, regex, thiserror only |
 | `shorwatch-rules` | Built-in YAML rules (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` for external rules | core |
 | `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng), both on the shared `jvm` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written). Nothing tree-sitter leaks out | core |
-| `shorwatch-report` | Pure renderers over a `Scan`: terminal (banner, detailed/compact), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown | core |
+| `shorwatch-report` | Pure renderers over a `Scan`: terminal (banner, detailed/compact), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only) | core |
 | `shorwatch-cli` | `shorwatch scan` / `shorwatch rules`: clap args, `ignore` walker, `layout` (test vs production code by path), rayon pipeline, output, exit codes | all |
 
 Pipeline (what the CLI does): lower every file with its frontend → `link`

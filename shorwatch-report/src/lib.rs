@@ -10,12 +10,15 @@
 //! - [`cbom`]: a CycloneDX 1.6 Cryptography Bill of Materials (inventory).
 //! - [`json`]: the findings as JSON, for scripts and other tools.
 //! - [`markdown`]: a summary for CI job summaries and pull-request comments.
+//! - [`html`]: a self-contained page with charts, filters, code and data-flow
+//!   paths, to read or share.
 
 use std::collections::BTreeMap;
 
 use shorwatch_core::Finding;
 
 pub mod cbom;
+pub mod html;
 pub mod json;
 pub mod markdown;
 pub mod sarif;
