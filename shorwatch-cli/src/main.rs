@@ -16,6 +16,10 @@ use shorwatch_core::{CodeRole, Status};
 
 use args::{Cli, Command, FailOn, ScanArgs};
 
+#[cfg(target_env = "musl")]
+#[global_allocator]
+static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() -> ExitCode {

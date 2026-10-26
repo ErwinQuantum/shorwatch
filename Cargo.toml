@@ -38,6 +38,7 @@ ignore = "0.4"
 rayon = "1.10"
 anstream = "1"
 owo-colors = "4"
+mimalloc = { version = "0.1", default-features = false }
 insta = { version = "1", features = ["yaml", "glob"] }
 
 [workspace.lints.rust]

@@ -24,6 +24,10 @@ rayon.workspace = true
 anyhow.workspace = true
 anstream.workspace = true
 
+# musl's allocator serializes threads: the static Linux build swaps it.
+[target.'cfg(target_env = "musl")'.dependencies]
+mimalloc.workspace = true
+
 [dev-dependencies]
 serde_json.workspace = true
 

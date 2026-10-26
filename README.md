@@ -219,6 +219,9 @@ jobs:
 ### Docker (Jenkins, Azure DevOps, GitLab CI)
 
 The image needs no Rust toolchain: a static binary on Alpine (~23 MB).
+On Linux CI agents it scans as fast as the native binary (Keycloak, 9,000
+files: ~4 s). Docker Desktop on Windows and macOS shares host folders slowly
+(the same scan takes ~20 s); there, prefer the native binary.
 
 ```sh
 docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch scan . --format sarif -o shorwatch.sarif

@@ -8,7 +8,7 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
-- Docker image (`ghcr.io/erwinquantum/shorwatch`, static musl binary on Alpine) for CI systems without Rust, published for version tags; README snippets for Jenkins, Azure DevOps and GitLab CI.
+- Docker image (`ghcr.io/erwinquantum/shorwatch`, static musl binary on Alpine) for CI systems without Rust, published for version tags; README snippets for Jenkins, Azure DevOps and GitLab CI. The static build uses mimalloc: musl's allocator halved multi-threaded scan speed.
 - Initial repository layout (5-crate workspace).
 - `shorwatch-core`: intermediate model, rule model with validation (Shor-category rules cannot carry an auto-fix) and evaluation engine with hybrid-scheme detection.
 - `shorwatch-langs`: Java frontend (tree-sitter) resolving receiver types and same-file `final` constants.
