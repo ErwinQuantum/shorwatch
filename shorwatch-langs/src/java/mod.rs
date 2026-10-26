@@ -11,23 +11,21 @@
 //! reported as unknown. That is the job of the future taint-analysis layer.
 //!
 //! - this module: the traversal (phase one) and node helpers;
-//! - [`resolve`]: phase two, names to types, constant and injected values;
+//! - [`crate::jvm`]: phase two, shared with Kotlin;
 //! - [`literals`]: decoding Java string and integer literals.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use shorwatch_core::Language;
 use shorwatch_core::ir::{ArgValue, FactKind, Location, Position, ScopeId, ScopeKind, SourceUnit};
 use tree_sitter::{Node, Parser, Point};
 
+use crate::jvm::{ArgSource, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase};
 use crate::{Frontend, LangError};
 use literals::{int_value, string_value};
-use model::{ArgSource, Pending, PendingArg, Receiver, Symbol};
-use syntax::{has_modifier, is_name_path, is_name_slot, starts_uppercase, type_name};
+use syntax::{has_modifier, is_name_path, is_name_slot, type_name};
 
 mod literals;
-mod model;
-mod resolve;
 mod syntax;
 #[cfg(test)]
 mod tests;
@@ -60,30 +58,17 @@ impl Frontend for JavaFrontend {
 
 struct Lowering<'s> {
     src: &'s str,
-    unit: SourceUnit,
-    /// Simple name -> fully qualified name, from single-type imports.
-    imports: HashMap<String, String>,
-    /// Member name -> fully qualified owner type, from single static imports.
-    static_imports: HashMap<String, String>,
-    /// Methods declared in this file, which shadow statically imported ones.
-    methods: HashSet<String>,
-    symbols: HashMap<(ScopeId, String), Symbol>,
+    file: JvmFile,
     /// Interfaces and annotation types, whose fields are implicitly constant.
     interfaces: HashSet<ScopeId>,
-    pending: Vec<(Pending, ScopeId, Location)>,
 }
 
 impl<'s> Lowering<'s> {
     fn new(path: &str, src: &'s str) -> Self {
         Self {
             src,
-            unit: SourceUnit::new(path, Language::Java),
-            imports: HashMap::new(),
-            static_imports: HashMap::new(),
-            methods: HashSet::new(),
-            symbols: HashMap::new(),
+            file: JvmFile::new(path, Language::Java),
             interfaces: HashSet::new(),
-            pending: Vec::new(),
         }
     }
 
@@ -97,8 +82,7 @@ impl<'s> Lowering<'s> {
                 stack.extend(children.into_iter().rev().map(|c| (c, child_scope)));
             }
         }
-        self.resolve();
-        self.unit
+        self.file.resolve()
     }
 
     /// Records what `node` contributes. Returns the scope its children belong
@@ -116,7 +100,7 @@ impl<'s> Lowering<'s> {
             | "record_declaration"
             | "annotation_type_declaration") => {
                 let name = self.field_text(node, "name").map(str::to_owned);
-                let id = self.unit.add_scope(ScopeKind::Type, name, scope);
+                let id = self.file.unit.add_scope(ScopeKind::Type, name, scope);
                 if matches!(
                     kind,
                     "interface_declaration" | "annotation_type_declaration"
@@ -130,11 +114,11 @@ impl<'s> Lowering<'s> {
             | "compact_constructor_declaration" => {
                 let name = self.field_text(node, "name").map(str::to_owned);
                 if let Some(name) = &name {
-                    self.methods.insert(name.clone());
+                    self.file.methods.insert(name.clone());
                 }
-                Some(self.unit.add_scope(ScopeKind::Method, name, scope))
+                Some(self.file.unit.add_scope(ScopeKind::Method, name, scope))
             }
-            "static_initializer" => Some(self.unit.add_scope(
+            "static_initializer" => Some(self.file.unit.add_scope(
                 ScopeKind::Method,
                 Some("<clinit>".into()),
                 scope,
@@ -157,7 +141,7 @@ impl<'s> Lowering<'s> {
                         ty: Some(type_name(self.text(ty))),
                         constant: self.injected(node),
                     };
-                    self.symbols.insert((scope, name.to_owned()), symbol);
+                    self.file.symbols.insert((scope, name.to_owned()), symbol);
                 }
                 None
             }
@@ -172,7 +156,7 @@ impl<'s> Lowering<'s> {
             "field_access" => self.field_access(node, scope),
             "identifier" => {
                 let name = self.text(node);
-                if self.static_imports.contains_key(name) && !is_name_slot(node) {
+                if self.file.static_imports.contains_key(name) && !is_name_slot(node) {
                     self.defer(Pending::StaticMember(name.to_owned()), scope, node);
                 }
                 None
@@ -201,10 +185,11 @@ impl<'s> Lowering<'s> {
         let name = self.text(*name).to_owned();
         if !is_wildcard && let Some((owner, simple)) = name.rsplit_once('.') {
             if is_static {
-                self.static_imports
+                self.file
+                    .static_imports
                     .insert(simple.to_owned(), owner.to_owned());
             } else {
-                self.imports.insert(simple.to_owned(), name.clone());
+                self.file.imports.insert(simple.to_owned(), name.clone());
             }
         }
         let path = if is_wildcard {
@@ -239,7 +224,8 @@ impl<'s> Lowering<'s> {
                 (None, true) => value.and_then(|v| self.literal(v)),
                 (None, false) => None,
             };
-            self.symbols
+            self.file
+                .symbols
                 .insert((scope, name.to_owned()), Symbol { ty, constant });
         }
     }
@@ -389,7 +375,7 @@ impl<'s> Lowering<'s> {
 
     fn defer(&mut self, pending: Pending, scope: ScopeId, node: Node<'_>) {
         let location = self.location(node);
-        self.pending.push((pending, scope, location));
+        self.file.defer(pending, scope, location);
     }
 
     fn ready(&mut self, kind: FactKind, scope: ScopeId, node: Node<'_>) {

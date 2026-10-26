@@ -1,12 +1,12 @@
-//! Phase two of the Java lowering: once the whole file has been traversed,
+//! Phase two of a JVM lowering: once the whole file has been traversed,
 //! pending facts are resolved. Receivers get their declared types, names
-//! their constant or injected values, static imports their owners.
+//! their constant or injected values, member imports their owners.
 
-use super::{ArgSource, Lowering, Pending, PendingArg, Receiver, Symbol, starts_uppercase};
-use shorwatch_core::ir::{Arg, ArgValue, FactKind, ScopeId, ScopeKind, TypeRef};
+use super::{ArgSource, JvmFile, Pending, PendingArg, Receiver, starts_uppercase};
+use shorwatch_core::ir::{Arg, ArgValue, FactKind, ScopeId, ScopeKind, SourceUnit, TypeRef};
 
-impl Lowering<'_> {
-    pub(super) fn resolve(&mut self) {
+impl JvmFile {
+    pub(crate) fn resolve(mut self) -> SourceUnit {
         for (pending, scope, location) in std::mem::take(&mut self.pending) {
             let kind = match pending {
                 Pending::Call {
@@ -40,15 +40,7 @@ impl Lowering<'_> {
             };
             self.unit.push(kind, scope, location);
         }
-    }
-
-    fn lookup(&self, mut scope: ScopeId, name: &str) -> Option<&Symbol> {
-        loop {
-            if let Some(symbol) = self.symbols.get(&(scope, name.to_owned())) {
-                return Some(symbol);
-            }
-            scope = self.unit.scope(scope).parent?;
-        }
+        self.unit
     }
 
     fn resolve_receiver(&self, receiver: &Receiver, scope: ScopeId) -> Option<TypeRef> {

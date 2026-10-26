@@ -36,7 +36,3 @@ pub(super) fn type_name(written: &str) -> String {
     let base = written.split(['<', '[']).next().unwrap_or(written);
     base.split_whitespace().last().unwrap_or(base).to_owned()
 }
-
-pub(super) fn starts_uppercase(name: &str) -> bool {
-    name.chars().next().is_some_and(char::is_uppercase)
-}

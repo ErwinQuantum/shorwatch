@@ -5,16 +5,16 @@ use shorwatch_core::ir::{ArgValue, FactKind, Location};
 
 /// What the file says about a name declared in some scope.
 #[derive(Debug, Default)]
-pub(super) struct Symbol {
+pub(crate) struct Symbol {
     /// Declared (or, for `var`, inferred) type as written.
-    pub(super) ty: Option<String>,
+    pub(crate) ty: Option<String>,
     /// Literal initializer of a `final` declaration, or the property injected
     /// by `@Value("${...}")`.
-    pub(super) constant: Option<ArgValue>,
+    pub(crate) constant: Option<ArgValue>,
 }
 
 #[derive(Debug)]
-pub(super) enum Receiver {
+pub(crate) enum Receiver {
     /// `x.m()`: a variable or a type name.
     Name(String),
     /// `a.b.C.m()` or `this.x.m()`.
@@ -22,7 +22,7 @@ pub(super) enum Receiver {
 }
 
 #[derive(Debug)]
-pub(super) enum ArgSource {
+pub(crate) enum ArgSource {
     Value(ArgValue),
     /// `m(NAME)`.
     Name(String),
@@ -34,14 +34,14 @@ pub(super) enum ArgSource {
 }
 
 #[derive(Debug)]
-pub(super) struct PendingArg {
-    pub(super) source: ArgSource,
-    pub(super) raw: String,
-    pub(super) location: Location,
+pub(crate) struct PendingArg {
+    pub(crate) source: ArgSource,
+    pub(crate) raw: String,
+    pub(crate) location: Location,
 }
 
 #[derive(Debug)]
-pub(super) enum Pending {
+pub(crate) enum Pending {
     Call {
         receiver: Option<Receiver>,
         method: String,

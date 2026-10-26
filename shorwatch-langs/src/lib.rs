@@ -9,6 +9,7 @@ use thiserror::Error;
 
 pub mod config;
 pub mod java;
+mod jvm;
 
 pub use config::{PropertiesFrontend, YamlFrontend};
 pub use java::JavaFrontend;
