@@ -53,6 +53,13 @@ patterns:
   - construct:
       type: org.bouncycastle.crypto.generators.ECKeyPairGenerator
 
+  # EC JWKs: the same key may sign (ES256) or agree on keys (ECDH-ES).
+  - construct: { type: com.nimbusds.jose.jwk.gen.ECKeyGenerator }
+  - construct: { type: com.nimbusds.jose.jwk.ECKey.Builder }
+  - field:
+      type: io.jsonwebtoken.security.Jwks.CRV
+      matches: '^P(256|384|521)$'
+
 hybrid:
   scope: type
   markers:
