@@ -2,6 +2,7 @@
 //! configuration.
 
 mod args;
+mod classpath;
 mod discover;
 mod layout;
 mod output;
@@ -50,7 +51,15 @@ fn scan(args: &ScanArgs) -> Result<ExitCode> {
         min_severity: args.min_severity.into(),
         tool_version: VERSION.to_owned(),
     };
-    let scan = pipeline::scan(&files, &rules, &options);
+    let library = classpath::load(&args.classpath)?;
+    if !args.classpath.is_empty() {
+        eprintln!(
+            "classpath: {} types, {} methods returning types",
+            library.types.len(),
+            library.methods.len()
+        );
+    }
+    let scan = pipeline::scan(&files, &library, &rules, &options);
     output::write(&scan, args)?;
 
     let fails = match args.fail_on {

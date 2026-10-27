@@ -15,4 +15,10 @@ class Providers {
 
     /** A longer chain: each call is typed from the one before. */
     fun archiveKeys(): KeyPair = Registry.registry().provider().generator("DSA").generateKeyPair()
+
+    /** No type written: the variable takes provider()'s return type. */
+    fun escrowKeys(): KeyPair {
+        val provider = Keys.provider()
+        return provider.generator("DH").generateKeyPair()
+    }
 }

@@ -87,6 +87,7 @@ shorwatch scan . --format cbom -o crypto.cdx.json # CycloneDX CBOM inventory
 shorwatch scan . --format html -o shorwatch.html   # a report to open in a browser
 shorwatch scan . --min-severity medium --fail-on any
 shorwatch scan . --rules ./company-rules/    # add your own YAML rules
+shorwatch scan . --classpath @cp.txt         # follow calls into compiled dependencies
 shorwatch rules                              # list the rules in effect
 ```
 
@@ -103,8 +104,32 @@ shorwatch rules                              # list the rules in effect
 | `--exclude-tests` | Skip test code (Maven/Gradle test source sets such as `src/test` or `src/jvmTest`, test directories, `*Test`/`*IT` classes). Without it, findings in test code are reported and labelled as such |
 | `--compact` | One line per finding |
 | `--rules DIR` | Extra rules directory (repeatable) |
+| `--classpath PATHS` | Compiled dependencies to read types from (see below) |
 
 Exit codes: `0` nothing failing, `1` failing findings, `2` error.
+
+### Compiled dependencies (`--classpath`)
+
+Sources say `jsch.getSession(host).apply { setConfig("kex", ...) }`; only the
+library knows that `getSession` returns a `Session`. With `--classpath`,
+Shorwatch reads the class files of the dependencies (signatures only: no
+code is run or analyzed) and follows calls through library types. Without
+it, everything else works the same.
+
+```sh
+# Maven: the project's resolved dependencies
+mvn dependency:build-classpath -Dmdep.outputFile=cp.txt
+shorwatch scan . --classpath @cp.txt
+
+# Any directory of jars or classes, and the JDK's own modules
+shorwatch scan . --classpath build/libs --classpath "$JAVA_HOME/jmods"
+```
+
+Entries are directories (searched for `.class`, `.jar` and `.jmod` files),
+jars and jmods, separated like `CLASSPATH` (`:`, or `;` on Windows), or
+`@file` listing them. Only the types the project's call chains reach are
+kept, so a large classpath costs mostly the time to read it (about 2 s for
+a 1 GB Maven repository).
 
 ### Example output
 
@@ -289,7 +314,7 @@ the same findings.
 | BouncyCastle lightweight API (engines, signers, generators) and PKIX certificate signing (`JcaContentSignerBuilder`) | `@ConfigurationProperties` binding |
 | JWT/JOSE: jjwt (0.11 and 0.12), Nimbus JOSE + JWT, Auth0 java-jwt | Algorithms chosen at runtime, e.g. from a remote JWKS |
 | Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Quarkus and Micronaut configuration keys |
-| Spring Boot config: `jws-algorithms`, `public-key-location`, TLS cipher suites (`*.ssl.ciphers`); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Compiled `.jar` dependencies |
+| Spring Boot config: `jws-algorithms`, `public-key-location`, TLS cipher suites (`*.ssl.ciphers`); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Crypto inside compiled `.jar` dependencies (their types are read with `--classpath`, their code is not analyzed) |
 | Values injected with `@Value("${key:default}")`, resolved against every profile's config file | |
 | Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
 | OpenPGP (BouncyCastle `bcpg`): key, hash and symmetric algorithm tags | The algorithm of keys read from existing key rings |
@@ -300,7 +325,7 @@ the same findings.
 | Google Tink: predefined parameters, legacy key templates, `KeyTemplates.get("ECDSA_P256")` | |
 | Android Keystore (`KeyProperties.KEY_ALGORITHM_RSA/EC`) | |
 | Algorithm names as literals, same-file `final` constants, enum/static constants and static imports | |
-| Data flow within and across files: variables, fields set in constructors, parameters of methods and constructors fed by calls anywhere in the project, returned values (`switch`/`when` mappings), constants of other classes, concatenations and templates, `?:`/`if` branches. Calls through interfaces reach every implementation (the type hierarchy comes from the sources), and chained calls such as `Crypto.provider().keyPairGenerator("RSA")` are typed from the declared return type, also along longer chains. Findings show the path from the literal to the use, file by file | Overloads; types from libraries (needs compiled classes); enum properties; values that depend on the order of execution |
+| Data flow within and across files: variables, fields set in constructors, parameters of methods and constructors fed by calls anywhere in the project, returned values (`switch`/`when` mappings), constants of other classes, concatenations and templates, `?:`/`if` branches. Calls through interfaces reach every implementation (the type hierarchy comes from the sources), and chained calls such as `Crypto.provider().keyPairGenerator("RSA")` are typed from the declared return type, also along longer chains and for variables without a written type (`var`, Kotlin `val`). With `--classpath`, library types too (`jsch.getSession(...)` returns a `Session`). Findings show the path from the literal to the use, file by file | Overloads; enum properties; values that depend on the order of execution |
 | Kotlin idioms: constructor calls without `new`, `val` / `const val` / `companion object` constants, member imports, `@Value` on constructor parameters, scope functions (`apply`, `run`, `with`, `also`, `let`) | Kotlin extension functions that wrap crypto (needs data flow) |
 
 ## Rules
@@ -390,7 +415,7 @@ cargo test --workspace
 
 - More configuration formats (Quarkus, Micronaut)
 - Data-flow analysis to follow crypto through wrapper methods
-- Dependency scanning (`pom.xml`, `build.gradle`, compiled `.jar`s)
+- Dependency inventory (`pom.xml`, `build.gradle`, crypto inside compiled `.jar`s)
 - Editor integration through LSP
 - Pre-commit hook and incremental CI scans
 - A post-quantum maturity score per project (migrated / hybrid / vulnerable)

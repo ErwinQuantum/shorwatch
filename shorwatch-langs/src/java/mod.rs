@@ -172,7 +172,7 @@ impl<'s> Lowering<'s> {
                     let symbol = Symbol {
                         ty: Some(type_name(self.text(ty))),
                         constant: self.injected(node),
-                        origin: None,
+                        ..Symbol::default()
                     };
                     self.file.symbols.insert((scope, name.to_owned()), symbol);
                 }
@@ -281,6 +281,10 @@ impl<'s> Lowering<'s> {
                 (None, false) => None,
             };
             let origin = value.and_then(|v| self.origin(v));
+            let call = match (declared.as_deref(), value) {
+                (Some("var"), Some(v)) if v.kind() == "method_invocation" => self.receiver(v, 0),
+                _ => None,
+            };
             if let (None, Some(value)) = (&constant, value) {
                 self.file.assignments.push(Assignment {
                     scope,
@@ -296,6 +300,7 @@ impl<'s> Lowering<'s> {
                     ty,
                     constant,
                     origin,
+                    call,
                 },
             );
         }

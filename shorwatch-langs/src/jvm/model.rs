@@ -14,6 +14,10 @@ pub(crate) struct Symbol {
     /// Arguments of the factory call that initialized it:
     /// `KeyGenerator.getInstance("AES")` -> `["AES"]`.
     pub(crate) origin: Option<Vec<PendingArg>>,
+    /// The call that initialized it when no type is written (`var p =
+    /// keys.provider()`, Kotlin `val p = ...`): a [`Receiver::Call`] that
+    /// `link` types from the method's declared return type.
+    pub(crate) call: Option<Receiver>,
 }
 
 #[derive(Debug, Clone)]

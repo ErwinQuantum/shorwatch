@@ -8,6 +8,7 @@
 
 mod facts;
 mod language;
+mod library;
 mod location;
 #[cfg(test)]
 mod tests;
@@ -19,6 +20,7 @@ pub use facts::{
     MethodSummary, TypeDecl,
 };
 pub use language::{Language, Platform};
+pub use library::Library;
 pub use location::{Location, Position};
 pub use types::TypeRef;
 pub use unit::{CodeRole, Scope, ScopeId, ScopeKind, SourceUnit};

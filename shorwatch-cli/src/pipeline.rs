@@ -1,11 +1,12 @@
 //! The scan itself: read and lower every file in parallel, link the units of
-//! the project together, analyze each unit in parallel.
+//! the project together (and with the classpath's declarations), analyze each
+//! unit in parallel.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
-use shorwatch_core::{CodeRole, Finding, RuleSet, Severity, SourceUnit, analyze, link};
+use shorwatch_core::{CodeRole, Finding, Library, RuleSet, Severity, SourceUnit, analyze, link};
 use shorwatch_report::Scan;
 
 use crate::discover::display_path;
@@ -15,7 +16,12 @@ pub struct Options {
     pub tool_version: String,
 }
 
-pub fn scan(files: &[(PathBuf, CodeRole)], rules: &RuleSet, options: &Options) -> Scan {
+pub fn scan(
+    files: &[(PathBuf, CodeRole)],
+    library: &Library,
+    rules: &RuleSet,
+    options: &Options,
+) -> Scan {
     let cwd = std::env::current_dir().unwrap_or_default();
     let mut lowered: Vec<(SourceUnit, String)> = files
         .par_iter()
@@ -27,7 +33,7 @@ pub fn scan(files: &[(PathBuf, CodeRole)], rules: &RuleSet, options: &Options) -
         .collect();
     // par_iter + collect keeps the input order, so linking is deterministic.
     let (mut units, sources): (Vec<_>, Vec<_>) = lowered.drain(..).unzip();
-    link(&mut units);
+    link(&mut units, library);
 
     let mut findings: Vec<Finding> = units
         .par_iter()

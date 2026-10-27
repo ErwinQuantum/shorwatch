@@ -35,14 +35,7 @@ impl JvmFile {
                     method,
                     args,
                 } => FactKind::Call {
-                    receiver_call: match &receiver {
-                        Some(Receiver::Call {
-                            owner,
-                            method,
-                            arity,
-                        }) => self.call_ref(owner.as_deref(), method, *arity, scope),
-                        _ => None,
-                    },
+                    receiver_call: receiver.as_ref().and_then(|r| self.receiver_call(r, scope)),
                     receiver_origin: receiver
                         .as_ref()
                         .and_then(|r| self.receiver_origin(r, scope))
@@ -86,6 +79,36 @@ impl JvmFile {
             }
         }
         self.unit
+    }
+
+    /// The call a receiver is the result of: written in place
+    /// (`keys.provider().m()`) or the initializer of an untyped variable
+    /// (`var p = keys.provider(); p.m()`), resolved where it was written.
+    fn receiver_call(&self, receiver: &Receiver, scope: ScopeId) -> Option<CallRef> {
+        let (call, scope) = match receiver {
+            Receiver::Call { .. } => (receiver, scope),
+            Receiver::Name(name) => self.initializer_call(name, scope)?,
+            Receiver::Path(path) => {
+                let field = path.strip_prefix("this.").filter(|f| !f.contains('.'))?;
+                self.initializer_call(field, scope)?
+            }
+            Receiver::Type { .. } => return None,
+        };
+        let Receiver::Call {
+            owner,
+            method,
+            arity,
+        } = call
+        else {
+            return None;
+        };
+        self.call_ref(owner.as_deref(), method, *arity, scope)
+    }
+
+    fn initializer_call(&self, variable: &str, scope: ScopeId) -> Option<(&Receiver, ScopeId)> {
+        let declared = self.lookup_scope(scope, variable)?;
+        let symbol = self.symbols.get(&(declared, variable.to_owned()))?;
+        Some((symbol.call.as_ref()?, declared))
     }
 
     /// `owner.method(..arity)`, the receiver of a chained call; `owner` may be

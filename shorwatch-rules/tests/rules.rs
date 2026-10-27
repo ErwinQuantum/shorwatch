@@ -17,7 +17,7 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 use serde::Serialize;
-use shorwatch_core::{Finding, RuleSet, SourceUnit, Status, analyze, link};
+use shorwatch_core::{Finding, Library, RuleSet, SourceUnit, Status, analyze, link};
 
 #[derive(Serialize)]
 struct Compact {
@@ -79,7 +79,7 @@ fn findings(path: &Path) -> Vec<Compact> {
         .collect();
     siblings.sort();
     let mut units: Vec<_> = siblings.iter().filter_map(|p| lower(p)).collect();
-    link(&mut units);
+    link(&mut units, &Library::default());
 
     let name = path.file_name().unwrap().to_string_lossy();
     let unit = units.iter().find(|u| u.path() == name).unwrap();

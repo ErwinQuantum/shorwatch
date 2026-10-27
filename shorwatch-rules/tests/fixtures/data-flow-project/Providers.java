@@ -19,4 +19,10 @@ public class Providers {
     KeyPair archiveKeys() throws Exception {
         return Registry.registry().provider().generator("DSA").generateKeyPair();
     }
+
+    /** No type written: the variable takes provider()'s return type. */
+    KeyPair escrowKeys() throws Exception {
+        var provider = Keys.provider();
+        return provider.generator("DH").generateKeyPair();
+    }
 }

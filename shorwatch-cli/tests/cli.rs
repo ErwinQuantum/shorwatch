@@ -259,3 +259,33 @@ fn test_code_is_labelled_and_can_be_excluded() {
     assert_eq!(only_production["summary"]["files_scanned"], 1);
     assert_eq!(only_production["findings"][0]["rule_id"], "jvm.jca.rsa");
 }
+
+#[test]
+fn classpath_entries_that_cannot_be_read_only_warn() {
+    let dir = std::env::temp_dir().join(format!("shorwatch-cp-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let broken = dir.join("broken.jar");
+    std::fs::write(&broken, b"not a zip").unwrap();
+    let list = dir.join("cp.txt");
+    std::fs::write(&list, format!("{}\n", broken.display())).unwrap();
+
+    let at_list = format!("@{}", list.display());
+    let missing = dir.join("missing.jar").display().to_string();
+    let output = shorwatch(&[
+        "scan",
+        &path("dh/Clean.java"),
+        "--classpath",
+        &at_list,
+        "--classpath",
+        &missing,
+    ]);
+    std::fs::remove_dir_all(&dir).unwrap();
+    assert_eq!(output.status.code(), Some(0));
+    let stderr = String::from_utf8(output.stderr).unwrap();
+    assert!(
+        stderr.contains("skipping") && stderr.contains("broken.jar"),
+        "{stderr}"
+    );
+    assert!(stderr.contains("missing.jar"), "{stderr}");
+    assert!(stderr.contains("classpath: 0 types"), "{stderr}");
+}

@@ -39,6 +39,7 @@ rayon = "1.10"
 anstream = "1"
 owo-colors = "4"
 mimalloc = { version = "0.1", default-features = false }
+zip = { version = "9.1", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 insta = { version = "1", features = ["yaml", "glob"] }
 
 [workspace.lints.rust]

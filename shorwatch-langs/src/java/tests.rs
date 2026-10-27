@@ -308,7 +308,6 @@ fn origins(unit: &SourceUnit) -> Vec<(String, ArgValue)> {
             FactKind::Call {
                 method,
                 receiver_origin: Some(origin),
-                receiver_call: None,
                 ..
             } => Some((method.clone(), origin.first()?.value.clone())),
             _ => None,

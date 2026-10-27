@@ -1,11 +1,11 @@
 //! The project's type hierarchy, from the types each file declares and the
-//! types they extend or implement. A call through a type can reach a method
+//! types they extend or implement, plus the library types they rely on. A call through a type can reach a method
 //! of that type, of a subtype that overrides it, or of a supertype it
 //! inherits it from: the type's *related* types.
 
 use std::collections::{HashMap, HashSet};
 
-use crate::ir::{SourceUnit, TypeRef};
+use crate::ir::{SourceUnit, TypeDecl, TypeRef};
 
 #[derive(Debug, Default)]
 pub(super) struct Hierarchy {
@@ -17,9 +17,14 @@ pub(super) struct Hierarchy {
 }
 
 impl Hierarchy {
-    pub(super) fn of(units: &[SourceUnit]) -> Self {
+    pub(super) fn of(units: &[SourceUnit], library: &[&TypeDecl]) -> Self {
+        let decls: Vec<&TypeDecl> = units
+            .iter()
+            .flat_map(SourceUnit::types)
+            .chain(library.iter().copied())
+            .collect();
         let mut by_simple_name: HashMap<String, Vec<String>> = HashMap::new();
-        for decl in units.iter().flat_map(SourceUnit::types) {
+        for decl in &decls {
             let names = by_simple_name
                 .entry(simple(&decl.name).to_owned())
                 .or_default();
@@ -32,7 +37,7 @@ impl Hierarchy {
             ..Self::default()
         };
         let mut parents: HashMap<&str, Vec<String>> = HashMap::new();
-        for decl in units.iter().flat_map(SourceUnit::types) {
+        for decl in &decls {
             let resolved: Vec<String> = decl
                 .supertypes
                 .iter()
@@ -65,14 +70,6 @@ impl Hierarchy {
             hierarchy.ancestors.insert((*name).to_owned(), seen);
         }
         hierarchy
-    }
-
-    /// Whether a call through `receiver` may reach a method declared by
-    /// `owner`.
-    pub(super) fn reaches(&self, receiver: &TypeRef, owner: &str) -> bool {
-        self.declared(receiver)
-            .into_iter()
-            .any(|declared| self.related(declared).any(|r| r == owner))
     }
 
     /// The project's types `reference` may denote.

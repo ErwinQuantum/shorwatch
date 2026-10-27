@@ -1,5 +1,8 @@
 use super::*;
-use crate::ir::{Arg, ArgValue, CodeRole, FactKind, Language, Location};
+use crate::ir::{
+    Arg, ArgValue, CallOwner, CallRef, CodeRole, FactKind, Language, Location, MethodSummary,
+    TypeDecl, TypeRef,
+};
 
 fn config(path: &str, entries: &[(&str, &str)]) -> SourceUnit {
     let mut unit = SourceUnit::new(path, Language::Yaml);
@@ -54,7 +57,7 @@ fn resolves_injected_values_from_config_units() {
         java_with_injected("jwt.algorithm", None),
         config("application.yml", &[("jwt.algorithm", "RS256")]),
     ];
-    link(&mut units);
+    link(&mut units, &Library::default());
     assert_eq!(texts(&units[0]), ["RS256"]);
 }
 
@@ -67,7 +70,7 @@ fn keys_bind_relaxed() {
             &[("jwt.signing-algorithm", "ES256")],
         ),
     ];
-    link(&mut units);
+    link(&mut units, &Library::default());
     assert_eq!(texts(&units[0]), ["ES256"]);
 }
 
@@ -78,7 +81,7 @@ fn every_profile_value_is_a_candidate() {
         config("application.yml", &[("jwt.algorithm", "HS256")]),
         config("application-prod.yml", &[("jwt.algorithm", "RS256")]),
     ];
-    link(&mut units);
+    link(&mut units, &Library::default());
     assert_eq!(texts(&units[0]), ["HS256", "RS256"]);
 }
 
@@ -94,7 +97,7 @@ fn list_keys_collect_their_elements() {
             ],
         ),
     ];
-    link(&mut units);
+    link(&mut units, &Library::default());
     assert_eq!(texts(&units[0]), ["ES256", "RS256"]);
 }
 
@@ -104,7 +107,7 @@ fn falls_back_to_the_default_when_unset() {
         java_with_injected("jwt.algorithm", Some("RS256")),
         config("application.yml", &[("server.port", "8080")]),
     ];
-    link(&mut units);
+    link(&mut units, &Library::default());
     assert_eq!(texts(&units[0]), ["RS256"]);
 }
 
@@ -129,7 +132,7 @@ fn test_config_only_reaches_test_code() {
         ),
         test_config(),
     ];
-    link(&mut units);
+    link(&mut units, &Library::default());
     assert_eq!(texts(&units[0]), ["HS256"]);
     assert_eq!(texts(&units[1]), ["HS256", "RS256"]);
 }
@@ -137,7 +140,7 @@ fn test_config_only_reaches_test_code() {
 #[test]
 fn unresolved_without_default_matches_nothing() {
     let mut units = vec![java_with_injected("jwt.algorithm", None)];
-    link(&mut units);
+    link(&mut units, &Library::default());
     assert!(texts(&units[0]).is_empty());
 }
 
@@ -197,7 +200,7 @@ fn helper_arg(units: &[SourceUnit]) -> &Arg {
 #[test]
 fn parameters_take_the_values_other_files_pass() {
     let mut units = helper_and_caller(CodeRole::Production);
-    link(&mut units);
+    link(&mut units, &Library::default());
     let arg = helper_arg(&units);
     assert_eq!(arg.match_texts(), ["SHA1withRSA"]);
     let ArgValue::OneOf(candidates) = &arg.value else {
@@ -220,6 +223,110 @@ fn parameters_take_the_values_other_files_pass() {
 #[test]
 fn production_code_takes_no_values_from_test_code() {
     let mut units = helper_and_caller(CodeRole::Test);
-    link(&mut units);
+    link(&mut units, &Library::default());
     assert_eq!(helper_arg(&units).value, ArgValue::Unknown);
+}
+
+/// `jsch.getSession(...).setConfig("kex", ...)`: the session's type is only
+/// known from the library's compiled declarations.
+fn session_call() -> SourceUnit {
+    let mut unit = SourceUnit::new("Tunnel.kt", Language::Kotlin);
+    unit.push(
+        FactKind::Call {
+            receiver: None,
+            method: "setConfig".into(),
+            args: vec![Arg::str("kex", Location::line(4, 9, 14))],
+            receiver_origin: None,
+            receiver_call: Some(CallRef {
+                owner: CallOwner::Type(TypeRef::qualified("com.jcraft.jsch.JSch")),
+                method: "getSession".into(),
+                arity: 3,
+            }),
+        },
+        SourceUnit::ROOT,
+        Location::line(4, 1, 20),
+    );
+    unit
+}
+
+fn library_method(owner: &str, name: &str, arity: usize, returns: &str) -> MethodSummary {
+    MethodSummary {
+        owner: owner.into(),
+        name: name.into(),
+        arity,
+        return_type: Some(TypeRef::qualified(returns)),
+        returns: vec![],
+    }
+}
+
+fn receiver(unit: &SourceUnit) -> Option<&str> {
+    match &unit.facts()[0].kind {
+        FactKind::Call { receiver, .. } => receiver.as_ref()?.qualified.as_deref(),
+        _ => unreachable!(),
+    }
+}
+
+#[test]
+fn library_return_types_type_chained_receivers() {
+    let mut units = vec![session_call()];
+    link(&mut units, &Library::default());
+    assert_eq!(receiver(&units[0]), None);
+
+    // Declared by a superclass of JSch, as libraries often do.
+    let library = Library {
+        types: vec![
+            TypeDecl {
+                name: "com.jcraft.jsch.JSch".into(),
+                supertypes: vec![TypeRef::qualified("com.jcraft.jsch.SessionFactory")],
+            },
+            TypeDecl {
+                name: "com.jcraft.jsch.SessionFactory".into(),
+                supertypes: vec![],
+            },
+        ],
+        methods: vec![
+            library_method(
+                "com.jcraft.jsch.SessionFactory",
+                "getSession",
+                3,
+                "com.jcraft.jsch.Session",
+            ),
+            library_method("com.other.Pool", "getSession", 3, "com.other.PooledSession"),
+        ],
+    };
+    let mut units = vec![session_call()];
+    link(&mut units, &library);
+    assert_eq!(receiver(&units[0]), Some("com.jcraft.jsch.Session"));
+}
+
+#[test]
+fn only_the_library_types_a_project_reaches_are_kept() {
+    let units = vec![session_call()];
+    let mut library = Library::default();
+    for i in 0..1000 {
+        library.types.push(TypeDecl {
+            name: format!("com.big.Type{i}"),
+            supertypes: vec![],
+        });
+        library.methods.push(library_method(
+            &format!("com.big.Type{i}"),
+            "get",
+            0,
+            "com.big.Type0",
+        ));
+    }
+    library.types.push(TypeDecl {
+        name: "com.jcraft.jsch.JSch".into(),
+        supertypes: vec![],
+    });
+    library.methods.push(library_method(
+        "com.jcraft.jsch.JSch",
+        "getSession",
+        3,
+        "com.jcraft.jsch.Session",
+    ));
+    let relevant = library::relevant(&library, &units);
+    let types: Vec<_> = relevant.types.iter().map(|t| t.name.as_str()).collect();
+    assert_eq!(types, ["com.jcraft.jsch.JSch"]);
+    assert_eq!(relevant.methods.len(), 1);
 }

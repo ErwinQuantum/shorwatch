@@ -29,12 +29,14 @@ all units of the project → `analyze` each unit → report.
 Module map (one responsibility per file, tests in sibling `tests.rs`):
 
 ```
-core/src/  ir/{language, location, unit, types, facts}  rule/{mod: model, error, compile}
+core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: model, error, compile}
            engine/{mod: analyze + findings, matching, hybrid, fix}
-           link/{mod, hierarchy, receivers, flow, config}  finding.rs
+           link/{mod, library, hierarchy, receivers, flow, config}  finding.rs
 rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules)  error.rs  build.rs
 langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
+           bytecode/{mod: class -> Library, classfile: JVMS parser}
+cli/src/   args, discover, layout, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
 ```
 
 ### Invariants (do not break)
@@ -68,16 +70,24 @@ langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, synta
   publish `MethodSummary`s (returns + declared return type), `TypeDecl`s
   (supertypes) and `ConstantDecl`s. `link` builds the type `hierarchy`, types
   chained receivers (`receivers`: `X.provider().m()` from `provider()`'s
-  return type; chains up to 8 calls, typed from the innermost out), then `flow` matches calls/constructions by name +
+  return type, declared by the receiver's type or inherited; chains up to 8
+  calls, typed from the innermost out; also variables with no written type,
+  `Symbol::call`), then `flow` matches calls/constructions by name +
   arity + any *related* type (the type, its supertypes and subtypes: calls
   through interfaces reach every implementation), up to 3 hops, and tags
   each `FlowStep` with its file. Calls are indexed by declared receiver type
   and parameters memoized: never scan every call per parameter (Kafka went
   from 5 s to 30 s once). Overloads stay unknown (unique per declaring
-  type). Production code takes no values from test code. A receiver's *origin* (`Call.receiver_origin`)
-  still comes only from the variable's own initializer; `origin` patterns
-  let unknown origins match (no lost detections). Don't hack around missing
-  flow in rules.
+  type). Production code takes no values from test code.
+- **Compiled dependencies** (`--classpath`, `langs/src/bytecode/`): class
+  files give a `Library` of `TypeDecl`s and `MethodSummary`s with return
+  types (signatures only, never bodies: values never come from a library).
+  `link::library::relevant` keeps only what the project's call chains reach
+  (a 1 GB `~/.m2` has 400k types; a project reaches a few thousand): never
+  feed the whole library to `hierarchy` or `receivers`.
+- A receiver's *origin* (`Call.receiver_origin`) still comes only from the
+  variable's own initializer; `origin` patterns let unknown origins match
+  (no lost detections). Don't hack around missing flow in rules.
 
 ### Frontends
 

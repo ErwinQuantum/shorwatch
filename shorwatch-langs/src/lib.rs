@@ -2,11 +2,13 @@
 //!
 //! Language frontends: each one parses source text with tree-sitter and lowers
 //! it into a [`shorwatch_core::SourceUnit`]. Nothing tree-sitter-specific
-//! crosses this crate's public API.
+//! crosses this crate's public API. [`bytecode`] reads the declarations of
+//! compiled dependencies.
 
 use shorwatch_core::{Language, SourceUnit};
 use thiserror::Error;
 
+pub mod bytecode;
 pub mod config;
 pub mod java;
 mod jvm;
@@ -23,6 +25,8 @@ pub enum LangError {
     Grammar(Language, String),
     #[error("parser gave up on `{0}`")]
     Parse(String),
+    #[error("malformed class file: {0}")]
+    Class(String),
 }
 
 /// Lowers source text of one language into the core's intermediate model.

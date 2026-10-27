@@ -89,6 +89,7 @@ enum LambdaContext {
     Parameter {
         ty: Option<String>,
         origin: Option<Vec<PendingArg>>,
+        call: Option<Receiver>,
     },
 }
 
@@ -282,8 +283,12 @@ impl<'s> Lowering<'s> {
             return;
         };
         let value = self.initializer(node, variable);
-        let ty = declared_type(variable, self.src)
-            .or_else(|| value.and_then(|v| self.infer_type(v, scope)));
+        let declared = declared_type(variable, self.src);
+        let call = match (&declared, value) {
+            (None, Some(v)) => self.chained(v, 0),
+            _ => None,
+        };
+        let ty = declared.or_else(|| value.and_then(|v| self.infer_type(v, scope)));
         let constant = self.injected(node).or_else(|| {
             has_child(node, "val")
                 .then(|| value.and_then(|v| self.literal(v)))
@@ -305,6 +310,7 @@ impl<'s> Lowering<'s> {
                 ty,
                 constant,
                 origin,
+                call,
             },
         );
     }
@@ -338,7 +344,7 @@ impl<'s> Lowering<'s> {
         let symbol = Symbol {
             ty: declared_type(node, self.src),
             constant: injected,
-            origin: None,
+            ..Symbol::default()
         };
         self.file.symbols.insert((scope, name.to_owned()), symbol);
     }
@@ -453,10 +459,14 @@ impl<'s> Lowering<'s> {
         match object.kind() {
             "identifier" => Some(Receiver::Name(self.text(object).to_owned())),
             _ if is_name_path(object) => Some(Receiver::Path(name_path(object, self.src))),
-            _ => self.infer_type(object, scope).map(|ty| Receiver::Type {
-                ty,
-                origin: self.origin(object, scope),
-            }),
+            _ => self
+                .infer_type(object, scope)
+                .map(|ty| Receiver::Type {
+                    ty,
+                    origin: self.origin(object, scope),
+                })
+                // `jsch.getSession(...).apply { }`: typed by `link`.
+                .or_else(|| self.chained(object, 0)),
         }
     }
 
@@ -492,7 +502,7 @@ impl<'s> Lowering<'s> {
             Some(LambdaContext::Receiver(receiver)) => {
                 self.implicit.insert(id, receiver);
             }
-            Some(LambdaContext::Parameter { ty, origin }) => {
+            Some(LambdaContext::Parameter { ty, origin, call }) => {
                 let name = child_of_kind(node, "lambda_parameters")
                     .and_then(|p| child_of_kind(p, "variable_declaration"))
                     .and_then(|v| child_of_kind(v, "identifier"))
@@ -503,6 +513,7 @@ impl<'s> Lowering<'s> {
                         ty,
                         constant: None,
                         origin,
+                        call,
                     },
                 );
             }
@@ -588,6 +599,7 @@ impl<'s> Lowering<'s> {
                     let context = LambdaContext::Parameter {
                         ty: self.infer_type(object, scope),
                         origin: self.origin(object, scope),
+                        call: self.chained(object, 0),
                     };
                     self.scope_function(node, context);
                     return;

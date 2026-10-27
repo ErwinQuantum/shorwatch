@@ -1,5 +1,6 @@
 //! Command-line interface definition.
 
+use std::ffi::OsString;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
@@ -62,6 +63,14 @@ pub struct ScanArgs {
     /// Without it, findings in test code are reported and labelled.
     #[arg(long)]
     pub exclude_tests: bool,
+
+    /// Compiled dependencies to read types from: directories (class files,
+    /// jars, jmods), jars or jmods, separated like CLASSPATH (`:`, or `;` on
+    /// Windows), or `@file` listing them. Lets data flow follow calls into
+    /// libraries, e.g. `jsch.getSession(...)` returning a `Session`.
+    /// Signatures only: no code from the classpath is run or analyzed.
+    #[arg(long, value_name = "PATHS")]
+    pub classpath: Vec<OsString>,
 
     /// One line per finding (text format only).
     #[arg(long)]
