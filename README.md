@@ -88,6 +88,8 @@ advice and links to the relevant NIST documents.
 cargo install --path shorwatch-cli          # until the first release is published
 
 shorwatch scan .                             # counts, and a link to the HTML report
+shorwatch scan . --open                      # ...opened in the browser when the scan ends
+shorwatch open                               # open the last report again, without scanning
 shorwatch scan services/                     # a folder of services: one group per project
 shorwatch scan . --overview                  # the files with findings, the most urgent explained
 shorwatch scan . --details                   # every finding, explained
@@ -114,6 +116,7 @@ apart by content.
 | `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
 | `--html FILE` | Also write the HTML report there, whatever the format |
 | `--no-html` | Do not write the HTML report to a temporary folder (see below) |
+| `--open` | Open the HTML report in the browser when the scan ends |
 | `--report-url URL` | The link shown for the HTML report, e.g. where CI publishes it (also `SHORWATCH_REPORT_URL`) |
 | `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`; `never` only reports) |
 | `--fail-severity info\|low\|medium\|high\|critical` | Only findings at or above this severity fail the scan; the rest are still reported |
@@ -157,7 +160,9 @@ Boot service. The terminal only counts, as test runners do, and links the
 HTML report, where findings are browsed (on an interactive terminal, the
 report is written to the system's temporary folder and overwritten by the
 next scan of the same project; `--html FILE` puts it elsewhere, `--no-html`
-skips it):
+skips it). Some terminals, VS Code's among them, open a `file://` link as
+text in the editor: `--open`, or `shorwatch open` afterwards, opens the
+report in the default browser instead.
 
 ```text
  Summary  17 findings in 9 files (9 scanned)
@@ -166,6 +171,7 @@ skips it):
 
  Report   file:///tmp/shorwatch/spring-service.html
 
+ → shorwatch open  open it in your browser
  → --details  every finding, here
 
  ✖ 16 findings fail the scan (exit code 1) · see --fail-on, --fail-severity

@@ -25,10 +25,17 @@ pub fn banner(version: &str) -> Result<()> {
     Ok(())
 }
 
+/// The HTML report of a scan: the local file, if any, and the link to show
+/// for it: `--report-url`, or the file as a `file://` URL.
+pub struct HtmlReport {
+    pub path: Option<PathBuf>,
+    pub link: Option<String>,
+}
+
 /// Writes the HTML report where it was asked for (or, for someone reading
-/// the text report on a terminal, to a temporary folder) and returns the
-/// link to show for it: `--report-url`, or the file as a `file://` URL.
-pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<Option<String>> {
+/// the text report on a terminal or asking to `--open` it, to a temporary
+/// folder). With `--format html` the report itself is written by [`write`].
+pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<HtmlReport> {
     let path = if let Some(path) = &args.html {
         Some(path.clone())
     } else if args.format == Format::Html {
@@ -44,23 +51,24 @@ pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<Option<String>> {
         fs::write(path, html::render(scan))
             .with_context(|| format!("writing `{}`", path.display()))?;
     }
-    Ok(args
+    let link = args
         .report_url
         .clone()
-        .or_else(|| path.map(|path| file_url(&path))))
+        .or_else(|| path.as_deref().map(file_url));
+    Ok(HtmlReport { path, link })
 }
 
 fn wants_temporary_html(scan: &Scan, args: &ScanArgs) -> bool {
-    args.format == Format::Text
+    let reading = args.format == Format::Text
         && args.output.is_none()
-        && !args.no_html
         && !scan.findings.is_empty()
-        && std::io::stdout().is_terminal()
+        && std::io::stdout().is_terminal();
+    !args.no_html && (args.open || reading)
 }
 
 /// One file per scanned folder, overwritten by the next scan of it.
 fn temporary_html(scan: &Scan, args: &ScanArgs) -> Result<PathBuf> {
-    let folder = std::env::temp_dir().join("shorwatch");
+    let folder = crate::browser::folder();
     fs::create_dir_all(&folder).with_context(|| format!("creating `{}`", folder.display()))?;
     let name = match scan.projects.as_slice() {
         [project] => project.name.clone(),
@@ -106,7 +114,7 @@ fn file_url(path: &Path) -> String {
     url
 }
 
-pub fn write(scan: &Scan, args: &ScanArgs, report_link: Option<&str>) -> Result<()> {
+pub fn write(scan: &Scan, args: &ScanArgs, html: &HtmlReport) -> Result<()> {
     let report = match args.format {
         Format::Text => terminal::render(
             scan,
@@ -120,7 +128,8 @@ pub fn write(scan: &Scan, args: &ScanArgs, report_link: Option<&str>) -> Result<
                 } else {
                     terminal::View::Summary
                 },
-                report: report_link.map(str::to_owned),
+                report: html.link.clone(),
+                opened: args.open,
             },
         ),
         Format::Sarif => sarif::render(scan),

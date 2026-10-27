@@ -30,6 +30,8 @@ pub struct Options {
     /// Where the HTML report of this scan can be opened (a `file://` URL or
     /// wherever CI publishes it), shown below the summary.
     pub report: Option<String>,
+    /// The report was opened in the browser already.
+    pub opened: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -73,34 +75,30 @@ fn next(scan: &Scan, options: &Options) -> String {
         return out;
     }
     let arrow = paint("→", accent());
+    let terminal = matches!(options.view, View::Summary | View::Overview);
+    let mut hints = Vec::new();
     if let Some(report) = &options.report {
         let _ = writeln!(
             out,
-            "
-{} {}",
+            "\n{} {}",
             paint(" Report  ", accent()),
             paint(report, bold())
         );
-    } else if matches!(options.view, View::Summary | View::Overview) {
-        let _ = writeln!(
-            out,
-            "
- {arrow} {}  a report to browse",
-            paint("--html shorwatch.html", bold())
-        );
+        // Terminals may open a `file://` link in an editor, not a browser.
+        if report.starts_with("file://") && !options.opened {
+            hints.push(("shorwatch open", "open it in your browser"));
+        }
+    } else if terminal {
+        hints.push(("--html shorwatch.html", "a report to browse"));
     }
-    if matches!(options.view, View::Summary | View::Overview) {
-        let gap = if options.report.is_some() {
-            "
-"
-        } else {
-            ""
-        };
-        let _ = writeln!(
-            out,
-            "{gap} {arrow} {}  every finding, here",
-            paint("--details", bold())
-        );
+    if terminal {
+        hints.push(("--details", "every finding, here"));
+    }
+    if !hints.is_empty() {
+        out.push('\n');
+    }
+    for (command, what) in hints {
+        let _ = writeln!(out, " {arrow} {}  {what}", paint(command, bold()));
     }
     out
 }
@@ -109,9 +107,7 @@ fn next(scan: &Scan, options: &Options) -> String {
 /// to the HTML report when the summary above did not show it.
 pub fn verdict(failing: usize, report: Option<&str>) -> String {
     let mut out = format!(
-        "
- {} {} {}
-",
+        "\n {} {} {}\n",
         paint("✖", rgb_red()),
         paint(
             format!(

@@ -10,4 +10,5 @@ expression: "plain(&render(&scan(), &options))"
 
  Report   file:///tmp/shorwatch/payments.html
 
+ → shorwatch open  open it in your browser
  → --details  every finding, here

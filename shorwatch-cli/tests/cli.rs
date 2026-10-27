@@ -349,3 +349,10 @@ fn classpath_entries_that_cannot_be_read_only_warn() {
     assert!(stderr.contains("missing.jar"), "{stderr}");
     assert!(stderr.contains("classpath: 0 types"), "{stderr}");
 }
+
+#[test]
+fn open_needs_a_report_that_exists() {
+    let output = shorwatch(&["open", "definitely/not/here.html"]);
+    assert_eq!(output.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("does not exist"));
+}

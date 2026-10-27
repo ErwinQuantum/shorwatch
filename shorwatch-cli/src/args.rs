@@ -23,8 +23,16 @@ pub enum Command {
     /// Scan files or directories (respects .gitignore).
     #[command(after_help = EXIT_CODES)]
     Scan(ScanArgs),
+    /// Open the last HTML report in the browser, without scanning again.
+    Open(OpenArgs),
     /// List the rules that would be applied.
     Rules(RulesArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct OpenArgs {
+    /// The report to open instead of the last one written.
+    pub report: Option<PathBuf>,
 }
 
 const EXIT_CODES: &str = "\
@@ -72,6 +80,11 @@ pub struct ScanArgs {
     /// Do not write the HTML report to a temporary folder.
     #[arg(long, conflicts_with = "html")]
     pub no_html: bool,
+
+    /// Open the HTML report in the browser when the scan ends (written to
+    /// a temporary folder unless --html or --format html says where).
+    #[arg(long, conflicts_with = "no_html")]
+    pub open: bool,
 
     /// The link shown for the HTML report instead of its local path: where CI
     /// publishes it (an artifact, a Pages site...).

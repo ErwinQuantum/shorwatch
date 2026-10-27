@@ -2,6 +2,7 @@
 //! configuration.
 
 mod args;
+mod browser;
 mod classpath;
 mod discover;
 mod layout;
@@ -28,6 +29,9 @@ fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = match cli.command {
         Command::Scan(args) => scan(&args),
+        Command::Open(args) => {
+            browser::open_last(args.report.as_deref()).map(|()| ExitCode::SUCCESS)
+        }
         Command::Rules(args) => rules::load(&args.rules).map(|rules| {
             print!("{}", rules::listing(&rules));
             ExitCode::SUCCESS
@@ -65,7 +69,13 @@ fn scan(args: &ScanArgs) -> Result<ExitCode> {
     let projects = projects::detect(&args.paths, &paths, &cwd);
     let scan = pipeline::scan(&files, projects, &library, &rules, &options);
     let report = output::html_report(&scan, args)?;
-    output::write(&scan, args, report.as_deref())?;
+    output::write(&scan, args, &report)?;
+    if let Some(path) = &report.path {
+        browser::remember(path);
+        if args.open {
+            browser::open(path)?;
+        }
+    }
 
     let threshold = Severity::from(args.fail_severity);
     let failing = scan
@@ -81,6 +91,6 @@ fn scan(args: &ScanArgs) -> Result<ExitCode> {
     if failing == 0 {
         return Ok(ExitCode::SUCCESS);
     }
-    output::verdict(failing, args, report.as_deref())?;
+    output::verdict(failing, args, report.link.as_deref())?;
     Ok(ExitCode::from(1))
 }

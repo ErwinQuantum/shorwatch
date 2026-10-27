@@ -8,7 +8,10 @@ fn plain(text: &str) -> String {
 }
 
 fn view(view: View) -> Options {
-    Options { view, report: None }
+    Options {
+        view,
+        ..Options::default()
+    }
 }
 
 #[test]
@@ -80,9 +83,6 @@ fn report_is_coloured_before_stripping() {
 fn verdict_says_why_the_scan_fails() {
     assert_eq!(
         plain(&verdict(2, Some("https://ci.example/run/7"))),
-        "
- ✖ 2 findings fail the scan (exit code 1) · see --fail-on, --fail-severity
-   Report https://ci.example/run/7
-"
+        "\n ✖ 2 findings fail the scan (exit code 1) · see --fail-on, --fail-severity\n   Report https://ci.example/run/7\n"
     );
 }
