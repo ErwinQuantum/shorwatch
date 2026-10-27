@@ -21,11 +21,15 @@ a repository holds (certificates, keys, keystores). Everything in the repo
 | `shorwatch-core` | Pure domain: IR (`SourceUnit`, `Fact`, `Scope`), rule model + validation, engine (`analyze`), cross-file `link`, `Finding`. **No I/O.** | serde, regex, thiserror only |
 | `shorwatch-rules` | Built-in YAML rules (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` for external rules | core |
 | `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng), both on the shared `jvm` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written). Nothing tree-sitter leaks out | core |
-| `shorwatch-report` | Pure renderers over a `Scan`: terminal (banner, detailed/compact), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only) | core |
-| `shorwatch-cli` | `shorwatch scan` / `shorwatch rules`: clap args, `ignore` walker, `layout` (test vs production code by path), rayon pipeline, output, exit codes | all |
+| `shorwatch-report` | Pure renderers over a `Scan` (findings, sources, `projects`): terminal (banner; overview by default, `--details`, `--compact`), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only; an index + tab per project when there are several) | core |
+| `shorwatch-cli` | `shorwatch scan` / `shorwatch rules`: clap args, `ignore` walker, `layout` (test vs production code by path), `projects` (top-most build roots of a scanned folder), rayon pipeline (one `link` per project), output, exit codes | all |
 
-Pipeline (what the CLI does): lower every file with its frontend → `link`
-all units of the project → `analyze` each unit → report.
+Pipeline (what the CLI does): lower every file with its frontend → group
+units by project → `link` each project's units → `analyze` each unit →
+report. A scanned folder with no build file whose subfolders (2 levels) hold
+several build roots (`pom.xml`, Gradle, `.git`...) is several projects;
+several plain paths (`src/ config/`) stay one project so `@Value` still
+resolves across them.
 
 Module map (one responsibility per file, tests in sibling `tests.rs`):
 
@@ -38,7 +42,9 @@ langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, synta
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
-cli/src/   args, discover, layout, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
+cli/src/   args, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
+report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, wrap, banner}
+           html/{mod: payload, report.html/css/js}  sarif cbom json markdown summary
 ```
 
 ### Invariants (do not break)

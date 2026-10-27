@@ -15,6 +15,13 @@
       "high": 13
     }
   },
+  "projects": [
+    {
+      "name": "spring-service",
+      "root": "examples/spring-service",
+      "files_scanned": 9
+    }
+  ],
   "findings": [
     {
       "rule_id": "jvm.nimbus.jose-rsa",

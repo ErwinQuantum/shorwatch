@@ -2,7 +2,8 @@
 //! that opens offline (CI artifacts, e-mail) and loads nothing from the
 //! network. The page renders the scan client-side from embedded JSON: a
 //! summary, charts, filters, and every finding with its code, explanation
-//! and data-flow path.
+//! and data-flow path. A scan of several projects opens on an index of them,
+//! with a tab per project.
 //!
 //! All source text reaches the page as data and is inserted with
 //! `textContent`, never as markup.
@@ -10,7 +11,7 @@
 use serde::Serialize;
 use shorwatch_core::Finding;
 
-use crate::{Scan, Summary};
+use crate::{Project, Scan, Summary};
 
 const TEMPLATE: &str = include_str!("report.html");
 const STYLE: &str = include_str!("report.css");
@@ -23,6 +24,7 @@ pub fn render(scan: &Scan) -> String {
     let payload = Payload {
         tool_version: &scan.tool_version,
         summary: scan.summary(),
+        projects: &scan.projects,
         findings: scan.findings.iter().map(|f| entry(scan, f)).collect(),
     };
     let data = serde_json::to_string(&payload).expect("a scan always serializes");
@@ -47,6 +49,7 @@ fn entry<'a>(scan: &'a Scan, finding: &'a Finding) -> Entry<'a> {
         .collect();
     Entry {
         finding,
+        project: scan.project_of(&finding.path),
         snippet: Snippet {
             first_line: first,
             lines,
@@ -66,6 +69,7 @@ fn entry<'a>(scan: &'a Scan, finding: &'a Finding) -> Entry<'a> {
 struct Payload<'a> {
     tool_version: &'a str,
     summary: Summary,
+    projects: &'a [Project],
     findings: Vec<Entry<'a>>,
 }
 
@@ -73,6 +77,8 @@ struct Payload<'a> {
 struct Entry<'a> {
     #[serde(flatten)]
     finding: &'a Finding,
+    /// Index in `projects`.
+    project: Option<usize>,
     snippet: Snippet<'a>,
     /// The source line of each data-flow step, when known.
     flow_lines: Vec<Option<&'a str>>,

@@ -1,17 +1,21 @@
 //! The findings as JSON, for scripts and other tools. The shape mirrors the
 //! core [`Finding`](shorwatch_core::Finding) type, wrapped with the tool
-//! version and the summary.
+//! version, the summary and the projects.
 
 use serde::Serialize;
 use shorwatch_core::Finding;
 
-use crate::{Scan, Summary};
+use crate::{Project, Scan, Summary};
 
 #[derive(Serialize)]
 struct Report<'a> {
     tool: &'static str,
     version: &'a str,
     summary: Summary,
+    /// The projects scanned together; a finding belongs to the one with the
+    /// longest `root` its path is under.
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    projects: &'a [Project],
     findings: &'a [Finding],
 }
 
@@ -20,6 +24,7 @@ pub fn render(scan: &Scan) -> String {
         tool: "shorwatch",
         version: &scan.tool_version,
         summary: scan.summary(),
+        projects: &scan.projects,
         findings: &scan.findings,
     };
     // Plain data with string keys: serialization cannot fail.

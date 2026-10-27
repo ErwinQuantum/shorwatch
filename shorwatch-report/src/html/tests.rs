@@ -58,3 +58,24 @@ fn source_text_cannot_close_the_data_script() {
         "    x = \"</script><img src=x onerror=alert(1)>\";"
     );
 }
+
+#[test]
+fn findings_know_their_project() {
+    let mut scan = scan();
+    scan.projects = vec![
+        crate::Project {
+            name: "auth".into(),
+            root: "src/main".into(),
+            files_scanned: 9,
+        },
+        crate::Project {
+            name: "auth-tests".into(),
+            root: "src/test".into(),
+            files_scanned: 3,
+        },
+    ];
+    let data = data(&render(&scan));
+    assert_eq!(data["projects"][1]["name"], "auth-tests");
+    assert_eq!(data["findings"][0]["project"], 0);
+    assert_eq!(data["findings"][4]["project"], 1);
+}

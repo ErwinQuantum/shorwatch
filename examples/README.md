@@ -15,6 +15,7 @@ From the repository root:
 
 ```sh
 cargo run --release -- scan examples/spring-service
+cargo run --release -- scan examples/spring-service --details
 cargo run --release -- scan examples/algorithms --compact
 cargo run --release -- scan examples/spring-service --format sarif --output report.sarif
 ```
@@ -50,4 +51,5 @@ for f in sarif cbom json markdown html; do
   cargo run -q -- scan examples/spring-service --format $f --output examples/output/report.$ext
 done
 cargo run -q -- scan examples/spring-service --output examples/output/report.txt
+cargo run -q -- scan examples/spring-service --details --output examples/output/report-details.txt
 ```

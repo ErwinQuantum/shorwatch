@@ -88,6 +88,8 @@ advice and links to the relevant NIST documents.
 cargo install --path shorwatch-cli          # until the first release is published
 
 shorwatch scan .                             # scan the current project
+shorwatch scan services/                     # a folder of services: one group per project
+shorwatch scan . --details                   # every finding, explained
 shorwatch scan src/ config/ --compact        # several paths, one line per finding
 shorwatch scan . --format sarif -o shorwatch.sarif
 shorwatch scan . --format cbom -o crypto.cdx.json # CycloneDX CBOM inventory
@@ -112,6 +114,7 @@ apart by content.
 | `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
 | `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`) |
 | `--exclude-tests` | Skip test code (Maven/Gradle test source sets such as `src/test` or `src/jvmTest`, test directories, `*Test`/`*IT` classes). Without it, findings in test code are reported and labelled as such |
+| `--details` | Explain every finding (the default view lists files and explains the three most urgent) |
 | `--compact` | One line per finding |
 | `--rules DIR` | Extra rules directory (repeatable) |
 | `--classpath PATHS` | Compiled dependencies to read types from (see below) |
@@ -144,55 +147,58 @@ a 1 GB Maven repository).
 ### Example output
 
 Scanning [`examples/spring-service`](examples/spring-service/), a small Spring
-Boot service:
+Boot service. The default view is an overview, as test runners show it: the
+files with findings, production code first, one line each; the three most
+urgent findings explained; the summary; and where to look next.
 
 ```text
- HIGH  RSA · jvm.jca.rsa · vulnerable
-  ──▶ examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java:32:42
-   │
-32 │             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-   │                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   │ RSA is broken by Shor's algorithm
-   = help: Plan a protocol migration, not a drop-in swap. For key establishment and
-           encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS
-           204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or
-           RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding
-           post-quantum protection.
-   = ref: https://csrc.nist.gov/pubs/fips/203/final
+ Files with findings
+   ▲ src/main/java/…/payments/partners/StatementSigner.java        3  ECDSA, RSA, SHA-1
+   ▲ src/main/kotlin/…/example/payments/partners/PartnerKeys.kt    3  ECC ×2, ECDSA (JOSE/JWT)
+   ▲ src/main/java/…/auth/AuthorizationServerConfig.java           2  RSA, RSA (JOSE/JWT)
+   ▲ src/main/resources/application.yml                            2  RSA (JOSE/JWT), TLS key exchange
+   ▲ src/main/java/com/example/payments/auth/TokenSigner.java      1  ECDSA (JOSE/JWT)
+   ▲ src/main/resources/application-prod.yml                       1  ECDSA (JOSE/JWT)
+   ▲ src/main/resources/certs/partner-signing.pem                  1  RSA
+   ● src/main/java/…/example/payments/crypto/LegacyCrypto.java     3  3DES, AES-128, SHA-1
+   ◐ src/main/java/…/payments/tls/HybridKeyExchange.java           1  ECDH
 
- HIGH  ECDH · jvm.jca.ecdh · in transition
-  ──▶ examples/spring-service/src/main/java/com/example/payments/tls/HybridKeyExchange.java:9:16
-   │
- 9 │         return KeyAgreement.getInstance("X25519");
-   │                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   │ Elliptic-curve Diffie-Hellman (including X25519/X448) is broken by Shor's algorithm
-   = in transition: post-quantum code at line 13 (ML-KEM)
-   ...
+ Most urgent  3 of 17
 
- HIGH  ECC · jvm.jca.ec · vulnerable
-  ──▶ examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:19:9
+ HIGH  RSA (JOSE/JWT) · jvm.nimbus.jose-rsa · vulnerable
+  ──▶ examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java:23:25
    │
-19 │         KeyPairGenerator.getInstance("EC").apply {
-   │         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   │ Elliptic-curve keys are broken by Shor's algorithm
-   ...
-
- HIGH  RSA · keys.material.rsa · vulnerable
-  ──▶ examples/spring-service/src/main/resources/certs/partner-signing.pem:1:1
-   │
- 1 │ -----BEGIN CERTIFICATE-----
-   │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   │ RSA is broken by Shor's algorithm
-   = found: certificate "CN=statements.partner.example, O=Example Partner": RSA 3072-bit, signed with SHA256withRSA, valid until 2031-10-26
+23 │         RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
+   │                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ RSA-based JWT/JOSE algorithm is broken by Shor's algorithm
+   = why: A JWT or JOSE object is signed (RS256/384/512, PS256/384/512) or encrypted
    ...
 
  Summary  17 findings in 9 files (9 scanned)
           16 vulnerable · 1 in transition · 1 auto-fixable
           13 high · 3 medium · 1 low
+
+ → --details  every finding, explained
+ → --format html -o shorwatch.html  a report to browse
+```
+
+`--details` explains every finding (where, why it matters, what to do);
+`--compact` gives one line per finding. Scanning a folder of services or
+repositories groups the overview by project:
+
+```text
+ ▲ apereo_cas                                   500 findings · 79 in production · 449 high · 42 medium · 9 low
+   ▲ support/…/jwks/OidcJwksRegistrationEndpointController.java    6  ECDSA (JOSE/JWT) ×2, EdDSA (JOSE/JWT) ×…
+   ▲ support/…/authentication/TokenAuthenticationSecurity.java     6  RSA (JOSE/JWT) ×4, ECDH (JOSE/JWE), ECD…
+   …
+ ▲ signalapp_Signal-Server                      8 findings · 6 in production · 7 high · 1 medium
+   ▲ service/src/main/…/gcp/CanonicalRequestSigner.java         3  RSA ×3
+   ▲ service/src/main/…/push/apns-certificates.pem              1  RSA
+   …
 ```
 
 Every format for that scan is in [`examples/output/`](examples/output/):
-[text](examples/output/report.txt), [SARIF](examples/output/report.sarif),
+[text](examples/output/report.txt) (also [with --details](examples/output/report-details.txt)), [SARIF](examples/output/report.sarif),
 [CBOM](examples/output/report.cdx.json), [JSON](examples/output/report.json),
 [Markdown](examples/output/report.md), [HTML](examples/output/report.html).
 
@@ -204,9 +210,17 @@ the post-quantum readiness of the project, findings by severity and
 algorithm, filters, and every finding with its code, an explanation, the
 migration advice and, when the algorithm was written elsewhere, the path the
 value takes to the crypto call. Styles, script and data are embedded; the
-page loads nothing from the network.
+page loads nothing from the network. Light and dark themes, print styles.
 
 ![Shorwatch HTML report](docs/images/html-report.png)
+
+A scan of several projects (a folder of microservices, of repositories, or
+several project paths) opens on an index: totals, then one card per project
+with its findings, severities and algorithms, and a tab per project. A
+project's tab is a report of its own, and its link (`#project=billing`) can
+be shared. A single project opens directly, without tabs.
+
+![Shorwatch HTML report of several projects](docs/images/html-projects.png)
 
 ### Cryptography Bill of Materials (CBOM)
 
