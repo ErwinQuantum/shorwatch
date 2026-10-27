@@ -388,7 +388,11 @@ expression: render(&scan())
             ]
           }
         }
-      ]
+      ],
+      "properties": {
+        "ignoredInCode": 0,
+        "inBaseline": 0
+      }
     }
   ]
 }

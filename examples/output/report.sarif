@@ -1151,7 +1151,11 @@
             "role": "production"
           }
         }
-      ]
+      ],
+      "properties": {
+        "ignoredInCode": 0,
+        "inBaseline": 0
+      }
     }
   ]
 }

@@ -172,10 +172,11 @@ every rule on that line; the reason after `--` travels into the reports. To
 skip whole files (test certificates, vendored code), list them in a
 `.shorwatchignore` file, in `.gitignore` syntax.
 
-Every report counts what was left out and why. In SARIF the suppressed
-findings are still results, marked with `suppressions` (`inSource` with the
-reason, or `external` for the baseline), as the SARIF standard describes;
-the CBOM, an inventory, still lists their algorithms.
+Every report counts what was left out and why; the JSON report lists those
+findings with their reason. SARIF leaves them out (GitHub code scanning has
+been seen to open alerts for results marked as suppressed) and counts them
+in the run's properties. The CBOM, an inventory, still lists their
+algorithms.
 
 ### Compiled dependencies (`--classpath`)
 
