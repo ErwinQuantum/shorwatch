@@ -27,7 +27,7 @@ fn path(folder: &str) -> String {
 
 #[test]
 fn vulnerable_project_exits_with_1_and_reports_locations() {
-    let output = shorwatch(&["scan", &path("spring-app")]);
+    let output = shorwatch(&["scan", &path("spring-app"), "--details"]);
     assert_eq!(output.status.code(), Some(1));
     let text = stdout(&output);
     assert!(text.contains("jvm.jca.rsa"), "{text}");
@@ -39,6 +39,20 @@ fn vulnerable_project_exits_with_1_and_reports_locations() {
     assert!(text.contains("WebhookSigner.kt:19:9"), "{text}");
     assert!(text.contains("14 findings in 10 files"), "{text}");
     assert!(!text.contains('\x1b'), "piped output must not be coloured");
+}
+
+#[test]
+fn the_default_view_lists_files_and_details_lists_findings() {
+    let overview = stdout(&shorwatch(&["scan", &path("spring-app")]));
+    assert!(overview.contains("Files with findings"), "{overview}");
+    assert!(overview.contains("Most urgent"), "{overview}");
+    assert!(overview.contains("--details"), "{overview}");
+    let blocks = |text: &str| text.matches("──▶").count();
+    assert_eq!(blocks(&overview), 3);
+
+    let details = stdout(&shorwatch(&["scan", &path("spring-app"), "--details"]));
+    assert_eq!(blocks(&details), 14);
+    assert!(!details.contains("Most urgent"));
 }
 
 #[test]

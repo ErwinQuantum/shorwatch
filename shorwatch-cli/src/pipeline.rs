@@ -1,13 +1,13 @@
 //! The scan itself: read and lower every file in parallel, link the units of
-//! the project together (and with the classpath's declarations), analyze each
-//! unit in parallel.
+//! each project together (and with the classpath's declarations), analyze
+//! each unit in parallel.
 
 use std::fs;
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
 use shorwatch_core::{CodeRole, Finding, Library, RuleSet, Severity, SourceUnit, analyze, link};
-use shorwatch_report::Scan;
+use shorwatch_report::{Project, Scan, project_of};
 
 use crate::discover::display_path;
 
@@ -18,6 +18,7 @@ pub struct Options {
 
 pub fn scan(
     files: &[(PathBuf, CodeRole)],
+    projects: Vec<Project>,
     library: &Library,
     rules: &RuleSet,
     options: &Options,
@@ -32,8 +33,17 @@ pub fn scan(
         })
         .collect();
     // par_iter + collect keeps the input order, so linking is deterministic.
+    // Each project is linked on its own: unrelated services share no data
+    // flow, and linking them together only costs time.
+    let project = |unit: &SourceUnit| project_of(&projects, unit.path());
+    lowered.sort_by_key(|(unit, _)| project(unit));
     let (mut units, sources): (Vec<_>, Vec<_>) = lowered.drain(..).unzip();
-    link(&mut units, library);
+    let groups: Vec<&mut [SourceUnit]> = units
+        .chunk_by_mut(|a, b| project(a) == project(b))
+        .collect();
+    groups
+        .into_par_iter()
+        .for_each(|group| link(group, library));
 
     let mut findings: Vec<Finding> = units
         .par_iter()
@@ -61,6 +71,7 @@ pub fn scan(
         findings,
         sources,
         files_scanned: units.len(),
+        projects,
     }
 }
 

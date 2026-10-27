@@ -54,6 +54,18 @@ pub(crate) fn severity_badge(severity: Severity, width: usize) -> String {
         .to_string()
 }
 
+/// A file's mark in the overview: its worst severity, or `◐` when all its
+/// findings are already in transition.
+pub(crate) fn severity_mark(severity: Severity, in_transition: bool) -> String {
+    let (mark, color) = match (in_transition, severity) {
+        (true, _) => ("◐", (45, 212, 191)),
+        (false, Severity::Critical | Severity::High) => ("▲", (248, 113, 113)),
+        (false, Severity::Medium) => ("●", (251, 191, 36)),
+        (false, Severity::Low | Severity::Info) => ("○", ACCENT),
+    };
+    paint(mark, rgb(color))
+}
+
 /// The status label, padded to `width` for columns.
 pub(crate) fn status(status: Status, width: usize) -> String {
     let (label, color) = match status {

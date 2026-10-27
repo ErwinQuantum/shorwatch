@@ -29,7 +29,13 @@ pub fn write(scan: &Scan, args: &ScanArgs) -> Result<()> {
         Format::Text => terminal::render(
             scan,
             terminal::Options {
-                compact: args.compact,
+                view: if args.compact {
+                    terminal::View::Compact
+                } else if args.details {
+                    terminal::View::Details
+                } else {
+                    terminal::View::Overview
+                },
             },
         ),
         Format::Sarif => sarif::render(scan),

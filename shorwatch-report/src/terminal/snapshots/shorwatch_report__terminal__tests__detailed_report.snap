@@ -1,6 +1,6 @@
 ---
 source: shorwatch-report/src/terminal/tests.rs
-expression: "plain(&render(&scan(), Options::default()))"
+expression: "plain(&render(&scan(), view(View::Details)))"
 ---
  HIGH  RSA · jvm.jca.rsa · vulnerable
   ──▶ src/main/java/com/acme/auth/AuthConfig.java:5:25
@@ -8,6 +8,7 @@ expression: "plain(&render(&scan(), Options::default()))"
  5 │         var generator = KeyPairGenerator.getInstance("RSA");
    │                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    │ RSA is broken by Shor's algorithm
+   = why: RSA usage detected.
    = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and
            ML-DSA (FIPS 204) for signatures; hybrid schemes keep classical security
            during the transition.
@@ -19,6 +20,7 @@ expression: "plain(&render(&scan(), Options::default()))"
 11 │     generator.init(128);
    │     ^^^^^^^^^^^^^^^^^^^
    │ AES-128 keeps only about 64 bits of security against Grover's algorithm
+   = why: A 128-bit AES key detected.
    = fix: Use a 256-bit AES key → `256` at 11:17
    = help: Use 256-bit keys (AES-256).
    = ref: https://csrc.nist.gov/pubs/fips/197/final
@@ -29,6 +31,7 @@ expression: "plain(&render(&scan(), Options::default()))"
  3 │         return new Signature[] { Signature.getInstance("SHA256withECDSA"), Signature.getInstance("ML-DSA-65") };
    │                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    │ ECDSA is broken by Shor's algorithm
+   = why: ECDSA usage detected.
    = in transition: post-quantum code at line 3 (ML-DSA-65)
    = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and
            ML-DSA (FIPS 204) for signatures; hybrid schemes keep classical security
@@ -41,6 +44,7 @@ expression: "plain(&render(&scan(), Options::default()))"
  4 │       jws-algorithms: [RS256]
    │                        ^^^^^
    │ RSA (JOSE/JWT) is broken by Shor's algorithm
+   = why: RSA (JOSE/JWT) usage detected.
    = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and
            ML-DSA (FIPS 204) for signatures; hybrid schemes keep classical security
            during the transition.
@@ -52,6 +56,7 @@ expression: "plain(&render(&scan(), Options::default()))"
  3 │         return KeyPairGenerator.getInstance(algorithm).generateKeyPair();
    │                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
    │ RSA is broken by Shor's algorithm
+   = why: RSA usage detected.
    = value: 7:24 "RSA" is written here
             7:24 passed as algorithm to fixture(...)
    = help: Plan a protocol migration to ML-KEM (FIPS 203) for key establishment and

@@ -72,6 +72,11 @@ pub struct ScanArgs {
     #[arg(long, value_name = "PATHS")]
     pub classpath: Vec<OsString>,
 
+    /// Every finding, explained (text format only). By default the text
+    /// report lists the files with findings and explains the most urgent.
+    #[arg(long, conflicts_with = "compact")]
+    pub details: bool,
+
     /// One line per finding (text format only).
     #[arg(long)]
     pub compact: bool,

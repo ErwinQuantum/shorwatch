@@ -39,11 +39,47 @@ pub struct Scan {
     pub sources: BTreeMap<String, String>,
     /// How many files were analyzed, findings or not.
     pub files_scanned: usize,
+    /// The projects scanned together, such as the services of a folder of
+    /// microservices. Empty or a single entry for one project; reports
+    /// split findings by project only when there are several.
+    pub projects: Vec<Project>,
+}
+
+/// The index of the project `path` belongs to: the one with the longest
+/// root `path` is under.
+pub fn project_of(projects: &[Project], path: &str) -> Option<usize> {
+    projects
+        .iter()
+        .enumerate()
+        .filter(|(_, p)| {
+            p.root.is_empty()
+                || path
+                    .strip_prefix(p.root.as_str())
+                    .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
+        })
+        .max_by_key(|(_, p)| p.root.len())
+        .map(|(i, _)| i)
+}
+
+/// A project of a scan: the findings whose path is under `root`.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize)]
+pub struct Project {
+    pub name: String,
+    /// Directory as findings name it (`services/billing`), `/`-separated and
+    /// without a trailing slash; empty for files that belong to no project.
+    pub root: String,
+    pub files_scanned: usize,
 }
 
 impl Scan {
     pub fn summary(&self) -> Summary {
         Summary::of(self)
+    }
+
+    /// The index in [`Scan::projects`] of the project `path` belongs to:
+    /// the one with the longest matching root.
+    pub fn project_of(&self, path: &str) -> Option<usize> {
+        project_of(&self.projects, path)
     }
 
     /// The source line `line` (1-based) of `path`, if known.

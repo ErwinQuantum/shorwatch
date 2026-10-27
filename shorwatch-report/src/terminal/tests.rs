@@ -7,14 +7,47 @@ fn plain(text: &str) -> String {
     anstream::adapter::strip_str(text).to_string()
 }
 
+fn view(view: View) -> Options {
+    Options { view }
+}
+
+#[test]
+fn overview_report() {
+    insta::assert_snapshot!(plain(&render(&scan(), Options::default())));
+}
+
+/// Several projects: one group each, the clean ones listed too.
+#[test]
+fn overview_of_several_projects() {
+    let mut scan = scan();
+    scan.projects = vec![
+        crate::Project {
+            name: "auth".into(),
+            root: "src/main".into(),
+            files_scanned: 8,
+        },
+        crate::Project {
+            name: "auth-tests".into(),
+            root: "src/test".into(),
+            files_scanned: 3,
+        },
+        crate::Project {
+            name: "billing".into(),
+            root: "billing".into(),
+            files_scanned: 5,
+        },
+    ];
+    insta::assert_snapshot!(plain(&render(&scan, Options::default())));
+}
+
 #[test]
 fn detailed_report() {
-    insta::assert_snapshot!(plain(&render(&scan(), Options::default())));
+    insta::assert_snapshot!(plain(&render(&scan(), view(View::Details))));
 }
 
 #[test]
 fn compact_report() {
-    insta::assert_snapshot!(plain(&render(&scan(), Options { compact: true })));
+    insta::assert_snapshot!(plain(&render(&scan(), view(View::Compact))));
 }
 
 #[test]

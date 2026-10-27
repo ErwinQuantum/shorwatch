@@ -1,11 +1,13 @@
 //! The human-readable terminal report.
 //!
-//! [`render`] produces the findings (detailed or compact) and a summary;
+//! [`render`] produces the findings (an overview, every finding in detail,
+//! or one line each) and a summary;
 //! [`banner`] is printed separately by the CLI, only on interactive terminals.
 
 mod banner;
 mod compact;
 mod detailed;
+mod overview;
 mod style;
 #[cfg(test)]
 mod tests;
@@ -21,23 +23,38 @@ use crate::summary::severity_label;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Options {
-    /// One line per finding instead of the detailed view.
-    pub compact: bool,
+    pub view: View,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum View {
+    /// Files with findings, the most urgent ones explained, the summary.
+    #[default]
+    Overview,
+    /// Every finding, explained.
+    Details,
+    /// One line per finding.
+    Compact,
 }
 
 pub fn render(scan: &Scan, options: Options) -> String {
     let mut out = String::new();
-    if options.compact {
-        out.push_str(&compact::render(scan));
-    } else {
-        let blocks: Vec<_> = scan
-            .findings
-            .iter()
-            .map(|f| detailed::render(scan, f))
-            .collect();
-        out.push_str(&blocks.join("\n"));
+    match options.view {
+        View::Overview => out.push_str(&overview::render(scan)),
+        View::Compact => out.push_str(&compact::render(scan)),
+        View::Details => {
+            let blocks: Vec<_> = scan
+                .findings
+                .iter()
+                .map(|f| detailed::render(scan, f))
+                .collect();
+            out.push_str(&blocks.join("\n"));
+        }
     }
     out.push_str(&summary(scan));
+    if options.view == View::Overview {
+        out.push_str(&overview::hints(scan));
+    }
     out
 }
 

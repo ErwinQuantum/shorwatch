@@ -60,6 +60,14 @@ pub(super) fn render(scan: &Scan, finding: &Finding) -> String {
     if let Some(detail) = &finding.detail {
         let _ = writeln!(out, "{pad} {eq} found: {detail}");
     }
+    let why_indent = format!("{pad}   {}", " ".repeat("why: ".len()));
+    let why = wrap(&finding.message, TEXT_WIDTH - why_indent.len(), &why_indent);
+    let _ = writeln!(
+        out,
+        "{pad} {eq} {}{}",
+        paint("why: ", bold()),
+        why.trim_start()
+    );
 
     // Where the value comes from, step by step, when it is written elsewhere.
     for (index, step) in finding.flow.iter().enumerate() {

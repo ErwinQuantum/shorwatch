@@ -7,6 +7,7 @@ mod discover;
 mod layout;
 mod output;
 mod pipeline;
+mod projects;
 mod rules;
 
 use std::process::ExitCode;
@@ -59,7 +60,10 @@ fn scan(args: &ScanArgs) -> Result<ExitCode> {
             library.methods.len()
         );
     }
-    let scan = pipeline::scan(&files, &library, &rules, &options);
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let paths: Vec<_> = files.iter().map(|(path, _)| path.clone()).collect();
+    let projects = projects::detect(&args.paths, &paths, &cwd);
+    let scan = pipeline::scan(&files, projects, &library, &rules, &options);
     output::write(&scan, args)?;
 
     let fails = match args.fail_on {
