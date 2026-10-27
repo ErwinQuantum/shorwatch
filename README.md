@@ -324,6 +324,7 @@ name: Shorwatch
 on: [push, pull_request]
 permissions:
   contents: read
+  actions: read
   security-events: write
 jobs:
   scan:
@@ -337,7 +338,7 @@ jobs:
         if: always()
         with:
           sarif_file: shorwatch-report/report.sarif
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: shorwatch-report
