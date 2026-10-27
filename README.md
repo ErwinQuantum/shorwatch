@@ -96,6 +96,7 @@ shorwatch report                             # scan and open the HTML report in 
 shorwatch --watch                            # scan again whenever a file changes
 shorwatch open                               # open the last report again, without scanning
 shorwatch ci                                 # in a pipeline: SARIF + HTML, linked from the log
+shorwatch baseline                           # record today's findings: later scans report only new ones
 
 shorwatch services/                          # a folder of services: one group per project
 shorwatch --overview                         # the files with findings, the most urgent explained
@@ -138,6 +139,43 @@ against the project's configuration files. Key material is read from `.pem`,
 
 Exit codes: `0` nothing failing, `1` failing findings, `2` error. See
 [In CI pipelines](#in-ci-pipelines).
+
+### Baseline and suppressions
+
+A first scan of an existing project finds what years of code hold. To adopt
+Shorwatch without fixing everything first, record a baseline and commit it:
+
+```sh
+shorwatch baseline        # writes shorwatch-baseline.json
+```
+
+Scans run from the same folder read it and report only **new** findings;
+the known ones are counted, not hidden (`not counted: 412 known from the
+baseline`), and `--no-baseline` shows everything again. A finding is known by
+its rule, its file and the code on its line, so edits elsewhere in the file
+keep it known; record the baseline again as findings are fixed.
+
+To accept a single finding, say why next to it:
+
+```java
+// shorwatch:ignore jvm.jca.rsa -- partner API requires RSA until Q3
+KeyPairGenerator.getInstance("RSA");
+```
+
+```yaml
+jws-algorithms: RS256 # shorwatch:ignore rsa -- legacy mobile clients
+```
+
+The comment goes on the finding's line or alone on the line above. Name
+rules by id or by profile (`rsa` covers every `*.rsa` rule), or none for
+every rule on that line; the reason after `--` travels into the reports. To
+skip whole files (test certificates, vendored code), list them in a
+`.shorwatchignore` file, in `.gitignore` syntax.
+
+Every report counts what was left out and why. In SARIF the suppressed
+findings are still results, marked with `suppressions` (`inSource` with the
+reason, or `external` for the baseline), as the SARIF standard describes;
+the CBOM, an inventory, still lists their algorithms.
 
 ### Compiled dependencies (`--classpath`)
 
@@ -317,6 +355,7 @@ paths). Gating is a choice:
 | `--fail-severity high` | Fail on high and critical findings; medium and low are still reported |
 | `--fail-on any` | Also fail on findings already in transition (hybrid) |
 | `--exclude-tests` | Leave test code out of the scan, and of the gate |
+| `shorwatch-baseline.json` | Fail only on findings that are new since the baseline was recorded (see [Baseline and suppressions](#baseline-and-suppressions)) |
 
 Publish the folder even when the scan fails (`if: always()`, `when: always`,
 `post { always }`, `condition: always()` below).

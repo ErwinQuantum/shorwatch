@@ -30,14 +30,20 @@ pub fn render(scan: &Scan) -> String {
                 }],
             },
         },
-        components: components(&scan.findings),
+        // An inventory lists the cryptography that is there, findings
+        // ignored in the code or known from the baseline included.
+        components: components(
+            scan.findings
+                .iter()
+                .chain(scan.suppressed.iter().map(|s| &s.finding)),
+        ),
     };
     // Plain data with string keys: serialization cannot fail.
     serde_json::to_string_pretty(&bom).expect("CBOM serializes") + "\n"
 }
 
 /// One component per algorithm, in order of first appearance.
-fn components(findings: &[Finding]) -> Vec<Component<'_>> {
+fn components<'a>(findings: impl Iterator<Item = &'a Finding>) -> Vec<Component<'a>> {
     let mut groups: Vec<(&str, Vec<&Finding>)> = Vec::new();
     for finding in findings {
         match groups

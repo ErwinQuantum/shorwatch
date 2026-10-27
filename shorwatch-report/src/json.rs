@@ -5,7 +5,7 @@
 use serde::Serialize;
 use shorwatch_core::Finding;
 
-use crate::{Project, Scan, Summary};
+use crate::{Project, Scan, Summary, Suppressed};
 
 #[derive(Serialize)]
 struct Report<'a> {
@@ -17,6 +17,9 @@ struct Report<'a> {
     #[serde(skip_serializing_if = "<[_]>::is_empty")]
     projects: &'a [Project],
     findings: &'a [Finding],
+    /// Findings ignored in the code or already in the baseline.
+    #[serde(skip_serializing_if = "<[_]>::is_empty")]
+    suppressed: &'a [Suppressed],
 }
 
 pub fn render(scan: &Scan) -> String {
@@ -26,6 +29,7 @@ pub fn render(scan: &Scan) -> String {
         summary: scan.summary(),
         projects: &scan.projects,
         findings: &scan.findings,
+        suppressed: &scan.suppressed,
     };
     // Plain data with string keys: serialization cannot fail.
     serde_json::to_string_pretty(&report).expect("report serializes") + "\n"

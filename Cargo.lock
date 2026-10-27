@@ -611,6 +611,7 @@ dependencies = [
  "ignore",
  "mimalloc",
  "rayon",
+ "serde",
  "serde_json",
  "shorwatch-core",
  "shorwatch-langs",

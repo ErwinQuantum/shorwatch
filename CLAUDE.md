@@ -42,7 +42,8 @@ langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, synta
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
-cli/src/   args, browser (--open, `shorwatch open`), ci, gate (--fail-on/--fail-severity), watch, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
+cli/src/   args, browser (--open, `shorwatch open`), ci, gate (--fail-on/--fail-severity), watch,
+           suppress/{mod: apply, inline: `shorwatch:ignore`, baseline: shorwatch-baseline.json}, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
 report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, wrap, banner}
            html/{mod: payload, report.html/css/js}  sarif cbom json markdown summary links
 ```
@@ -93,6 +94,12 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `link::library::relevant` keeps only what the project's call chains reach
   (a 1 GB `~/.m2` has 400k types; a project reaches a few thousand): never
   feed the whole library to `hierarchy` or `receivers`.
+- **Suppressions** never hide silently: `suppress::apply` moves ignored
+  (`shorwatch:ignore`) and baseline-known findings to `Scan::suppressed`;
+  every report counts them, SARIF keeps them with `suppressions`, the CBOM
+  still inventories them, and gates ignore them. A finding's identity across
+  scans is `report::fingerprint` (rule + whitespace-normalised line, or the
+  key label): never the line number.
 - A receiver's *origin* (`Call.receiver_origin`) still comes only from the
   variable's own initializer; `origin` patterns let unknown origins match
   (no lost detections). Don't hack around missing flow in rules.

@@ -23,6 +23,8 @@ ignore.workspace = true
 rayon.workspace = true
 anyhow.workspace = true
 anstream.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 zip.workspace = true
 
 # musl's allocator serializes threads: the static Linux build swaps it.
@@ -30,7 +32,6 @@ zip.workspace = true
 mimalloc.workspace = true
 
 [dev-dependencies]
-serde_json.workspace = true
 
 [lints]
 workspace = true

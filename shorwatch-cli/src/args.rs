@@ -31,7 +31,8 @@ Without a command, scans like `shorwatch scan`:
   shorwatch --details       every finding, in the terminal
   shorwatch --watch         scan again whenever a file changes
   shorwatch report          scan and open the HTML report in the browser
-  shorwatch ci              scan in a CI pipeline (SARIF + HTML, linked from the log)";
+  shorwatch ci              scan in a CI pipeline (SARIF + HTML, linked from the log)
+  shorwatch baseline        record today's findings: later scans report only new ones";
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
@@ -50,6 +51,14 @@ pub enum Command {
     /// GitHub Actions the summary also goes to the job summary.
     #[command(after_help = EXIT_CODES)]
     Ci(CiArgs),
+    /// Record today's findings in a baseline: later scans report only new
+    /// ones.
+    ///
+    /// Writes `shorwatch-baseline.json`; commit it, and scans run from the
+    /// same folder read it (see --baseline, --no-baseline). Findings are
+    /// recognised by rule, file and the code on their line, so edits
+    /// elsewhere in a file keep them known.
+    Baseline(BaselineArgs),
     /// Open the last HTML report in the browser, without scanning again.
     Open(OpenArgs),
     /// List the rules that would be applied.
@@ -89,6 +98,15 @@ pub struct Analysis {
     /// Signatures only: no code from the classpath is run or analyzed.
     #[arg(long, value_name = "PATHS")]
     pub classpath: Vec<OsString>,
+
+    /// Leave out the findings recorded in this baseline (default:
+    /// `shorwatch-baseline.json` in the working directory, when present).
+    #[arg(long, value_name = "FILE")]
+    pub baseline: Option<PathBuf>,
+
+    /// Report every finding, even those in the baseline.
+    #[arg(long, conflicts_with = "baseline")]
+    pub no_baseline: bool,
 }
 
 /// When a scan fails (exit code 1).
@@ -176,6 +194,21 @@ pub struct CiArgs {
     /// as the job's artifact).
     #[arg(long, value_name = "DIR", default_value = "shorwatch-report")]
     pub out_dir: PathBuf,
+}
+
+#[derive(Debug, Args)]
+pub struct BaselineArgs {
+    #[command(flatten)]
+    pub analysis: Analysis,
+
+    /// Where to write the baseline.
+    #[arg(
+        short,
+        long,
+        value_name = "FILE",
+        default_value = "shorwatch-baseline.json"
+    )]
+    pub output: PathBuf,
 }
 
 #[derive(Debug, Args)]

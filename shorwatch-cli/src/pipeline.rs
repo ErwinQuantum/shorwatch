@@ -12,11 +12,37 @@ use shorwatch_report::{Project, Scan, project_of};
 
 use crate::args::Analysis;
 use crate::discover::{self, display_path};
+use crate::suppress::{self, Baseline};
 use crate::{classpath, projects, rules};
 
 /// Everything a scanning command does before reporting: rules, files,
-/// classpath, projects, the scan.
+/// classpath, projects, the scan, then the findings ignored in the code or
+/// known from the baseline set aside.
 pub fn run(analysis: &Analysis, version: &str) -> Result<Scan> {
+    let baseline = match &analysis.baseline {
+        Some(path) => Some(Baseline::load(path)?),
+        None if analysis.no_baseline => None,
+        None => {
+            let default = Path::new(suppress::DEFAULT_FILE);
+            default
+                .is_file()
+                .then(|| Baseline::load(default))
+                .transpose()?
+        }
+    };
+    let mut scan = analyze_all(analysis, version)?;
+    suppress::apply(&mut scan, baseline.as_ref());
+    Ok(scan)
+}
+
+/// The scan a baseline records: comments still apply, no older baseline.
+pub fn run_for_baseline(analysis: &Analysis, version: &str) -> Result<Scan> {
+    let mut scan = analyze_all(analysis, version)?;
+    suppress::apply(&mut scan, None);
+    Ok(scan)
+}
+
+fn analyze_all(analysis: &Analysis, version: &str) -> Result<Scan> {
     let rules = rules::load(&analysis.rules)?;
     let mut files = discover::files(&analysis.paths)?;
     if analysis.exclude_tests {
@@ -102,6 +128,7 @@ pub fn scan(
         files_scanned: units.len(),
         projects,
         links: shorwatch_report::SourceLinks::default(),
+        suppressed: Vec::new(),
     }
 }
 

@@ -1,4 +1,5 @@
-//! Finding the files to scan: walks the given paths respecting `.gitignore`,
+//! Finding the files to scan: walks the given paths respecting `.gitignore`
+//! and `.shorwatchignore`,
 //! skips build output, and keeps files some frontend understands, each with
 //! its role (production or test code).
 
@@ -30,6 +31,9 @@ pub fn files(paths: &[PathBuf]) -> Result<Vec<(PathBuf, CodeRole)>> {
     for path in rest {
         builder.add(path);
     }
+    // Files a project never wants scanned (test certificates, vendored
+    // code), in `.gitignore` syntax.
+    builder.add_custom_ignore_filename(".shorwatchignore");
     builder.filter_entry(|entry| {
         let is_dir = entry.file_type().is_some_and(|t| t.is_dir());
         !(is_dir && SKIPPED_DIRS.iter().any(|d| entry.file_name() == *d))

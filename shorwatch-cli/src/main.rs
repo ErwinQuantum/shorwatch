@@ -12,15 +12,16 @@ mod output;
 mod pipeline;
 mod projects;
 mod rules;
+mod suppress;
 mod watch;
 
 use std::process::ExitCode;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use shorwatch_report::Scan;
 
-use args::{Cli, Command, ScanArgs};
+use args::{BaselineArgs, Cli, Command, ScanArgs};
 
 #[cfg(target_env = "musl")]
 #[global_allocator]
@@ -38,6 +39,7 @@ fn main() -> ExitCode {
             scan(&args)
         }
         Some(Command::Ci(args)) => ci::run(&args, VERSION),
+        Some(Command::Baseline(args)) => baseline(&args),
         Some(Command::Open(args)) => {
             browser::open_last(args.report.as_deref()).map(|()| ExitCode::SUCCESS)
         }
@@ -63,6 +65,22 @@ fn scan(args: &ScanArgs) -> Result<ExitCode> {
     output::add_links(&mut scan, args);
     let failing = report(&scan, args, args.open)?;
     Ok(gate::exit_code(failing))
+}
+
+fn baseline(args: &BaselineArgs) -> Result<ExitCode> {
+    let scan = pipeline::run_for_baseline(&args.analysis, VERSION)?;
+    let baseline = suppress::Baseline::of(&scan);
+    std::fs::write(&args.output, baseline.to_json())
+        .with_context(|| format!("writing `{}`", args.output.display()))?;
+    println!(
+        "Recorded {} in `{}`: scans from this folder now report only new findings. Commit it.",
+        match baseline.len() {
+            1 => "1 finding".to_owned(),
+            n => format!("{n} findings"),
+        },
+        args.output.display()
+    );
+    Ok(ExitCode::SUCCESS)
 }
 
 /// Writes a scan's reports, opens the HTML one if asked to, and says why

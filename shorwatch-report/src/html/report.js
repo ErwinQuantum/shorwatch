@@ -195,6 +195,11 @@
     const scope = multi
       ? `${plural(projects.length, "project", "projects")} · ${plural(summary.files_scanned, "file", "files")} scanned`
       : `${projects[0] ? `${projects[0].name} · ` : ""}${plural(summary.files_scanned, "file", "files")} scanned`;
+    const left = [
+      summary.ignored_in_code ? `${num(summary.ignored_in_code)} ignored in the code` : null,
+      summary.in_baseline ? `${num(summary.in_baseline)} known from the baseline` : null,
+    ].filter(Boolean);
+    const notCounted = left.length ? ` Not counted: ${left.join(", ")}.` : "";
     const migrating = summary.in_transition === 0
       ? "None is migrating yet."
       : `${num(summary.in_transition)} already ${summary.in_transition === 1 ? "sits" : "sit"} next to post-quantum code.`;
@@ -204,16 +209,16 @@
       el("h1", {
         class: "headline",
         text: findings.length === 0
-          ? "No quantum-vulnerable cryptography found."
+          ? `No ${summary.in_baseline ? "new " : ""}quantum-vulnerable cryptography found.`
           : `${num(findings.length)} ${findings.length === 1 ? "place" : "places"} where today’s cryptography ${shor ? "falls to" : "is weakened by"} a quantum computer.`,
       }),
       el("p", {
         class: "lede",
         text: findings.length === 0
-          ? "No rule matched in the scanned code, configuration or key material."
+          ? `No rule matched in the scanned code, configuration or key material.${notCounted}`
           : `${shor
             ? "RSA, elliptic curves and Diffie-Hellman are broken outright by Shor’s algorithm; data protected with them today can be recorded now and opened later."
-            : "Grover’s algorithm halves the strength of these algorithms; larger keys and hashes fix them."} ${num(production)} of these findings ${production === 1 ? "is" : "are"} in production code. ${migrating}`,
+            : "Grover’s algorithm halves the strength of these algorithms; larger keys and hashes fix them."} ${num(production)} of these findings ${production === 1 ? "is" : "are"} in production code. ${migrating}${notCounted}`,
       }),
       findings.length === 0 ? null : el("div", { class: "stats" }, [
         stat(production, "in production code →", chapterHref({})),

@@ -24,10 +24,12 @@ pub mod links;
 pub mod markdown;
 pub mod sarif;
 pub mod summary;
+pub mod suppression;
 pub mod terminal;
 
 pub use links::{SourceLinks, WebLinks};
 pub use summary::Summary;
+pub use suppression::{Suppressed, Suppression, fingerprint};
 
 /// Everything a report needs about one scan.
 #[derive(Debug, Clone, Default)]
@@ -47,6 +49,9 @@ pub struct Scan {
     pub projects: Vec<Project>,
     /// Where findings open outside the report (editor, repository host).
     pub links: SourceLinks,
+    /// Findings found but not reported: ignored in the code, or already in
+    /// the baseline. Reports count them so nothing disappears silently.
+    pub suppressed: Vec<Suppressed>,
 }
 
 /// The index of the project `path` belongs to: the one with the longest
@@ -87,7 +92,7 @@ impl Scan {
     }
 
     /// The source line `line` (1-based) of `path`, if known.
-    pub(crate) fn line(&self, path: &str, line: u32) -> Option<&str> {
+    pub fn line(&self, path: &str, line: u32) -> Option<&str> {
         let index = usize::try_from(line).ok()?.checked_sub(1)?;
         self.sources.get(path)?.lines().nth(index)
     }

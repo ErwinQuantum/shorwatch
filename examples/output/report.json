@@ -13,7 +13,9 @@
       "low": 1,
       "medium": 3,
       "high": 13
-    }
+    },
+    "ignored_in_code": 0,
+    "in_baseline": 0
   },
   "projects": [
     {

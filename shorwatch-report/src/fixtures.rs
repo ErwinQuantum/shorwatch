@@ -189,6 +189,7 @@ pub(crate) fn scan() -> Scan {
         .collect(),
         files_scanned: 12,
         links: crate::SourceLinks::default(),
+        suppressed: Vec::new(),
         projects: Vec::new(),
     }
 }

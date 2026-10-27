@@ -21,8 +21,8 @@ use std::fmt::Write as _;
 pub use banner::banner;
 use style::{accent, bold, dim, failure as rgb_red, paint};
 
-use crate::Scan;
 use crate::summary::severity_label;
+use crate::{Scan, Summary};
 
 #[derive(Debug, Clone, Default)]
 pub struct Options {
@@ -131,15 +131,17 @@ fn summary(scan: &Scan) -> String {
     let summary = scan.summary();
     let label = paint(" Summary ", accent());
     let mut out = String::new();
+    let indent = " ".repeat(" Summary ".len());
     if summary.findings == 0 {
         let _ = writeln!(
             out,
-            "\n{label} no quantum-vulnerable cryptography found in {}",
+            "\n{label} no {}quantum-vulnerable cryptography found in {}",
+            if summary.in_baseline > 0 { "new " } else { "" },
             plural(summary.files_scanned, "file")
         );
+        suppressed(&summary, &indent, &mut out);
         return out;
     }
-    let indent = " ".repeat(" Summary ".len());
     let _ = writeln!(
         out,
         "\n{label} {} in {} {} ({} scanned)",
@@ -170,6 +172,7 @@ fn summary(scan: &Scan) -> String {
             summary.in_tests
         );
     }
+    suppressed(&summary, &indent, &mut out);
     if scan.projects.len() > 1 {
         let with_findings: BTreeSet<_> = scan
             .findings
@@ -184,6 +187,24 @@ fn summary(scan: &Scan) -> String {
         let _ = writeln!(out, "{indent} {}", paint(projects, dim()));
     }
     out
+}
+
+/// Findings left out on purpose: always said, never silent.
+fn suppressed(summary: &Summary, indent: &str, out: &mut String) {
+    let mut parts = Vec::new();
+    if summary.ignored_in_code > 0 {
+        parts.push(format!("{} ignored in the code", summary.ignored_in_code));
+    }
+    if summary.in_baseline > 0 {
+        parts.push(format!("{} known from the baseline", summary.in_baseline));
+    }
+    if !parts.is_empty() {
+        let _ = writeln!(
+            out,
+            "{indent} {}",
+            paint(format!("not counted: {}", parts.join(" · ")), dim())
+        );
+    }
 }
 
 fn plural(n: usize, word: &str) -> String {

@@ -13,8 +13,10 @@ pub fn render(scan: &Scan) -> String {
     if summary.findings == 0 {
         let _ = writeln!(
             out,
-            "## 🛡️ Shorwatch: no quantum-vulnerable cryptography found\n\n{} files scanned.",
-            summary.files_scanned
+            "## 🛡️ Shorwatch: no {}quantum-vulnerable cryptography found\n\n{} files scanned.{}",
+            if summary.in_baseline > 0 { "new " } else { "" },
+            summary.files_scanned,
+            suppressed_note(&summary)
         );
         return out;
     }
@@ -38,6 +40,12 @@ pub fn render(scan: &Scan) -> String {
     }
     for (severity, n) in summary.severities() {
         let _ = writeln!(out, "| Severity {} | {n} |", severity_label(severity));
+    }
+    if summary.ignored_in_code > 0 {
+        let _ = writeln!(out, "| Ignored in the code | {} |", summary.ignored_in_code);
+    }
+    if summary.in_baseline > 0 {
+        let _ = writeln!(out, "| Known (baseline) | {} |", summary.in_baseline);
     }
     let _ = writeln!(
         out,
@@ -76,6 +84,22 @@ pub fn render(scan: &Scan) -> String {
         );
     }
     out
+}
+
+/// Findings left out, said where a clean result is announced.
+fn suppressed_note(summary: &crate::Summary) -> String {
+    let mut parts = Vec::new();
+    if summary.ignored_in_code > 0 {
+        parts.push(format!("{} ignored in the code", summary.ignored_in_code));
+    }
+    if summary.in_baseline > 0 {
+        parts.push(format!("{} known from the baseline", summary.in_baseline));
+    }
+    if parts.is_empty() {
+        String::new()
+    } else {
+        format!(" Not counted: {}.", parts.join(", "))
+    }
 }
 
 /// `path:line`, linked to the lines on the repository host when known.

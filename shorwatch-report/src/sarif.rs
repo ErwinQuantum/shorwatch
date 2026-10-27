@@ -3,6 +3,9 @@
 //! Each distinct rule becomes a `reportingDescriptor` with its migration
 //! advice as help text; each finding a `result` located by line and column
 //! (Unicode code points). Mechanical fixes are attached as SARIF `fixes`.
+//! Suppressed findings are results too, with their `suppressions` (in the
+//! source, or `external`: the baseline), as the standard expects; every
+//! result carries a `partialFingerprints` entry that survives line moves.
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
@@ -11,14 +14,19 @@ use serde::Serialize;
 use shorwatch_core::ir::Location;
 use shorwatch_core::{CodeRole, Finding, Severity};
 
-use crate::Scan;
 use crate::summary::status_label;
+use crate::{Scan, Suppression, fingerprint};
 
 const SCHEMA: &str = "https://json.schemastore.org/sarif-2.1.0.json";
 const INFORMATION_URI: &str = "https://github.com/ErwinQuantum/shorwatch";
 
 pub fn render(scan: &Scan) -> String {
-    let rules = descriptors(&scan.findings);
+    let all: Vec<&Finding> = scan
+        .findings
+        .iter()
+        .chain(scan.suppressed.iter().map(|s| &s.finding))
+        .collect();
+    let rules = descriptors(&all);
     let index: BTreeMap<&str, usize> = rules.iter().enumerate().map(|(i, r)| (r.id, i)).collect();
     let log = Log {
         schema: SCHEMA,
@@ -36,7 +44,13 @@ pub fn render(scan: &Scan) -> String {
             results: scan
                 .findings
                 .iter()
-                .map(|f| result(f, index[f.rule_id.as_str()]))
+                .map(|f| (f, None))
+                .chain(
+                    scan.suppressed
+                        .iter()
+                        .map(|s| (&s.finding, Some(&s.suppression))),
+                )
+                .map(|(f, suppression)| result(scan, f, index[f.rule_id.as_str()], suppression))
                 .collect(),
         }],
     };
@@ -44,9 +58,9 @@ pub fn render(scan: &Scan) -> String {
     serde_json::to_string_pretty(&log).expect("SARIF serializes") + "\n"
 }
 
-fn descriptors(findings: &[Finding]) -> Vec<Descriptor<'_>> {
+fn descriptors<'a>(findings: &[&'a Finding]) -> Vec<Descriptor<'a>> {
     let mut seen = BTreeMap::new();
-    for finding in findings {
+    for finding in findings.iter().copied() {
         seen.entry(finding.rule_id.as_str()).or_insert(finding);
     }
     seen.into_values()
@@ -95,7 +109,12 @@ fn help_markdown(finding: &Finding) -> String {
     text
 }
 
-fn result(finding: &Finding, rule_index: usize) -> SarifResult<'_> {
+fn result<'a>(
+    scan: &Scan,
+    finding: &'a Finding,
+    rule_index: usize,
+    suppression: Option<&Suppression>,
+) -> SarifResult<'a> {
     let artifact = Artifact {
         uri: finding.path.replace('\\', "/"),
         uri_base_id: "%SRCROOT%",
@@ -145,6 +164,22 @@ fn result(finding: &Finding, rule_index: usize) -> SarifResult<'_> {
                     }],
                 }],
             })
+            .collect(),
+        partial_fingerprints: Fingerprints {
+            shorwatch: fingerprint(scan, finding),
+        },
+        suppressions: suppression
+            .map(|s| match s {
+                Suppression::InSource { justification } => SarifSuppression {
+                    kind: "inSource",
+                    justification: justification.clone(),
+                },
+                Suppression::Baseline => SarifSuppression {
+                    kind: "external",
+                    justification: Some("In the Shorwatch baseline.".into()),
+                },
+            })
+            .into_iter()
             .collect(),
         properties: ResultProperties {
             algorithm: &finding.algorithm,
@@ -298,7 +333,23 @@ struct SarifResult<'a> {
     code_flows: Vec<CodeFlow>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     fixes: Vec<Fix>,
+    partial_fingerprints: Fingerprints,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    suppressions: Vec<SarifSuppression>,
     properties: ResultProperties<'a>,
+}
+
+#[derive(Serialize)]
+struct Fingerprints {
+    #[serde(rename = "shorwatch/v1")]
+    shorwatch: String,
+}
+
+#[derive(Serialize)]
+struct SarifSuppression {
+    kind: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    justification: Option<String>,
 }
 
 #[derive(Serialize)]

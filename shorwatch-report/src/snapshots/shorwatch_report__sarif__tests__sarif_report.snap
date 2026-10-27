@@ -153,6 +153,9 @@ expression: render(&scan())
               }
             }
           ],
+          "partialFingerprints": {
+            "shorwatch/v1": "817857e3e95749f2"
+          },
           "properties": {
             "algorithm": "RSA",
             "status": "vulnerable",
@@ -210,6 +213,9 @@ expression: render(&scan())
               ]
             }
           ],
+          "partialFingerprints": {
+            "shorwatch/v1": "a213b2f9f404f645"
+          },
           "properties": {
             "algorithm": "AES-128",
             "status": "vulnerable",
@@ -239,6 +245,9 @@ expression: render(&scan())
               }
             }
           ],
+          "partialFingerprints": {
+            "shorwatch/v1": "943ec53920a30980"
+          },
           "properties": {
             "algorithm": "ECDSA",
             "status": "in transition",
@@ -268,6 +277,9 @@ expression: render(&scan())
               }
             }
           ],
+          "partialFingerprints": {
+            "shorwatch/v1": "4b6dbdd69421627e"
+          },
           "properties": {
             "algorithm": "RSA (JOSE/JWT)",
             "status": "vulnerable",
@@ -364,6 +376,9 @@ expression: render(&scan())
               ]
             }
           ],
+          "partialFingerprints": {
+            "shorwatch/v1": "fcdf521669269d03"
+          },
           "properties": {
             "algorithm": "RSA",
             "status": "vulnerable",

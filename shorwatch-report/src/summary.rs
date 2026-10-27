@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::Serialize;
 use shorwatch_core::{CodeRole, Severity, Status};
 
-use crate::Scan;
+use crate::{Scan, Suppression};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Summary {
@@ -21,6 +21,10 @@ pub struct Summary {
     pub in_tests: usize,
     /// Most severe first.
     pub by_severity: BTreeMap<Severity, usize>,
+    /// Findings a `shorwatch:ignore` comment leaves out.
+    pub ignored_in_code: usize,
+    /// Findings already in the baseline, left out.
+    pub in_baseline: usize,
 }
 
 impl Summary {
@@ -44,6 +48,16 @@ impl Summary {
             fixable: findings.iter().filter(|f| f.fix.is_some()).count(),
             in_tests: findings.iter().filter(|f| f.role == CodeRole::Test).count(),
             by_severity,
+            ignored_in_code: scan
+                .suppressed
+                .iter()
+                .filter(|s| matches!(s.suppression, Suppression::InSource { .. }))
+                .count(),
+            in_baseline: scan
+                .suppressed
+                .iter()
+                .filter(|s| s.suppression == Suppression::Baseline)
+                .count(),
         }
     }
 
