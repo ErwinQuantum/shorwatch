@@ -112,9 +112,18 @@ pub struct MethodSummary {
 /// A call by its target: `owner.method(...)` with `arity` arguments.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct CallRef {
-    pub owner: TypeRef,
+    pub owner: CallOwner,
     pub method: String,
     pub arity: usize,
+}
+
+/// What a [`CallRef`] is called on: a known type, or the result of another
+/// call (`a.b().c()`), typed from that call's declared return type.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CallOwner {
+    Type(TypeRef),
+    Call(Box<CallRef>),
 }
 
 /// A constant a type declares (`static final`, `const val`), for other

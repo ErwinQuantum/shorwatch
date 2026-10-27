@@ -3,6 +3,12 @@ source: shorwatch-rules/tests/rules.rs
 expression: findings
 input_file: shorwatch-rules/tests/fixtures/data-flow-project/DefaultKeyProvider.java
 ---
+- rule: jvm.jca.dsa
+  at: "9:16"
+  status: vulnerable
+  flow:
+    - "Providers.java:20: \"DSA\" is written here"
+    - "Providers.java:20: passed as algorithm to generator(...)"
 - rule: jvm.jca.ec
   at: "9:16"
   status: vulnerable

@@ -68,7 +68,7 @@ langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, synta
   publish `MethodSummary`s (returns + declared return type), `TypeDecl`s
   (supertypes) and `ConstantDecl`s. `link` builds the type `hierarchy`, types
   chained receivers (`receivers`: `X.provider().m()` from `provider()`'s
-  return type, one level), then `flow` matches calls/constructions by name +
+  return type; chains up to 8 calls, typed from the innermost out), then `flow` matches calls/constructions by name +
   arity + any *related* type (the type, its supertypes and subtypes: calls
   through interfaces reach every implementation), up to 3 hops, and tags
   each `FlowStep` with its file. Calls are indexed by declared receiver type

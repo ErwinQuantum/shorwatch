@@ -21,7 +21,8 @@ use shorwatch_core::ir::{ArgValue, FactKind, Location, ScopeId, ScopeKind, Sourc
 use tree_sitter::{Node, Parser};
 
 use crate::jvm::{
-    ArgSource, Assignment, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase,
+    ArgSource, Assignment, JvmFile, MAX_CHAIN, Pending, PendingArg, Receiver, Symbol,
+    starts_uppercase,
 };
 use crate::{Frontend, LangError, span};
 use literals::{int_value, string_value};
@@ -358,36 +359,34 @@ impl<'s> Lowering<'s> {
         .then(|| self.args(value))
     }
 
+    /// A call's receiver as written. A call as receiver
+    /// (`Crypto.provider().m()`, also longer chains) is typed from its
+    /// declared return type later.
+    fn receiver(&self, object: Node<'_>, depth: usize) -> Option<Receiver> {
+        let text = self.text(object).to_owned();
+        match object.kind() {
+            "identifier" => Some(Receiver::Name(text)),
+            "field_access" | "scoped_identifier" => Some(Receiver::Path(text)),
+            "method_invocation" if depth < MAX_CHAIN => Some(Receiver::Call {
+                owner: match object.child_by_field_name("object") {
+                    None => None,
+                    Some(o) if o.kind() == "this" => None,
+                    Some(o) => Some(Box::new(self.receiver(o, depth + 1)?)),
+                },
+                method: self.field_text(object, "name")?.to_owned(),
+                arity: self.args(object).len(),
+            }),
+            _ => None,
+        }
+    }
+
     fn call(&mut self, node: Node<'_>, scope: ScopeId) {
         let Some(method) = self.field_text(node, "name").map(str::to_owned) else {
             return;
         };
-        let receiver = node.child_by_field_name("object").and_then(|object| {
-            let text = self.text(object).to_owned();
-            match object.kind() {
-                "identifier" => Some(Receiver::Name(text)),
-                "field_access" | "scoped_identifier" => Some(Receiver::Path(text)),
-                // `Crypto.provider().m()`: typed from `provider()` later.
-                "method_invocation" => {
-                    let owner = match object.child_by_field_name("object") {
-                        None => None,
-                        Some(o) if o.kind() == "identifier" => {
-                            Some(Box::new(Receiver::Name(self.text(o).to_owned())))
-                        }
-                        Some(o) if matches!(o.kind(), "field_access" | "scoped_identifier") => {
-                            Some(Box::new(Receiver::Path(self.text(o).to_owned())))
-                        }
-                        Some(_) => return None,
-                    };
-                    Some(Receiver::Call {
-                        owner,
-                        method: self.field_text(object, "name")?.to_owned(),
-                        arity: self.args(object).len(),
-                    })
-                }
-                _ => None,
-            }
-        });
+        let receiver = node
+            .child_by_field_name("object")
+            .and_then(|object| self.receiver(object, 0));
         let args = self.args(node);
         self.defer(
             Pending::Call {

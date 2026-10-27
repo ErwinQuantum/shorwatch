@@ -30,7 +30,8 @@ use shorwatch_core::ir::{ArgValue, FactKind, Location, ScopeId, ScopeKind, Sourc
 use tree_sitter::{Node, Parser};
 
 use crate::jvm::{
-    ArgSource, Assignment, JvmFile, Pending, PendingArg, Receiver, Symbol, starts_uppercase,
+    ArgSource, Assignment, JvmFile, MAX_CHAIN, Pending, PendingArg, Receiver, Symbol,
+    starts_uppercase,
 };
 use crate::{Frontend, LangError, span};
 use literals::{TemplatePart, int_value, string_value, template_parts};
@@ -594,7 +595,7 @@ impl<'s> Lowering<'s> {
                 let args = self.args(node);
                 if !is_name_path(object) {
                     // `Crypto.provider().m()`: typed from `provider()` later.
-                    let receiver = self.chained(object);
+                    let receiver = self.chained(object, 0);
                     self.defer(
                         Pending::Call {
                             receiver,
@@ -628,9 +629,9 @@ impl<'s> Lowering<'s> {
     }
 
     /// `object` as the receiver of a chained call, when it is a call to a
-    /// named method: `provider()` or `Crypto.provider()`.
-    fn chained(&self, object: Node<'_>) -> Option<Receiver> {
-        if object.kind() != "call_expression" {
+    /// named method: `provider()`, `Crypto.provider()` or a longer chain.
+    fn chained(&self, object: Node<'_>, depth: usize) -> Option<Receiver> {
+        if object.kind() != "call_expression" || depth >= MAX_CHAIN {
             return None;
         }
         let callee = object.named_child(0)?;
@@ -640,11 +641,12 @@ impl<'s> Lowering<'s> {
             "navigation_expression" => {
                 let (owner, member) = navigation_parts(callee)?;
                 let owner = match owner.kind() {
-                    "identifier" => Receiver::Name(self.text(owner).to_owned()),
-                    _ if is_name_path(owner) => Receiver::Path(name_path(owner, self.src)),
-                    _ => return None,
+                    "this_expression" => None,
+                    "identifier" => Some(Receiver::Name(self.text(owner).to_owned())),
+                    _ if is_name_path(owner) => Some(Receiver::Path(name_path(owner, self.src))),
+                    _ => Some(self.chained(owner, depth + 1)?),
                 };
-                (Some(Box::new(owner)), self.text(member))
+                (owner.map(Box::new), self.text(member))
             }
             _ => return None,
         };

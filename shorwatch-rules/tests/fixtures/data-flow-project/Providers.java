@@ -14,4 +14,9 @@ public class Providers {
         KeyPairGenerator.getInstance(KeyTypes.EC);
         return Keys.provider().generator(KeyTypes.EC).generateKeyPair();
     }
+
+    /** A longer chain: each call is typed from the one before. */
+    KeyPair archiveKeys() throws Exception {
+        return Registry.registry().provider().generator("DSA").generateKeyPair();
+    }
 }

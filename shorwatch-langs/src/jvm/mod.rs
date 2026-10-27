@@ -22,6 +22,10 @@ mod flow;
 mod model;
 mod resolve;
 
+/// Calls in a receiver chain that are kept (`a.b().c().d()` has three):
+/// longer builder chains carry no algorithm worth the depth.
+pub(crate) const MAX_CHAIN: usize = 8;
+
 /// One JVM source file between the two phases of its lowering.
 #[derive(Debug)]
 pub(crate) struct JvmFile {

@@ -15,8 +15,8 @@ mod types;
 mod unit;
 
 pub use facts::{
-    Arg, ArgValue, CallRef, Candidate, ConstantDecl, Fact, FactKind, FlowStep, MethodSummary,
-    TypeDecl,
+    Arg, ArgValue, CallOwner, CallRef, Candidate, ConstantDecl, Fact, FactKind, FlowStep,
+    MethodSummary, TypeDecl,
 };
 pub use language::{Language, Platform};
 pub use location::{Location, Position};

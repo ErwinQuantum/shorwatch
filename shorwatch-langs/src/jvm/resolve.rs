@@ -5,7 +5,7 @@
 use super::{ArgSource, JvmFile, LocalCall, Pending, PendingArg, Receiver, starts_uppercase};
 use shorwatch_core::Language;
 use shorwatch_core::ir::{
-    Arg, ArgValue, CallRef, FactKind, ScopeId, ScopeKind, SourceUnit, TypeDecl, TypeRef,
+    Arg, ArgValue, CallOwner, CallRef, FactKind, ScopeId, ScopeKind, SourceUnit, TypeDecl, TypeRef,
 };
 
 impl JvmFile {
@@ -88,7 +88,8 @@ impl JvmFile {
         self.unit
     }
 
-    /// `owner.method(..arity)`, the receiver of a chained call.
+    /// `owner.method(..arity)`, the receiver of a chained call; `owner` may be
+    /// a call itself (`a.b().c()`).
     fn call_ref(
         &self,
         owner: Option<&Receiver>,
@@ -97,8 +98,18 @@ impl JvmFile {
         scope: ScopeId,
     ) -> Option<CallRef> {
         let owner = match owner {
-            Some(receiver) => self.resolve_receiver(receiver, scope)?,
-            None => TypeRef::qualified(self.owner(scope)?),
+            Some(Receiver::Call {
+                owner,
+                method,
+                arity,
+            }) => CallOwner::Call(Box::new(self.call_ref(
+                owner.as_deref(),
+                method,
+                *arity,
+                scope,
+            )?)),
+            Some(receiver) => CallOwner::Type(self.resolve_receiver(receiver, scope)?),
+            None => CallOwner::Type(TypeRef::qualified(self.owner(scope)?)),
         };
         Some(CallRef {
             owner,

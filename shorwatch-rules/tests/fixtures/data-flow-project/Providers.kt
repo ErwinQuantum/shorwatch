@@ -12,4 +12,7 @@ class Providers {
         KeyPairGenerator.getInstance(KeyTypes.EC)
         return Keys.provider().generator(KeyTypes.EC).generateKeyPair()
     }
+
+    /** A longer chain: each call is typed from the one before. */
+    fun archiveKeys(): KeyPair = Registry.registry().provider().generator("DSA").generateKeyPair()
 }
