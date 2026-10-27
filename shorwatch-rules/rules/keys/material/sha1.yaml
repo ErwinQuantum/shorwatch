@@ -1,0 +1,10 @@
+id: keys.material.sha1
+profile: sha1
+platform: keys
+message: >-
+  A certificate signed with SHA-1. SHA-1 collisions are practical today
+  (SHAttered, 2017), so signatures over it can be forged, quantum computer or
+  not; Grover's algorithm only adds to that.
+
+patterns:
+  - key: { signature: '^SHA1with' }

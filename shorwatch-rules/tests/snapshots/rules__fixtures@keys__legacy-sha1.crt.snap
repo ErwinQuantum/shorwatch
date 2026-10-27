@@ -1,0 +1,13 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/keys/legacy-sha1.crt
+---
+- rule: keys.material.rsa
+  at: "1:1"
+  status: vulnerable
+  detail: "certificate \"CN=legacy.example.com\": RSA 1024-bit, signed with SHA1withRSA, valid until 2036-10-24"
+- rule: keys.material.sha1
+  at: "1:1"
+  status: vulnerable
+  detail: "certificate \"CN=legacy.example.com\": RSA 1024-bit, signed with SHA1withRSA, valid until 2036-10-24"

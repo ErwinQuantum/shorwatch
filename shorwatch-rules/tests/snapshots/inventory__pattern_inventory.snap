@@ -64,6 +64,7 @@ DSA:
   - "Field { owner: \"org.bouncycastle.openpgp.PGPPublicKey\", matches: Some(\"^DSA$\") }"
   - "Field { owner: \"org.opensaml.xml.signature.SignatureConstants\", matches: Some(\"^ALGO_ID_SIGNATURE_DSA\") }"
   - "Field { owner: \"org.opensaml.xmlsec.signature.support.SignatureConstants\", matches: Some(\"^ALGO_ID_SIGNATURE_DSA\") }"
+  - "Key { algorithm: Some(\"^DSA$\"), signature: None }"
 Diffie-Hellman:
   - "Call { receiver: \"com.jcraft.jsch.JSch\", method: \"setConfig\", arg: Some(ArgPattern { index: 1, matches: \"(^|,)diffie-hellman-group\" }), origin: None }"
   - "Call { receiver: \"com.jcraft.jsch.Session\", method: \"setConfig\", arg: Some(ArgPattern { index: 1, matches: \"(^|,)diffie-hellman-group\" }), origin: None }"
@@ -83,6 +84,7 @@ Diffie-Hellman:
   - "Field { owner: \"org.bouncycastle.openpgp.PGPPublicKey\", matches: Some(\"^DIFFIE_HELLMAN$\") }"
   - "Field { owner: \"org.opensaml.xml.encryption.EncryptionConstants\", matches: Some(\"^ALGO_ID_KEYAGREEMENT_DH\") }"
   - "Field { owner: \"org.opensaml.xmlsec.encryption.support.EncryptionConstants\", matches: Some(\"^ALGO_ID_KEYAGREEMENT_DH\") }"
+  - "Key { algorithm: Some(\"^DH$\"), signature: None }"
 ECC:
   - "Call { receiver: \"java.security.AlgorithmParameters\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^EC$\" }), origin: None }"
   - "Call { receiver: \"java.security.KeyFactory\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^EC$\" }), origin: None }"
@@ -105,6 +107,7 @@ ECC:
   - "Field { owner: \"org.apache.sshd.common.config.keys.KeyUtils\", matches: Some(\"^EC_ALGORITHM$\") }"
   - "Field { owner: \"software.amazon.awssdk.services.kms.model.CustomerMasterKeySpec\", matches: Some(\"^(ECC_|SM2$)\") }"
   - "Field { owner: \"software.amazon.awssdk.services.kms.model.KeySpec\", matches: Some(\"^(ECC_|SM2$)\") }"
+  - "Key { algorithm: Some(\"^EC$\"), signature: None }"
 ECDH:
   - "Call { receiver: \"com.google.crypto.tink.KeyTemplates\", method: \"get\", arg: Some(ArgPattern { index: 0, matches: \"^(ECIES_|DHKEM_(X25519|P256|P384|P521)_)\" }), origin: None }"
   - "Call { receiver: \"com.jcraft.jsch.JSch\", method: \"setConfig\", arg: Some(ArgPattern { index: 1, matches: \"(^|,)(ecdh-sha2-nistp(256|384|521)|curve(25519|448)-sha(256|512)(@libssh\\\\.org)?)(,|$)\" }), origin: None }"
@@ -131,6 +134,7 @@ ECDH:
   - "Field { owner: \"org.opensaml.xml.encryption.EncryptionConstants\", matches: Some(\"^ALGO_ID_KEYAGREEMENT_ECDH\") }"
   - "Field { owner: \"org.opensaml.xmlsec.encryption.support.EncryptionConstants\", matches: Some(\"^ALGO_ID_KEYAGREEMENT_ECDH\") }"
   - "Field { owner: \"software.amazon.awssdk.services.kms.model.KeyAgreementAlgorithmSpec\", matches: Some(\"^ECDH$\") }"
+  - "Key { algorithm: Some(\"^X(25519|448)$\"), signature: None }"
 ECDH (JOSE/JWE):
   - "Construct { ty: \"com.nimbusds.jose.crypto.ECDHDecrypter\", arg: None }"
   - "Construct { ty: \"com.nimbusds.jose.crypto.ECDHEncrypter\", arg: None }"
@@ -165,6 +169,7 @@ ECDSA:
   - "Field { owner: \"org.opensaml.xml.signature.SignatureConstants\", matches: Some(\"^ALGO_ID_SIGNATURE_ECDSA\") }"
   - "Field { owner: \"org.opensaml.xmlsec.signature.support.SignatureConstants\", matches: Some(\"^ALGO_ID_SIGNATURE_ECDSA\") }"
   - "Field { owner: \"software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec\", matches: Some(\"^(ECDSA_|SM2DSA$)\") }"
+  - "Key { algorithm: Some(\"^ECDSA$\"), signature: None }"
 ECDSA (JOSE/JWT):
   - "Call { receiver: \"com.auth0.jwt.algorithms.Algorithm\", method: \"ECDSA256\", arg: None, origin: None }"
   - "Call { receiver: \"com.auth0.jwt.algorithms.Algorithm\", method: \"ECDSA256K\", arg: None, origin: None }"
@@ -212,6 +217,7 @@ EdDSA:
   - "Field { owner: \"org.apache.xml.security.signature.XMLSignature\", matches: Some(\"^ALGO_ID_SIGNATURE_EDDSA_\") }"
   - "Field { owner: \"org.bouncycastle.bcpg.PublicKeyAlgorithmTags\", matches: Some(\"^(EDDSA|EDDSA_LEGACY|Ed25519|Ed448)$\") }"
   - "Field { owner: \"org.bouncycastle.openpgp.PGPPublicKey\", matches: Some(\"^(EDDSA|EDDSA_LEGACY|Ed25519|Ed448)$\") }"
+  - "Key { algorithm: Some(\"^Ed(25519|448)$\"), signature: None }"
 EdDSA (JOSE/JWT):
   - "Call { receiver: \"com.nimbusds.jose.JWSAlgorithm\", method: \"parse\", arg: Some(ArgPattern { index: 0, matches: \"^(EdDSA|Ed25519|Ed448)$\" }), origin: None }"
   - "Construct { ty: \"com.nimbusds.jose.crypto.Ed25519Signer\", arg: None }"
@@ -284,6 +290,7 @@ RSA:
   - "Field { owner: \"software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec\", matches: Some(\"^RSAES_\") }"
   - "Field { owner: \"software.amazon.awssdk.services.kms.model.KeySpec\", matches: Some(\"^RSA_\") }"
   - "Field { owner: \"software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec\", matches: Some(\"^RSASSA_\") }"
+  - "Key { algorithm: Some(\"^RSA$\"), signature: None }"
   - "Property { key: \"(?i)^encrypt\\\\.key-?store\\\\.location$\", matches: None }"
   - "Property { key: \"(?i)^encrypt\\\\.rsa\\\\.\", matches: None }"
 RSA (JOSE/JWT):
@@ -329,6 +336,7 @@ SHA-1:
   - "Field { owner: \"org.bouncycastle.bcpg.HashAlgorithmTags\", matches: Some(\"^SHA1$\") }"
   - "Field { owner: \"org.opensaml.xml.signature.SignatureConstants\", matches: Some(\"^(ALGO_ID_DIGEST_SHA1|ALGO_ID_SIGNATURE_(RSA|DSA|RSA_SHA1|DSA_SHA1|ECDSA_SHA1))$\") }"
   - "Field { owner: \"org.opensaml.xmlsec.signature.support.SignatureConstants\", matches: Some(\"^(ALGO_ID_DIGEST_SHA1|ALGO_ID_SIGNATURE_(RSA|DSA|RSA_SHA1|DSA_SHA1|ECDSA_SHA1))$\") }"
+  - "Key { algorithm: None, signature: Some(\"^SHA1with\") }"
 TLS key exchange:
   - "Call { receiver: \"java.lang.System\", method: \"setProperty\", arg: Some(ArgPattern { index: 1, matches: \"(?i)(^|,)\\\\s*(x25519|x448|secp(256|384|521)r1|ffdhe\\\\d+)\\\\s*(,|$)\" }), origin: None }"
   - "Field { owner: \"okhttp3.CipherSuite\", matches: Some(\"^(TLS|SSL)_(RSA|DHE?|ECDHE?)_\") }"

@@ -99,6 +99,7 @@ fn shor(rule_id: &str, algorithm: &str, path: &str, at: Location) -> Finding {
         path: path.into(),
         role: CodeRole::Production,
         location: at,
+        detail: None,
         flow: Vec::new(),
         hybrid_evidence: None,
         fix: None,

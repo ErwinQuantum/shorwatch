@@ -127,13 +127,24 @@ pub enum Pattern {
         #[serde(default)]
         matches: Option<String>,
     },
+    /// A key or certificate whose public key `algorithm` and, for
+    /// certificates, `signature` algorithm match (either absent: any).
+    Key {
+        #[serde(default)]
+        algorithm: Option<String>,
+        #[serde(default)]
+        signature: Option<String>,
+    },
 }
 
 impl Pattern {
     fn arg(&self) -> Option<&ArgPattern> {
         match self {
             Pattern::Call { arg, .. } | Pattern::Construct { arg, .. } => arg.as_ref(),
-            Pattern::Field { .. } | Pattern::Literal { .. } | Pattern::Property { .. } => None,
+            Pattern::Field { .. }
+            | Pattern::Literal { .. }
+            | Pattern::Property { .. }
+            | Pattern::Key { .. } => None,
         }
     }
 }

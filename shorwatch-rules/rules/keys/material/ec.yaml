@@ -1,0 +1,11 @@
+id: keys.material.ec
+profile: ec
+platform: keys
+message: >-
+  An elliptic-curve key or certificate (used for ECDSA signatures or ECDH key
+  agreement). Keys and certificates live for years, and whatever they protect
+  or sign until they are replaced can be attacked later: a quantum computer
+  running Shor's algorithm recovers the private key from the public one.
+
+patterns:
+  - key: { algorithm: '^EC$' }

@@ -5,7 +5,7 @@
 //! ties them into [`Finding`]s.
 
 use crate::finding::{Finding, Status};
-use crate::ir::{Fact, SourceUnit};
+use crate::ir::{Fact, FactKind, SourceUnit};
 use crate::rule::{CompiledRule, RuleSet};
 
 mod fix;
@@ -55,6 +55,10 @@ fn build_finding(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact, matched: M
         path: unit.path().to_owned(),
         role: unit.role(),
         location: fact.location,
+        detail: match &fact.kind {
+            FactKind::Key { label, .. } => Some(label.clone()),
+            _ => None,
+        },
         flow: matched.flow.clone(),
         hybrid_evidence,
         fix: suggested_fix(rule, &matched),

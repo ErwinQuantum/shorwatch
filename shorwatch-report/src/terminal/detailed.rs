@@ -56,6 +56,10 @@ pub(super) fn render(scan: &Scan, finding: &Finding) -> String {
         let _ = writeln!(out, "{pad} {bar} {}", paint(underline, accent()));
     }
     let _ = writeln!(out, "{pad} {bar} {}", paint(&finding.title, bold()));
+    // Key material: what the file holds, which its bytes do not show.
+    if let Some(detail) = &finding.detail {
+        let _ = writeln!(out, "{pad} {eq} found: {detail}");
+    }
 
     // Where the value comes from, step by step, when it is written elsewhere.
     for (index, step) in finding.flow.iter().enumerate() {

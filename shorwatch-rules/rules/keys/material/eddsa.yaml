@@ -1,0 +1,11 @@
+id: keys.material.eddsa
+profile: eddsa
+platform: keys
+message: >-
+  An EdDSA (Ed25519 or Ed448) key or certificate. Keys and certificates live
+  for years, and whatever they protect or sign until they are replaced can be
+  attacked later: a quantum computer running Shor's algorithm recovers the
+  private key from the public one.
+
+patterns:
+  - key: { algorithm: '^Ed(25519|448)$' }

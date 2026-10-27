@@ -4,7 +4,7 @@ use shorwatch_core::Language;
 use shorwatch_core::ir::{FactKind, SourceUnit};
 use tree_sitter::{Node, Parser};
 
-use super::location;
+use crate::span::byte_range;
 use crate::{Frontend, LangError};
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -67,7 +67,7 @@ impl YamlLowering<'_> {
             }
             "plain_scalar" | "double_quote_scalar" | "single_quote_scalar" | "block_scalar" => {
                 if let Some(value) = self.scalar(node) {
-                    let location = location(self.src, node.start_byte(), node.end_byte());
+                    let location = byte_range(self.src, node.start_byte(), node.end_byte());
                     let kind = FactKind::Property { key: prefix, value };
                     self.unit.push(kind, SourceUnit::ROOT, location);
                 }

@@ -104,12 +104,18 @@ fn result(finding: &Finding, rule_index: usize) -> SarifResult<'_> {
         rule_index,
         level: level(finding.severity),
         message: Text {
-            text: match &finding.hybrid_evidence {
-                Some(e) => format!(
-                    "{} In transition: post-quantum code at line {} ({}).",
-                    finding.message, e.location.start.line, e.text
-                ),
-                None => finding.message.clone(),
+            text: {
+                let mut text = match &finding.detail {
+                    Some(detail) => format!("Found {detail}. {}", finding.message),
+                    None => finding.message.clone(),
+                };
+                if let Some(e) = &finding.hybrid_evidence {
+                    text.push_str(&format!(
+                        " In transition: post-quantum code at line {} ({}).",
+                        e.location.start.line, e.text
+                    ));
+                }
+                text
             },
         },
         locations: [ResultLocation {

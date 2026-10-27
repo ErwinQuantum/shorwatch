@@ -29,10 +29,13 @@ pub(super) fn render(scan: &Scan) -> String {
             current = Some(&finding.path);
         }
         let start = finding.location.start;
-        let excerpt = scan
-            .line(&finding.path, start.line)
-            .map(|l| excerpt(l.trim()))
-            .unwrap_or_default();
+        let excerpt = match &finding.detail {
+            Some(detail) => excerpt(detail),
+            None => scan
+                .line(&finding.path, start.line)
+                .map(|l| excerpt(l.trim()))
+                .unwrap_or_default(),
+        };
         let role = match (any_test, finding.role) {
             (false, _) => String::new(),
             (true, CodeRole::Test) => format!("{}  ", paint("test", dim())),

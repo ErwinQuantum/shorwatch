@@ -13,6 +13,10 @@ pub enum Language {
     Properties,
     /// YAML configuration files.
     Yaml,
+    /// Keys and certificates: PEM and DER files, Java keystores, PKCS#12
+    /// and SSH keys.
+    #[serde(rename = "key-material")]
+    KeyMaterial,
 }
 
 impl Language {
@@ -20,6 +24,7 @@ impl Language {
         match self {
             Language::Java | Language::Kotlin => Platform::Jvm,
             Language::Properties | Language::Yaml => Platform::Config,
+            Language::KeyMaterial => Platform::Keys,
         }
     }
 }
@@ -33,4 +38,7 @@ impl Language {
 pub enum Platform {
     Jvm,
     Config,
+    /// Key material: the algorithm of keys and certificates themselves,
+    /// whatever file holds them.
+    Keys,
 }

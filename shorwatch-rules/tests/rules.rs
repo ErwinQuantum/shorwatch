@@ -28,6 +28,9 @@ struct Compact {
     hybrid_evidence: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     fix: Option<String>,
+    /// What a key fact says about itself: subject, size, expiry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    detail: Option<String>,
     /// The data-flow path, one `[file:]line: note` per step.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     flow: Vec<String>,
@@ -45,6 +48,7 @@ impl From<Finding> for Compact {
             fix: f
                 .fix
                 .map(|fix| format!("{} @ {}", fix.replacement, fix.location.start.line)),
+            detail: f.detail,
             flow: f
                 .flow
                 .iter()
@@ -60,9 +64,13 @@ impl From<Finding> for Compact {
 fn lower(path: &Path) -> Option<SourceUnit> {
     let extension = path.extension()?.to_str()?;
     let frontend = shorwatch_langs::for_extension(extension)?;
-    let source = fs::read_to_string(path).unwrap();
     let name = path.file_name().unwrap().to_string_lossy();
-    Some(frontend.lower(&name, &source).unwrap())
+    Some(
+        frontend
+            .lower_bytes(&name, fs::read(path).unwrap())
+            .unwrap()
+            .0,
+    )
 }
 
 /// Compiled once: every fixture is analyzed with all built-in rules.
@@ -91,18 +99,21 @@ fn findings(path: &Path) -> Vec<Compact> {
 
 #[test]
 fn fixtures() {
-    insta::glob!("fixtures/**/*.{java,kt,yml,yaml,properties}", |path| {
-        let findings = findings(path);
-        if path.file_stem().is_some_and(|s| s == "Clean") {
-            assert!(
-                findings.is_empty(),
-                "{} should be clean, got {} finding(s)",
-                path.display(),
-                findings.len()
-            );
+    insta::glob!(
+        "fixtures/**/*.{java,kt,yml,yaml,properties,pem,crt,der,key,pub,jks,p12}",
+        |path| {
+            let findings = findings(path);
+            if path.file_stem().is_some_and(|s| s == "Clean") {
+                assert!(
+                    findings.is_empty(),
+                    "{} should be clean, got {} finding(s)",
+                    path.display(),
+                    findings.len()
+                );
+            }
+            insta::assert_yaml_snapshot!(findings);
         }
-        insta::assert_yaml_snapshot!(findings);
-    });
+    );
 }
 
 /// What a finding means, without where it is: twins differ in layout.

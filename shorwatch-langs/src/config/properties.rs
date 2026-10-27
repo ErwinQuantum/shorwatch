@@ -3,7 +3,7 @@
 use shorwatch_core::Language;
 use shorwatch_core::ir::{FactKind, SourceUnit};
 
-use super::location;
+use crate::span::byte_range;
 use crate::{Frontend, LangError};
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -21,7 +21,7 @@ impl Frontend for PropertiesFrontend {
     fn lower(&self, path: &str, source: &str) -> Result<SourceUnit, LangError> {
         let mut unit = SourceUnit::new(path, Language::Properties);
         for entry in properties(source) {
-            let location = location(source, entry.value_start, entry.value_end);
+            let location = byte_range(source, entry.value_start, entry.value_end);
             let kind = FactKind::Property {
                 key: entry.key,
                 value: entry.value,

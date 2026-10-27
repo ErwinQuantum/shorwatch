@@ -1,0 +1,13 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/keys/authorized.pub
+---
+- rule: keys.material.ecdsa
+  at: "1:1"
+  status: vulnerable
+  detail: "SSH public key \"ci@example\": ECDSA secp256r1"
+- rule: keys.material.eddsa
+  at: "2:1"
+  status: vulnerable
+  detail: "SSH public key \"ops@example\": Ed25519"

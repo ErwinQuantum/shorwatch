@@ -225,6 +225,7 @@ mark { background: transparent; color: inherit; text-decoration: underline 2px v
 .refs { margin: 4px 0 0; padding-left: 18px; font-size: 13px; }
 .note { border-left: 3px solid var(--good); padding: 4px 10px; color: var(--ink-2); background: var(--surface-2); border-radius: 0 6px 6px 0; }
 .note.fix { border-left-color: var(--accent); }
+.detail { font: 13px/1.5 var(--mono); color: var(--ink-2); margin: -4px 0 10px; overflow-wrap: anywhere; }
 
 /* Data-flow path */
 .flow { margin: 12px 0; padding: 12px 14px; background: var(--surface-2); border-radius: 8px; }

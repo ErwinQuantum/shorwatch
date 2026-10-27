@@ -1,0 +1,9 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/keys/deploy_rsa.pub
+---
+- rule: keys.material.rsa
+  at: "1:1"
+  status: vulnerable
+  detail: "SSH public key \"deploy@example\": RSA 3072-bit"

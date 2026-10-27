@@ -1,4 +1,10 @@
 # Keep fixtures and snapshots byte-identical across platforms: findings carry
 # byte offsets, and snapshots must not churn on Windows checkouts.
 * text=auto eol=lf
+# Binary key material fixtures (DER certificates, keystores).
+*.der binary
+*.jks binary
+*.jceks binary
+*.p12 binary
+*.pfx binary
 graphify-out/graph.json merge=graphify

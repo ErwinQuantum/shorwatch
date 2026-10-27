@@ -1,0 +1,11 @@
+id: keys.material.dh
+profile: dh
+platform: keys
+message: >-
+  A finite-field Diffie-Hellman key. Keys and certificates live for years, and
+  whatever they protect or sign until they are replaced can be attacked later:
+  a quantum computer running Shor's algorithm recovers the private key from
+  the public one.
+
+patterns:
+  - key: { algorithm: '^DH$' }

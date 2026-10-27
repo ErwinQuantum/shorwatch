@@ -44,6 +44,10 @@ pub struct Finding {
     /// Whether the finding is in production or test code.
     pub role: CodeRole,
     pub location: Location,
+    /// What was found, when the source line does not show it: a
+    /// certificate's subject, key size and expiry.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub detail: Option<String>,
     /// How the matched value reached `location` when it was written
     /// elsewhere: the literal first, then each assignment, call or return.
     #[serde(skip_serializing_if = "Vec::is_empty")]

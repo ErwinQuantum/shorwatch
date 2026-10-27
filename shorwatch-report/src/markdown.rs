@@ -57,8 +57,9 @@ pub fn render(scan: &Scan) -> String {
             cell(&f.algorithm),
             cell(&f.path),
             f.location.start.line,
-            match f.flow.first() {
-                Some(origin) => match &origin.path {
+            match (&f.detail, f.flow.first()) {
+                (Some(detail), _) => format!(" ({})", cell(detail)),
+                (None, Some(origin)) => match &origin.path {
                     Some(path) => format!(
                         " (value from `{}:{}`)",
                         cell(path),
@@ -66,7 +67,7 @@ pub fn render(scan: &Scan) -> String {
                     ),
                     None => format!(" (value from line {})", origin.location.start.line),
                 },
-                None => String::new(),
+                (None, None) => String::new(),
             },
             match f.role {
                 CodeRole::Production => status_label(f.status).to_owned(),

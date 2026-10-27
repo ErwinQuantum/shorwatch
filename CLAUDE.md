@@ -10,7 +10,8 @@ Shorwatch is a SAST tool in Rust that finds quantum-vulnerable cryptography in
 source code and configuration, and suggests migrating to the NIST post-quantum
 standards (FIPS 203 ML-KEM, FIPS 204 ML-DSA). It analyzes statically through
 tree-sitter (no compiling, no binaries): **Java** and **Kotlin** sources plus
-**YAML / `.properties`** configuration (Spring Boot). Everything in the repo
+**YAML / `.properties`** configuration (Spring Boot), and the **key material**
+a repository holds (certificates, keys, keystores). Everything in the repo
 (code, comments, rules, docs, commits) is in English.
 
 ## Architecture (hexagonal workspace)
@@ -36,6 +37,7 @@ rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules)  error.rs
 langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
+           keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
 cli/src/   args, discover, layout, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
 ```
 
@@ -116,6 +118,19 @@ cli/src/   args, discover, layout, classpath (--classpath: dirs, jars, jmods, @f
   leaves `"$x"` and unicode escapes as plain content): templates are `None`.
   `@Value("\${k}")` on properties, constructor and function parameters
   (function parameter annotations are preceding `parameter_modifiers` siblings).
+- **Key material** (`langs/src/keys/`, platform `keys`, `Language::KeyMaterial`):
+  formats told apart by content, never by extension. One `FactKind::Key`
+  (algorithm, bits, curve, signature, `label`) per key; `Finding::detail`
+  carries the label, since binary files have no line to show (their
+  findings sit at 1:1 and `lower_bytes` keeps no text). Hand-written DER
+  reader: no ASN.1 dependency. A self-signed certificate's (or a CSR's)
+  signature is not a fact (nothing verifies it, so no SHA-1 finding);
+  certificates a keystore only *trusts* are grouped per algorithm when
+  there are several (Keycloak's truststores copy ~290 JDK CAs); a PKCS#12
+  key whose certificate is present is not repeated. Encrypted content is
+  skipped silently. Fixtures are generated with OpenSSL 3.5 (ML-DSA,
+  ML-KEM), keytool and ssh-keygen; private key fixtures start with a
+  "throwaway" comment line.
 - **YAML / properties**: flatten keys like Spring (`a.b[0].c`), one
   `FactKind::Property` per scalar, located at the value. Multi-document YAML,
   flow/block collections, `\` continuations, CRLF. Comments produce nothing.
@@ -149,12 +164,16 @@ Rule fields override profile fields. A rule file may also be self-contained.
 Tests enforce: id = path, platform = top folder, file name = profile, every
 profile/marker set used. `build.rs` embeds everything under `rules/`.
 
+Rules for key material (`keys/material/`) match `key: { algorithm,
+signature }` and override the profile's `message` (the profiles talk about
+code).
+
 Profiles (17): `rsa dh ecdh ecdsa ec eddsa dsa elgamal` (shor, high),
 `aes-128` (grover, low, fix only in `jvm/jca`), `sha1` `3des` (grover,
 medium, no fix), `jose-rsa jose-ecdsa jose-eddsa jose-ecdh` (shor, JWT advice),
 `jose-aes-128` (grover), `tls-key-exchange` (shor, TLS suites).
 
-Libraries (119 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
+Libraries (127 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
 jsch, apache-sshd, tls (suite-name literals, `jdk.tls.namedGroups`), okhttp,
 aws-kms, azure-keyvault, gcp-kms, tink, opensaml,
 xml-security (JSR 105 + Santuario), android-keystore, spring-security, jjwt,
@@ -162,7 +181,8 @@ nimbus (incl. `JWSAlgorithm.Family`), auth0, i2p-eddsa, commons-codec, guava
 · `config/` spring-boot
 (jws-algorithms, public-key-location, `*.ssl.ciphers`), spring-cloud-config
 (`encrypt.key-store`, `encrypt.rsa`), app (custom `*.alg`/`*.algorithm`
-keys with exact JOSE names).
+keys with exact JOSE names) · `keys/` material (RSA, EC, ECDSA, DSA, EdDSA,
+X25519/X448, DH keys; SHA-1 certificate signatures).
 
 Notable design calls: generic `"EC"` keys and EC JWKs → `ec` profile (could
 be ECDH or ECDSA); SHA-1 excludes HMAC-SHA1, PBKDF2-SHA1, OAEP-SHA1; one value

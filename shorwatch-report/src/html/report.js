@@ -242,6 +242,7 @@
         el("span", { class: "where", text: `line ${start.line}, column ${start.column}` }),
       ]),
       el("p", { class: "finding-title", text: f.title }),
+      f.detail ? el("p", { class: "detail", text: f.detail }) : null,
       codeBlock(f),
       flowDiagram(f),
       el("div", { class: "explain" }, [

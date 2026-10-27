@@ -54,6 +54,13 @@ The same algorithms are also detected inside **JWT/JOSE** (RS256, PS256,
 ES256, EdDSA, RSA-OAEP, ECDH-ES, A128GCM, ...) with token-specific advice:
 ML-DSA for JOSE, algorithm-agile verifiers and JWKS rotation.
 
+Besides code and configuration, Shorwatch reads the **keys and certificates**
+a repository holds: PEM and DER certificates, public and private keys, Java
+keystores (JKS, JCEKS), PKCS#12 files and SSH keys. Each one is reported with
+its subject, key size or curve, signature and expiry, e.g. `certificate
+"CN=api.example.com": RSA 2048-bit, signed with SHA256withRSA, valid until
+2031-03-01`.
+
 Every finding carries the file, line, severity, an explanation, migration
 advice and links to the relevant NIST documents.
 
@@ -93,7 +100,10 @@ shorwatch rules                              # list the rules in effect
 
 `scan` walks the given paths respecting `.gitignore`, analyzes `.java`,
 `.kt`, `.kts`, `.yml`, `.yaml` and `.properties` files in parallel, and resolves
-`@Value("${...}")` injections against the project's configuration files.
+`@Value("${...}")` injections against the project's configuration files. Key
+material is read from `.pem`, `.crt`, `.cer`, `.der`, `.key`, `.pub`, `.csr`,
+`.jks`, `.jceks`, `.keystore`, `.truststore`, `.p12` and `.pfx` files, told
+apart by content.
 
 | Option | |
 |---|---|
@@ -325,6 +335,7 @@ the same findings.
 | Google Tink: predefined parameters, legacy key templates, `KeyTemplates.get("ECDSA_P256")` | |
 | Android Keystore (`KeyProperties.KEY_ALGORITHM_RSA/EC`) | |
 | Algorithm names as literals, same-file `final` constants, enum/static constants and static imports | |
+| Keys and certificates: X.509 certificates and requests, SPKI public keys, PKCS#8, PKCS#1 and SEC 1 private keys (PEM or DER), JKS/JCEKS keystores, unencrypted PKCS#12 content, SSH public keys and OpenSSH private keys. Certificates a keystore only trusts are grouped by algorithm; the SHA-1 signature of a self-signed certificate is not reported (nothing verifies it) | Encrypted content: password-protected private keys and the certificates PKCS#12 encrypts with the store's password (Java's default) |
 | Data flow within and across files: variables, fields set in constructors, parameters of methods and constructors fed by calls anywhere in the project, returned values (`switch`/`when` mappings), constants of other classes, concatenations and templates, `?:`/`if` branches. Calls through interfaces reach every implementation (the type hierarchy comes from the sources), and chained calls such as `Crypto.provider().keyPairGenerator("RSA")` are typed from the declared return type, also along longer chains and for variables without a written type (`var`, Kotlin `val`). With `--classpath`, library types too (`jsch.getSession(...)` returns a `Session`). Findings show the path from the literal to the use, file by file | Overloads; enum properties; values that depend on the order of execution |
 | Kotlin idioms: constructor calls without `new`, `val` / `const val` / `companion object` constants, member imports, `@Value` on constructor parameters, scope functions (`apply`, `run`, `with`, `also`, `let`) | Kotlin extension functions that wrap crypto (needs data flow) |
 

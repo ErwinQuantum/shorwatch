@@ -23,7 +23,7 @@ pub fn scan(
     options: &Options,
 ) -> Scan {
     let cwd = std::env::current_dir().unwrap_or_default();
-    let mut lowered: Vec<(SourceUnit, String)> = files
+    let mut lowered: Vec<(SourceUnit, Option<String>)> = files
         .par_iter()
         .filter_map(|(path, role)| {
             let (mut unit, source) = lower(path, &cwd)?;
@@ -54,7 +54,7 @@ pub fn scan(
         .iter()
         .zip(sources)
         .filter(|(unit, _)| shown(unit.path()))
-        .map(|(unit, source)| (unit.path().to_owned(), source))
+        .filter_map(|(unit, source)| Some((unit.path().to_owned(), source?)))
         .collect();
     Scan {
         tool_version: options.tool_version.clone(),
@@ -64,31 +64,24 @@ pub fn scan(
     }
 }
 
-/// Reads and lowers one file. Unreadable files are reported on stderr and
-/// skipped, so one bad file never aborts a scan.
-fn lower(path: &Path, cwd: &Path) -> Option<(SourceUnit, String)> {
+/// Reads and lowers one file, with the text reports show (none for binary
+/// files). Unreadable files are reported on stderr and skipped, so one bad
+/// file never aborts a scan.
+fn lower(path: &Path, cwd: &Path) -> Option<(SourceUnit, Option<String>)> {
     let extension = path.extension()?.to_str()?;
     let frontend = shorwatch_langs::for_extension(extension)?;
-    let source = match fs::read(path) {
-        Ok(bytes) => decode(bytes),
+    let bytes = match fs::read(path) {
+        Ok(bytes) => bytes,
         Err(error) => {
             eprintln!("warning: skipping `{}`: {error}", path.display());
             return None;
         }
     };
-    match frontend.lower(&display_path(path, cwd), &source) {
-        Ok(unit) => Some((unit, source)),
+    match frontend.lower_bytes(&display_path(path, cwd), bytes) {
+        Ok(lowered) => Some(lowered),
         Err(error) => {
             eprintln!("warning: skipping `{}`: {error}", path.display());
             None
         }
     }
-}
-
-/// UTF-8, or else ISO-8859-1: the historical encoding of `.properties` files
-/// and of older Java sources. Every byte is a Latin-1 character, so decoding
-/// never fails; algorithm names and keys are ASCII either way.
-fn decode(bytes: Vec<u8>) -> String {
-    String::from_utf8(bytes)
-        .unwrap_or_else(|error| error.into_bytes().into_iter().map(char::from).collect())
 }

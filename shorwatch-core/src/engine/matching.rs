@@ -71,6 +71,25 @@ pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Op
         (CompiledPattern::Property { key, value }, FactKind::Property { key: k, value: v }) => {
             return (key.is_match(k) && optional(value, v)).then_some(Match::NONE);
         }
+        (
+            CompiledPattern::Key {
+                algorithm,
+                signature,
+            },
+            FactKind::Key {
+                algorithm: actual,
+                signature: signed,
+                ..
+            },
+        ) => {
+            // A signature pattern needs a signature: keys alone have none.
+            let signed = match (signature, signed) {
+                (None, _) => true,
+                (Some(re), Some(signed)) => re.is_match(signed),
+                (Some(_), None) => false,
+            };
+            return (optional(algorithm, actual) && signed).then_some(Match::NONE);
+        }
         _ => return None,
     };
 

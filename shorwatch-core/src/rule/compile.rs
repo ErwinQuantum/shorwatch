@@ -38,6 +38,10 @@ pub(crate) enum CompiledPattern {
         key: Regex,
         value: Option<Regex>,
     },
+    Key {
+        algorithm: Option<Regex>,
+        signature: Option<Regex>,
+    },
 }
 
 #[derive(Debug)]
@@ -165,6 +169,13 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                 Pattern::Property { key, matches } => CompiledPattern::Property {
                     key: regex(key)?,
                     value: matches.as_deref().map(regex).transpose()?,
+                },
+                Pattern::Key {
+                    algorithm,
+                    signature,
+                } => CompiledPattern::Key {
+                    algorithm: algorithm.as_deref().map(regex).transpose()?,
+                    signature: signature.as_deref().map(regex).transpose()?,
                 },
             })
         })

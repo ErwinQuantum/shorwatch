@@ -222,6 +222,25 @@ pub enum FactKind {
     /// A configuration entry. `key` is flattened with dots and list indexes as
     /// written (`a.b[0].c`); `value` is the scalar as text.
     Property { key: String, value: String },
+    /// A key or certificate: in a PEM or DER file, a keystore entry, an SSH
+    /// key.
+    Key {
+        /// The public key algorithm: `RSA`, `EC`, `DSA`, `Ed25519`, `X25519`,
+        /// `ML-DSA-65`... (the OID in dotted form when unknown).
+        algorithm: String,
+        /// Key size in bits, when the algorithm has one (RSA, DSA).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        bits: Option<u32>,
+        /// Named curve of an EC key (`secp256r1`).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        curve: Option<String>,
+        /// How a certificate is signed (`SHA256withRSA`), by its issuer.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        signature: Option<String>,
+        /// What holds the key, for people: `certificate CN=api.example.com
+        /// (alias "server"), valid until 2027-03-01`.
+        label: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
