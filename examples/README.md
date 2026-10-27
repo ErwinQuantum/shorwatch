@@ -14,10 +14,10 @@ to be compiled or run: these files exist to be scanned.
 From the repository root:
 
 ```sh
-cargo run --release -- scan examples/spring-service
-cargo run --release -- scan examples/spring-service --details
-cargo run --release -- scan examples/algorithms --compact
-cargo run --release -- scan examples/spring-service --format sarif --output report.sarif
+cargo run --release -- report examples/spring-service      # opens the HTML report
+cargo run --release -- examples/spring-service --details
+cargo run --release -- examples/algorithms --compact
+cargo run --release -- examples/spring-service --format sarif --output report.sarif
 ```
 
 ## What to look at in the reports
@@ -28,7 +28,7 @@ cargo run --release -- scan examples/spring-service --format sarif --output repo
   default but `ES256` in the `prod` profile, so the `JWSAlgorithm.parse(...)`
   call is reported, and so is the config key itself.
 - `LegacyCrypto.java`: SHA-1, 3DES through a constant, and AES-128. Only the
-  AES-128 finding carries an automatic fix (`128` → `256`).
+  AES-128 finding carries a suggested fix (`128` → `256`).
 - `HybridKeyExchange.java` uses X25519 next to ML-KEM: reported as
   **in transition**, not vulnerable.
 - `StatementSigner.java` passes `algorithmFor(partnerTier)` to

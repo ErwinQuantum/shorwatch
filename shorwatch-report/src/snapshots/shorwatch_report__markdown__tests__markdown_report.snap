@@ -8,7 +8,7 @@ expression: render(&scan())
 |---|---:|
 | Vulnerable | 4 |
 | In transition (hybrid) | 1 |
-| Auto-fixable | 1 |
+| With a suggested fix | 1 |
 | In test code | 1 |
 | Severity high | 4 |
 | Severity low | 1 |

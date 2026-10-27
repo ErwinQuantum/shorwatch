@@ -33,7 +33,7 @@ pub struct HtmlReport {
 }
 
 /// Writes the HTML report where it was asked for (or, for someone reading
-/// the text report on a terminal or asking to `--open` it, to a temporary
+/// the text report on a terminal or asking to `--open` it, to the per-user
 /// folder). With `--format html` the report itself is written by [`write`].
 pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<HtmlReport> {
     let path = if let Some(path) = &args.html {
@@ -59,7 +59,7 @@ pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<HtmlReport> {
     Ok(HtmlReport { path, link })
 }
 
-/// The HTML report goes to the temporary folder: nobody said where.
+/// The HTML report goes to the per-user report folder: nobody said where.
 fn temporary(scan: &Scan, args: &ScanArgs) -> bool {
     if args.html.is_some() || args.format == Format::Html {
         return false;

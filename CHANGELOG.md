@@ -7,65 +7,80 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-### Added
-- Docker image (`ghcr.io/erwinquantum/shorwatch`, static musl binary on Alpine) for CI systems without Rust, published for version tags; README snippets for Jenkins, Azure DevOps and GitLab CI. The static build uses mimalloc: musl's allocator halved multi-threaded scan speed.
-- Initial repository layout (5-crate workspace).
-- `shorwatch-core`: intermediate model, rule model with validation (Shor-category rules cannot carry an auto-fix) and evaluation engine with hybrid-scheme detection.
-- `shorwatch-langs`: Java frontend (tree-sitter) resolving receiver types and same-file `final` constants.
-- `shorwatch-rules`: YAML loader and 11 built-in Java rules:
-  - Shor category (advice only, never an auto-fix): `rsa`, `dh`, `ecdh` (including X25519/X448/XDH and ECIES), `ecdsa`, `ec` (ambiguous "EC" key material), `eddsa` (Ed25519/Ed448), `dsa`, `elgamal`.
-  - Grover category: `aes-128` (with a mechanical AES-256 fix), `sha1`, `3des`.
-- Hybrid-scheme detection: findings next to ML-KEM/ML-DSA/Kyber/Dilithium code, BouncyCastle PQC or liboqs imports are reported as `in_transition`. Glued hybrid names such as `X25519MLKEM768` are recognised.
-- Fixture-driven snapshot tests: one folder per rule, discovered automatically.
-- Static field reads (`JWSAlgorithm.RS256`, `Jwts.SIG.ES256`) as a new kind of fact, with a `field` rule pattern; single static imports are resolved for fields and unqualified method calls.
-- JWT/JOSE rules: `jwt.rsa`, `jwt.ecdsa`, `jwt.eddsa`, `jwt.ecdh` and `jwt.aes-128`, covering jjwt (0.11 and 0.12), Nimbus JOSE + JWT and Auth0 java-jwt. EC JWKs are reported as generic ECC.
-- Spring Security coverage: OAuth2 JOSE algorithm constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters` and spring-security-rsa.
-- A realistic Spring Authorization Server fixture exercising the frontend on records, lambdas, annotations and generics.
-- Configuration frontends: YAML (tree-sitter-yaml) and `.properties`, flattening keys the Spring way (`a.b[0].c`), with a `property` rule pattern.
-- Config rules: Spring Boot resource server algorithms and public keys, TLS cipher suites (`*.ssl.ciphers`), Spring Cloud Config encryption keys, and application keys such as `jwt.algorithm: RS256`. New `tls-key-exchange` profile.
-- Values injected with `@Value("${key:default}")` are resolved across files (`shorwatch_core::link`) against every profile's config, with Spring relaxed binding.
-  Production code only sees production config; test code also sees test config.
-- `shorwatch` CLI: `scan` (parallel, `.gitignore`-aware, `--format text|sarif|json|markdown`, `--output`, `--min-severity`, `--fail-on`, `--compact`, `--rules`) and `rules`. Exit codes 0/1/2 for CI gates.
-- Reports: rustc-style terminal output with the matched span underlined and a gradient banner on interactive terminals, SARIF 2.1.0 (rule descriptors, `security-severity`, fixes), JSON and Markdown.
-- CycloneDX 1.6 CBOM output (`--format cbom`): one `cryptographic-asset` per algorithm with primitive, parameters and NIST quantum security level, and every occurrence as evidence. Validated against the official schema. Profiles gain a `crypto:` block, enforced by tests.
-- Kotlin frontend (tree-sitter-kotlin-ng) for `.kt` and `.kts`: constructor calls without `new`, `val`/`const val`/`companion object` constants, member imports and aliases, `@Value` on constructor and function parameters, string templates, and scope functions (`apply`, `run`, `with`, `also`, `let`) passing their receiver to the lambda. All JVM rules apply unchanged; every Java fixture has a Kotlin twin that must produce the same findings.
-- Receiver origin: a call on a variable created by a factory (`g = KeyGenerator.getInstance("AES"); g.init(128)`, Kotlin `...getInstance("AES").apply { init(128) }`) carries the factory's arguments, and `call` patterns can constrain them with `origin`. `KeyGenerator.init(128)` on an HMAC generator is no longer reported as AES-128; a generator of unknown origin still is.
-- Rules for BouncyCastle PKIX certificate signing (`JcaContentSignerBuilder`, `Bc*ContentSignerBuilder`), XML Signature and Encryption (JSR 105 and Apache Santuario: RSA, ECDSA, DSA, EdDSA, SHA-1, AES-128, 3DES), the Android Keystore (`KeyProperties.KEY_ALGORITHM_RSA/EC`) and Nimbus algorithm families (`JWSAlgorithm.Family.RSA`...). 64 rules.
-- Rules for OpenPGP (BouncyCastle `bcpg` algorithm tags), JSch (key types and `setConfig` algorithm lists, hybrid `mlkem768x25519-sha256` recognised as in transition) and Apache MINA SSHD (signature and key-exchange factories, host key algorithms). 87 rules.
-- `literal` rule pattern: a string literal anywhere in the code, optionally skipped when passed to methods matching `unless_call`. Literal facts record the calls they are arguments of.
-- Rules for TLS configured in code (cipher suite names in any stack, OkHttp `CipherSuite`, `jdk.tls.namedGroups`; exclusion lists ignored), cloud KMS (AWS, Azure Key Vault, Google Cloud KMS), Google Tink and OpenSAML. Spring Boot cipher lists also accept OpenSSL names. 119 rules.
-- Findings know whether they are in production or test code (`CodeRole`, set from the project layout: Maven/Gradle test source sets, test directories, `*Test`/`*IT` classes). Every format shows it (terminal label and summary split, `role` in JSON and SARIF plus a `test` SARIF tag, Markdown, CBOM), and `--exclude-tests` skips test code.
-- `examples/`: one file per algorithm, a Spring Boot service (Java and Kotlin) and its reports in every format.
-- `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md`.
+The first release.
 
-- Data flow within a file: an algorithm reaching the crypto API through a variable, a field, a parameter fed by a call in the same file, a method's return value, a concatenation or a conditional is resolved, and the finding carries its path (`flow`: where the value is written, then each assignment, call or return). Shown in the terminal, as SARIF `codeFlows`, in JSON and in Markdown. On the field-test projects: 9 new findings, all true positives.
+### Detection
 
-- `--format html`: a self-contained HTML report (styles, script and data embedded, nothing loaded from the network) with a summary, post-quantum readiness, findings by severity and algorithm, filters, and every finding with its code, explanation, advice and data-flow path. Light and dark themes, print styles.
-- The example Spring service gains a statement signer whose algorithm comes from a `switch`, to show data flow; `examples/output/` includes the HTML report.
+- 127 rules over 17 algorithm profiles: RSA, Diffie-Hellman, ECDH (X25519,
+  X448, ECIES), ECDSA, generic EC keys, EdDSA, DSA and ElGamal (broken by
+  Shor's algorithm); AES-128, SHA-1 and 3DES (weakened by Grover's); the same
+  algorithms in JWT/JOSE, and TLS key exchange.
+- Java and Kotlin sources: JCA/JCE, BouncyCastle (lightweight API, PKIX,
+  OpenPGP), Nimbus JOSE + JWT, jjwt, Auth0 java-jwt, Spring Security, JSch,
+  Apache MINA SSHD, XML Signature and Encryption (JSR 105, Santuario,
+  OpenSAML), TLS in code (JSSE, Netty, Jetty, Tomcat, OkHttp), AWS, Azure and
+  Google Cloud KMS, Google Tink, the Android Keystore, Commons Codec, Guava.
+- Spring configuration (`application.yml`, `.properties`): resource server
+  algorithms and keys, TLS cipher suites, Spring Cloud Config encryption,
+  application keys such as `jwt.algorithm: RS256`.
+- Keys and certificates a repository holds, told apart by content: X.509
+  certificates and requests, public and private keys (PEM or DER), JKS and
+  JCEKS keystores, PKCS#12, SSH keys. Each finding names what it found
+  (subject, key size or curve, signature, expiry).
+- Hybrid-aware: classical crypto next to post-quantum code (ML-KEM, ML-DSA,
+  BouncyCastle PQC, liboqs, `X25519MLKEM768`) is reported as *in transition*.
+- Suggested fixes only where safe (AES-128 → AES-256); a rule for a
+  Shor-broken algorithm that declares a fix is rejected.
+- Rules are YAML data; your own load at run time with `--rules`.
 
-- Data flow across files: an algorithm passed to a method or constructor of another file, or returned by one, is followed through the project (receiver type, name and arity; up to three calls), and each step of the path names its file. A method's return binds its parameters to the call's own arguments. Production code takes no values from test code. On the field-test projects this finds Keycloak's central signing contexts (RSA, ECDSA, EdDSA through `JavaAlgorithm.getJavaAlgorithm`) and Spring Security's SHA-1 password encoder across three files; all new findings were true positives.
+### Analysis
 
-- Type hierarchy from the sources (`extends`, `implements`, Kotlin supertypes): data flow follows calls through interfaces and superclasses to every implementation. Chained receivers (`Crypto.provider().keyPairGen("RSA")`) are typed from the declared return type of the method, in any file. Constants of other files (`KeyType.RSA`, static imports) resolve, as arguments and along data-flow paths. On the field-test projects: Keycloak's crypto providers (Default, FIPS, Elytron) and PicketLink's SAML signatures (DSA and RSA with SHA-1), all new findings true positives; 19 of 84 variable-argument `getInstance` calls in production code are now reported, from none before data flow.
-- Longer receiver chains (`CryptoIntegration.getProvider().getPemUtils().generateThumbprint(...)`) are typed call by call, up to eight calls. On the field-test projects: Keycloak's SHA-1 JWK thumbprint.
-- Variables with no written type (`var p = keys.provider()`, Kotlin `val p = ...`) take the declared return type of the call that initializes them; it also replaces the guess that `X.m()` returns an `X`.
-- `--classpath`: compiled dependencies (directories, jars, jmods, or `@file` listing them, such as Maven's `dependency:build-classpath` output) are read as a type oracle. Their class files give the types and method return types the sources cannot see, so `jsch.getSession(...).apply { setConfig("kex", ...) }` is checked as a JSch `Session` call. Signatures only: no code from the classpath is analyzed. Only the types the project reaches are kept; reading a whole 1 GB Maven repository adds about 2 s.
-- Key material: certificates (PEM or DER), certificate requests, public and private keys (SPKI, PKCS#8, PKCS#1, SEC 1), Java keystores (JKS, JCEKS), PKCS#12 files and SSH keys are scanned, told apart by content. Each finding names what it found (`certificate "CN=api.example.com": RSA 2048-bit, signed with SHA256withRSA, valid until 2031-03-01`) in every report format (`Finding::detail`). Certificates a keystore only trusts are grouped by algorithm, and the SHA-1 signature of a self-signed certificate is not reported. Post-quantum keys (ML-DSA, ML-KEM, SLH-DSA) are recognised and not reported. 127 rules.
-- Terminal overview: the default text report lists the files with findings (one line each, production code first, grouped by project), explains the three most urgent findings and ends with the summary and where to look next. `--details` explains every finding; findings now also say why they matter.
-- The text report now only counts by default, as test runners do, and links the HTML report: on an interactive terminal it is written to the system's temporary folder (`--no-html` skips it), and `--html FILE` writes it next to any other format. The file list and most urgent findings moved to `--overview`. `--open` opens the report in the default browser when the scan ends, and `shorwatch open` opens the last one again (terminals such as VS Code's open `file://` links in the editor).
-- `shorwatch` without a command scans (like `shorwatch scan`), `shorwatch report` scans and opens the HTML report, `--watch` scans again whenever a scanned file changes, and `shorwatch ci` is the scan for pipelines: SARIF and HTML in `shorwatch-report/`, the summary in the log linked to the report where GitHub Actions, GitLab CI, Jenkins or Azure Pipelines serve the job's artifacts, and the GitHub Actions job summary.
-- Findings open where they are fixed: the terminal's HTML report links each one to VS Code (`vscode://`, line and column; saved reports leave it out, as it holds local paths), and in CI the HTML report and the GitHub job summary link each location to its lines at the scanned commit on GitHub or GitLab, plus github.dev.
-- Baseline and suppressions: `shorwatch baseline` records today's findings in `shorwatch-baseline.json`, which later scans from that folder read to report only new ones (`--baseline FILE`, `--no-baseline`); findings are recognised by rule, file and the code on their line. `// shorwatch:ignore <rule or profile> -- reason` (or `#` in YAML and properties) ignores a finding on its line or the next one, and `.shorwatchignore` skips files. Every report counts what was left out; SARIF leaves them out (counted in the run's properties) and every result gets a `partialFingerprints` entry; the CBOM still inventories their algorithms.
-- CI gating: `--fail-severity` (only findings at or above it fail the scan; the rest are still reported), a closing line on standard error saying why the scan fails, and `--report-url` / `SHORWATCH_REPORT_URL` so that line links the HTML report where CI publishes it. README snippets for GitHub Actions, Jenkins, Azure DevOps and GitLab CI publish the report and pass its URL.
-- Projects: a scan of a folder of services or repositories (the top-most build roots under it) or of several project paths reports each project on its own, in the terminal, in JSON (`projects`) and in the HTML report, which opens on an index of project cards with a tab per project. Each project is linked separately: unrelated services share no data flow, and eight repositories scanned together went from 52 s to 21 s.
-- The HTML report is now an editorial audit report: a cover (headline numbers, where the findings live, the three to fix first, algorithms, severities) and chapters opened from any number, with production code grouped by file, test code folded, findings opening in place, a contents column and a link per chapter and finding. No framework and nothing from the network (Content-Security-Policy); light and dark themes.
+- Values are followed to the crypto API through constants, `@Value`
+  properties (resolved against every profile's configuration), variables,
+  parameters, returned values, concatenations and branches, within and
+  across files; findings show the path, file by file.
+- Calls through interfaces reach every implementation; chained calls and
+  untyped variables are typed from declared return types. `--classpath`
+  reads compiled dependencies for their types (signatures only).
+- Test code is told from production code by the project layout and
+  labelled (`--exclude-tests` skips it). A folder of services is split into
+  projects, each analyzed on its own.
 
-### Fixed
-- Absolute paths outside the working directory were shown as `C:/\/Users/...` on Windows.
+### Reports
 
-### Changed
-- A type name without an import only matches types of the file's package, its on-demand imports and the implicit ones (`java.lang`, Kotlin's defaults); Java 25 `import module` keeps any match. Fixes same-package classes mistaken for library types (Keycloak's `KeyType` for Azure's).
-- The Spring Security RSA rule also covers `org.springframework.security.crypto.encrypt`, where Spring Security 6.3 moved spring-security-rsa.
-- Rules target a platform (`jvm`, `config`) instead of a language, so JVM rules apply to Java and Kotlin alike.
-- JVM name resolution (receivers, constants, injected values, member imports) is shared by the Java and Kotlin frontends (`shorwatch-langs/src/jvm`).
-- MSRV raised to Rust 1.88.
-- Rules are split into algorithm profiles (`rules/algorithms/`, written once) and per-library rule files (`rules/jvm/<library>/`, `rules/config/<framework>/`) holding only patterns. Rule ids follow the path, e.g. `jvm.nimbus.jose-rsa`. Hybrid markers are shared (`rules/markers/pqc.yaml`). Every file under `rules/` is embedded automatically.
+- Terminal: a summary by default, with a link to the HTML report;
+  `--overview`, `--details`, `--compact`.
+- HTML: one offline page that reads like an audit report, with a cover and
+  chapters per severity, algorithm and project; findings open in VS Code (in
+  the terminal's report) or on GitHub/GitLab and github.dev (in CI).
+- SARIF 2.1.0 (code scanning, IDEs), CycloneDX 1.6 CBOM (validated against
+  the schema), JSON and Markdown.
+
+### Workflow
+
+- `shorwatch` scans the current project; `shorwatch report` opens the HTML
+  report; `shorwatch open` reopens the last one; `--watch` scans again on
+  every change.
+- `shorwatch ci` for pipelines: SARIF and HTML in one folder, the summary in
+  the log linked to the report where GitHub Actions, GitLab CI, Jenkins or
+  Azure Pipelines publish it, the GitHub job summary and an error
+  annotation. Gates: `--fail-on`, `--fail-severity`; exit codes 0, 1, 2.
+- Adoption on existing code: `shorwatch baseline` (fail only on new
+  findings), `// shorwatch:ignore <rule> -- reason`, `.shorwatchignore`.
+  Whatever is left out is counted in every report.
+
+### Security
+
+- Scanned repositories are treated as untrusted: private key bodies never
+  reach a report, control characters never reach the terminal or CI logs,
+  the HTML report renders text only under a Content-Security-Policy with no
+  network access, and Markdown escapes markup from file names.
+- Binaries with SHA-256 checksums and build provenance attestations;
+  workflow actions pinned by commit; `cargo deny` in CI. See
+  [SECURITY.md](SECURITY.md).
+
+### Distribution
+
+- Binaries for Linux, macOS and Windows; a Docker image
+  (`ghcr.io/erwinquantum/shorwatch`, static, on Alpine) for CI systems
+  without Rust. Rust 1.88 or later to build from source.

@@ -66,7 +66,7 @@
 
  Summary  17 findings in 9 files (9 scanned)
           13 high · 3 medium · 1 low
-          16 vulnerable · 1 in transition · 1 auto-fixable
+          16 vulnerable · 1 in transition · 1 with a suggested fix
 
  → --html shorwatch.html  a report to browse
  → --details  every finding, here

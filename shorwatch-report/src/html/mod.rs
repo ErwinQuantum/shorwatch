@@ -1,9 +1,9 @@
 //! A self-contained HTML report: one file with its styles, script and data,
 //! that opens offline (CI artifacts, e-mail) and loads nothing from the
 //! network. The page renders the scan client-side from embedded JSON: a
-//! summary, charts, filters, and every finding with its code, explanation
-//! and data-flow path. A scan of several projects opens on an index of them,
-//! with a tab per project.
+//! cover (headline numbers, where findings live, what to fix first) and
+//! hash-routed chapters per severity, algorithm and project, every finding
+//! with its code, explanation and data-flow path.
 //!
 //! All source text reaches the page as data and is inserted with
 //! `textContent`, never as markup.

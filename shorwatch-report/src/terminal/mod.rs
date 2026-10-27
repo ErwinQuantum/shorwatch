@@ -161,7 +161,7 @@ fn summary(scan: &Scan) -> String {
     let _ = writeln!(out, "{indent} {}", paint(severities.join(" · "), bold()));
     let _ = writeln!(
         out,
-        "{indent} {} vulnerable · {} in transition · {} auto-fixable",
+        "{indent} {} vulnerable · {} in transition · {} with a suggested fix",
         summary.vulnerable, summary.in_transition, summary.fixable
     );
     if summary.in_tests > 0 {

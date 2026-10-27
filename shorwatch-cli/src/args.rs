@@ -144,17 +144,19 @@ pub struct ScanArgs {
     pub output: Option<PathBuf>,
 
     /// Also write the HTML report to this file, whatever the --format. On an
-    /// interactive terminal the text report writes one to a temporary folder
-    /// anyway and links it (see --no-html).
+    /// interactive terminal the text report writes one to a per-user folder
+    /// anyway (the temporary folder on Windows, the cache folder elsewhere)
+    /// and links it (see --no-html).
     #[arg(long, value_name = "FILE")]
     pub html: Option<PathBuf>,
 
-    /// Do not write the HTML report to a temporary folder.
+    /// Do not write the HTML report to the per-user report folder.
     #[arg(long, conflicts_with = "html")]
     pub no_html: bool,
 
     /// Open the HTML report in the browser when the scan ends (written to
-    /// a temporary folder unless --html or --format html says where).
+    /// the per-user report folder unless --html or --format html says
+    /// where).
     #[arg(long, conflicts_with = "no_html")]
     pub open: bool,
 
@@ -242,8 +244,8 @@ pub enum Format {
     Json,
     /// Markdown summary (CI job summaries, PR comments).
     Markdown,
-    /// A self-contained HTML page with charts, filters, code and data-flow
-    /// paths (offline, nothing loaded from the network).
+    /// A self-contained HTML audit report: a cover, chapters, every finding
+    /// with its code and data-flow path (offline, no network access).
     Html,
 }
 

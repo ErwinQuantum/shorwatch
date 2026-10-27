@@ -27,7 +27,8 @@ a repository holds (certificates, keys, keystores). Everything in the repo
 
 Pipeline (what the CLI does): lower every file with its frontend → group
 units by project → `link` each project's units → `analyze` each unit →
-report. A scanned folder with no build file whose subfolders (2 levels) hold
+make text from scanned files printable (`printable.rs`) → set suppressed
+findings aside (`suppress/`) → report. A scanned folder with no build file whose subfolders (2 levels) hold
 several build roots (`pom.xml`, Gradle, `.git`...) is several projects;
 several plain paths (`src/ config/`) stay one project so `@Value` still
 resolves across them.
@@ -43,10 +44,12 @@ langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, synta
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
-cli/src/   args, browser (--open, `shorwatch open`), ci, gate (--fail-on/--fail-severity), watch,
-           suppress/{mod: apply, inline: `shorwatch:ignore`, baseline: shorwatch-baseline.json}, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
+cli/src/   args, pipeline, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file)
+           printable (control characters out), suppress/{mod: apply, inline: `shorwatch:ignore`,
+           baseline: shorwatch-baseline.json}, gate (--fail-on/--fail-severity), output,
+           browser (--open, `shorwatch open`), ci, watch
 report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, wrap, banner}
-           html/{mod: payload, report.html/css/js}  sarif cbom json markdown summary links
+           html/{mod: payload, report.html/css/js}  sarif cbom json markdown summary links suppression
 ```
 
 ### Invariants (do not break)
@@ -55,6 +58,12 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
 - Rules are data. A new detection must not require touching the engine.
 - Rules target a **platform** (`jvm`, `config`), not a language: JVM rules
   describe library APIs that Java and Kotlin call identically.
+- **Scanned repositories are untrusted.** Text from them reaches reports
+  only through `printable` (no control characters) and, in HTML, only as
+  `textContent`; links in the page are limited to `#`, `http(s)://` and
+  `vscode://`, and rule references must be http(s). Private key bodies never
+  reach the text reports show (`keys::pem::redact_private_keys`). Binary
+  parsers are bounded; never `read_to_end` input without a size limit.
 - **Shor-category rules can never carry a `fix`** (`RuleError::FixNotAllowed`).
   Their `suggestion` is educational text only.
 - A fix is never offered when the matched value was resolved indirectly
@@ -236,6 +245,7 @@ cargo test --workspace
 INSTA_UPDATE=always cargo test -p shorwatch-rules   # or `cargo insta review`
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
+cargo deny check                                     # advisories, licenses
 ```
 
 Toolchain: stable, edition 2024, MSRV 1.88 (`ignore` uses let chains).

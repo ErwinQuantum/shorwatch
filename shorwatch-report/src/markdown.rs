@@ -34,7 +34,7 @@ pub fn render(scan: &Scan) -> String {
         "| In transition (hybrid) | {} |",
         summary.in_transition
     );
-    let _ = writeln!(out, "| Auto-fixable | {} |", summary.fixable);
+    let _ = writeln!(out, "| With a suggested fix | {} |", summary.fixable);
     if summary.in_tests > 0 {
         let _ = writeln!(out, "| In test code | {} |", summary.in_tests);
     }

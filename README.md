@@ -8,9 +8,9 @@ into a syntax tree, matches it against declarative rules, and reports every use
 of cryptography that a quantum computer would break or weaken, together with
 the post-quantum replacement and the NIST standard behind it.
 
-**Status: pre-alpha (v0.1 in progress).** The scanner works end to end on Java,
-Kotlin and Spring projects; no release has been published yet. See
-[Coverage](#coverage) for exactly what is and isn't detected.
+**Status: v0.1.** Java, Kotlin and Spring projects, and the keys and
+certificates they hold. See [Coverage](#coverage) for exactly what is and
+isn't detected.
 
 ## Why
 
@@ -36,7 +36,7 @@ Shorwatch automates that inventory.
 
 ## What it detects
 
-| Algorithm | Threat | Migrate to | Auto-fix |
+| Algorithm | Threat | Migrate to | Suggested fix |
 |---|---|---|---|
 | RSA | Shor | ML-KEM (FIPS 203) / ML-DSA (FIPS 204) | never |
 | Diffie-Hellman | Shor | ML-KEM | never |
@@ -74,21 +74,32 @@ advice and links to the relevant NIST documents.
   (ML-KEM, ML-DSA, Kyber, Dilithium, BouncyCastle PQC, liboqs) is reported as
   **in transition** instead of vulnerable. Projects that are already migrating
   are recognized, not punished.
-- **Auto-fix only where it is safe.** AES-128 → AES-256 is a parameter change,
-  so Shorwatch can propose the edit. Replacing RSA or ECC changes the protocol,
-  so that advice is always text for a human, never an automatic edit. The
-  engine enforces this: a rule for a Shor-broken algorithm that declares a fix
-  is rejected when the rules are loaded.
-- **Rules are data.** Detections live in YAML files, so adding one never
-  requires touching or recompiling the engine.
+- **Fixes only where they are safe.** AES-128 → AES-256 is a parameter
+  change, so Shorwatch suggests the edit (in SARIF, for tools that apply it,
+  and in `--details`). Replacing RSA or ECC changes the protocol, so that
+  advice is always text for a human, never an edit. The engine enforces this:
+  a rule for a Shor-broken algorithm that declares a fix is rejected when the
+  rules are loaded.
+- **Rules are data.** Detections live in YAML files: adding one never touches
+  the engine, and your own rules load at run time (`--rules`).
+- **Adoptable on old code.** A baseline lets a project fail only on new
+  findings, and every finding left out is counted, never hidden.
+
+## Install
+
+- **Binaries** for Linux and Windows (x86-64) and macOS (Apple silicon and
+  Intel) on the
+  [releases page](https://github.com/ErwinQuantum/shorwatch/releases), with
+  SHA-256 checksums and build provenance (`gh attestation verify <file>
+  --repo ErwinQuantum/shorwatch`).
+- **Docker**: `docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch`
+  (see [Docker](#docker-jenkins-azure-devops-gitlab-ci)).
+- **From source** (Rust 1.88 or later):
+  `cargo install --git https://github.com/ErwinQuantum/shorwatch shorwatch-cli`
 
 ## Usage
 
-Install it once, then run `shorwatch` from any project:
-
-```sh
-cargo install --path shorwatch-cli          # until the first release is published
-```
+Run `shorwatch` from any project:
 
 ```sh
 shorwatch                                    # scan the current project: counts, and a link to the HTML report
@@ -124,7 +135,7 @@ against the project's configuration files. Key material is read from `.pem`,
 | `-o, --output FILE` | Write the report to a file |
 | `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
 | `--html FILE` | Also write the HTML report there, whatever the format |
-| `--no-html` | Do not write the HTML report to a temporary folder (see below) |
+| `--no-html` | Do not write the HTML report to the per-user report folder (see below) |
 | `--open` | Open the HTML report in the browser when the scan ends (`shorwatch report` does it) |
 | `--watch` | Scan again whenever a scanned file changes, until Ctrl+C |
 | `--report-url URL` | The link shown for the HTML report, e.g. where CI publishes it (also `SHORWATCH_REPORT_URL`) |
@@ -134,6 +145,7 @@ against the project's configuration files. Key material is read from `.pem`,
 | `--overview` | List the files with findings and explain the three most urgent |
 | `--details` | Explain every finding |
 | `--compact` | One line per finding |
+| `--baseline FILE` / `--no-baseline` | Leave out the findings of this baseline (default: `shorwatch-baseline.json`, when present) / report them all |
 | `--rules DIR` | Extra rules directory (repeatable) |
 | `--classpath PATHS` | Compiled dependencies to read types from (see below) |
 
@@ -163,11 +175,12 @@ KeyPairGenerator.getInstance("RSA");
 ```
 
 ```yaml
-jws-algorithms: RS256 # shorwatch:ignore rsa -- legacy mobile clients
+jws-algorithms: RS256 # shorwatch:ignore jose-rsa -- legacy mobile clients
 ```
 
 The comment goes on the finding's line or alone on the line above. Name
-rules by id or by profile (`rsa` covers every `*.rsa` rule), or none for
+rules by id or by profile (`rsa` covers every `*.rsa` rule, `jose-rsa` the
+JWT ones; `shorwatch rules` lists them), or none for
 every rule on that line; the reason after `--` travels into the reports. To
 skip whole files (test certificates, vendored code), list them in a
 `.shorwatchignore` file, in `.gitignore` syntax.
@@ -206,18 +219,18 @@ a 1 GB Maven repository).
 Scanning [`examples/spring-service`](examples/spring-service/), a small Spring
 Boot service. The terminal only counts, as test runners do, and links the
 HTML report, where findings are browsed (on an interactive terminal, the
-report is written to the system's temporary folder and overwritten by the
-next scan of the same project; `--html FILE` puts it elsewhere, `--no-html`
-skips it). Some terminals, VS Code's among them, open a `file://` link as
+report is written to a per-user folder, the temporary folder on Windows and
+`~/.cache/shorwatch` on Linux, and overwritten by the next scan of the same
+project; `--html FILE` puts it elsewhere, `--no-html` skips it). Some terminals, VS Code's among them, open a `file://` link as
 text in the editor: `shorwatch report` (or `--open`) opens the report in the
 default browser when the scan ends, `shorwatch open` afterwards.
 
 ```text
  Summary  17 findings in 9 files (9 scanned)
           13 high · 3 medium · 1 low
-          16 vulnerable · 1 in transition · 1 auto-fixable
+          16 vulnerable · 1 in transition · 1 with a suggested fix
 
- Report   file:///tmp/shorwatch/spring-service.html
+ Report   file:///home/you/.cache/shorwatch/spring-service.html
 
  → shorwatch open  open it in your browser
  → --details  every finding, here
@@ -242,9 +255,12 @@ why it matters, what to do); `--compact` gives one line per finding.
 ```
 
 Every format for that scan is in [`examples/output/`](examples/output/):
-[text](examples/output/report.txt) (also [--overview](examples/output/report-overview.txt) and [--details](examples/output/report-details.txt)), [SARIF](examples/output/report.sarif),
-[CBOM](examples/output/report.cdx.json), [JSON](examples/output/report.json),
-[Markdown](examples/output/report.md), [HTML](examples/output/report.html).
+[text](examples/output/report.txt) (also
+[--overview](examples/output/report-overview.txt) and
+[--details](examples/output/report-details.txt)),
+[SARIF](examples/output/report.sarif), [CBOM](examples/output/report.cdx.json),
+[JSON](examples/output/report.json), [Markdown](examples/output/report.md),
+[HTML](examples/output/report.html).
 
 ### HTML report
 
@@ -338,7 +354,7 @@ When the scan fails, the last line of the log says why and links the report:
 ```text
  Summary  17 findings in 9 files (9 scanned)
           13 high · 3 medium · 1 low
-          16 vulnerable · 1 in transition · 1 auto-fixable
+          16 vulnerable · 1 in transition · 1 with a suggested fix
 
  Report   https://github.com/acme/payments/actions/runs/912345678
 
@@ -553,7 +569,9 @@ shorwatch-core     Pure domain: intermediate code model, rule model and
 shorwatch-rules    Built-in YAML rules, loader and schema validation.
 shorwatch-langs    Frontends that lower files into the core's intermediate
                    model: Java and Kotlin (tree-sitter, sharing one JVM
-                   name resolver), YAML (tree-sitter), .properties.
+                   name resolver), YAML (tree-sitter), .properties, key
+                   material (hand-written DER, PEM, keystore and SSH
+                   readers), and class files for --classpath.
 shorwatch-report   Output adapters: terminal, SARIF 2.1.0, CycloneDX CBOM,
                    JSON, Markdown and a self-contained HTML report.
 shorwatch-cli      The `shorwatch` binary.
@@ -572,14 +590,22 @@ cargo build --release
 cargo test --workspace
 ```
 
+[CONTRIBUTING.md](CONTRIBUTING.md) explains how to add a rule or a frontend;
+[AGENTS.md](AGENTS.md) describes the architecture and its invariants for
+coding agents and humans alike. Security issues: see
+[SECURITY.md](SECURITY.md).
+
 ## Roadmap
 
-- More configuration formats (Quarkus, Micronaut)
-- Data-flow analysis to follow crypto through wrapper methods
-- Dependency inventory (`pom.xml`, `build.gradle`, crypto inside compiled `.jar`s)
-- Editor integration through LSP
-- Pre-commit hook and incremental CI scans
-- A post-quantum maturity score per project (migrated / hybrid / vulnerable)
+- Editor integration through LSP: findings underlined as you type
+- Pull-request mode: report and comment only what a change introduces
+- A GitHub Action on the Marketplace, and `shorwatch fix` to apply the
+  suggested fixes
+- A post-quantum maturity score and the NIST IR 8547 deadlines per project
+- Beyond source code: dependency versions (`pom.xml`, `build.gradle`),
+  infrastructure (nginx, Kubernetes, Terraform) and message brokers
+- More configuration formats (Quarkus, Micronaut, `@ConfigurationProperties`)
+- More languages
 
 ## License
 

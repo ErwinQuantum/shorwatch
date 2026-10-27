@@ -13,7 +13,11 @@ cargo build
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt --all --check
+cargo deny check        # advisories and licenses; `cargo install cargo-deny`
 ```
+
+[AGENTS.md](AGENTS.md) describes the architecture, the invariants the tests
+enforce and the conventions, for coding agents and humans alike.
 
 Snapshot tests use [insta](https://insta.rs). After a change that alters
 output, review and accept snapshots with `cargo insta review` (install it with
@@ -29,6 +33,7 @@ algorithms/<profile>.yaml        what an algorithm is and why it matters (writte
 markers/<name>.yaml              signs of post-quantum code (hybrid detection)
 jvm/<library>/<profile>.yaml     the patterns one library exposes
 config/<framework>/<profile>.yaml
+keys/material/<profile>.yaml     keys and certificates a repository holds
 ```
 
 ### Covering a new library for an existing algorithm
@@ -63,13 +68,19 @@ migration advice and NIST references come from `algorithms/rsa.yaml`.
 | `field` | A static constant `Type.NAME`, with an optional `matches` regex on the name | `JWSAlgorithm.RS256` |
 | `literal` | A string literal anywhere in the code, by `matches` regex; optional `unless_call` regex on the methods it is passed to. Only for names specific enough to stand alone | `"TLS_ECDHE_RSA_WITH_..."`, but not in `setExcludeCipherSuites(...)` |
 | `property` | A config entry: `key` regex, optional `matches` regex on the value | `server.ssl.ciphers: TLS_RSA_...` |
+| `key` | A key or certificate in a key file: `algorithm` and/or `signature` regexes | `key: { signature: '^SHA1with' }` |
 
 Types are fully qualified; Shorwatch resolves imports, `var`, fields and
 parameters, so code using simple names still matches. A name without an
 import only matches types of the file's own package, its `import a.b.*`
 packages and `java.lang` (a same-package `KeyType` is not Azure's), unless the
-file uses a Java 25 `import module`. Arguments match through
-literals, same-file `final` constants and `@Value("${...}")` properties.
+file uses a Java 25 `import module`. Arguments match whatever value
+Shorwatch can follow to them: literals, constants (of any class),
+`@Value("${...}")` properties, and the data flow within and across files
+(variables, parameters, returned values).
+
+To see what your rule does on real code without writing a test, scan a
+project with it: `shorwatch --rules ./my-rules/ --details path/to/project`.
 
 Write regexes in **single quotes** (`'^RSA$'`): in single-quoted YAML a
 backslash is literal, which is what regexes want.
@@ -112,9 +123,9 @@ on the other crates.
 |---|---|
 | `shorwatch-core` | Intermediate model, rule model and validation, engine, cross-file linking |
 | `shorwatch-rules` | Embedded YAML rules and the loader that assembles profiles and rules |
-| `shorwatch-langs` | Frontends: Java (tree-sitter), YAML (tree-sitter), `.properties` |
-| `shorwatch-report` | Pure renderers: terminal, SARIF, JSON, Markdown |
-| `shorwatch-cli` | The `shorwatch` binary |
+| `shorwatch-langs` | Frontends: Java and Kotlin (tree-sitter, one shared JVM resolver), YAML (tree-sitter), `.properties`, key material, class files |
+| `shorwatch-report` | Pure renderers: terminal, SARIF, CBOM, JSON, Markdown, HTML |
+| `shorwatch-cli` | The `shorwatch` binary: commands, file discovery, the scan pipeline, baselines and suppressions |
 
 Conventions:
 
@@ -128,7 +139,8 @@ Conventions:
 
 ## Reporting a false positive or a missed detection
 
-Open an issue with the smallest Java or config snippet that reproduces it. It
-will very likely become a fixture.
+Open an issue with the smallest Java, Kotlin or config snippet that
+reproduces it. It will very likely become a fixture. Security issues go
+through [SECURITY.md](SECURITY.md), not an issue.
 
 By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).

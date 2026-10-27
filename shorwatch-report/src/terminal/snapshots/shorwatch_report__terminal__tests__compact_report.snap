@@ -17,5 +17,5 @@ src/test/java/com/acme/auth/SignerTest.java
 
  Summary  5 findings in 4 files (12 scanned)
           4 high · 1 low
-          4 vulnerable · 1 in transition · 1 auto-fixable
+          4 vulnerable · 1 in transition · 1 with a suggested fix
           4 in production code · 1 in test code
