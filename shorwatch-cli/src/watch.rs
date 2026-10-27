@@ -36,7 +36,8 @@ pub fn run(args: &ScanArgs, version: &str) -> Result<ExitCode> {
         if output::wants_banner(args) {
             output::banner(version)?;
         }
-        let scan = pipeline::run(&args.analysis, version)?;
+        let mut scan = pipeline::run(&args.analysis, version)?;
+        output::add_links(&mut scan, args);
         crate::report(&scan, args, open)?;
         open = false;
         writeln!(

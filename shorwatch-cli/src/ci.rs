@@ -8,20 +8,21 @@ use std::path::Path;
 use std::process::ExitCode;
 
 use anyhow::{Context, Result};
-use shorwatch_report::{Scan, html, markdown, sarif, terminal};
+use shorwatch_report::{Scan, WebLinks, html, markdown, sarif, terminal};
 
 use crate::args::CiArgs;
 use crate::{gate, output, pipeline};
 
 pub fn run(args: &CiArgs, version: &str) -> Result<ExitCode> {
-    let scan = pipeline::run(&args.analysis, version)?;
+    let env = |name: &str| std::env::var(name).ok().filter(|v| !v.is_empty());
+    let mut scan = pipeline::run(&args.analysis, version)?;
+    scan.links.web = web_links(env, &std::env::current_dir().unwrap_or_default());
     fs::create_dir_all(&args.out_dir)
         .with_context(|| format!("creating `{}`", args.out_dir.display()))?;
     let html_path = args.out_dir.join("report.html");
     write(&args.out_dir.join("report.sarif"), &sarif::render(&scan))?;
     write(&html_path, &html::render(&scan))?;
 
-    let env = |name: &str| std::env::var(name).ok().filter(|v| !v.is_empty());
     let published = slashes(&html_path);
     let link = args
         .gate
@@ -110,6 +111,47 @@ fn report_url(env: impl Fn(&str) -> Option<String>, html: &str) -> Option<String
     None
 }
 
+/// Links to the scanned commit's files on the repository host, from the
+/// variables its CI sets. Finding paths are relative to `cwd`, which may be
+/// a folder of the checkout.
+pub fn web_links(env: impl Fn(&str) -> Option<String>, cwd: &Path) -> Option<WebLinks> {
+    let within = |checkout: Option<String>| {
+        let prefix = checkout
+            .and_then(|root| cwd.strip_prefix(root).ok().map(slashes))
+            .unwrap_or_default();
+        if prefix.is_empty() {
+            prefix
+        } else {
+            format!("{prefix}/")
+        }
+    };
+    if env("GITHUB_ACTIONS").is_some() {
+        let server = env("GITHUB_SERVER_URL")?;
+        let repository = env("GITHUB_REPOSITORY")?;
+        let sha = env("GITHUB_SHA")?;
+        let prefix = within(env("GITHUB_WORKSPACE"));
+        return Some(WebLinks {
+            host: "GitHub".into(),
+            file: format!("{server}/{repository}/blob/{sha}/{prefix}{{path}}#L{{line}}-L{{end}}"),
+            // github.dev serves github.com repositories only.
+            editor: (server == "https://github.com").then(|| {
+                format!("https://github.dev/{repository}/blob/{sha}/{prefix}{{path}}#L{{line}}")
+            }),
+        });
+    }
+    if env("GITLAB_CI").is_some() {
+        let project = env("CI_PROJECT_URL")?;
+        let sha = env("CI_COMMIT_SHA")?;
+        let prefix = within(env("CI_PROJECT_DIR"));
+        return Some(WebLinks {
+            host: "GitLab".into(),
+            file: format!("{project}/-/blob/{sha}/{prefix}{{path}}#L{{line}}-{{end}}"),
+            editor: None,
+        });
+    }
+    None
+}
+
 /// A workspace path as CI systems write it in URLs.
 fn slashes(path: &Path) -> String {
     let text = path.to_string_lossy().replace('\\', "/");
@@ -177,6 +219,31 @@ mod tests {
     fn unknown_or_incomplete_ci_gives_no_link() {
         assert_eq!(url(&[]), None);
         assert_eq!(url(&[("GITLAB_CI", "true")]), None);
+    }
+
+    #[test]
+    fn findings_link_to_the_commit_on_the_host() {
+        let vars = [
+            ("GITHUB_ACTIONS", "true"),
+            ("GITHUB_SERVER_URL", "https://github.com"),
+            ("GITHUB_REPOSITORY", "acme/payments"),
+            ("GITHUB_SHA", "abc123"),
+            ("GITHUB_WORKSPACE", "/w/payments"),
+        ];
+        let env = |name: &str| {
+            vars.iter()
+                .find(|(key, _)| *key == name)
+                .map(|(_, value)| (*value).to_owned())
+        };
+        let links = web_links(env, Path::new("/w/payments/services")).unwrap();
+        assert_eq!(
+            links.file("auth/Keys.java", 3, 5).as_deref(),
+            Some("https://github.com/acme/payments/blob/abc123/services/auth/Keys.java#L3-L5")
+        );
+        assert_eq!(
+            links.editor.as_deref(),
+            Some("https://github.dev/acme/payments/blob/abc123/services/{path}#L{line}")
+        );
     }
 
     #[test]

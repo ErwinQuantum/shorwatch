@@ -40,7 +40,7 @@ pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<HtmlReport> {
         Some(path.clone())
     } else if args.format == Format::Html {
         args.output.clone()
-    } else if wants_temporary_html(scan, args) {
+    } else if temporary(scan, args) {
         Some(temporary_html(scan, args)?)
     } else {
         None
@@ -59,7 +59,11 @@ pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<HtmlReport> {
     Ok(HtmlReport { path, link })
 }
 
-fn wants_temporary_html(scan: &Scan, args: &ScanArgs) -> bool {
+/// The HTML report goes to the temporary folder: nobody said where.
+fn temporary(scan: &Scan, args: &ScanArgs) -> bool {
+    if args.html.is_some() || args.format == Format::Html {
+        return false;
+    }
     let reading = args.format == Format::Text
         && args.output.is_none()
         && !scan.findings.is_empty()
@@ -93,6 +97,22 @@ fn temporary_html(scan: &Scan, args: &ScanArgs) -> Result<PathBuf> {
         .collect();
     let name = if name.is_empty() { "scan".into() } else { name };
     Ok(folder.join(format!("{name}.html")))
+}
+
+/// Where findings open: on the repository host when the scan runs in its
+/// CI, and in the editor on this machine. Only the temporary report gets
+/// editor links: they hold this machine's paths (user names included), and
+/// a report saved with --html or --format html may be shared.
+pub fn add_links(scan: &mut Scan, args: &ScanArgs) {
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let env = |name: &str| std::env::var(name).ok().filter(|v| !v.is_empty());
+    scan.links.web = crate::ci::web_links(env, &cwd);
+    if scan.links.web.is_none() && temporary(scan, args) {
+        let root = fs::canonicalize(&cwd).unwrap_or(cwd);
+        let root = root.to_string_lossy().replace('\\', "/");
+        let root = root.strip_prefix("//?/").unwrap_or(&root);
+        scan.links.local_root = Some(root.to_owned());
+    }
 }
 
 /// A `file://` URL that terminals turn into a link.

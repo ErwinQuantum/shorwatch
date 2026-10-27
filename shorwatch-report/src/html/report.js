@@ -397,6 +397,31 @@
     }
   }
 
+  // Where the finding's lines open: VS Code for files on this machine, the
+  // repository host (and its editor in the browser) for scans run in CI.
+  function openLinks(f) {
+    const links = data.links || {};
+    const start = f.location.start;
+    const end = Math.max(f.location.end.line, start.line);
+    const absolute = /^(\/|[A-Za-z]:)/.test(f.path);
+    const out = [];
+    if (links.local_root) {
+      const file = absolute ? f.path : `${links.local_root}/${f.path}`;
+      out.push(el("a", { href: `vscode://file/${encodeURI(file)}:${start.line}:${start.column}`, text: "Open in VS Code" }));
+    }
+    if (links.web && !absolute && !f.path.split("/").includes("..")) {
+      const fill = (template) => template
+        .replace("{path}", f.path.split("/").map(encodeURIComponent).join("/"))
+        .replace("{line}", String(start.line))
+        .replace("{end}", String(end));
+      out.push(el("a", { href: fill(links.web.file), rel: "noopener noreferrer", target: "_blank", text: `View on ${links.web.host}` }));
+      if (links.web.editor) {
+        out.push(el("a", { href: fill(links.web.editor), rel: "noopener noreferrer", target: "_blank", text: "Open in github.dev" }));
+      }
+    }
+    return out;
+  }
+
   function findingDetail(f, params) {
     const link = `${window.location.href.split("#")[0]}${chapterHref({ ...params, f: f.id })}`;
     return el("div", { class: "finding-detail", id: `finding-${f.id}` }, [
@@ -419,6 +444,7 @@
         f.fix ? el("p", { text: `Fix: ${f.fix.description}: replace with “${f.fix.replacement}” at line ${f.fix.location.start.line}.` }) : null,
       ]),
       el("div", { class: "actions" }, [
+        openLinks(f),
         el("button", { type: "button", onclick: (e) => copy(e.currentTarget, link), text: "Copy link to this finding" }),
         el("button", { type: "button", onclick: (e) => copy(e.currentTarget, `${f.path}:${f.location.start.line}`), text: "Copy path" }),
         (f.references || []).map((r) => el("a", { href: r.url, rel: "noopener noreferrer", target: "_blank", text: r.title })),

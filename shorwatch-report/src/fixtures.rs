@@ -188,6 +188,7 @@ pub(crate) fn scan() -> Scan {
         .map(|(p, s)| (p.to_owned(), s.to_owned()))
         .collect(),
         files_scanned: 12,
+        links: crate::SourceLinks::default(),
         projects: Vec::new(),
     }
 }

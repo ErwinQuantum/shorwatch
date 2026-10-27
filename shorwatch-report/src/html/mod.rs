@@ -11,7 +11,7 @@
 use serde::Serialize;
 use shorwatch_core::Finding;
 
-use crate::{Project, Scan, Summary};
+use crate::{Project, Scan, SourceLinks, Summary};
 
 const TEMPLATE: &str = include_str!("report.html");
 const STYLE: &str = include_str!("report.css");
@@ -25,6 +25,7 @@ pub fn render(scan: &Scan) -> String {
         tool_version: &scan.tool_version,
         summary: scan.summary(),
         projects: &scan.projects,
+        links: &scan.links,
         findings: scan.findings.iter().map(|f| entry(scan, f)).collect(),
     };
     let data = serde_json::to_string(&payload).expect("a scan always serializes");
@@ -70,6 +71,7 @@ struct Payload<'a> {
     tool_version: &'a str,
     summary: Summary,
     projects: &'a [Project],
+    links: &'a SourceLinks,
     findings: Vec<Entry<'a>>,
 }
 

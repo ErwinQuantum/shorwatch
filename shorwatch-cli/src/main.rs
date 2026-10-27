@@ -59,7 +59,8 @@ fn scan(args: &ScanArgs) -> Result<ExitCode> {
     if output::wants_banner(args) {
         output::banner(VERSION)?;
     }
-    let scan = pipeline::run(&args.analysis, VERSION)?;
+    let mut scan = pipeline::run(&args.analysis, VERSION)?;
+    output::add_links(&mut scan, args);
     let failing = report(&scan, args, args.open)?;
     Ok(gate::exit_code(failing))
 }

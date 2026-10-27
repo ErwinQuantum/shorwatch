@@ -101,6 +101,7 @@ pub fn scan(
         sources,
         files_scanned: units.len(),
         projects,
+        links: shorwatch_report::SourceLinks::default(),
     }
 }
 

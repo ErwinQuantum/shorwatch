@@ -20,11 +20,13 @@ use shorwatch_core::Finding;
 pub mod cbom;
 pub mod html;
 pub mod json;
+pub mod links;
 pub mod markdown;
 pub mod sarif;
 pub mod summary;
 pub mod terminal;
 
+pub use links::{SourceLinks, WebLinks};
 pub use summary::Summary;
 
 /// Everything a report needs about one scan.
@@ -43,6 +45,8 @@ pub struct Scan {
     /// microservices. Empty or a single entry for one project; reports
     /// split findings by project only when there are several.
     pub projects: Vec<Project>,
+    /// Where findings open outside the report (editor, repository host).
+    pub links: SourceLinks,
 }
 
 /// The index of the project `path` belongs to: the one with the longest

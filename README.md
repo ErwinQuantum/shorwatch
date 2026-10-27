@@ -226,6 +226,14 @@ into one endless scroll and any finding can be shared.
 
 ![A chapter of the HTML report](docs/images/html-chapter.png)
 
+Each finding opens where you work on it. The report a scan writes for your
+terminal has **Open in VS Code**, straight to the line and column; reports
+saved with `--html` or `--format html` leave it out, since it would carry
+your machine's paths to whoever receives the file. A report written by
+`shorwatch ci` links **View on GitHub** (or GitLab) at the scanned commit,
+the lines highlighted, and **Open in github.dev**, the editor in the
+browser.
+
 A scan of several projects (a folder of services or repositories) ranks them
 on the cover, and each gets its chapters. The page is plain HTML, CSS and
 script with the data embedded: no framework, no fonts or anything else from
@@ -280,7 +288,8 @@ detects; quantum-safe algorithms are not listed yet.
 `shorwatch ci` is the scan for pipelines. It writes `shorwatch-report/`
 (`report.sarif` for code scanning tools, `report.html` for people; another
 folder with `--out-dir`), prints the summary in the log with a link to the
-HTML report, and, on GitHub Actions, adds it to the job summary. It knows
+HTML report, and, on GitHub Actions, adds it to the job summary, every
+location linked to its lines at the scanned commit. It knows
 where GitHub Actions, GitLab CI, Jenkins and Azure Pipelines serve a job's
 artifacts, so the link works once the folder is published; elsewhere, pass
 it with `--report-url` (or `SHORWATCH_REPORT_URL`).

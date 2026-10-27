@@ -1,7 +1,7 @@
 //! A Markdown summary for CI job summaries (`$GITHUB_STEP_SUMMARY`) and
 //! pull-request comments.
 
-use shorwatch_core::CodeRole;
+use shorwatch_core::{CodeRole, Finding};
 use std::fmt::Write as _;
 
 use crate::Scan;
@@ -52,11 +52,10 @@ pub fn render(scan: &Scan) -> String {
     for f in &scan.findings {
         let _ = writeln!(
             out,
-            "| {} | {} | `{}:{}`{} | {} | `{}` |",
+            "| {} | {} | {}{} | {} | `{}` |",
             severity_label(f.severity),
             cell(&f.algorithm),
-            cell(&f.path),
-            f.location.start.line,
+            location(scan, f),
             match (&f.detail, f.flow.first()) {
                 (Some(detail), _) => format!(" ({})", cell(detail)),
                 (None, Some(origin)) => match &origin.path {
@@ -79,6 +78,20 @@ pub fn render(scan: &Scan) -> String {
     out
 }
 
+/// `path:line`, linked to the lines on the repository host when known.
+fn location(scan: &Scan, f: &Finding) -> String {
+    let text = format!("`{}:{}`", cell(&f.path), f.location.start.line);
+    let url = scan
+        .links
+        .web
+        .as_ref()
+        .and_then(|web| web.file(&f.path, f.location.start.line, f.location.end.line));
+    match url {
+        Some(url) => format!("[{text}]({url})"),
+        None => text,
+    }
+}
+
 /// Escapes characters that would break a table cell.
 fn cell(text: &str) -> String {
     text.replace('|', "\\|").replace('\n', " ")
@@ -92,6 +105,23 @@ mod tests {
     #[test]
     fn markdown_report() {
         insta::assert_snapshot!(render(&scan()));
+    }
+
+    #[test]
+    fn locations_link_to_the_repository_host() {
+        let mut scan = scan();
+        scan.links.web = Some(crate::WebLinks {
+            host: "GitHub".into(),
+            file: "https://github.com/acme/auth/blob/abc/{path}#L{line}-L{end}".into(),
+            editor: None,
+        });
+        let report = render(&scan);
+        assert!(
+            report.contains(
+                "[`src/main/java/com/acme/auth/AuthConfig.java:5`](https://github.com/acme/auth/blob/abc/src/main/java/com/acme/auth/AuthConfig.java#L5-L5)"
+            ),
+            "{report}"
+        );
     }
 
     #[test]
