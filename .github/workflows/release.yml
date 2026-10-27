@@ -60,12 +60,30 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v5
       - uses: actions/download-artifact@v5
         with:
           path: dist
           merge-multiple: true
+      # Notes: the CHANGELOG section of this version (`## [0.1.0]`), or
+      # `[Unreleased]` for a pre-release such as `v0.1.0-rc.1`.
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/* \
-            --repo "$GITHUB_REPOSITORY" --title "Shorwatch $GITHUB_REF_NAME" --generate-notes
+          version="${GITHUB_REF_NAME#v}"
+          flags=()
+          section="$version"
+          if [[ "$version" == *-* ]]; then
+            flags+=(--prerelease)
+            section="Unreleased"
+          fi
+          awk -v section="$section" '
+            /^## \[/ { inside = index($0, "## [" section "]") == 1; next }
+            inside
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "No CHANGELOG section for $section" >&2
+            exit 1
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* "${flags[@]}" \
+            --repo "$GITHUB_REPOSITORY" --title "Shorwatch $GITHUB_REF_NAME" --notes-file notes.md
