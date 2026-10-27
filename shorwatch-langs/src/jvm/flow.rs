@@ -103,20 +103,17 @@ impl JvmFile {
                 value: value.clone(),
                 flow: vec![step(arg.location, format!("{} is written here", arg.raw))],
             }],
-            // A statically imported constant of another file.
-            ArgSource::Name(name)
-                if self.lookup_scope(scope, name).is_none()
-                    && let Some(owner) = self.static_imports.get(name) =>
-            {
-                vec![Candidate {
+            ArgSource::Name(name) => match self.static_imports.get(name) {
+                // A statically imported constant of another file.
+                Some(owner) if self.lookup_scope(scope, name).is_none() => vec![Candidate {
                     value: ArgValue::Constant {
                         owner: TypeRef::qualified(owner.clone()),
                         name: name.clone(),
                     },
                     flow: vec![step(arg.location, format!("{name} is a constant"))],
-                }]
-            }
-            ArgSource::Name(name) => self.variable(scope, name, false, arg.location, cx),
+                }],
+                _ => self.variable(scope, name, false, arg.location, cx),
+            },
             ArgSource::Member { owner, name } if owner == "this" => {
                 self.variable(scope, name, true, arg.location, cx)
             }
