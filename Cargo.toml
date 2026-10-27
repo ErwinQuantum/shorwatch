@@ -48,6 +48,13 @@ missing_debug_implementations = "warn"
 
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
+# A curated part of `pedantic`: the lints that catch bugs or unclear docs,
+# not the stylistic ones (`must_use` everywhere, `# Errors` sections).
+cast_possible_truncation = "warn"
+format_push_string = "warn"
+match_wildcard_for_single_variants = "warn"
+unnested_or_patterns = "warn"
+doc_markdown = "warn"
 
 [profile.release]
 lto = "thin"

@@ -8,6 +8,8 @@
 //! key lines. Encrypted content (a password-protected private key, the
 //! encrypted parts of a PKCS#12) is skipped: its algorithm is not visible.
 
+use std::fmt::Write as _;
+
 use shorwatch_core::Language;
 use shorwatch_core::ir::{FactKind, Location, SourceUnit};
 
@@ -107,7 +109,7 @@ impl Label {
     fn certificate(certificate: &x509::Certificate, alias: Option<&str>) -> Self {
         let mut what = format!("certificate \"{}\"", certificate.subject);
         if let Some(alias) = alias {
-            what.push_str(&format!(" (alias \"{alias}\")"));
+            let _ = write!(what, " (alias \"{alias}\")");
         }
         Self {
             what,
@@ -121,10 +123,10 @@ impl Label {
 fn push(unit: &mut SourceUnit, key: KeyInfo, label: Label, location: Location) {
     let mut text = format!("{}: {}", label.what, key.algorithm);
     if let Some(bits) = key.bits {
-        text.push_str(&format!(" {bits}-bit"));
+        let _ = write!(text, " {bits}-bit");
     }
     if let Some(curve) = &key.curve {
-        text.push_str(&format!(" {curve}"));
+        let _ = write!(text, " {curve}");
     }
     if let Some(signature) = &label.signature {
         let how = if label.self_signed {
@@ -132,10 +134,10 @@ fn push(unit: &mut SourceUnit, key: KeyInfo, label: Label, location: Location) {
         } else {
             "signed"
         };
-        text.push_str(&format!(", {how} with {signature}"));
+        let _ = write!(text, ", {how} with {signature}");
     }
     if let Some(date) = &label.not_after {
-        text.push_str(&format!(", valid until {date}"));
+        let _ = write!(text, ", valid until {date}");
     }
     let kind = FactKind::Key {
         algorithm: key.algorithm,

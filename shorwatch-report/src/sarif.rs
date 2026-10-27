@@ -5,6 +5,7 @@
 //! (Unicode code points). Mechanical fixes are attached as SARIF `fixes`.
 
 use std::collections::BTreeMap;
+use std::fmt::Write as _;
 
 use serde::Serialize;
 use shorwatch_core::ir::Location;
@@ -88,7 +89,7 @@ fn help_markdown(finding: &Finding) -> String {
     if !finding.references.is_empty() {
         text.push_str("\n\n**References**\n");
         for reference in &finding.references {
-            text.push_str(&format!("\n- [{}]({})", reference.title, reference.url));
+            let _ = write!(text, "\n- [{}]({})", reference.title, reference.url);
         }
     }
     text
@@ -110,10 +111,11 @@ fn result(finding: &Finding, rule_index: usize) -> SarifResult<'_> {
                     None => finding.message.clone(),
                 };
                 if let Some(e) = &finding.hybrid_evidence {
-                    text.push_str(&format!(
+                    let _ = write!(
+                        text,
                         " In transition: post-quantum code at line {} ({}).",
                         e.location.start.line, e.text
-                    ));
+                    );
                 }
                 text
             },
@@ -397,7 +399,7 @@ mod tests {
         let run = &log["runs"][0];
         let rules = run["tool"]["driver"]["rules"].as_array().unwrap();
         for result in run["results"].as_array().unwrap() {
-            let index = result["ruleIndex"].as_u64().unwrap() as usize;
+            let index = usize::try_from(result["ruleIndex"].as_u64().unwrap()).unwrap();
             assert_eq!(rules[index]["id"], result["ruleId"]);
         }
         assert_eq!(rules.len(), 4);

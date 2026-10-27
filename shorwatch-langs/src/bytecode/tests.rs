@@ -12,10 +12,10 @@ fn class(
     let mut pool: Vec<Vec<u8>> = Vec::new();
     let mut utf8 = |pool: &mut Vec<Vec<u8>>, s: &str| -> u16 {
         let mut entry = vec![1];
-        entry.extend((s.len() as u16).to_be_bytes());
+        entry.extend(u16::try_from(s.len()).unwrap().to_be_bytes());
         entry.extend(s.as_bytes());
         pool.push(entry);
-        pool.len() as u16
+        u16::try_from(pool.len()).unwrap()
     };
     let class_ref =
         |pool: &mut Vec<Vec<u8>>, utf8: &mut dyn FnMut(&mut Vec<Vec<u8>>, &str) -> u16, s: &str| {
@@ -23,7 +23,7 @@ fn class(
             let mut entry = vec![7];
             entry.extend(name.to_be_bytes());
             pool.push(entry);
-            pool.len() as u16
+            u16::try_from(pool.len()).unwrap()
         };
     let this = class_ref(&mut pool, &mut utf8, name);
     let sup = class_ref(&mut pool, &mut utf8, superclass);
@@ -41,19 +41,19 @@ fn class(
 
     let mut out = 0xCAFE_BABE_u32.to_be_bytes().to_vec();
     out.extend([0, 0, 0, 65]);
-    out.extend((pool.len() as u16 + 1).to_be_bytes());
+    out.extend((u16::try_from(pool.len()).unwrap() + 1).to_be_bytes());
     for entry in &pool {
         out.extend(entry);
     }
     out.extend(access.to_be_bytes());
     out.extend(this.to_be_bytes());
     out.extend(sup.to_be_bytes());
-    out.extend((ifaces.len() as u16).to_be_bytes());
+    out.extend(u16::try_from(ifaces.len()).unwrap().to_be_bytes());
     for i in ifaces {
         out.extend(i.to_be_bytes());
     }
     out.extend([0, 0]); // fields
-    out.extend((methods.len() as u16).to_be_bytes());
+    out.extend(u16::try_from(methods.len()).unwrap().to_be_bytes());
     for (access, n, d) in methods {
         out.extend(access.to_be_bytes());
         out.extend(n.to_be_bytes());

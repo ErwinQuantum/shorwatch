@@ -503,7 +503,7 @@ impl JvmFile {
                     let key = (self.enclosing_type(id), name.to_owned(), self.arity(id));
                     self.method_scopes.entry(key).or_default().push(id);
                 }
-                _ => {}
+                ScopeKind::File => {}
             }
         }
     }

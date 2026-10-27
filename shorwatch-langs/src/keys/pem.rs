@@ -70,7 +70,7 @@ pub(super) fn base64(text: &str) -> Option<Vec<u8>> {
         bits += 6;
         if bits >= 8 {
             bits -= 8;
-            out.push((buffer >> bits) as u8);
+            out.push((buffer >> bits).to_le_bytes()[0]);
         }
     }
     Some(out)
