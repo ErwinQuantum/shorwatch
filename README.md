@@ -338,7 +338,7 @@ jobs:
         if: always()
         with:
           sarif_file: shorwatch-report/report.sarif
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: shorwatch-report
