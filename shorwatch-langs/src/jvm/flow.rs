@@ -15,7 +15,8 @@
 //! invented.
 
 use shorwatch_core::ir::{
-    Arg, ArgValue, Candidate, FlowStep, Location, MethodSummary, ScopeId, ScopeKind,
+    Arg, ArgValue, Candidate, ConstantDecl, FlowStep, Location, MethodSummary, ScopeId, ScopeKind,
+    TypeRef,
 };
 
 use super::{ArgSource, Assignment, JvmFile, PendingArg};
@@ -61,20 +62,25 @@ impl JvmFile {
                 continue;
             };
             let arity = self.arity(id);
-            let returns_something = self.returns.iter().any(|(s, _)| *s == id);
-            if scope.kind != ScopeKind::Method
-                || name.starts_with('<')
-                || !returns_something
-                || self.method_scope(name, arity) != Some(id)
-            {
+            if scope.kind != ScopeKind::Method || name.starts_with('<') || !self.is_unique(id) {
                 continue;
             }
-            let returns = self.returns_of(id, &mut Context::default());
-            if !returns.is_empty() {
+            let return_type = self
+                .return_types
+                .get(&id)
+                .filter(|ty| is_object_type(ty))
+                .map(|ty| self.type_ref(ty));
+            let returns = if self.returns.iter().any(|(s, _)| *s == id) {
+                self.returns_of(id, &mut Context::default())
+            } else {
+                Vec::new()
+            };
+            if return_type.is_some() || !returns.is_empty() {
                 summaries.push(MethodSummary {
                     owner,
                     name: name.to_owned(),
                     arity,
+                    return_type,
                     returns,
                 });
             }
@@ -97,19 +103,37 @@ impl JvmFile {
                 value: value.clone(),
                 flow: vec![step(arg.location, format!("{} is written here", arg.raw))],
             }],
+            // A statically imported constant of another file.
+            ArgSource::Name(name)
+                if self.lookup_scope(scope, name).is_none()
+                    && let Some(owner) = self.static_imports.get(name) =>
+            {
+                vec![Candidate {
+                    value: ArgValue::Constant {
+                        owner: TypeRef::qualified(owner.clone()),
+                        name: name.clone(),
+                    },
+                    flow: vec![step(arg.location, format!("{name} is a constant"))],
+                }]
+            }
             ArgSource::Name(name) => self.variable(scope, name, false, arg.location, cx),
             ArgSource::Member { owner, name } if owner == "this" => {
                 self.variable(scope, name, true, arg.location, cx)
             }
-            ArgSource::Member { owner, name } => self
-                .member_constant(scope, owner, name)
-                .map(|value| {
-                    vec![Candidate {
-                        value,
-                        flow: vec![step(arg.location, format!("{owner}.{name} is a constant"))],
-                    }]
-                })
-                .unwrap_or_default(),
+            ArgSource::Member { owner, name } => {
+                let note = format!("{owner}.{name} is a constant");
+                let value = self
+                    .member_constant(scope, owner, name)
+                    .or_else(|| self.foreign_constant(scope, owner, name));
+                value
+                    .map(|value| {
+                        vec![Candidate {
+                            value,
+                            flow: vec![step(arg.location, note)],
+                        }]
+                    })
+                    .unwrap_or_default()
+            }
             ArgSource::Concat(parts) => self.concat(parts, scope, cx),
             ArgSource::Choice(options) => options
                 .iter()
@@ -143,6 +167,42 @@ impl JvmFile {
             return Vec::new();
         }
         unique
+    }
+
+    /// `Owner.NAME` where `Owner` is a type of another file: a constant for
+    /// `link` to look up. Not when `Owner` is a variable.
+    fn foreign_constant(&self, scope: ScopeId, owner: &str, name: &str) -> Option<ArgValue> {
+        let first = owner.split('.').next().unwrap_or(owner);
+        if matches!(first, "this" | "super")
+            || self.lookup_scope(scope, first).is_some()
+            || !owner.split('.').any(super::starts_uppercase)
+        {
+            return None;
+        }
+        Some(ArgValue::Constant {
+            owner: self.type_ref(owner),
+            name: name.to_owned(),
+        })
+    }
+
+    /// Constants of this file's types, for other files.
+    pub(super) fn constants(&self) -> Vec<ConstantDecl> {
+        let mut constants: Vec<ConstantDecl> = self
+            .symbols
+            .iter()
+            .filter(|((scope, _), _)| self.unit.scope(*scope).kind == ScopeKind::Type)
+            .filter_map(|((scope, name), symbol)| {
+                let value = symbol.constant.clone()?;
+                matches!(value, ArgValue::Str(_) | ArgValue::Int(_)).then_some(())?;
+                Some(ConstantDecl {
+                    owner: self.owner(*scope)?,
+                    name: name.clone(),
+                    value,
+                })
+            })
+            .collect();
+        constants.sort_by(|a, b| (&a.owner, &a.name).cmp(&(&b.owner, &b.name)));
+        constants
     }
 
     /// The arguments of a call to another file's method, resolved within the
@@ -249,7 +309,7 @@ impl JvmFile {
         let arity = self.arity(method);
         // A type's own parameters are its primary constructor's (Kotlin).
         let constructor = self.unit.scope(method).kind == ScopeKind::Type;
-        if !constructor && self.method_scope(name, arity) != Some(method) {
+        if !constructor && !self.is_unique(method) {
             return Vec::new();
         }
         let note = format!("passed as {param} to {name}(...)");
@@ -263,7 +323,10 @@ impl JvmFile {
         }
         let mut found = Vec::new();
         for call in &self.local_calls {
-            if call.method == name && call.args.len() == arity {
+            if call.method == name
+                && call.args.len() == arity
+                && self.target(call.scope, name, arity) == Some(method)
+            {
                 let arg = &call.args[index];
                 let candidates = self.candidates(arg, call.scope, cx);
                 found.extend(then(candidates, arg.location, &note));
@@ -293,7 +356,7 @@ impl JvmFile {
         scope: ScopeId,
         cx: &mut Context<'a>,
     ) -> Vec<Candidate> {
-        let Some(method) = self.method_scope(name, args.len()) else {
+        let Some(method) = self.target(scope, name, args.len()) else {
             return Vec::new();
         };
         cx.calls.push(Entered {
@@ -388,22 +451,64 @@ impl JvmFile {
         }
     }
 
-    /// The only method of this file with that name and arity.
-    fn method_scope(&self, name: &str, arity: usize) -> Option<ScopeId> {
-        let mut matching = self
-            .unit
-            .scopes()
-            .iter()
-            .enumerate()
-            .filter_map(|(index, scope)| {
-                let id = ScopeId(u32::try_from(index).ok()?);
-                (scope.kind == ScopeKind::Method
-                    && scope.name.as_deref() == Some(name)
-                    && self.arity(id) == arity)
-                    .then_some(id)
-            });
-        let first = matching.next()?;
-        matching.next().is_none().then_some(first)
+    /// The method an unqualified call `name(..arity)` in `scope` targets:
+    /// the innermost enclosing type that declares one, if it declares only
+    /// one (no overload).
+    fn target(&self, scope: ScopeId, name: &str, arity: usize) -> Option<ScopeId> {
+        let mut owner = self.enclosing_type(scope);
+        loop {
+            let methods = self.methods_of(owner, name, arity);
+            match methods.as_slice() {
+                [method] => return Some(*method),
+                [] => {}
+                _ => return None,
+            }
+            let ty = owner?;
+            owner = self
+                .unit
+                .scope(ty)
+                .parent
+                .and_then(|p| self.enclosing_type(p));
+        }
+    }
+
+    /// Whether `method` is its type's only method with its name and arity.
+    fn is_unique(&self, method: ScopeId) -> bool {
+        let name = self.unit.scope(method).name.as_deref().unwrap_or_default();
+        let owner = self.enclosing_type(method);
+        self.methods_of(owner, name, self.arity(method)) == [method]
+    }
+
+    /// The methods named `name` with `arity` parameters declared directly in
+    /// `owner` (top-level functions when `None`).
+    fn methods_of(&self, owner: Option<ScopeId>, name: &str, arity: usize) -> Vec<ScopeId> {
+        self.method_scopes
+            .get(&(owner, name.to_owned(), arity))
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    /// Indexes type and method scopes for [`Self::methods_of`] and type
+    /// lookups, once the traversal has declared them all.
+    pub(super) fn index_scopes(&mut self) {
+        for (index, scope) in self.unit.scopes().iter().enumerate() {
+            let (Ok(id), Some(name)) = (u32::try_from(index).map(ScopeId), scope.name.as_deref())
+            else {
+                continue;
+            };
+            match scope.kind {
+                ScopeKind::Type => self
+                    .type_scopes
+                    .entry(name.to_owned())
+                    .or_default()
+                    .push(id),
+                ScopeKind::Method => {
+                    let key = (self.enclosing_type(id), name.to_owned(), self.arity(id));
+                    self.method_scopes.entry(key).or_default().push(id);
+                }
+                _ => {}
+            }
+        }
     }
 
     fn arity(&self, method: ScopeId) -> usize {
@@ -412,7 +517,7 @@ impl JvmFile {
 
     /// The fully qualified type that declares `scope`: package, then the
     /// enclosing types (`com.acme.Outer.Inner`). `None` outside any type.
-    fn owner(&self, scope: ScopeId) -> Option<String> {
+    pub(super) fn owner(&self, scope: ScopeId) -> Option<String> {
         let mut types = Vec::new();
         let mut current = Some(scope);
         while let Some(id) = current {
@@ -442,6 +547,30 @@ impl JvmFile {
             scope = self.unit.scope(scope).parent?;
         }
     }
+}
+
+/// Whether a declared return type can type a chained receiver: a class of
+/// its own, not a primitive, `String` or a JDK value type.
+fn is_object_type(ty: &str) -> bool {
+    const VALUE_TYPES: &[&str] = &[
+        "String",
+        "Object",
+        "Boolean",
+        "Byte",
+        "Short",
+        "Integer",
+        "Long",
+        "Float",
+        "Double",
+        "Character",
+        "Void",
+        "Any",
+        "Unit",
+        "Int",
+        "Char",
+        "ByteArray",
+    ];
+    ty.chars().next().is_some_and(char::is_uppercase) && !VALUE_TYPES.contains(&ty)
 }
 
 /// The candidates, each with one more step.

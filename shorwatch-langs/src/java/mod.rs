@@ -113,6 +113,8 @@ impl<'s> Lowering<'s> {
             | "annotation_type_declaration") => {
                 let name = self.field_text(node, "name").map(str::to_owned);
                 let id = self.file.unit.add_scope(ScopeKind::Type, name, scope);
+                let supertypes = self.supertypes(node);
+                self.file.type_decls.push((id, supertypes));
                 if matches!(
                     kind,
                     "interface_declaration" | "annotation_type_declaration"
@@ -128,7 +130,12 @@ impl<'s> Lowering<'s> {
                 if let Some(name) = &name {
                     self.file.methods.insert(name.clone());
                 }
-                Some(self.file.unit.add_scope(ScopeKind::Method, name, scope))
+                let id = self.file.unit.add_scope(ScopeKind::Method, name, scope);
+                if let Some(ty) = node.child_by_field_name("type") {
+                    let ty = type_name(self.text(ty));
+                    self.file.return_types.insert(id, ty);
+                }
+                Some(id)
             }
             "static_initializer" => Some(self.file.unit.add_scope(
                 ScopeKind::Method,
@@ -360,6 +367,24 @@ impl<'s> Lowering<'s> {
             match object.kind() {
                 "identifier" => Some(Receiver::Name(text)),
                 "field_access" | "scoped_identifier" => Some(Receiver::Path(text)),
+                // `Crypto.provider().m()`: typed from `provider()` later.
+                "method_invocation" => {
+                    let owner = match object.child_by_field_name("object") {
+                        None => None,
+                        Some(o) if o.kind() == "identifier" => {
+                            Some(Box::new(Receiver::Name(self.text(o).to_owned())))
+                        }
+                        Some(o) if matches!(o.kind(), "field_access" | "scoped_identifier") => {
+                            Some(Box::new(Receiver::Path(self.text(o).to_owned())))
+                        }
+                        Some(_) => return None,
+                    };
+                    Some(Receiver::Call {
+                        owner,
+                        method: self.field_text(object, "name")?.to_owned(),
+                        arity: self.args(object).len(),
+                    })
+                }
                 _ => None,
             }
         });
@@ -400,6 +425,32 @@ impl<'s> Lowering<'s> {
         let name = name.to_owned();
         self.defer(Pending::Field { owner, name }, scope, node);
         None
+    }
+
+    /// The types a type declaration extends or implements, as written.
+    fn supertypes(&self, declaration: Node<'_>) -> Vec<String> {
+        let mut cursor = declaration.walk();
+        let mut supertypes = Vec::new();
+        for clause in declaration.named_children(&mut cursor) {
+            let mut inner = clause.walk();
+            match clause.kind() {
+                "superclass" => supertypes.extend(clause.named_child(0)),
+                "super_interfaces" | "extends_interfaces" => supertypes.extend(
+                    clause
+                        .named_children(&mut inner)
+                        .filter(|c| c.kind() == "type_list")
+                        .flat_map(|list| {
+                            let mut cursor = list.walk();
+                            list.named_children(&mut cursor).collect::<Vec<_>>()
+                        }),
+                ),
+                _ => {}
+            }
+        }
+        supertypes
+            .into_iter()
+            .map(|ty| type_name(self.text(ty)))
+            .collect()
     }
 
     /// `name = value` or `this.name = value`, for data flow.

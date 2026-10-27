@@ -14,7 +14,10 @@ mod tests;
 mod types;
 mod unit;
 
-pub use facts::{Arg, ArgValue, Candidate, Fact, FactKind, FlowStep, MethodSummary};
+pub use facts::{
+    Arg, ArgValue, CallRef, Candidate, ConstantDecl, Fact, FactKind, FlowStep, MethodSummary,
+    TypeDecl,
+};
 pub use language::{Language, Platform};
 pub use location::{Location, Position};
 pub use types::TypeRef;

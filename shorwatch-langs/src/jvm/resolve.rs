@@ -4,10 +4,13 @@
 
 use super::{ArgSource, JvmFile, LocalCall, Pending, PendingArg, Receiver, starts_uppercase};
 use shorwatch_core::Language;
-use shorwatch_core::ir::{Arg, ArgValue, FactKind, ScopeId, ScopeKind, SourceUnit, TypeRef};
+use shorwatch_core::ir::{
+    Arg, ArgValue, CallRef, FactKind, ScopeId, ScopeKind, SourceUnit, TypeDecl, TypeRef,
+};
 
 impl JvmFile {
     pub(crate) fn resolve(mut self) -> SourceUnit {
+        self.index_scopes();
         self.local_calls = self
             .pending
             .iter()
@@ -32,6 +35,14 @@ impl JvmFile {
                     method,
                     args,
                 } => FactKind::Call {
+                    receiver_call: match &receiver {
+                        Some(Receiver::Call {
+                            owner,
+                            method,
+                            arity,
+                        }) => self.call_ref(owner.as_deref(), method, *arity, scope),
+                        _ => None,
+                    },
                     receiver_origin: receiver
                         .as_ref()
                         .and_then(|r| self.receiver_origin(r, scope))
@@ -65,7 +76,35 @@ impl JvmFile {
         for summary in self.summaries() {
             self.unit.add_method(summary);
         }
+        for constant in self.constants() {
+            self.unit.add_constant(constant);
+        }
+        for (scope, supertypes) in std::mem::take(&mut self.type_decls) {
+            if let Some(name) = self.owner(scope) {
+                let supertypes = supertypes.iter().map(|s| self.type_ref(s)).collect();
+                self.unit.add_type(TypeDecl { name, supertypes });
+            }
+        }
         self.unit
+    }
+
+    /// `owner.method(..arity)`, the receiver of a chained call.
+    fn call_ref(
+        &self,
+        owner: Option<&Receiver>,
+        method: &str,
+        arity: usize,
+        scope: ScopeId,
+    ) -> Option<CallRef> {
+        let owner = match owner {
+            Some(receiver) => self.resolve_receiver(receiver, scope)?,
+            None => TypeRef::qualified(self.owner(scope)?),
+        };
+        Some(CallRef {
+            owner,
+            method: method.to_owned(),
+            arity,
+        })
     }
 
     pub(super) fn resolve_receiver(&self, receiver: &Receiver, scope: ScopeId) -> Option<TypeRef> {
@@ -84,6 +123,8 @@ impl JvmFile {
                 None => Some(self.type_ref(path)),
             },
             Receiver::Type { ty, .. } => Some(self.type_ref(ty)),
+            // Typed by `link`, from the method's declared return type.
+            Receiver::Call { .. } => None,
         }
     }
 
@@ -94,6 +135,7 @@ impl JvmFile {
             Receiver::Type { origin, .. } => return origin.clone(),
             Receiver::Name(name) => name.as_str(),
             Receiver::Path(path) => path.strip_prefix("this.").filter(|f| !f.contains('.'))?,
+            Receiver::Call { .. } => return None,
         };
         self.lookup(scope, variable)?.origin.clone()
     }
@@ -123,7 +165,7 @@ impl JvmFile {
     }
 
     /// Resolves a type name as written to the most precise [`TypeRef`] possible.
-    fn type_ref(&self, name: &str) -> TypeRef {
+    pub(super) fn type_ref(&self, name: &str) -> TypeRef {
         match name.split_once('.') {
             // `java.security.KeyPairGenerator`: already fully qualified.
             Some((first, _)) if !starts_uppercase(first) => TypeRef::qualified(name),
@@ -140,9 +182,23 @@ impl JvmFile {
         }
     }
 
+    /// The fully qualified name of the only type of this file named `name`.
+    fn local_type(&self, name: &str) -> Option<String> {
+        match self.type_scopes.get(name)?.as_slice() {
+            [scope] => self.owner(*scope),
+            _ => None,
+        }
+    }
+
     /// A type name no import names: it can only come from the file's
     /// package, an on-demand import or the language's implicit imports.
     fn unimported(&self, name: &str) -> TypeRef {
+        // A type of this file, nested ones included (`Signer` in `Outer`).
+        if !name.contains('.')
+            && let Some(local) = self.local_type(name)
+        {
+            return TypeRef::qualified(local);
+        }
         if self.module_imports {
             return TypeRef::simple(name);
         }

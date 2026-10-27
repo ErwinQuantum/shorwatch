@@ -1,26 +1,21 @@
 package com.example.billing;
 
-import java.security.Signature;
+import java.security.MessageDigest;
 
 /**
- * Not followed: a call through an interface could reach any implementation,
- * which only the compiled class hierarchy knows. No findings here, although
- * SHA1withRSA reaches Signature.getInstance at run time.
+ * Not followed: which overload a call picks depends on the argument types,
+ * so neither is. No findings here, although SHA-1 reaches getInstance.
  */
 public class Limits {
-    interface Signer {
-        byte[] sign(byte[] data, String algorithm) throws Exception;
+    void digest(String algorithm) throws Exception {
+        MessageDigest.getInstance(algorithm);
     }
 
-    static class JcaSigner implements Signer {
-        public byte[] sign(byte[] data, String algorithm) throws Exception {
-            Signature signer = Signature.getInstance(algorithm);
-            signer.update(data);
-            return signer.sign();
-        }
+    void digest(StringBuilder algorithm) throws Exception {
+        MessageDigest.getInstance(algorithm.toString());
     }
 
-    byte[] use(Signer signer, byte[] data) throws Exception {
-        return signer.sign(data, "SHA1withRSA");
+    void legacy() throws Exception {
+        digest("SHA-1");
     }
 }

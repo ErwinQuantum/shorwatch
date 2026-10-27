@@ -72,3 +72,8 @@ methods:
               start_byte: 155
               end_byte: 167
             note: returned by alg(...)
+types:
+  - name: Outer
+    supertypes: []
+  - name: Outer.Inner
+    supertypes: []

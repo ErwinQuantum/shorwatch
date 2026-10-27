@@ -150,14 +150,21 @@ impl<'s> Lowering<'s> {
             }
             "class_declaration" | "object_declaration" => {
                 let name = self.field_text(node, "name").map(str::to_owned);
-                Some(self.file.unit.add_scope(ScopeKind::Type, name, scope))
+                let id = self.file.unit.add_scope(ScopeKind::Type, name, scope);
+                let supertypes = self.supertypes(node);
+                self.file.type_decls.push((id, supertypes));
+                Some(id)
             }
             "function_declaration" => {
                 let name = self.field_text(node, "name").map(str::to_owned);
                 if let Some(name) = &name {
                     self.file.methods.insert(name.clone());
                 }
-                Some(self.file.unit.add_scope(ScopeKind::Method, name, scope))
+                let id = self.file.unit.add_scope(ScopeKind::Method, name, scope);
+                if let Some(ty) = self.return_type(node) {
+                    self.file.return_types.insert(id, ty);
+                }
+                Some(id)
             }
             "secondary_constructor" | "anonymous_initializer" => Some(self.file.unit.add_scope(
                 ScopeKind::Method,
@@ -586,9 +593,11 @@ impl<'s> Lowering<'s> {
                 }
                 let args = self.args(node);
                 if !is_name_path(object) {
+                    // `Crypto.provider().m()`: typed from `provider()` later.
+                    let receiver = self.chained(object);
                     self.defer(
                         Pending::Call {
-                            receiver: None,
+                            receiver,
                             method,
                             args,
                         },
@@ -616,6 +625,62 @@ impl<'s> Lowering<'s> {
             }
             _ => {}
         }
+    }
+
+    /// `object` as the receiver of a chained call, when it is a call to a
+    /// named method: `provider()` or `Crypto.provider()`.
+    fn chained(&self, object: Node<'_>) -> Option<Receiver> {
+        if object.kind() != "call_expression" {
+            return None;
+        }
+        let callee = object.named_child(0)?;
+        let arity = self.args(object).len();
+        let (owner, method) = match callee.kind() {
+            "identifier" => (None, self.text(callee)),
+            "navigation_expression" => {
+                let (owner, member) = navigation_parts(callee)?;
+                let owner = match owner.kind() {
+                    "identifier" => Receiver::Name(self.text(owner).to_owned()),
+                    _ if is_name_path(owner) => Receiver::Path(name_path(owner, self.src)),
+                    _ => return None,
+                };
+                (Some(Box::new(owner)), self.text(member))
+            }
+            _ => return None,
+        };
+        (!looks_like_type(method) && !is_scope_function(method)).then(|| Receiver::Call {
+            owner,
+            method: method.to_owned(),
+            arity,
+        })
+    }
+
+    /// The types a class or object extends or implements, as written.
+    fn supertypes(&self, declaration: Node<'_>) -> Vec<String> {
+        let Some(specifiers) = child_of_kind(declaration, "delegation_specifiers") else {
+            return Vec::new();
+        };
+        let mut cursor = specifiers.walk();
+        specifiers
+            .named_children(&mut cursor)
+            .filter_map(|specifier| {
+                let ty = child_of_kind(specifier, "user_type").or_else(|| {
+                    child_of_kind(specifier, "constructor_invocation")
+                        .and_then(|c| child_of_kind(c, "user_type"))
+                })?;
+                syntax::type_name(ty, self.src)
+            })
+            .collect()
+    }
+
+    /// A function's declared return type: the type after its parameters.
+    fn return_type(&self, function: Node<'_>) -> Option<String> {
+        let mut cursor = function.walk();
+        let ty = function
+            .named_children(&mut cursor)
+            .skip_while(|c| c.kind() != "function_value_parameters")
+            .find(|c| matches!(c.kind(), "user_type" | "nullable_type"))?;
+        syntax::type_name(ty, self.src)
     }
 
     /// The receiver of unqualified calls inside `apply`, `run` or `with`.

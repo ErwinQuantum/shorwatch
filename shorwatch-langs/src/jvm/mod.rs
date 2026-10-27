@@ -48,8 +48,16 @@ pub(crate) struct JvmFile {
     pub(crate) params: HashMap<ScopeId, Vec<String>>,
     /// `return` values (and Kotlin expression bodies) by method scope.
     pub(crate) returns: Vec<(ScopeId, PendingArg)>,
+    /// Declared return types by method scope, as written.
+    pub(crate) return_types: HashMap<ScopeId, String>,
+    /// Type scopes and the supertypes they name, as written.
+    pub(crate) type_decls: Vec<(ScopeId, Vec<String>)>,
     /// Calls that may target a method of this file, gathered in phase two.
     local_calls: Vec<LocalCall>,
+    /// Type scopes by name and method scopes by declaring type, name and
+    /// arity, indexed once in phase two: big generated files have thousands.
+    type_scopes: HashMap<String, Vec<ScopeId>>,
+    method_scopes: HashMap<(Option<ScopeId>, String, usize), Vec<ScopeId>>,
     pending: Vec<(Pending, ScopeId, Location)>,
 }
 
@@ -67,7 +75,11 @@ impl JvmFile {
             assignments: Vec::new(),
             params: HashMap::new(),
             returns: Vec::new(),
+            return_types: HashMap::new(),
+            type_decls: Vec::new(),
             local_calls: Vec::new(),
+            type_scopes: HashMap::new(),
+            method_scopes: HashMap::new(),
             pending: Vec::new(),
         }
     }

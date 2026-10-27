@@ -1,24 +1,21 @@
 package com.example.billing.kt
 
-import java.security.Signature
+import java.security.MessageDigest
 
 /**
- * Not followed: a call through an interface could reach any implementation,
- * which only the compiled class hierarchy knows. No findings here, although
- * SHA1withRSA reaches Signature.getInstance at run time.
+ * Not followed: which overload a call picks depends on the argument types,
+ * so neither is. No findings here, although SHA-1 reaches getInstance.
  */
 class Limits {
-    interface Signer {
-        fun sign(data: ByteArray, algorithm: String): ByteArray
+    fun digest(algorithm: String) {
+        MessageDigest.getInstance(algorithm)
     }
 
-    class JcaSigner : Signer {
-        override fun sign(data: ByteArray, algorithm: String): ByteArray {
-            val signer = Signature.getInstance(algorithm)
-            signer.update(data)
-            return signer.sign()
-        }
+    fun digest(algorithm: StringBuilder) {
+        MessageDigest.getInstance(algorithm.toString())
     }
 
-    fun use(signer: Signer, data: ByteArray): ByteArray = signer.sign(data, "SHA1withRSA")
+    fun legacy() {
+        digest("SHA-1")
+    }
 }

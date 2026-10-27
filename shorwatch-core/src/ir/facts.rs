@@ -32,6 +32,12 @@ pub enum ArgValue {
         index: usize,
         param: String,
     },
+    /// Among [`ArgValue::OneOf`] candidates: the constant `owner.name` of
+    /// another file (`KeyType.RSA`), which [`crate::link`] looks up.
+    Constant {
+        owner: TypeRef,
+        name: String,
+    },
     /// Among [`ArgValue::OneOf`] candidates: what `owner.method(args)`, a
     /// method of another file, returns. [`crate::link`] looks it up.
     Returns {
@@ -59,7 +65,10 @@ impl ArgValue {
                 candidates.iter().flat_map(|c| c.value.texts()).collect()
             }
             // Unresolved until `link`; nothing to match on its own.
-            ArgValue::Param { .. } | ArgValue::Returns { .. } | ArgValue::Unknown => Vec::new(),
+            ArgValue::Param { .. }
+            | ArgValue::Returns { .. }
+            | ArgValue::Constant { .. }
+            | ArgValue::Unknown => Vec::new(),
         }
     }
 }
@@ -91,8 +100,40 @@ pub struct MethodSummary {
     pub owner: String,
     pub name: String,
     pub arity: usize,
+    /// The declared return type, when it is a type of its own (not a
+    /// primitive or `String`).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub return_type: Option<TypeRef>,
     /// The values of its `return`s, like an argument's candidates.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     pub returns: Vec<Candidate>,
+}
+
+/// A call by its target: `owner.method(...)` with `arity` arguments.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CallRef {
+    pub owner: TypeRef,
+    pub method: String,
+    pub arity: usize,
+}
+
+/// A constant a type declares (`static final`, `const val`), for other
+/// files that refer to it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ConstantDecl {
+    /// The declaring type, fully qualified.
+    pub owner: String,
+    pub name: String,
+    pub value: ArgValue,
+}
+
+/// A type declared in a file and the types it extends or implements, for
+/// calls through a supertype.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct TypeDecl {
+    /// Fully qualified (`com.acme.crypto.FipsProvider`).
+    pub name: String,
+    pub supertypes: Vec<TypeRef>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -147,6 +188,11 @@ pub enum FactKind {
         /// rule tell an AES key generator from an HMAC one. `None` when unknown.
         #[serde(skip_serializing_if = "Option::is_none")]
         receiver_origin: Option<Vec<Arg>>,
+        /// When the receiver is itself a call (`Crypto.provider().m()`), that
+        /// call: [`crate::link`] types the receiver from the method's
+        /// declared return type, wherever the method is declared.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        receiver_call: Option<CallRef>,
     },
     /// An object instantiation.
     Construct { ty: TypeRef, args: Vec<Arg> },

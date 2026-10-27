@@ -34,6 +34,7 @@ pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Op
                 method: actual_method,
                 args,
                 receiver_origin,
+                ..
             },
         ) if actual_method == method
             && actual.is(receiver)

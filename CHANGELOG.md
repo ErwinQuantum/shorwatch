@@ -45,6 +45,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 - Data flow across files: an algorithm passed to a method or constructor of another file, or returned by one, is followed through the project (receiver type, name and arity; up to three calls), and each step of the path names its file. A method's return binds its parameters to the call's own arguments. Production code takes no values from test code. On the field-test projects this finds Keycloak's central signing contexts (RSA, ECDSA, EdDSA through `JavaAlgorithm.getJavaAlgorithm`) and Spring Security's SHA-1 password encoder across three files; all new findings were true positives.
 
+- Type hierarchy from the sources (`extends`, `implements`, Kotlin supertypes): data flow follows calls through interfaces and superclasses to every implementation. Chained receivers (`Crypto.provider().keyPairGen("RSA")`) are typed from the declared return type of the method, in any file. Constants of other files (`KeyType.RSA`, static imports) resolve, as arguments and along data-flow paths. On the field-test projects: Keycloak's crypto providers (Default, FIPS, Elytron) and PicketLink's SAML signatures (DSA and RSA with SHA-1), all new findings true positives; 19 of 84 variable-argument `getInstance` calls in production code are now reported, from none before data flow.
+
 ### Fixed
 - Absolute paths outside the working directory were shown as `C:/\/Users/...` on Windows.
 

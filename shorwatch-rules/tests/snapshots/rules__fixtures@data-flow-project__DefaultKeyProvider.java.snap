@@ -1,0 +1,17 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/data-flow-project/DefaultKeyProvider.java
+---
+- rule: jvm.jca.ec
+  at: "9:16"
+  status: vulnerable
+  flow:
+    - "Providers.java:15: KeyTypes.EC is a constant"
+    - "Providers.java:15: passed as algorithm to generator(...)"
+- rule: jvm.jca.rsa
+  at: "9:16"
+  status: vulnerable
+  flow:
+    - "Providers.java:9: \"RSA\" is written here"
+    - "Providers.java:9: passed as algorithm to generator(...)"

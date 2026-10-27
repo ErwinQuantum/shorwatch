@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{Fact, FactKind, Language, Location, MethodSummary};
+use super::{ConstantDecl, Fact, FactKind, Language, Location, MethodSummary, TypeDecl};
 
 /// Lexical nesting level. Ordered from widest to narrowest.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -56,6 +56,12 @@ pub struct SourceUnit {
     /// What this file's methods return, for data flow across files.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     methods: Vec<MethodSummary>,
+    /// The types this file declares, with their supertypes.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    types: Vec<TypeDecl>,
+    /// The constants its types declare.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    constants: Vec<ConstantDecl>,
 }
 
 impl SourceUnit {
@@ -71,6 +77,8 @@ impl SourceUnit {
             }],
             facts: Vec::new(),
             methods: Vec::new(),
+            types: Vec::new(),
+            constants: Vec::new(),
         }
     }
 
@@ -98,6 +106,22 @@ impl SourceUnit {
 
     pub fn add_method(&mut self, method: MethodSummary) {
         self.methods.push(method);
+    }
+
+    pub fn types(&self) -> &[TypeDecl] {
+        &self.types
+    }
+
+    pub fn add_type(&mut self, decl: TypeDecl) {
+        self.types.push(decl);
+    }
+
+    pub fn constants(&self) -> &[ConstantDecl] {
+        &self.constants
+    }
+
+    pub fn add_constant(&mut self, constant: ConstantDecl) {
+        self.constants.push(constant);
     }
 
     pub fn facts(&self) -> &[Fact] {

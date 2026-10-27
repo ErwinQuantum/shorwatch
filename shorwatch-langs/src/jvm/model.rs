@@ -29,6 +29,14 @@ pub(crate) enum Receiver {
         ty: String,
         origin: Option<Vec<PendingArg>>,
     },
+    /// `owner.method(...)` with `arity` arguments, or `method(...)` on this
+    /// type when `owner` is `None`: typed later from the method's declared
+    /// return type, which may be in another file.
+    Call {
+        owner: Option<Box<Receiver>>,
+        method: String,
+        arity: usize,
+    },
 }
 
 #[derive(Debug, Clone)]

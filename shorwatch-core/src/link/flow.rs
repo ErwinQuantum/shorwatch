@@ -6,15 +6,18 @@
 //! [`MethodSummary`]s of every unit, and each step of the path records the
 //! file it is in.
 //!
-//! Methods are matched by declaring type, name and arity, constructors by
-//! type and arity: an overload, or a call through an interface, stays
-//! unknown. A parameter of a method being
+//! Methods are matched by name and arity, and by type through the project's
+//! hierarchy: a call through an interface reaches every implementation.
+//! Overloads (several methods of a type with one name and arity) stay
+//! unknown; frontends publish no summary for them. A parameter of a method being
 //! called takes that call's argument; otherwise every call counts. Production
 //! code only takes values from production code.
 
-use std::collections::HashMap;
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
 
 use super::args;
+use super::hierarchy::Hierarchy;
 use crate::ir::{Arg, ArgValue, Candidate, CodeRole, FactKind, FlowStep, SourceUnit, TypeRef};
 
 /// How many calls between files a path may cross.
@@ -24,9 +27,9 @@ const MAX_CANDIDATES: usize = 32;
 
 /// Replaces the cross-file candidates of every argument by what they stand
 /// for. Values that cannot be found are dropped.
-pub(super) fn resolve(units: &mut [SourceUnit]) {
+pub(super) fn resolve(units: &mut [SourceUnit], hierarchy: &Hierarchy) {
     let replacements = {
-        let project = Project::of(units);
+        let project = Project::of(units, hierarchy);
         let mut replacements = Vec::new();
         for (u, unit) in units.iter().enumerate() {
             for (f, fact) in unit.facts().iter().enumerate() {
@@ -55,15 +58,14 @@ pub(super) fn resolve(units: &mut [SourceUnit]) {
 fn is_cross_file(candidate: &Candidate) -> bool {
     matches!(
         candidate.value,
-        ArgValue::Param { .. } | ArgValue::Returns { .. }
+        ArgValue::Param { .. } | ArgValue::Returns { .. } | ArgValue::Constant { .. }
     )
 }
 
-/// A call whose receiver has a known type.
+/// A call through a project type.
 struct Call<'u> {
     path: &'u str,
     role: CodeRole,
-    receiver: &'u TypeRef,
     args: &'u [Arg],
 }
 
@@ -75,17 +77,34 @@ struct Method<'u> {
     returns: &'u [Candidate],
 }
 
-/// Calls and methods of every unit, by method name and arity.
+/// Calls and methods of every unit, by method name, arity and the project
+/// type they are called through or declared in. Calls through other types
+/// (the JDK, libraries) cannot reach the project's methods and are left out.
 struct Project<'u> {
-    calls: HashMap<(&'u str, usize), Vec<Call<'u>>>,
-    methods: HashMap<(&'u str, usize), Vec<Method<'u>>>,
+    calls: HashMap<(&'u str, usize, &'u str), Vec<Call<'u>>>,
+    methods: HashMap<(&'u str, usize, &'u str), Vec<Method<'u>>>,
+    /// Constants by declaring type and name.
+    constants: HashMap<(&'u str, &'u str), &'u ArgValue>,
+    hierarchy: &'u Hierarchy,
+    /// A parameter's values, with every step's file explicit, by parameter,
+    /// role and hops left: many arguments may wait for the same parameter.
+    params: RefCell<HashMap<ParamKey, Vec<Candidate>>>,
 }
 
+type ParamKey = (String, String, usize, usize, CodeRole, usize);
+
 impl<'u> Project<'u> {
-    fn of(units: &'u [SourceUnit]) -> Self {
+    fn of(units: &'u [SourceUnit], hierarchy: &'u Hierarchy) -> Self {
         let mut calls: HashMap<_, Vec<_>> = HashMap::new();
         let mut methods: HashMap<_, Vec<_>> = HashMap::new();
+        let mut constants = HashMap::new();
         for unit in units {
+            for constant in unit.constants() {
+                constants.insert(
+                    (constant.owner.as_str(), constant.name.as_str()),
+                    &constant.value,
+                );
+            }
             for fact in unit.facts() {
                 // A constructor is a method named after its type.
                 let (receiver, method, args) = match &fact.kind {
@@ -100,16 +119,27 @@ impl<'u> Project<'u> {
                     }
                     _ => continue,
                 };
-                calls.entry((method, args.len())).or_default().push(Call {
-                    path: unit.path(),
-                    role: unit.role(),
-                    receiver,
-                    args,
-                });
+                // A qualified type no unit declares still names itself.
+                let mut types = hierarchy.declared(receiver);
+                if types.is_empty()
+                    && let Some(qualified) = &receiver.qualified
+                {
+                    types.push(qualified);
+                }
+                for ty in types {
+                    calls
+                        .entry((method, args.len(), ty))
+                        .or_default()
+                        .push(Call {
+                            path: unit.path(),
+                            role: unit.role(),
+                            args,
+                        });
+                }
             }
-            for summary in unit.methods() {
+            for summary in unit.methods().iter().filter(|m| !m.returns.is_empty()) {
                 methods
-                    .entry((summary.name.as_str(), summary.arity))
+                    .entry((summary.name.as_str(), summary.arity, summary.owner.as_str()))
                     .or_default()
                     .push(Method {
                         path: unit.path(),
@@ -119,7 +149,13 @@ impl<'u> Project<'u> {
                     });
             }
         }
-        Self { calls, methods }
+        Self {
+            calls,
+            methods,
+            constants,
+            hierarchy,
+            params: RefCell::default(),
+        }
     }
 
     /// The candidates of an argument of a unit at `here`, with the
@@ -160,38 +196,45 @@ impl<'u> Project<'u> {
                 index,
                 param,
             } => {
-                let note = format!("passed as {param} to {method}(...)");
-                let mut found = Vec::new();
-                for call in self
-                    .calls
-                    .get(&(method.as_str(), *arity))
-                    .into_iter()
-                    .flatten()
-                {
-                    if !call.receiver.is(owner) || !visible(call.role, role) {
-                        continue;
-                    }
-                    let arg = &call.args[*index];
-                    for origin in self.origins(arg, call.path, role, hops - 1) {
-                        let mut flow = moved(origin.flow, call.path, here);
-                        flow.push(FlowStep {
-                            path: elsewhere(call.path, here),
-                            location: arg.location,
-                            note: note.clone(),
-                        });
-                        found.push(Candidate {
-                            value: origin.value,
-                            flow,
-                        });
-                    }
-                }
+                let key = (owner.clone(), method.clone(), *arity, *index, role, hops);
+                let cached = self.params.borrow().get(&key).cloned();
+                let found = cached.unwrap_or_else(|| {
+                    let found = self.parameter(owner, method, *arity, *index, param, role, hops);
+                    self.params.borrow_mut().insert(key, found.clone());
+                    found
+                });
+                // Cached with every file explicit: `here`'s own steps lose it.
                 found
+                    .into_iter()
+                    .map(|mut c| {
+                        for step in &mut c.flow {
+                            if step.path.as_deref() == Some(here) {
+                                step.path = None;
+                            }
+                        }
+                        c
+                    })
+                    .collect()
             }
             ArgValue::Returns {
                 owner,
                 method,
                 args,
             } => self.returns(owner, method, args, here, role, hops),
+            // Declared by the type or one of its supertypes.
+            ArgValue::Constant { owner, name } => self
+                .hierarchy
+                .declared(owner)
+                .into_iter()
+                .flat_map(|ty| self.hierarchy.with_ancestors(ty))
+                .find_map(|ty| self.constants.get(&(ty, name.as_str())))
+                .map(|value| {
+                    vec![Candidate {
+                        value: (*value).clone(),
+                        flow: Vec::new(),
+                    }]
+                })
+                .unwrap_or_default(),
             _ => return vec![candidate.clone()],
         };
         found
@@ -203,7 +246,49 @@ impl<'u> Project<'u> {
             .collect()
     }
 
-    /// What `owner.method(args)`, called in `here`, returns.
+    /// The values the calls of the project pass as parameter `index` of
+    /// `owner.method`, through any related type, with every step's file.
+    #[allow(clippy::too_many_arguments)]
+    fn parameter(
+        &self,
+        owner: &str,
+        method: &str,
+        arity: usize,
+        index: usize,
+        param: &str,
+        role: CodeRole,
+        hops: usize,
+    ) -> Vec<Candidate> {
+        let note = format!("passed as {param} to {method}(...)");
+        let mut found = Vec::new();
+        for ty in self.hierarchy.related(owner) {
+            for call in self.calls.get(&(method, arity, ty)).into_iter().flatten() {
+                if !visible(call.role, role) {
+                    continue;
+                }
+                let arg = &call.args[index];
+                for origin in self.origins(arg, call.path, role, hops - 1) {
+                    let mut flow = moved(origin.flow, call.path, "");
+                    flow.push(FlowStep {
+                        path: Some(call.path.to_owned()),
+                        location: arg.location,
+                        note: note.clone(),
+                    });
+                    found.push(Candidate {
+                        value: origin.value,
+                        flow,
+                    });
+                    if found.len() >= MAX_CANDIDATES {
+                        return found;
+                    }
+                }
+            }
+        }
+        found
+    }
+
+    /// What `owner.method(args)`, called in `here`, returns: any method it
+    /// may reach through the hierarchy.
     fn returns(
         &self,
         owner: &TypeRef,
@@ -213,17 +298,24 @@ impl<'u> Project<'u> {
         role: CodeRole,
         hops: usize,
     ) -> Vec<Candidate> {
-        let mut matching = self
-            .methods
-            .get(&(method, args.len()))
+        // Through an interface, any implementation may answer.
+        let owners: HashSet<&str> = self
+            .hierarchy
+            .declared(owner)
             .into_iter()
-            .flatten()
-            .filter(|m| owner.is(m.owner) && visible(m.role, role));
-        let (Some(callee), None) = (matching.next(), matching.next()) else {
-            return Vec::new();
-        };
+            .flat_map(|declared| self.hierarchy.related(declared))
+            .collect();
+        let callees = owners
+            .into_iter()
+            .flat_map(|o| {
+                self.methods
+                    .get(&(method, args.len(), o))
+                    .into_iter()
+                    .flatten()
+            })
+            .filter(|m| visible(m.role, role));
         let mut found = Vec::new();
-        for returned in callee.returns {
+        for (callee, returned) in callees.flat_map(|c| c.returns.iter().map(move |r| (c, r))) {
             let origins: Vec<Candidate> = match &returned.value {
                 // The callee's own parameter: this call's argument.
                 ArgValue::Param {
@@ -267,7 +359,10 @@ impl<'u> Project<'u> {
     /// without a path are in `path`.
     fn origins(&self, arg: &Arg, path: &str, role: CodeRole, hops: usize) -> Vec<Candidate> {
         match &arg.value {
-            ArgValue::Unknown | ArgValue::Param { .. } | ArgValue::Returns { .. } => Vec::new(),
+            ArgValue::Unknown
+            | ArgValue::Param { .. }
+            | ArgValue::Returns { .. }
+            | ArgValue::Constant { .. } => Vec::new(),
             ArgValue::OneOf(candidates) => candidates
                 .iter()
                 .flat_map(|c| self.expand(c, path, role, hops))

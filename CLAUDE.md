@@ -30,7 +30,8 @@ Module map (one responsibility per file, tests in sibling `tests.rs`):
 
 ```
 core/src/  ir/{language, location, unit, types, facts}  rule/{mod: model, error, compile}
-           engine/{mod: analyze + findings, matching, hybrid, fix}  link/{mod, config, flow}  finding.rs
+           engine/{mod: analyze + findings, matching, hybrid, fix}
+           link/{mod, hierarchy, receivers, flow, config}  finding.rs
 rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules)  error.rs  build.rs
 langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
@@ -60,14 +61,20 @@ langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, synta
   `Finding::flow`. Order-insensitive, bounded (depth 6, 16 candidates);
   overloaded targets and cycles stay unknown. A call's return binds the
   callee's parameters to that call's arguments.
-- **Cross-file data flow** (`core/src/link/flow.rs`): what a file cannot
-  resolve stays as `ArgValue::Param` (a parameter, constructors included)
-  or `ArgValue::Returns` (another type's method, with the call's args)
-  candidates; frontends publish `MethodSummary`s (what each method returns).
-  `link` matches calls/constructions by receiver type + name + arity
-  (unique match only: no interfaces, no overloads), up to 3 hops, and tags
-  each `FlowStep` with the file it is in. Production code takes no values
-  from test code. A receiver's *origin* (`Call.receiver_origin`)
+- **Cross-file data flow** (`core/src/link/`): what a file cannot resolve
+  stays as `ArgValue::Param` (a parameter, constructors included),
+  `ArgValue::Returns` (another type's method, with the call's args) or
+  `ArgValue::Constant` (`Owner.NAME` of another file) candidates. Frontends
+  publish `MethodSummary`s (returns + declared return type), `TypeDecl`s
+  (supertypes) and `ConstantDecl`s. `link` builds the type `hierarchy`, types
+  chained receivers (`receivers`: `X.provider().m()` from `provider()`'s
+  return type, one level), then `flow` matches calls/constructions by name +
+  arity + any *related* type (the type, its supertypes and subtypes: calls
+  through interfaces reach every implementation), up to 3 hops, and tags
+  each `FlowStep` with its file. Calls are indexed by declared receiver type
+  and parameters memoized: never scan every call per parameter (Kafka went
+  from 5 s to 30 s once). Overloads stay unknown (unique per declaring
+  type). Production code takes no values from test code. A receiver's *origin* (`Call.receiver_origin`)
   still comes only from the variable's own initializer; `origin` patterns
   let unknown origins match (no lost detections). Don't hack around missing
   flow in rules.

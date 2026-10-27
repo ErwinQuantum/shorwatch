@@ -128,3 +128,6 @@ methods:
               start_byte: 172
               end_byte: 188
             note: returned by group(...)
+types:
+  - name: com.example.Kem
+    supertypes: []
