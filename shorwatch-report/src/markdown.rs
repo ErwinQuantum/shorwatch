@@ -68,8 +68,8 @@ pub fn render(scan: &Scan) -> String {
                 (Some(detail), _) => format!(" ({})", cell(detail)),
                 (None, Some(origin)) => match &origin.path {
                     Some(path) => format!(
-                        " (value from `{}:{}`)",
-                        cell(path),
+                        " (value from {}:{})",
+                        code(path),
                         origin.location.start.line
                     ),
                     None => format!(" (value from line {})", origin.location.start.line),
@@ -104,7 +104,7 @@ fn suppressed_note(summary: &crate::Summary) -> String {
 
 /// `path:line`, linked to the lines on the repository host when known.
 fn location(scan: &Scan, f: &Finding) -> String {
-    let text = format!("`{}:{}`", cell(&f.path), f.location.start.line);
+    let text = code(&format!("{}:{}", f.path, f.location.start.line));
     let url = scan
         .links
         .web
@@ -116,11 +116,36 @@ fn location(scan: &Scan, f: &Finding) -> String {
     }
 }
 
-/// Escapes characters that would break a table cell.
+/// Text in a table cell. File names and keystore aliases come from the
+/// scanned repository (a pull request from a fork, say): no markup of theirs
+/// may render (`<img>` loading a tracker, a broken table).
 fn cell(text: &str) -> String {
-    text.replace('|', "\\|").replace('\n', " ")
+    let mut out = String::with_capacity(text.len());
+    for c in text.chars() {
+        match c {
+            '|' | '\\' | '`' | '*' | '_' | '[' | ']' | '(' | ')' | '!' | '#' => {
+                out.push('\\');
+                out.push(c);
+            }
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '&' => out.push_str("&amp;"),
+            '\n' | '\r' => out.push(' '),
+            _ => out.push(c),
+        }
+    }
+    out
 }
 
+/// Text in a code span inside a table cell: literal, so only the span's
+/// own delimiter and the cell's need care.
+fn code(text: &str) -> String {
+    let text = text
+        .replace('`', "'")
+        .replace('|', "\\|")
+        .replace(['\n', '\r'], " ");
+    format!("`{text}`")
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -146,6 +171,13 @@ mod tests {
             ),
             "{report}"
         );
+    }
+
+    #[test]
+    fn markup_from_the_scanned_files_does_not_render() {
+        assert_eq!(cell("a<img src=x>|b"), r"a&lt;img src=x&gt;\|b");
+        assert_eq!(cell("[x](http://t)"), r"\[x\]\(http://t\)");
+        assert_eq!(code("a`b|c\nd"), r"`a'b\|c d`");
     }
 
     #[test]

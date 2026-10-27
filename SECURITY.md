@@ -1,0 +1,49 @@
+# Security policy
+
+## Reporting a vulnerability
+
+Please report vulnerabilities privately, through GitHub's
+[private vulnerability reporting](https://github.com/ErwinQuantum/shorwatch/security/advisories/new),
+not in a public issue. Say what you found, how to reproduce it, and what it
+lets an attacker do. You will get an answer within a week; once a fix is
+released, the advisory is published with credit to you, unless you prefer
+otherwise.
+
+Only the latest release receives security fixes.
+
+## What counts
+
+Shorwatch reads repositories that may not be trustworthy (a pull request
+from a fork, a dependency's sources) and writes reports that travel (CI
+artifacts, job summaries, e-mail). Issues in that path are in scope, for
+example:
+
+- a scanned file that crashes the scan, hangs it or exhausts memory;
+- text from a scanned file that runs script in the HTML report, injects
+  markup into the Markdown job summary, or escape sequences or CI workflow
+  commands into the terminal and logs;
+- secrets from a scanned file (private keys) reaching a report;
+- anything that makes Shorwatch read or write outside the paths it is given,
+  its reports and its own cache folder, or run a program.
+
+A missed detection or a false positive is not a vulnerability: open a
+regular issue.
+
+## What Shorwatch does to stay safe
+
+- It never runs code from what it scans: sources are parsed, class files
+  (`--classpath`) are read for signatures only.
+- Binary formats (DER, keystores, class files, jars) are read by bounded,
+  hand-written parsers; files over 4 MB are skipped, and so are jar entries
+  over 16 MB.
+- Private key bodies are redacted from the text reports show.
+- Text from scanned files reaches the terminal and the CI log without
+  control characters, and the HTML report as text only (`textContent`),
+  under a Content-Security-Policy that forbids any network access; links
+  are limited to the web, the report's own routes and the editor.
+- Rules from other people (`--rules`) are data: their references must be
+  web links, and their regular expressions run in linear time.
+- Reports written for the terminal go to a per-user folder, and `shorwatch
+  open` opens HTML files only.
+- Release archives come with SHA-256 checksums and build provenance
+  attestations (`gh attestation verify <file> --repo ErwinQuantum/shorwatch`).

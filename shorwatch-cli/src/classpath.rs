@@ -12,6 +12,10 @@ use anyhow::{Context, Result};
 use rayon::prelude::*;
 use shorwatch_core::Library;
 
+/// The JVM caps a class file's tables at 65,535 entries: real ones stay far
+/// below this.
+const MAX_CLASS_BYTES: u64 = 16 * 1024 * 1024;
+
 /// Every class of the classpath, read in parallel. Unreadable entries and
 /// malformed classes are reported on stderr and skipped: a classpath only
 /// adds types, it never makes a scan fail.
@@ -104,8 +108,13 @@ fn read(path: &Path) -> Result<Library> {
         if !wanted {
             continue;
         }
+        // A class file over this size is no class file: a zip bomb, say.
+        if entry.size() > MAX_CLASS_BYTES {
+            malformed += 1;
+            continue;
+        }
         bytes.clear();
-        entry.read_to_end(&mut bytes)?;
+        (&mut entry).take(MAX_CLASS_BYTES).read_to_end(&mut bytes)?;
         match shorwatch_langs::bytecode::read_class(&bytes) {
             Ok(class) => library.extend(class),
             Err(_) => malformed += 1,

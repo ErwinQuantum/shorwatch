@@ -30,6 +30,8 @@ fn shorwatch(args: &[&str]) -> Output {
         .env("TMP", tmp)
         .env("TEMP", tmp)
         .env("TMPDIR", tmp)
+        .env("XDG_CACHE_HOME", tmp)
+        .env("HOME", tmp)
         .output()
         .unwrap()
 }

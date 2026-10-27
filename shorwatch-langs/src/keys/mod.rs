@@ -57,8 +57,8 @@ impl Frontend for KeyMaterialFrontend {
         Ok(self.lower_bytes(path, source.as_bytes().to_vec())?.0)
     }
 
-    /// Text formats (PEM, SSH public keys) keep their text for reports;
-    /// binary ones have no lines to show.
+    /// Text formats (PEM, SSH public keys) keep their text for reports,
+    /// private keys redacted; binary ones have no lines to show.
     fn lower_bytes(
         &self,
         path: &str,
@@ -84,7 +84,7 @@ impl Frontend for KeyMaterialFrontend {
                 push(&mut unit, key, label, location);
             }
         }
-        Ok((unit, Some(text)))
+        Ok((unit, Some(pem::redact_private_keys(&text))))
     }
 }
 

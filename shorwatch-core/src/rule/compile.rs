@@ -199,6 +199,19 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
         None => (HybridSpec::default_scope(), Vec::new()),
     };
 
+    // Reports turn references into links: a `javascript:` URL in someone
+    // else's rules must not become one.
+    if let Some(bad) = rule
+        .references
+        .iter()
+        .find(|r| !(r.url.starts_with("https://") || r.url.starts_with("http://")))
+    {
+        return Err(RuleError::ReferenceNotHttp(
+            rule.id.clone(),
+            bad.url.clone(),
+        ));
+    }
+
     let fix = match &rule.fix {
         None => None,
         Some(_) if rule.category == Category::Shor => {

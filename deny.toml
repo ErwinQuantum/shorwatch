@@ -1,0 +1,36 @@
+# cargo-deny: what the dependency tree may contain. CI runs `cargo deny check`.
+
+[graph]
+all-features = true
+
+[advisories]
+# Every RustSec advisory fails the check, unmaintained crates included;
+# exceptions go here with the reason.
+ignore = [
+    # unsafe-libyaml (through serde_yaml_ng) is archived, with no maintained
+    # successor yet. It parses rule files only (the built-in rules and the
+    # user's own `--rules`); the YAML files of a scanned repository go
+    # through tree-sitter-yaml instead. Revisit when serde_yaml_ng moves on.
+    { id = "RUSTSEC-2024-0449", reason = "parses rule files only; scanned YAML uses tree-sitter" },
+]
+
+[licenses]
+# Permissive licenses, compatible with Apache-2.0 distribution.
+allow = [
+    "Apache-2.0",
+    "MIT",
+    "Unicode-3.0",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "allow"
+wildcards = "deny"
+# The workspace's own crates depend on each other by path.
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

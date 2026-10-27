@@ -60,6 +60,16 @@ fn compiles_a_valid_rule() {
 }
 
 #[test]
+fn references_must_be_web_links() {
+    let mut rule = rsa_rule();
+    rule.references[0].url = "javascript:alert(1)".into();
+    assert_eq!(
+        RuleSet::compile([rule]).unwrap_err(),
+        RuleError::ReferenceNotHttp("jvm.jca.rsa".into(), "javascript:alert(1)".into())
+    );
+}
+
+#[test]
 fn shor_rules_cannot_carry_a_fix() {
     let rule = Rule {
         fix: Some(fix()),

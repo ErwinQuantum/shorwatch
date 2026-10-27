@@ -82,6 +82,43 @@ fn public_and_private_keys_in_every_pem_form() {
     assert!(labels("enc.key", fixture!("encrypted.key")).is_empty());
 }
 
+/// Reports show the text of key files: private keys never reach them.
+#[test]
+fn private_keys_are_redacted_from_the_text_reports_show() {
+    for name in [
+        "legacy-rsa.key",
+        "client-ec.key",
+        "ops_ed25519.key",
+        "encrypted.key",
+    ] {
+        let bytes = match name {
+            "legacy-rsa.key" => &fixture!("legacy-rsa.key")[..],
+            "client-ec.key" => &fixture!("client-ec.key")[..],
+            "ops_ed25519.key" => &fixture!("ops_ed25519.key")[..],
+            _ => &fixture!("encrypted.key")[..],
+        };
+        let original = String::from_utf8(bytes.to_vec()).unwrap();
+        let (_, text) = KeyMaterialFrontend
+            .lower_bytes(name, bytes.to_vec())
+            .unwrap();
+        let text = text.unwrap();
+        assert_eq!(text.lines().count(), original.lines().count(), "{name}");
+        for line in original
+            .lines()
+            .filter(|l| l.len() > 40 && !l.contains(' '))
+        {
+            assert!(!text.contains(line), "{name} still shows {line}");
+        }
+        assert!(text.contains("PRIVATE KEY-----"), "{name}: markers stay");
+    }
+    // Public keys and certificates are public: they stay.
+    let server = String::from_utf8(fixture!("server.pem").to_vec()).unwrap();
+    let (_, text) = KeyMaterialFrontend
+        .lower_bytes("server.pem", server.clone().into_bytes())
+        .unwrap();
+    assert_eq!(text.unwrap(), server);
+}
+
 #[test]
 fn der_certificates_and_keystores_have_no_text() {
     let (keys, text) = keys("client.der", fixture!("client.der"));

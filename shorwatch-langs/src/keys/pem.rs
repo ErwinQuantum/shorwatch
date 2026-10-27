@@ -43,6 +43,32 @@ pub(super) fn blocks(text: &str) -> Vec<Block<'_>> {
     blocks
 }
 
+/// What replaces each line inside a private key block.
+pub(super) const REDACTED: &str = "[private key material, not shown by Shorwatch]";
+
+/// The text with the inside of every private key block replaced, line for
+/// line, so reports (snippets in HTML, the terminal, CI artifacts) never
+/// carry a key. Lines keep their count, so findings keep their position.
+pub(super) fn redact_private_keys(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut private = false;
+    for line in text.split_inclusive('\n') {
+        let trimmed = line.trim();
+        if marker(trimmed, "BEGIN").is_some_and(|label| label.contains("PRIVATE KEY")) {
+            private = true;
+        } else if private && marker(trimmed, "END").is_some() {
+            private = false;
+        } else if private {
+            let ending = &line[line.trim_end_matches(['\r', '\n']).len()..];
+            out.push_str(REDACTED);
+            out.push_str(ending);
+            continue;
+        }
+        out.push_str(line);
+    }
+    out
+}
+
 fn marker<'a>(line: &'a str, kind: &str) -> Option<&'a str> {
     line.strip_prefix("-----")?
         .strip_prefix(kind)?

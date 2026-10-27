@@ -10,6 +10,7 @@ mod gate;
 mod layout;
 mod output;
 mod pipeline;
+mod printable;
 mod projects;
 mod rules;
 mod suppress;
@@ -49,7 +50,7 @@ fn main() -> ExitCode {
         }),
     };
     result.unwrap_or_else(|error| {
-        eprintln!("error: {error:#}");
+        eprintln!("{}", printable::text(&format!("error: {error:#}")));
         ExitCode::from(2)
     })
 }

@@ -9,9 +9,25 @@ use std::process::Command;
 use anyhow::{Context, Result, bail};
 
 /// Where reports written for the terminal live, with the pointer to the
-/// last one written.
+/// last one written. Per user: on Unix `/tmp` is shared, and another user
+/// could plant the folder, the pointer or a symlink where a report goes.
 pub fn folder() -> PathBuf {
-    std::env::temp_dir().join("shorwatch")
+    if cfg!(windows) {
+        // %TEMP% is already per user.
+        return std::env::temp_dir().join("shorwatch");
+    }
+    let cache = std::env::var_os("XDG_CACHE_HOME")
+        .map(PathBuf::from)
+        .filter(|path| path.is_absolute())
+        .or_else(|| {
+            let home = PathBuf::from(std::env::var_os("HOME")?);
+            Some(if cfg!(target_os = "macos") {
+                home.join("Library/Caches")
+            } else {
+                home.join(".cache")
+            })
+        });
+    cache.unwrap_or_else(std::env::temp_dir).join("shorwatch")
 }
 
 fn last_report() -> PathBuf {
@@ -53,6 +69,15 @@ pub fn open_last(report: Option<&Path>) -> Result<()> {
 }
 
 pub fn open(report: &Path) -> Result<()> {
+    // The system opens a file with whatever handles its type: an `.exe` or
+    // a script would run. Reports only.
+    let html = report
+        .extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| e.eq_ignore_ascii_case("html") || e.eq_ignore_ascii_case("htm"));
+    if !html {
+        bail!("`{}` is not an HTML report", report.display());
+    }
     let mut command = if cfg!(windows) {
         // Not `cmd /c start`: cmd would interpret `&` or `^` in the path.
         let mut command = Command::new("rundll32");

@@ -20,6 +20,9 @@
       else if (key === "class") node.className = value;
       else if (key === "value") node.value = value;
       else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+      // Links come from rules too (`--rules` may be someone else's): only
+      // the report's own routes, the web and the editor, never `javascript:`.
+      else if (key === "href" && !/^(#|https?:\/\/|vscode:\/\/)/i.test(String(value))) continue;
       else node.setAttribute(key, value === true ? "" : value);
     }
     for (const child of [].concat(children ?? []).flat(Infinity)) {

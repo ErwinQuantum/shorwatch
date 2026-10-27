@@ -13,7 +13,7 @@ use shorwatch_report::{Project, Scan, project_of};
 use crate::args::Analysis;
 use crate::discover::{self, display_path};
 use crate::suppress::{self, Baseline};
-use crate::{classpath, projects, rules};
+use crate::{classpath, printable, projects, rules};
 
 /// Everything a scanning command does before reporting: rules, files,
 /// classpath, projects, the scan, then the findings ignored in the code or
@@ -31,6 +31,7 @@ pub fn run(analysis: &Analysis, version: &str) -> Result<Scan> {
         }
     };
     let mut scan = analyze_all(analysis, version)?;
+    printable::scan(&mut scan);
     suppress::apply(&mut scan, baseline.as_ref());
     Ok(scan)
 }
@@ -38,6 +39,7 @@ pub fn run(analysis: &Analysis, version: &str) -> Result<Scan> {
 /// The scan a baseline records: comments still apply, no older baseline.
 pub fn run_for_baseline(analysis: &Analysis, version: &str) -> Result<Scan> {
     let mut scan = analyze_all(analysis, version)?;
+    printable::scan(&mut scan);
     suppress::apply(&mut scan, None);
     Ok(scan)
 }
@@ -141,14 +143,20 @@ fn lower(path: &Path, cwd: &Path) -> Option<(SourceUnit, Option<String>)> {
     let bytes = match fs::read(path) {
         Ok(bytes) => bytes,
         Err(error) => {
-            eprintln!("warning: skipping `{}`: {error}", path.display());
+            eprintln!(
+                "{}",
+                printable::text(&format!("warning: skipping `{}`: {error}", path.display()))
+            );
             return None;
         }
     };
     match frontend.lower_bytes(&display_path(path, cwd), bytes) {
         Ok(lowered) => Some(lowered),
         Err(error) => {
-            eprintln!("warning: skipping `{}`: {error}", path.display());
+            eprintln!(
+                "{}",
+                printable::text(&format!("warning: skipping `{}`: {error}", path.display()))
+            );
             None
         }
     }
