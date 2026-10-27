@@ -89,6 +89,11 @@
             "location": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
             "line": 9,
             "additionalContext": "jvm.jca.rsa (vulnerable)"
+          },
+          {
+            "location": "examples/spring-service/src/main/resources/certs/partner-signing.pem",
+            "line": 1,
+            "additionalContext": "keys.material.rsa (vulnerable)"
           }
         ]
       },

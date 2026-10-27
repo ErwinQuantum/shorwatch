@@ -1,14 +1,14 @@
-## 🛡️ Shorwatch: 16 quantum-vulnerable findings
+## 🛡️ Shorwatch: 17 quantum-vulnerable findings
 
 | | Count |
 |---|---:|
-| Vulnerable | 15 |
+| Vulnerable | 16 |
 | In transition (hybrid) | 1 |
 | Auto-fixable | 1 |
-| Severity high | 12 |
+| Severity high | 13 |
 | Severity medium | 3 |
 | Severity low | 1 |
-| Files with findings / scanned | 8 / 8 |
+| Files with findings / scanned | 9 / 9 |
 
 ### Findings
 
@@ -30,3 +30,4 @@
 | high | ECDSA (JOSE/JWT) | `examples/spring-service/src/main/resources/application-prod.yml:4` | vulnerable | `config.app.jose-ecdsa` |
 | high | RSA (JOSE/JWT) | `examples/spring-service/src/main/resources/application.yml:8` | vulnerable | `config.spring-boot.jose-rsa` |
 | high | TLS key exchange | `examples/spring-service/src/main/resources/application.yml:14` | vulnerable | `config.spring-boot.tls-key-exchange` |
+| high | RSA | `examples/spring-service/src/main/resources/certs/partner-signing.pem:1` (certificate "CN=statements.partner.example, O=Example Partner": RSA 3072-bit, signed with SHA256withRSA, valid until 2031-10-26) | vulnerable | `keys.material.rsa` |

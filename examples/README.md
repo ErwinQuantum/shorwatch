@@ -6,7 +6,7 @@ to be compiled or run: these files exist to be scanned.
 | Folder | What it shows |
 |---|---|
 | [`algorithms/`](algorithms/) | One minimal file per detected algorithm (RSA, DH, ECDH, ECDSA, EdDSA, DSA, ElGamal, AES-128, SHA-1, 3DES) plus JWT signatures |
-| [`spring-service/`](spring-service/) | A small Spring Boot payments service: an RSA-signed authorization server, a webhook signer whose algorithm comes from `application-prod.yml` through `@Value`, a legacy crypto helper, TLS cipher suites, a class already migrating to hybrid ML-KEM, a statement signer whose algorithm comes from a `switch`, and partner keys written in Kotlin |
+| [`spring-service/`](spring-service/) | A small Spring Boot payments service: an RSA-signed authorization server, a webhook signer whose algorithm comes from `application-prod.yml` through `@Value`, a legacy crypto helper, TLS cipher suites, a class already migrating to hybrid ML-KEM, a statement signer whose algorithm comes from a `switch`, partner keys written in Kotlin, and a partner's signing certificate |
 | [`output/`](output/) | The reports for `spring-service/` in every format; open `report.html` in a browser |
 
 ## Try it
@@ -38,6 +38,9 @@ cargo run --release -- scan examples/spring-service --format sarif --output repo
   inside `apply { initialize(...) }` and the `ES384` member import are found
   like their Java equivalents.
 - `application.yml`: an RS256 resource server and a TLS 1.2 ECDHE suite.
+- `certs/partner-signing.pem`: the certificate a partner signs statements
+  with, an RSA 3072-bit key valid until 2031. Key material is reported like
+  code, with what the certificate holds in the finding.
 
 Regenerate `output/` after changing rules or examples:
 

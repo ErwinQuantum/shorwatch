@@ -213,6 +213,20 @@
            Remove static RSA suites today.
    = ref: https://csrc.nist.gov/pubs/fips/203/final
 
- Summary  16 findings in 8 files (8 scanned)
-          15 vulnerable · 1 in transition · 1 auto-fixable
-          12 high · 3 medium · 1 low
+ HIGH  RSA · keys.material.rsa · vulnerable
+  ──▶ examples/spring-service/src/main/resources/certs/partner-signing.pem:1:1
+   │
+ 1 │ -----BEGIN CERTIFICATE-----
+   │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ RSA is broken by Shor's algorithm
+   = found: certificate "CN=statements.partner.example, O=Example Partner": RSA 3072-bit, signed with SHA256withRSA, valid until 2031-10-26
+   = help: Plan a protocol migration, not a drop-in swap. For key establishment and
+           encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS
+           204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or
+           RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding
+           post-quantum protection.
+   = ref: https://csrc.nist.gov/pubs/fips/203/final
+
+ Summary  17 findings in 9 files (9 scanned)
+          16 vulnerable · 1 in transition · 1 auto-fixable
+          13 high · 3 medium · 1 low

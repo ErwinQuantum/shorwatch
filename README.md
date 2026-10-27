@@ -177,9 +177,18 @@ Boot service:
    │ Elliptic-curve keys are broken by Shor's algorithm
    ...
 
- Summary  16 findings in 8 files (8 scanned)
-          15 vulnerable · 1 in transition · 1 auto-fixable
-          12 high · 3 medium · 1 low
+ HIGH  RSA · keys.material.rsa · vulnerable
+  ──▶ examples/spring-service/src/main/resources/certs/partner-signing.pem:1:1
+   │
+ 1 │ -----BEGIN CERTIFICATE-----
+   │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   │ RSA is broken by Shor's algorithm
+   = found: certificate "CN=statements.partner.example, O=Example Partner": RSA 3072-bit, signed with SHA256withRSA, valid until 2031-10-26
+   ...
+
+ Summary  17 findings in 9 files (9 scanned)
+          16 vulnerable · 1 in transition · 1 auto-fixable
+          13 high · 3 medium · 1 low
 ```
 
 Every format for that scan is in [`examples/output/`](examples/output/):
