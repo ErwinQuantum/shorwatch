@@ -22,7 +22,7 @@ a repository holds (certificates, keys, keystores). Everything in the repo
 | `shorwatch-rules` | Built-in YAML rules (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` for external rules | core |
 | `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng), both on the shared `jvm` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written). Nothing tree-sitter leaks out | core |
 | `shorwatch-report` | Pure renderers over a `Scan` (findings, sources, `projects`): terminal (banner; summary + HTML report link by default, `--overview`, `--details`, `--compact`, the failing verdict), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only, CSP forbids the network; an editorial cover + hash-routed chapters `#/findings?sev=&project=&alg=&cat=&f=`, grouped by file, tests folded) | core |
-| `shorwatch-cli` | `shorwatch scan` / `shorwatch open` (last HTML report, in the browser) / `shorwatch rules`: clap args, `ignore` walker, `layout` (test vs production code by path), `projects` (top-most build roots of a scanned folder), rayon pipeline (one `link` per project), output (`--html`, temporary HTML on terminals, `--report-url`), exit codes (`--fail-on`, `--fail-severity`) | all |
+| `shorwatch-cli` | `shorwatch [scan]` (no command = scan) / `report` (scan + open) / `ci` (SARIF + HTML in `shorwatch-report/`, CI artifact links) / `open` (last HTML report, in the browser) / `rules`; `--watch` polls mtimes: clap args, `ignore` walker, `layout` (test vs production code by path), `projects` (top-most build roots of a scanned folder), rayon pipeline (one `link` per project), output (`--html`, temporary HTML on terminals, `--report-url`), exit codes (`--fail-on`, `--fail-severity`) | all |
 
 Pipeline (what the CLI does): lower every file with its frontend → group
 units by project → `link` each project's units → `analyze` each unit →
@@ -42,7 +42,7 @@ langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, synta
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
-cli/src/   args, browser (--open, `shorwatch open`), discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
+cli/src/   args, browser (--open, `shorwatch open`), ci, gate (--fail-on/--fail-severity), watch, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file), pipeline, output
 report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, wrap, banner}
            html/{mod: payload, report.html/css/js}  sarif cbom json markdown summary
 ```

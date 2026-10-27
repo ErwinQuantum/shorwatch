@@ -3,21 +3,24 @@
 
 mod args;
 mod browser;
+mod ci;
 mod classpath;
 mod discover;
+mod gate;
 mod layout;
 mod output;
 mod pipeline;
 mod projects;
 mod rules;
+mod watch;
 
 use std::process::ExitCode;
 
 use anyhow::Result;
 use clap::Parser;
-use shorwatch_core::{CodeRole, Severity, Status};
+use shorwatch_report::Scan;
 
-use args::{Cli, Command, FailOn, ScanArgs};
+use args::{Cli, Command, ScanArgs};
 
 #[cfg(target_env = "musl")]
 #[global_allocator]
@@ -28,11 +31,17 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 fn main() -> ExitCode {
     let cli = Cli::parse();
     let result = match cli.command {
-        Command::Scan(args) => scan(&args),
-        Command::Open(args) => {
+        None => scan(&cli.scan),
+        Some(Command::Scan(args)) => scan(&args),
+        Some(Command::Report(mut args)) => {
+            args.open = true;
+            scan(&args)
+        }
+        Some(Command::Ci(args)) => ci::run(&args, VERSION),
+        Some(Command::Open(args)) => {
             browser::open_last(args.report.as_deref()).map(|()| ExitCode::SUCCESS)
         }
-        Command::Rules(args) => rules::load(&args.rules).map(|rules| {
+        Some(Command::Rules(args)) => rules::load(&args.rules).map(|rules| {
             print!("{}", rules::listing(&rules));
             ExitCode::SUCCESS
         }),
@@ -44,53 +53,31 @@ fn main() -> ExitCode {
 }
 
 fn scan(args: &ScanArgs) -> Result<ExitCode> {
+    if args.watch {
+        return watch::run(args, VERSION);
+    }
     if output::wants_banner(args) {
         output::banner(VERSION)?;
     }
-    let rules = rules::load(&args.rules)?;
-    let mut files = discover::files(&args.paths)?;
-    if args.exclude_tests {
-        files.retain(|(_, role)| *role == CodeRole::Production);
-    }
-    let options = pipeline::Options {
-        min_severity: args.min_severity.into(),
-        tool_version: VERSION.to_owned(),
-    };
-    let library = classpath::load(&args.classpath)?;
-    if !args.classpath.is_empty() {
-        eprintln!(
-            "classpath: {} types, {} methods returning types",
-            library.types.len(),
-            library.methods.len()
-        );
-    }
-    let cwd = std::env::current_dir().unwrap_or_default();
-    let paths: Vec<_> = files.iter().map(|(path, _)| path.clone()).collect();
-    let projects = projects::detect(&args.paths, &paths, &cwd);
-    let scan = pipeline::scan(&files, projects, &library, &rules, &options);
-    let report = output::html_report(&scan, args)?;
-    output::write(&scan, args, &report)?;
+    let scan = pipeline::run(&args.analysis, VERSION)?;
+    let failing = report(&scan, args, args.open)?;
+    Ok(gate::exit_code(failing))
+}
+
+/// Writes a scan's reports, opens the HTML one if asked to, and says why
+/// the scan fails. Returns the number of failing findings.
+fn report(scan: &Scan, args: &ScanArgs, open: bool) -> Result<usize> {
+    let report = output::html_report(scan, args)?;
+    output::write(scan, args, &report)?;
     if let Some(path) = &report.path {
         browser::remember(path);
-        if args.open {
+        if open {
             browser::open(path)?;
         }
     }
-
-    let threshold = Severity::from(args.fail_severity);
-    let failing = scan
-        .findings
-        .iter()
-        .filter(|f| f.severity >= threshold)
-        .filter(|f| match args.fail_on {
-            FailOn::Vulnerable => f.status == Status::Vulnerable,
-            FailOn::Any => true,
-            FailOn::Never => false,
-        })
-        .count();
-    if failing == 0 {
-        return Ok(ExitCode::SUCCESS);
+    let failing = gate::failing(scan, &args.gate);
+    if failing > 0 {
+        output::verdict(failing, args, report.link.as_deref())?;
     }
-    output::verdict(failing, args, report.link.as_deref())?;
-    Ok(ExitCode::from(1))
+    Ok(failing)
 }

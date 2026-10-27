@@ -32,6 +32,8 @@ pub struct Options {
     pub report: Option<String>,
     /// The report was opened in the browser already.
     pub opened: bool,
+    /// A CI log: no hints about commands to run next.
+    pub ci: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -75,7 +77,7 @@ fn next(scan: &Scan, options: &Options) -> String {
         return out;
     }
     let arrow = paint("→", accent());
-    let terminal = matches!(options.view, View::Summary | View::Overview);
+    let terminal = !options.ci && matches!(options.view, View::Summary | View::Overview);
     let mut hints = Vec::new();
     if let Some(report) = &options.report {
         let _ = writeln!(
@@ -85,7 +87,7 @@ fn next(scan: &Scan, options: &Options) -> String {
             paint(report, bold())
         );
         // Terminals may open a `file://` link in an editor, not a browser.
-        if report.starts_with("file://") && !options.opened {
+        if report.starts_with("file://") && !options.opened && !options.ci {
             hints.push(("shorwatch open", "open it in your browser"));
         }
     } else if terminal {

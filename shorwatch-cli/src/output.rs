@@ -52,6 +52,7 @@ pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<HtmlReport> {
             .with_context(|| format!("writing `{}`", path.display()))?;
     }
     let link = args
+        .gate
         .report_url
         .clone()
         .or_else(|| path.as_deref().map(file_url));
@@ -73,6 +74,7 @@ fn temporary_html(scan: &Scan, args: &ScanArgs) -> Result<PathBuf> {
     let name = match scan.projects.as_slice() {
         [project] => project.name.clone(),
         _ => args
+            .analysis
             .paths
             .first()
             .and_then(|path| fs::canonicalize(path).ok())
@@ -94,7 +96,7 @@ fn temporary_html(scan: &Scan, args: &ScanArgs) -> Result<PathBuf> {
 }
 
 /// A `file://` URL that terminals turn into a link.
-fn file_url(path: &Path) -> String {
+pub fn file_url(path: &Path) -> String {
     let absolute = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
     let text = absolute.to_string_lossy().replace('\\', "/");
     // Windows' verbatim prefix (`\\?\C:\...`).
@@ -130,6 +132,7 @@ pub fn write(scan: &Scan, args: &ScanArgs, html: &HtmlReport) -> Result<()> {
                 },
                 report: html.link.clone(),
                 opened: args.open,
+                ci: false,
             },
         ),
         Format::Sarif => sarif::render(scan),

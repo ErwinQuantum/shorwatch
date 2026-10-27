@@ -33,15 +33,21 @@ pub fn remember(report: &Path) {
 
 /// `shorwatch open`: the given report, or the last one written.
 pub fn open_last(report: Option<&Path>) -> Result<()> {
-    let path = match report {
-        Some(path) => path.to_path_buf(),
-        None => match fs::read_to_string(last_report()) {
-            Ok(path) => PathBuf::from(path.trim()),
-            Err(_) => bail!("no report yet: run `shorwatch scan` first"),
-        },
+    if let Some(path) = report {
+        if !path.is_file() {
+            bail!("`{}` does not exist", path.display());
+        }
+        return open(path);
+    }
+    let Ok(last) = fs::read_to_string(last_report()) else {
+        bail!("no report yet: run `shorwatch` or `shorwatch report` first");
     };
+    let path = PathBuf::from(last.trim());
     if !path.is_file() {
-        bail!("`{}` does not exist", path.display());
+        bail!(
+            "the last report, `{}`, no longer exists: run `shorwatch` again",
+            path.display()
+        );
     }
     open(&path)
 }

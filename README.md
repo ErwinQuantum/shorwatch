@@ -84,30 +84,38 @@ advice and links to the relevant NIST documents.
 
 ## Usage
 
+Install it once, then run `shorwatch` from any project:
+
 ```sh
 cargo install --path shorwatch-cli          # until the first release is published
+```
 
-shorwatch scan .                             # counts, and a link to the HTML report
-shorwatch scan . --open                      # ...opened in the browser when the scan ends
+```sh
+shorwatch                                    # scan the current project: counts, and a link to the HTML report
+shorwatch report                             # scan and open the HTML report in the browser
+shorwatch --watch                            # scan again whenever a file changes
 shorwatch open                               # open the last report again, without scanning
-shorwatch scan services/                     # a folder of services: one group per project
-shorwatch scan . --overview                  # the files with findings, the most urgent explained
-shorwatch scan . --details                   # every finding, explained
-shorwatch scan src/ config/ --compact        # several paths, one line per finding
-shorwatch scan . --format sarif -o shorwatch.sarif --html shorwatch.html
-shorwatch scan . --format cbom -o crypto.cdx.json # CycloneDX CBOM inventory
-shorwatch scan . --fail-severity high        # only high and critical findings fail the build
-shorwatch scan . --rules ./company-rules/    # add your own YAML rules
-shorwatch scan . --classpath @cp.txt         # follow calls into compiled dependencies
+shorwatch ci                                 # in a pipeline: SARIF + HTML, linked from the log
+
+shorwatch services/                          # a folder of services: one group per project
+shorwatch --overview                         # the files with findings, the most urgent explained
+shorwatch --details                          # every finding, explained
+shorwatch src/ config/ --compact             # several paths, one line per finding
+shorwatch --format cbom -o crypto.cdx.json   # CycloneDX CBOM inventory
+shorwatch --fail-severity high               # only high and critical findings fail
+shorwatch --rules ./company-rules/           # add your own YAML rules
+shorwatch --classpath @cp.txt                # follow calls into compiled dependencies
 shorwatch rules                              # list the rules in effect
 ```
 
-`scan` walks the given paths respecting `.gitignore`, analyzes `.java`,
-`.kt`, `.kts`, `.yml`, `.yaml` and `.properties` files in parallel, and resolves
-`@Value("${...}")` injections against the project's configuration files. Key
-material is read from `.pem`, `.crt`, `.cer`, `.der`, `.key`, `.pub`, `.csr`,
-`.jks`, `.jceks`, `.keystore`, `.truststore`, `.p12` and `.pfx` files, told
-apart by content.
+Without a command, `shorwatch` is `shorwatch scan` (which scripts may keep
+using; a folder named like a command, say `report/`, is scanned with
+`shorwatch scan report/`). A scan walks the given paths respecting
+`.gitignore`, analyzes `.java`, `.kt`, `.kts`, `.yml`, `.yaml` and
+`.properties` files in parallel, and resolves `@Value("${...}")` injections
+against the project's configuration files. Key material is read from `.pem`,
+`.crt`, `.cer`, `.der`, `.key`, `.pub`, `.csr`, `.jks`, `.jceks`, `.keystore`,
+`.truststore`, `.p12` and `.pfx` files, told apart by content.
 
 | Option | |
 |---|---|
@@ -116,7 +124,8 @@ apart by content.
 | `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
 | `--html FILE` | Also write the HTML report there, whatever the format |
 | `--no-html` | Do not write the HTML report to a temporary folder (see below) |
-| `--open` | Open the HTML report in the browser when the scan ends |
+| `--open` | Open the HTML report in the browser when the scan ends (`shorwatch report` does it) |
+| `--watch` | Scan again whenever a scanned file changes, until Ctrl+C |
 | `--report-url URL` | The link shown for the HTML report, e.g. where CI publishes it (also `SHORWATCH_REPORT_URL`) |
 | `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`; `never` only reports) |
 | `--fail-severity info\|low\|medium\|high\|critical` | Only findings at or above this severity fail the scan; the rest are still reported |
@@ -141,10 +150,10 @@ it, everything else works the same.
 ```sh
 # Maven: the project's resolved dependencies
 mvn dependency:build-classpath -Dmdep.outputFile=cp.txt
-shorwatch scan . --classpath @cp.txt
+shorwatch --classpath @cp.txt
 
 # Any directory of jars or classes, and the JDK's own modules
-shorwatch scan . --classpath build/libs --classpath "$JAVA_HOME/jmods"
+shorwatch --classpath build/libs --classpath "$JAVA_HOME/jmods"
 ```
 
 Entries are directories (searched for `.class`, `.jar` and `.jmod` files),
@@ -161,8 +170,8 @@ HTML report, where findings are browsed (on an interactive terminal, the
 report is written to the system's temporary folder and overwritten by the
 next scan of the same project; `--html FILE` puts it elsewhere, `--no-html`
 skips it). Some terminals, VS Code's among them, open a `file://` link as
-text in the editor: `--open`, or `shorwatch open` afterwards, opens the
-report in the default browser instead.
+text in the editor: `shorwatch report` (or `--open`) opens the report in the
+default browser when the scan ends, `shorwatch open` afterwards.
 
 ```text
  Summary  17 findings in 9 files (9 scanned)
@@ -268,9 +277,30 @@ detects; quantum-safe algorithms are not listed yet.
 
 ### In CI pipelines
 
-A scan fails the build (exit code `1`) when it finds cryptography still
-vulnerable; `2` means it could not run (bad arguments, invalid rules,
-unreadable paths). Gating is a choice:
+`shorwatch ci` is the scan for pipelines. It writes `shorwatch-report/`
+(`report.sarif` for code scanning tools, `report.html` for people; another
+folder with `--out-dir`), prints the summary in the log with a link to the
+HTML report, and, on GitHub Actions, adds it to the job summary. It knows
+where GitHub Actions, GitLab CI, Jenkins and Azure Pipelines serve a job's
+artifacts, so the link works once the folder is published; elsewhere, pass
+it with `--report-url` (or `SHORWATCH_REPORT_URL`).
+
+When the scan fails, the last line of the log says why and links the report:
+
+```text
+ Summary  17 findings in 9 files (9 scanned)
+          13 high · 3 medium · 1 low
+          16 vulnerable · 1 in transition · 1 auto-fixable
+
+ Report   https://github.com/acme/payments/actions/runs/912345678
+
+ ✖ 16 findings fail the scan (exit code 1) · see --fail-on, --fail-severity
+   Report https://github.com/acme/payments/actions/runs/912345678
+```
+
+Exit code `1` fails the build when it finds cryptography still vulnerable;
+`2` means the scan could not run (bad arguments, invalid rules, unreadable
+paths). Gating is a choice:
 
 | | |
 |---|---|
@@ -279,22 +309,14 @@ unreadable paths). Gating is a choice:
 | `--fail-on any` | Also fail on findings already in transition (hybrid) |
 | `--exclude-tests` | Leave test code out of the scan, and of the gate |
 
-When it fails, the last line of the log says why and links the HTML report:
-
-```text
- ✖ 12 findings fail the scan (exit code 1) · see --fail-on, --fail-severity
-   Report https://github.com/acme/payments/actions/runs/912345678
-```
-
-The link is `--report-url` (or `SHORWATCH_REPORT_URL`): Shorwatch cannot
-know where your CI publishes files, so each snippet below passes the URL
-of its artifacts. Write the HTML with `--html` and publish it even when the
-scan fails.
+Publish the folder even when the scan fails (`if: always()`, `when: always`,
+`post { always }`, `condition: always()` below).
 
 ### GitHub Actions
 
 SARIF results show up as code scanning alerts on the exact line of a pull
-request; the HTML report is an artifact of the run:
+request; the HTML report is an artifact of the run, linked from the log and
+the job summary:
 
 ```yaml
 # .github/workflows/shorwatch.yml
@@ -310,19 +332,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install --git https://github.com/ErwinQuantum/shorwatch shorwatch-cli
-      - run: >
-          shorwatch scan . --format sarif -o shorwatch.sarif --html shorwatch.html
-          --fail-severity high
-          --report-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      - run: shorwatch ci --fail-severity high
       - uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: shorwatch.sarif
+          sarif_file: shorwatch-report/report.sarif
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: shorwatch-report
-          path: shorwatch.html
+          path: shorwatch-report/
 ```
 
 ### Docker (Jenkins, Azure DevOps, GitLab CI)
@@ -333,8 +352,11 @@ files: ~4 s). Docker Desktop on Windows and macOS shares host folders slowly
 (the same scan takes ~20 s); there, prefer the native binary.
 
 ```sh
-docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch scan . --format sarif -o shorwatch.sarif --html shorwatch.html
+docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch ci
 ```
+
+The CI variables the link is built from must reach the container: GitLab
+runs the job inside the image; with `docker run`, pass them with `-e`.
 
 Jenkins, with the [Warnings Next Generation](https://plugins.jenkins.io/warnings-ng/)
 plugin reading the SARIF report and the HTML report archived with the build:
@@ -342,14 +364,12 @@ plugin reading the SARIF report and the HTML report archived with the build:
 ```groovy
 stage('Post-quantum crypto') {
     steps {
-        sh '''docker run --rm -v "$WORKSPACE:/src" ghcr.io/erwinquantum/shorwatch \
-              scan . --format sarif -o shorwatch.sarif --html shorwatch.html \
-              --fail-severity high --report-url "${BUILD_URL}artifact/shorwatch.html"'''
+        sh 'docker run --rm -v "$WORKSPACE:/src" -e JENKINS_URL -e BUILD_URL ghcr.io/erwinquantum/shorwatch ci --fail-severity high'
     }
     post {
         always {
-            recordIssues tool: sarif(pattern: 'shorwatch.sarif', id: 'shorwatch', name: 'Shorwatch')
-            archiveArtifacts artifacts: 'shorwatch.html'
+            recordIssues tool: sarif(pattern: 'shorwatch-report/report.sarif', id: 'shorwatch', name: 'Shorwatch')
+            archiveArtifacts artifacts: 'shorwatch-report/**'
         }
     }
 }
@@ -365,13 +385,13 @@ extension (it reads the `CodeAnalysisLogs` artifact):
 
 ```yaml
 - script: |
-    docker run --rm -v "$(Build.SourcesDirectory):/src" ghcr.io/erwinquantum/shorwatch \
-      scan . --format sarif -o shorwatch.sarif --html shorwatch.html --fail-severity high \
-      --report-url "$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts"
-- publish: shorwatch.sarif
+    docker run --rm -v "$(Build.SourcesDirectory):/src" \
+      -e TF_BUILD -e SYSTEM_COLLECTIONURI -e SYSTEM_TEAMPROJECT -e BUILD_BUILDID \
+      ghcr.io/erwinquantum/shorwatch ci --fail-severity high
+- publish: shorwatch-report/report.sarif
   artifact: CodeAnalysisLogs
   condition: always()
-- publish: shorwatch.html
+- publish: shorwatch-report
   artifact: shorwatch-report
   condition: always()
 ```
@@ -384,12 +404,11 @@ shorwatch:
     name: ghcr.io/erwinquantum/shorwatch
     entrypoint: [""]
   script:
-    - shorwatch scan . --format markdown -o shorwatch.md --html shorwatch.html
-      --fail-severity high --report-url "$CI_JOB_URL/artifacts/file/shorwatch.html"
+    - shorwatch ci --fail-severity high
   artifacts:
     when: always
     expose_as: Shorwatch report
-    paths: [shorwatch.html, shorwatch.md]
+    paths: [shorwatch-report/]
 ```
 
 ## Coverage

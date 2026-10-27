@@ -5,11 +5,40 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use anyhow::Result;
 use rayon::prelude::*;
 use shorwatch_core::{CodeRole, Finding, Library, RuleSet, Severity, SourceUnit, analyze, link};
 use shorwatch_report::{Project, Scan, project_of};
 
-use crate::discover::display_path;
+use crate::args::Analysis;
+use crate::discover::{self, display_path};
+use crate::{classpath, projects, rules};
+
+/// Everything a scanning command does before reporting: rules, files,
+/// classpath, projects, the scan.
+pub fn run(analysis: &Analysis, version: &str) -> Result<Scan> {
+    let rules = rules::load(&analysis.rules)?;
+    let mut files = discover::files(&analysis.paths)?;
+    if analysis.exclude_tests {
+        files.retain(|(_, role)| *role == CodeRole::Production);
+    }
+    let options = Options {
+        min_severity: analysis.min_severity.into(),
+        tool_version: version.to_owned(),
+    };
+    let library = classpath::load(&analysis.classpath)?;
+    if !analysis.classpath.is_empty() {
+        eprintln!(
+            "classpath: {} types, {} methods returning types",
+            library.types.len(),
+            library.methods.len()
+        );
+    }
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let paths: Vec<_> = files.iter().map(|(path, _)| path.clone()).collect();
+    let projects = projects::detect(&analysis.paths, &paths, &cwd);
+    Ok(scan(&files, projects, &library, &rules, &options))
+}
 
 pub struct Options {
     pub min_severity: Severity,

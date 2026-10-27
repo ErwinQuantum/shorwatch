@@ -9,10 +9,27 @@ fn fixtures(folder: &str) -> PathBuf {
         .join(folder)
 }
 
+/// Runs the binary with its own temporary folder, so the reports tests
+/// write never become the developer's last report (`shorwatch open`), and
+/// outside any CI system, so `shorwatch ci` links local files.
 fn shorwatch(args: &[&str]) -> Output {
-    Command::new(env!("CARGO_BIN_EXE_shorwatch"))
+    let tmp = env!("CARGO_TARGET_TMPDIR");
+    let mut command = Command::new(env!("CARGO_BIN_EXE_shorwatch"));
+    for ci in [
+        "GITHUB_ACTIONS",
+        "GITHUB_STEP_SUMMARY",
+        "GITLAB_CI",
+        "JENKINS_URL",
+        "TF_BUILD",
+    ] {
+        command.env_remove(ci);
+    }
+    command
         .args(args)
         .env("NO_COLOR", "1")
+        .env("TMP", tmp)
+        .env("TEMP", tmp)
+        .env("TMPDIR", tmp)
         .output()
         .unwrap()
 }
@@ -355,4 +372,32 @@ fn open_needs_a_report_that_exists() {
     let output = shorwatch(&["open", "definitely/not/here.html"]);
     assert_eq!(output.status.code(), Some(2));
     assert!(String::from_utf8_lossy(&output.stderr).contains("does not exist"));
+}
+
+#[test]
+fn without_a_command_it_scans() {
+    let output = shorwatch(&[&path("spring-app"), "--fail-on", "never"]);
+    assert_eq!(output.status.code(), Some(0));
+    assert!(stdout(&output).contains("14 findings in 10 files"));
+}
+
+#[test]
+fn ci_writes_sarif_and_html_and_links_the_report() {
+    let out = Path::new(env!("CARGO_TARGET_TMPDIR")).join("ci-report");
+    let output = shorwatch(&[
+        "ci",
+        &path("spring-app"),
+        "--out-dir",
+        &out.display().to_string(),
+    ]);
+    assert_eq!(output.status.code(), Some(1));
+    let sarif = std::fs::read_to_string(out.join("report.sarif")).unwrap();
+    serde_json::from_str::<serde_json::Value>(&sarif).unwrap();
+    assert!(out.join("report.html").is_file());
+    let log = stdout(&output);
+    assert!(log.contains("14 findings in 10 files"), "{log}");
+    assert!(log.contains("Report   file://"), "{log}");
+    assert!(!log.contains("--details"), "no terminal hints in CI: {log}");
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("Report file://"), "{stderr}");
 }
