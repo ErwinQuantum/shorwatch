@@ -38,18 +38,26 @@ pub fn run(args: &CiArgs, version: &str) -> Result<ExitCode> {
             ..terminal::Options::default()
         },
     );
+    // Everything on stdout: CI systems read stdout and stderr separately and
+    // may interleave them out of order.
     let mut stdout = anstream::stdout();
     stdout.write_all(summary.as_bytes())?;
-    stdout.flush()?;
     if let Some(path) = env("GITHUB_STEP_SUMMARY") {
         job_summary(Path::new(&path), &scan, &link)?;
     }
 
     let failing = gate::failing(&scan, &args.gate);
     if failing > 0 {
-        let mut stderr = anstream::stderr();
-        write!(stderr, "{}", terminal::verdict(failing, Some(&link)))?;
+        write!(stdout, "{}", terminal::verdict(failing, Some(&link)))?;
+        if env("GITHUB_ACTIONS").is_some() {
+            // An annotation: the failure and its link on the run's page.
+            writeln!(
+                stdout,
+                "::error title=Shorwatch::{failing} findings fail the scan. Report: {link}"
+            )?;
+        }
     }
+    stdout.flush()?;
     Ok(gate::exit_code(failing))
 }
 

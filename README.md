@@ -333,7 +333,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install --git https://github.com/ErwinQuantum/shorwatch shorwatch-cli
       - run: shorwatch ci --fail-severity high
-      - uses: github/codeql-action/upload-sarif@v3
+      - uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: shorwatch-report/report.sarif

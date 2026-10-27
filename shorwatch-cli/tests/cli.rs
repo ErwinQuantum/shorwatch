@@ -398,6 +398,7 @@ fn ci_writes_sarif_and_html_and_links_the_report() {
     assert!(log.contains("14 findings in 10 files"), "{log}");
     assert!(log.contains("Report   file://"), "{log}");
     assert!(!log.contains("--details"), "no terminal hints in CI: {log}");
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("Report file://"), "{stderr}");
+    // The verdict follows the summary in the same stream.
+    assert!(log.contains("fail the scan (exit code 1)"), "{log}");
+    assert!(log.contains("Report file://"), "{log}");
 }
