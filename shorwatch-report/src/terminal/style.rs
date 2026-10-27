@@ -23,6 +23,11 @@ pub(crate) fn dim() -> Style {
     rgb(DIM)
 }
 
+/// A failed scan.
+pub(crate) fn failure() -> Style {
+    rgb((248, 113, 113)).bold()
+}
+
 pub(crate) fn bold() -> Style {
     Style::new().bold()
 }

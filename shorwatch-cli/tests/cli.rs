@@ -42,12 +42,16 @@ fn vulnerable_project_exits_with_1_and_reports_locations() {
 }
 
 #[test]
-fn the_default_view_lists_files_and_details_lists_findings() {
-    let overview = stdout(&shorwatch(&["scan", &path("spring-app")]));
+fn the_default_view_counts_and_the_others_show_findings() {
+    let blocks = |text: &str| text.matches("──▶").count();
+    let summary = stdout(&shorwatch(&["scan", &path("spring-app")]));
+    assert!(summary.contains("14 findings in 10 files"), "{summary}");
+    assert!(summary.contains("--html"), "{summary}");
+    assert_eq!(blocks(&summary), 0);
+
+    let overview = stdout(&shorwatch(&["scan", &path("spring-app"), "--overview"]));
     assert!(overview.contains("Files with findings"), "{overview}");
     assert!(overview.contains("Most urgent"), "{overview}");
-    assert!(overview.contains("--details"), "{overview}");
-    let blocks = |text: &str| text.matches("──▶").count();
     assert_eq!(blocks(&overview), 3);
 
     let details = stdout(&shorwatch(&["scan", &path("spring-app"), "--details"]));
@@ -55,6 +59,33 @@ fn the_default_view_lists_files_and_details_lists_findings() {
     assert!(!details.contains("Most urgent"));
 }
 
+#[test]
+fn html_report_is_written_beside_any_format_and_linked() {
+    let file = std::env::temp_dir().join(format!("shorwatch-test-{}.html", std::process::id()));
+    let output = shorwatch(&[
+        "scan",
+        &path("spring-app"),
+        "--format",
+        "sarif",
+        "--html",
+        &file.display().to_string(),
+    ]);
+    let html = std::fs::read_to_string(&file).unwrap();
+    std::fs::remove_file(&file).unwrap();
+    assert!(html.contains("shorwatch-data"));
+    serde_json::from_str::<serde_json::Value>(&stdout(&output)).unwrap();
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("fail the scan (exit code 1)"), "{stderr}");
+    assert!(stderr.contains("file://"), "{stderr}");
+
+    let output = shorwatch(&[
+        "scan",
+        &path("spring-app"),
+        "--report-url",
+        "https://ci.example/run/7",
+    ]);
+    assert!(stdout(&output).contains("Report   https://ci.example/run/7"));
+}
 #[test]
 fn clean_files_exit_with_0() {
     let output = shorwatch(&["scan", &path("dh/Clean.java")]);
@@ -72,6 +103,13 @@ fn fail_on_controls_the_exit_code() {
     assert_eq!(shorwatch(&["scan", &hybrid]).status.code(), Some(0));
     let any = shorwatch(&["scan", &hybrid, "--fail-on", "any"]);
     assert_eq!(any.status.code(), Some(1));
+
+    // spring-app has high, medium and low findings: still reported, but
+    // only critical ones would fail.
+    let critical = shorwatch(&["scan", &path("spring-app"), "--fail-severity", "critical"]);
+    assert_eq!(critical.status.code(), Some(0));
+    assert!(stdout(&critical).contains("14 findings"));
+    assert!(critical.stderr.is_empty());
 }
 
 #[test]
@@ -134,6 +172,7 @@ fn output_file_is_plain_text() {
     let output = shorwatch(&[
         "scan",
         &path("spring-app"),
+        "--details",
         "--output",
         &file.display().to_string(),
     ]);
@@ -223,7 +262,14 @@ fn latin1_properties_are_scanned() {
     // `# Café` in ISO-8859-1: 0xE9 is not valid UTF-8 on its own.
     std::fs::write(&file, b"# Caf\xe9\njwt.algorithm=RS256\n").unwrap();
 
-    let output = shorwatch(&["scan", &dir.display().to_string(), "--format", "json"]);
+    let output = shorwatch(&[
+        "scan",
+        &dir.display().to_string(),
+        "--format",
+        "json",
+        "--fail-on",
+        "never",
+    ]);
     std::fs::remove_dir_all(&dir).unwrap();
     assert!(
         output.stderr.is_empty(),

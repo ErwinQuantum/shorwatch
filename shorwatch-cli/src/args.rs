@@ -54,9 +54,29 @@ pub struct ScanArgs {
     #[arg(long, value_enum, default_value_t = SeverityArg::Info)]
     pub min_severity: SeverityArg,
 
-    /// When to exit with code 1.
+    /// When to exit with code 1 (`never` keeps CI green and only reports).
     #[arg(long, value_enum, default_value_t = FailOn::Vulnerable)]
     pub fail_on: FailOn,
+
+    /// Only findings at or above this severity fail the scan; the rest are
+    /// still reported.
+    #[arg(long, value_enum, default_value_t = SeverityArg::Info)]
+    pub fail_severity: SeverityArg,
+
+    /// Also write the HTML report to this file, whatever the --format. On an
+    /// interactive terminal the text report writes one to a temporary folder
+    /// anyway and links it (see --no-html).
+    #[arg(long, value_name = "FILE")]
+    pub html: Option<PathBuf>,
+
+    /// Do not write the HTML report to a temporary folder.
+    #[arg(long, conflicts_with = "html")]
+    pub no_html: bool,
+
+    /// The link shown for the HTML report instead of its local path: where CI
+    /// publishes it (an artifact, a Pages site...).
+    #[arg(long, value_name = "URL", env = "SHORWATCH_REPORT_URL")]
+    pub report_url: Option<String>,
 
     /// Skip test code: Maven/Gradle test source sets (`src/test`,
     /// `src/integrationTest`...), test directories and `*Test`/`*IT` classes.
@@ -73,9 +93,14 @@ pub struct ScanArgs {
     pub classpath: Vec<OsString>,
 
     /// Every finding, explained (text format only). By default the text
-    /// report lists the files with findings and explains the most urgent.
-    #[arg(long, conflicts_with = "compact")]
+    /// report only counts them and links the HTML report.
+    #[arg(long, conflicts_with_all = ["compact", "overview"])]
     pub details: bool,
+
+    /// The files with findings and the most urgent ones explained (text
+    /// format only).
+    #[arg(long, conflicts_with = "compact")]
+    pub overview: bool,
 
     /// One line per finding (text format only).
     #[arg(long)]

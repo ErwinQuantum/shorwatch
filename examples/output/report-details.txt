@@ -305,5 +305,5 @@
    = ref: https://csrc.nist.gov/pubs/fips/203/final
 
  Summary  17 findings in 9 files (9 scanned)
-          16 vulnerable · 1 in transition · 1 auto-fixable
           13 high · 3 medium · 1 low
+          16 vulnerable · 1 in transition · 1 auto-fixable

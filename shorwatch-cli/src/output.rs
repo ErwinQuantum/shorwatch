@@ -1,8 +1,9 @@
 //! Rendering the scan in the chosen format and writing it out.
 
+use std::fmt::Write as _;
 use std::fs;
-use std::io::{IsTerminal, Write};
-use std::path::Path;
+use std::io::{IsTerminal, Write as _};
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use shorwatch_report::{Scan, cbom, html, json, markdown, sarif, terminal};
@@ -24,18 +25,102 @@ pub fn banner(version: &str) -> Result<()> {
     Ok(())
 }
 
-pub fn write(scan: &Scan, args: &ScanArgs) -> Result<()> {
+/// Writes the HTML report where it was asked for (or, for someone reading
+/// the text report on a terminal, to a temporary folder) and returns the
+/// link to show for it: `--report-url`, or the file as a `file://` URL.
+pub fn html_report(scan: &Scan, args: &ScanArgs) -> Result<Option<String>> {
+    let path = if let Some(path) = &args.html {
+        Some(path.clone())
+    } else if args.format == Format::Html {
+        args.output.clone()
+    } else if wants_temporary_html(scan, args) {
+        Some(temporary_html(scan, args)?)
+    } else {
+        None
+    };
+    if let Some(path) = &path
+        && args.format != Format::Html
+    {
+        fs::write(path, html::render(scan))
+            .with_context(|| format!("writing `{}`", path.display()))?;
+    }
+    Ok(args
+        .report_url
+        .clone()
+        .or_else(|| path.map(|path| file_url(&path))))
+}
+
+fn wants_temporary_html(scan: &Scan, args: &ScanArgs) -> bool {
+    args.format == Format::Text
+        && args.output.is_none()
+        && !args.no_html
+        && !scan.findings.is_empty()
+        && std::io::stdout().is_terminal()
+}
+
+/// One file per scanned folder, overwritten by the next scan of it.
+fn temporary_html(scan: &Scan, args: &ScanArgs) -> Result<PathBuf> {
+    let folder = std::env::temp_dir().join("shorwatch");
+    fs::create_dir_all(&folder).with_context(|| format!("creating `{}`", folder.display()))?;
+    let name = match scan.projects.as_slice() {
+        [project] => project.name.clone(),
+        _ => args
+            .paths
+            .first()
+            .and_then(|path| fs::canonicalize(path).ok())
+            .and_then(|path| path.file_name().map(|n| n.to_string_lossy().into_owned()))
+            .unwrap_or_default(),
+    };
+    let name: String = name
+        .chars()
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.') {
+                c
+            } else {
+                '-'
+            }
+        })
+        .collect();
+    let name = if name.is_empty() { "scan".into() } else { name };
+    Ok(folder.join(format!("{name}.html")))
+}
+
+/// A `file://` URL that terminals turn into a link.
+fn file_url(path: &Path) -> String {
+    let absolute = fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf());
+    let text = absolute.to_string_lossy().replace('\\', "/");
+    // Windows' verbatim prefix (`\\?\C:\...`).
+    let text = text.strip_prefix("//?/").unwrap_or(&text);
+    let mut url = String::from(if text.starts_with('/') {
+        "file://"
+    } else {
+        "file:///"
+    });
+    for byte in text.bytes() {
+        if byte.is_ascii_alphanumeric() || b"/:-_.~".contains(&byte) {
+            url.push(char::from(byte));
+        } else {
+            let _ = write!(url, "%{byte:02X}");
+        }
+    }
+    url
+}
+
+pub fn write(scan: &Scan, args: &ScanArgs, report_link: Option<&str>) -> Result<()> {
     let report = match args.format {
         Format::Text => terminal::render(
             scan,
-            terminal::Options {
+            &terminal::Options {
                 view: if args.compact {
                     terminal::View::Compact
                 } else if args.details {
                     terminal::View::Details
-                } else {
+                } else if args.overview {
                     terminal::View::Overview
+                } else {
+                    terminal::View::Summary
                 },
+                report: report_link.map(str::to_owned),
             },
         ),
         Format::Sarif => sarif::render(scan),
@@ -55,6 +140,16 @@ pub fn write(scan: &Scan, args: &ScanArgs) -> Result<()> {
             Ok(())
         }
     }
+}
+
+/// Why the scan fails, on standard error so it shows in CI logs whatever
+/// the format, with the report link when the text report did not show it.
+pub fn verdict(failing: usize, args: &ScanArgs, report_link: Option<&str>) -> Result<()> {
+    let shown = args.format == Format::Text && args.output.is_none();
+    let link = report_link.filter(|_| !shown);
+    let mut stderr = anstream::stderr();
+    write!(stderr, "{}", terminal::verdict(failing, link))?;
+    Ok(())
 }
 
 fn to_file(path: &Path, report: &str) -> Result<()> {

@@ -1,6 +1,6 @@
 ---
 source: shorwatch-report/src/terminal/tests.rs
-expression: "plain(&render(&scan, Options::default()))"
+expression: "plain(&render(&scan, &view(View::Overview)))"
 ---
  ▲ auth        4 findings · 3 high · 1 low
    ▲ java/com/acme/auth/AuthConfig.java    2  AES-128, RSA
@@ -52,9 +52,10 @@ expression: "plain(&render(&scan, Options::default()))"
    = ref: https://csrc.nist.gov/pubs/fips/203/final
 
  Summary  5 findings in 4 files (12 scanned)
+          4 high · 1 low
           4 vulnerable · 1 in transition · 1 auto-fixable
           4 in production code · 1 in test code
-          4 high · 1 low
+          2 of 3 projects with findings
 
- → --details  every finding, explained
- → --format html -o shorwatch.html  a report to browse, one tab per project
+ → --html shorwatch.html  a report to browse
+ → --details  every finding, here

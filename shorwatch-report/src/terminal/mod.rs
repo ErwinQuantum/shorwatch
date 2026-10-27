@@ -1,7 +1,9 @@
 //! The human-readable terminal report.
 //!
-//! [`render`] produces the findings (an overview, every finding in detail,
-//! or one line each) and a summary;
+//! [`render`] produces the summary (by default nothing else: the HTML report
+//! is where findings are browsed), optionally preceded by the findings (an
+//! overview, every finding in detail, or one line each), and where to look
+//! next;
 //! [`banner`] is printed separately by the CLI, only on interactive terminals.
 
 mod banner;
@@ -13,23 +15,29 @@ mod style;
 mod tests;
 mod wrap;
 
+use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 pub use banner::banner;
-use style::{accent, bold, dim, paint};
+use style::{accent, bold, dim, failure as rgb_red, paint};
 
 use crate::Scan;
 use crate::summary::severity_label;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Options {
     pub view: View,
+    /// Where the HTML report of this scan can be opened (a `file://` URL or
+    /// wherever CI publishes it), shown below the summary.
+    pub report: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum View {
-    /// Files with findings, the most urgent ones explained, the summary.
+    /// Counts only.
     #[default]
+    Summary,
+    /// Files with findings and the most urgent ones explained.
     Overview,
     /// Every finding, explained.
     Details,
@@ -37,9 +45,10 @@ pub enum View {
     Compact,
 }
 
-pub fn render(scan: &Scan, options: Options) -> String {
+pub fn render(scan: &Scan, options: &Options) -> String {
     let mut out = String::new();
     match options.view {
+        View::Summary => {}
         View::Overview => out.push_str(&overview::render(scan)),
         View::Compact => out.push_str(&compact::render(scan)),
         View::Details => {
@@ -52,8 +61,70 @@ pub fn render(scan: &Scan, options: Options) -> String {
         }
     }
     out.push_str(&summary(scan));
-    if options.view == View::Overview {
-        out.push_str(&overview::hints(scan));
+    out.push_str(&next(scan, options));
+    out
+}
+
+/// Where to look next: the HTML report, and the findings here for whoever
+/// prefers the terminal.
+fn next(scan: &Scan, options: &Options) -> String {
+    let mut out = String::new();
+    if scan.findings.is_empty() {
+        return out;
+    }
+    let arrow = paint("→", accent());
+    if let Some(report) = &options.report {
+        let _ = writeln!(
+            out,
+            "
+{} {}",
+            paint(" Report  ", accent()),
+            paint(report, bold())
+        );
+    } else if matches!(options.view, View::Summary | View::Overview) {
+        let _ = writeln!(
+            out,
+            "
+ {arrow} {}  a report to browse",
+            paint("--html shorwatch.html", bold())
+        );
+    }
+    if matches!(options.view, View::Summary | View::Overview) {
+        let gap = if options.report.is_some() {
+            "
+"
+        } else {
+            ""
+        };
+        let _ = writeln!(
+            out,
+            "{gap} {arrow} {}  every finding, here",
+            paint("--details", bold())
+        );
+    }
+    out
+}
+
+/// Why the scan exits with code 1, for the end of a CI log, with the link
+/// to the HTML report when the summary above did not show it.
+pub fn verdict(failing: usize, report: Option<&str>) -> String {
+    let mut out = format!(
+        "
+ {} {} {}
+",
+        paint("✖", rgb_red()),
+        paint(
+            format!(
+                "{} {} the scan (exit code 1)",
+                plural(failing, "finding"),
+                if failing == 1 { "fails" } else { "fail" }
+            ),
+            bold()
+        ),
+        paint("· see --fail-on, --fail-severity", dim())
+    );
+    if let Some(report) = report {
+        let _ = writeln!(out, "   {} {}", paint("Report", accent()), report);
     }
     out
 }
@@ -83,6 +154,11 @@ fn summary(scan: &Scan) -> String {
         },
         summary.files_scanned,
     );
+    let severities: Vec<_> = summary
+        .severities()
+        .map(|(severity, n)| format!("{n} {}", severity_label(severity)))
+        .collect();
+    let _ = writeln!(out, "{indent} {}", paint(severities.join(" · "), bold()));
     let _ = writeln!(
         out,
         "{indent} {} vulnerable · {} in transition · {} auto-fixable",
@@ -96,11 +172,19 @@ fn summary(scan: &Scan) -> String {
             summary.in_tests
         );
     }
-    let severities: Vec<_> = summary
-        .severities()
-        .map(|(severity, n)| format!("{n} {}", severity_label(severity)))
-        .collect();
-    let _ = writeln!(out, "{indent} {}", paint(severities.join(" · "), dim()));
+    if scan.projects.len() > 1 {
+        let with_findings: BTreeSet<_> = scan
+            .findings
+            .iter()
+            .filter_map(|f| scan.project_of(&f.path))
+            .collect();
+        let projects = format!(
+            "{} of {} projects with findings",
+            with_findings.len(),
+            scan.projects.len()
+        );
+        let _ = writeln!(out, "{indent} {}", paint(projects, dim()));
+    }
     out
 }
 

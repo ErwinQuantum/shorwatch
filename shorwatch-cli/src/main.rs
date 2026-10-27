@@ -14,7 +14,7 @@ use std::process::ExitCode;
 
 use anyhow::Result;
 use clap::Parser;
-use shorwatch_core::{CodeRole, Status};
+use shorwatch_core::{CodeRole, Severity, Status};
 
 use args::{Cli, Command, FailOn, ScanArgs};
 
@@ -64,16 +64,23 @@ fn scan(args: &ScanArgs) -> Result<ExitCode> {
     let paths: Vec<_> = files.iter().map(|(path, _)| path.clone()).collect();
     let projects = projects::detect(&args.paths, &paths, &cwd);
     let scan = pipeline::scan(&files, projects, &library, &rules, &options);
-    output::write(&scan, args)?;
+    let report = output::html_report(&scan, args)?;
+    output::write(&scan, args, report.as_deref())?;
 
-    let fails = match args.fail_on {
-        FailOn::Vulnerable => scan.findings.iter().any(|f| f.status == Status::Vulnerable),
-        FailOn::Any => !scan.findings.is_empty(),
-        FailOn::Never => false,
-    };
-    Ok(if fails {
-        ExitCode::from(1)
-    } else {
-        ExitCode::SUCCESS
-    })
+    let threshold = Severity::from(args.fail_severity);
+    let failing = scan
+        .findings
+        .iter()
+        .filter(|f| f.severity >= threshold)
+        .filter(|f| match args.fail_on {
+            FailOn::Vulnerable => f.status == Status::Vulnerable,
+            FailOn::Any => true,
+            FailOn::Never => false,
+        })
+        .count();
+    if failing == 0 {
+        return Ok(ExitCode::SUCCESS);
+    }
+    output::verdict(failing, args, report.as_deref())?;
+    Ok(ExitCode::from(1))
 }

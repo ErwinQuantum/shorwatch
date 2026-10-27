@@ -1,6 +1,6 @@
 ---
 source: shorwatch-report/src/terminal/tests.rs
-expression: "plain(&render(&scan(), Options { compact: true }))"
+expression: "plain(&render(&scan(), &view(View::Compact)))"
 ---
 src/main/java/com/acme/auth/AuthConfig.java
       5:25   HIGH      RSA             vulnerable           var generator = KeyPairGenerator.getInstance("RSA");
@@ -16,6 +16,6 @@ src/test/java/com/acme/auth/SignerTest.java
       3:16   HIGH      RSA             vulnerable     test  return KeyPairGenerator.getInstance(algorithm).generate…
 
  Summary  5 findings in 4 files (12 scanned)
+          4 high · 1 low
           4 vulnerable · 1 in transition · 1 auto-fixable
           4 in production code · 1 in test code
-          4 high · 1 low

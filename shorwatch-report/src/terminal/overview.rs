@@ -1,7 +1,7 @@
-//! The default terminal view: what a scan found at a glance, not every
-//! finding. One line per file (grouped by project when there are several),
-//! the most urgent findings explained, then the summary and where to look
-//! next. `--details` lists everything; the HTML report is for browsing.
+//! `--overview`: what a scan found at a glance, not every finding. One line
+//! per file (grouped by project when there are several) and the most urgent
+//! findings explained. `--details` lists everything; the HTML report is for
+//! browsing.
 
 use std::cmp::Reverse;
 use std::collections::BTreeMap;
@@ -75,31 +75,6 @@ pub(super) fn render(scan: &Scan) -> String {
     }
     let blocks: Vec<_> = picked.iter().map(|f| detailed::render(scan, f)).collect();
     out.push_str(&blocks.join("\n"));
-    out
-}
-
-/// Where to look next, after the summary.
-pub(super) fn hints(scan: &Scan) -> String {
-    if scan.findings.len() <= FEW {
-        return String::new();
-    }
-    let arrow = paint("→", accent());
-    let mut out = String::new();
-    let _ = writeln!(
-        out,
-        "\n {arrow} {}  every finding, explained",
-        paint("--details", bold())
-    );
-    let _ = writeln!(
-        out,
-        " {arrow} {}  a report to browse{}",
-        paint("--format html -o shorwatch.html", bold()),
-        if scan.projects.len() > 1 {
-            ", one tab per project"
-        } else {
-            ""
-        }
-    );
     out
 }
 

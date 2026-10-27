@@ -8,12 +8,21 @@ fn plain(text: &str) -> String {
 }
 
 fn view(view: View) -> Options {
-    Options { view }
+    Options { view, report: None }
+}
+
+#[test]
+fn summary_report() {
+    let options = Options {
+        report: Some("file:///tmp/shorwatch/payments.html".into()),
+        ..Options::default()
+    };
+    insta::assert_snapshot!(plain(&render(&scan(), &options)));
 }
 
 #[test]
 fn overview_report() {
-    insta::assert_snapshot!(plain(&render(&scan(), Options::default())));
+    insta::assert_snapshot!(plain(&render(&scan(), &view(View::Overview))));
 }
 
 /// Several projects: one group each, the clean ones listed too.
@@ -37,17 +46,17 @@ fn overview_of_several_projects() {
             files_scanned: 5,
         },
     ];
-    insta::assert_snapshot!(plain(&render(&scan, Options::default())));
+    insta::assert_snapshot!(plain(&render(&scan, &view(View::Overview))));
 }
 
 #[test]
 fn detailed_report() {
-    insta::assert_snapshot!(plain(&render(&scan(), view(View::Details))));
+    insta::assert_snapshot!(plain(&render(&scan(), &view(View::Details))));
 }
 
 #[test]
 fn compact_report() {
-    insta::assert_snapshot!(plain(&render(&scan(), view(View::Compact))));
+    insta::assert_snapshot!(plain(&render(&scan(), &view(View::Compact))));
 }
 
 #[test]
@@ -57,12 +66,23 @@ fn clean_report() {
         ..Default::default()
     };
     assert_eq!(
-        plain(&render(&clean, Options::default())),
+        plain(&render(&clean, &Options::default())),
         "\n Summary  no quantum-vulnerable cryptography found in 7 files\n"
     );
 }
 
 #[test]
 fn report_is_coloured_before_stripping() {
-    assert!(render(&scan(), Options::default()).contains("\x1b["));
+    assert!(render(&scan(), &Options::default()).contains("\x1b["));
+}
+
+#[test]
+fn verdict_says_why_the_scan_fails() {
+    assert_eq!(
+        plain(&verdict(2, Some("https://ci.example/run/7"))),
+        "
+ ✖ 2 findings fail the scan (exit code 1) · see --fail-on, --fail-severity
+   Report https://ci.example/run/7
+"
+    );
 }

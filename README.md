@@ -87,14 +87,14 @@ advice and links to the relevant NIST documents.
 ```sh
 cargo install --path shorwatch-cli          # until the first release is published
 
-shorwatch scan .                             # scan the current project
+shorwatch scan .                             # counts, and a link to the HTML report
 shorwatch scan services/                     # a folder of services: one group per project
+shorwatch scan . --overview                  # the files with findings, the most urgent explained
 shorwatch scan . --details                   # every finding, explained
 shorwatch scan src/ config/ --compact        # several paths, one line per finding
-shorwatch scan . --format sarif -o shorwatch.sarif
+shorwatch scan . --format sarif -o shorwatch.sarif --html shorwatch.html
 shorwatch scan . --format cbom -o crypto.cdx.json # CycloneDX CBOM inventory
-shorwatch scan . --format html -o shorwatch.html   # a report to open in a browser
-shorwatch scan . --min-severity medium --fail-on any
+shorwatch scan . --fail-severity high        # only high and critical findings fail the build
 shorwatch scan . --rules ./company-rules/    # add your own YAML rules
 shorwatch scan . --classpath @cp.txt         # follow calls into compiled dependencies
 shorwatch rules                              # list the rules in effect
@@ -112,14 +112,20 @@ apart by content.
 | `--format text\|sarif\|cbom\|json\|markdown\|html` | Output format (default `text`, coloured on terminals) |
 | `-o, --output FILE` | Write the report to a file |
 | `--min-severity info\|low\|medium\|high\|critical` | Hide less severe findings |
-| `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`) |
+| `--html FILE` | Also write the HTML report there, whatever the format |
+| `--no-html` | Do not write the HTML report to a temporary folder (see below) |
+| `--report-url URL` | The link shown for the HTML report, e.g. where CI publishes it (also `SHORWATCH_REPORT_URL`) |
+| `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`; `never` only reports) |
+| `--fail-severity info\|low\|medium\|high\|critical` | Only findings at or above this severity fail the scan; the rest are still reported |
 | `--exclude-tests` | Skip test code (Maven/Gradle test source sets such as `src/test` or `src/jvmTest`, test directories, `*Test`/`*IT` classes). Without it, findings in test code are reported and labelled as such |
-| `--details` | Explain every finding (the default view lists files and explains the three most urgent) |
+| `--overview` | List the files with findings and explain the three most urgent |
+| `--details` | Explain every finding |
 | `--compact` | One line per finding |
 | `--rules DIR` | Extra rules directory (repeatable) |
 | `--classpath PATHS` | Compiled dependencies to read types from (see below) |
 
-Exit codes: `0` nothing failing, `1` failing findings, `2` error.
+Exit codes: `0` nothing failing, `1` failing findings, `2` error. See
+[In CI pipelines](#in-ci-pipelines).
 
 ### Compiled dependencies (`--classpath`)
 
@@ -147,44 +153,28 @@ a 1 GB Maven repository).
 ### Example output
 
 Scanning [`examples/spring-service`](examples/spring-service/), a small Spring
-Boot service. The default view is an overview, as test runners show it: the
-files with findings, production code first, one line each; the three most
-urgent findings explained; the summary; and where to look next.
+Boot service. The terminal only counts, as test runners do, and links the
+HTML report, where findings are browsed (on an interactive terminal, the
+report is written to the system's temporary folder and overwritten by the
+next scan of the same project; `--html FILE` puts it elsewhere, `--no-html`
+skips it):
 
 ```text
- Files with findings
-   ▲ src/main/java/…/payments/partners/StatementSigner.java        3  ECDSA, RSA, SHA-1
-   ▲ src/main/kotlin/…/example/payments/partners/PartnerKeys.kt    3  ECC ×2, ECDSA (JOSE/JWT)
-   ▲ src/main/java/…/auth/AuthorizationServerConfig.java           2  RSA, RSA (JOSE/JWT)
-   ▲ src/main/resources/application.yml                            2  RSA (JOSE/JWT), TLS key exchange
-   ▲ src/main/java/com/example/payments/auth/TokenSigner.java      1  ECDSA (JOSE/JWT)
-   ▲ src/main/resources/application-prod.yml                       1  ECDSA (JOSE/JWT)
-   ▲ src/main/resources/certs/partner-signing.pem                  1  RSA
-   ● src/main/java/…/example/payments/crypto/LegacyCrypto.java     3  3DES, AES-128, SHA-1
-   ◐ src/main/java/…/payments/tls/HybridKeyExchange.java           1  ECDH
-
- Most urgent  3 of 17
-
- HIGH  RSA (JOSE/JWT) · jvm.nimbus.jose-rsa · vulnerable
-  ──▶ examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java:23:25
-   │
-23 │         RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
-   │                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-   │ RSA-based JWT/JOSE algorithm is broken by Shor's algorithm
-   = why: A JWT or JOSE object is signed (RS256/384/512, PS256/384/512) or encrypted
-   ...
-
  Summary  17 findings in 9 files (9 scanned)
-          16 vulnerable · 1 in transition · 1 auto-fixable
           13 high · 3 medium · 1 low
+          16 vulnerable · 1 in transition · 1 auto-fixable
 
- → --details  every finding, explained
- → --format html -o shorwatch.html  a report to browse
+ Report   file:///tmp/shorwatch/spring-service.html
+
+ → --details  every finding, here
+
+ ✖ 16 findings fail the scan (exit code 1) · see --fail-on, --fail-severity
 ```
 
-`--details` explains every finding (where, why it matters, what to do);
-`--compact` gives one line per finding. Scanning a folder of services or
-repositories groups the overview by project:
+For the terminal, `--overview` lists the files with findings (production code
+first, one line each, grouped by project when there are several) and
+explains the three most urgent; `--details` explains every finding (where,
+why it matters, what to do); `--compact` gives one line per finding.
 
 ```text
  ▲ apereo_cas                                   500 findings · 79 in production · 449 high · 42 medium · 9 low
@@ -198,14 +188,14 @@ repositories groups the overview by project:
 ```
 
 Every format for that scan is in [`examples/output/`](examples/output/):
-[text](examples/output/report.txt) (also [with --details](examples/output/report-details.txt)), [SARIF](examples/output/report.sarif),
+[text](examples/output/report.txt) (also [--overview](examples/output/report-overview.txt) and [--details](examples/output/report-details.txt)), [SARIF](examples/output/report.sarif),
 [CBOM](examples/output/report.cdx.json), [JSON](examples/output/report.json),
 [Markdown](examples/output/report.md), [HTML](examples/output/report.html).
 
 ### HTML report
 
-`--format html` writes one self-contained audit report to open in a browser
-or keep as a CI artifact (Jenkins `publishHTML`, Azure DevOps, GitLab). It
+`--format html` (or `--html FILE` next to any other format) writes one
+self-contained audit report to open in a browser or keep as a CI artifact. It
 reads like a printed audit: a cover with the headline numbers, where the
 findings live (projects or files), the three to fix first with their code and
 data-flow path, and the breakdown by algorithm and severity.
@@ -270,9 +260,35 @@ CycloneDX 1.6 schema and is deterministic (no timestamp or random serial
 number). Today it inventories the quantum-vulnerable algorithms Shorwatch
 detects; quantum-safe algorithms are not listed yet.
 
-### GitHub code scanning
+### In CI pipelines
 
-SARIF results show up as alerts on the exact line of a pull request:
+A scan fails the build (exit code `1`) when it finds cryptography still
+vulnerable; `2` means it could not run (bad arguments, invalid rules,
+unreadable paths). Gating is a choice:
+
+| | |
+|---|---|
+| `--fail-on never` | Report only, never fail: a first run, or a dashboard |
+| `--fail-severity high` | Fail on high and critical findings; medium and low are still reported |
+| `--fail-on any` | Also fail on findings already in transition (hybrid) |
+| `--exclude-tests` | Leave test code out of the scan, and of the gate |
+
+When it fails, the last line of the log says why and links the HTML report:
+
+```text
+ ✖ 12 findings fail the scan (exit code 1) · see --fail-on, --fail-severity
+   Report https://github.com/acme/payments/actions/runs/912345678
+```
+
+The link is `--report-url` (or `SHORWATCH_REPORT_URL`): Shorwatch cannot
+know where your CI publishes files, so each snippet below passes the URL
+of its artifacts. Write the HTML with `--html` and publish it even when the
+scan fails.
+
+### GitHub Actions
+
+SARIF results show up as code scanning alerts on the exact line of a pull
+request; the HTML report is an artifact of the run:
 
 ```yaml
 # .github/workflows/shorwatch.yml
@@ -288,10 +304,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo install --git https://github.com/ErwinQuantum/shorwatch shorwatch-cli
-      - run: shorwatch scan . --format sarif -o shorwatch.sarif --fail-on never
+      - run: >
+          shorwatch scan . --format sarif -o shorwatch.sarif --html shorwatch.html
+          --fail-severity high
+          --report-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       - uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
           sarif_file: shorwatch.sarif
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: shorwatch-report
+          path: shorwatch.html
 ```
 
 ### Docker (Jenkins, Azure DevOps, GitLab CI)
@@ -302,20 +327,32 @@ files: ~4 s). Docker Desktop on Windows and macOS shares host folders slowly
 (the same scan takes ~20 s); there, prefer the native binary.
 
 ```sh
-docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch scan . --format sarif -o shorwatch.sarif
+docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch scan . --format sarif -o shorwatch.sarif --html shorwatch.html
 ```
 
 Jenkins, with the [Warnings Next Generation](https://plugins.jenkins.io/warnings-ng/)
-plugin reading the SARIF report:
+plugin reading the SARIF report and the HTML report archived with the build:
 
 ```groovy
 stage('Post-quantum crypto') {
     steps {
-        sh 'docker run --rm -v "$WORKSPACE:/src" ghcr.io/erwinquantum/shorwatch scan . --format sarif -o shorwatch.sarif --fail-on never'
-        recordIssues tool: sarif(pattern: 'shorwatch.sarif', id: 'shorwatch', name: 'Shorwatch')
+        sh '''docker run --rm -v "$WORKSPACE:/src" ghcr.io/erwinquantum/shorwatch \
+              scan . --format sarif -o shorwatch.sarif --html shorwatch.html \
+              --fail-severity high --report-url "${BUILD_URL}artifact/shorwatch.html"'''
+    }
+    post {
+        always {
+            recordIssues tool: sarif(pattern: 'shorwatch.sarif', id: 'shorwatch', name: 'Shorwatch')
+            archiveArtifacts artifacts: 'shorwatch.html'
+        }
     }
 }
 ```
+
+Jenkins serves archived files under a strict Content-Security-Policy that
+blocks scripts, the report's included: configure a
+[resource root URL](https://www.jenkins.io/doc/book/security/user-content/#resource-root-url)
+(Jenkins' own recommendation for user content) or download the file.
 
 Azure DevOps, with the [SARIF SAST Scans Tab](https://marketplace.visualstudio.com/items?itemName=sariftools.scans)
 extension (it reads the `CodeAnalysisLogs` artifact):
@@ -323,12 +360,17 @@ extension (it reads the `CodeAnalysisLogs` artifact):
 ```yaml
 - script: |
     docker run --rm -v "$(Build.SourcesDirectory):/src" ghcr.io/erwinquantum/shorwatch \
-      scan . --format sarif -o shorwatch.sarif --fail-on never
+      scan . --format sarif -o shorwatch.sarif --html shorwatch.html --fail-severity high \
+      --report-url "$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)&view=artifacts"
 - publish: shorwatch.sarif
   artifact: CodeAnalysisLogs
+  condition: always()
+- publish: shorwatch.html
+  artifact: shorwatch-report
+  condition: always()
 ```
 
-GitLab CI:
+GitLab CI, where the job's artifacts open in the browser:
 
 ```yaml
 shorwatch:
@@ -336,9 +378,12 @@ shorwatch:
     name: ghcr.io/erwinquantum/shorwatch
     entrypoint: [""]
   script:
-    - shorwatch scan . --format markdown -o shorwatch.md
+    - shorwatch scan . --format markdown -o shorwatch.md --html shorwatch.html
+      --fail-severity high --report-url "$CI_JOB_URL/artifacts/file/shorwatch.html"
   artifacts:
-    paths: [shorwatch.md]
+    when: always
+    expose_as: Shorwatch report
+    paths: [shorwatch.html, shorwatch.md]
 ```
 
 ## Coverage

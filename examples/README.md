@@ -51,5 +51,6 @@ for f in sarif cbom json markdown html; do
   cargo run -q -- scan examples/spring-service --format $f --output examples/output/report.$ext
 done
 cargo run -q -- scan examples/spring-service --output examples/output/report.txt
+cargo run -q -- scan examples/spring-service --overview --output examples/output/report-overview.txt
 cargo run -q -- scan examples/spring-service --details --output examples/output/report-details.txt
 ```
