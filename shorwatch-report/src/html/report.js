@@ -1,14 +1,15 @@
 "use strict";
 (function () {
   const data = JSON.parse(document.getElementById("shorwatch-data").textContent);
-  const allFindings = data.findings;
+  const findings = data.findings;
   const projects = data.projects || [];
   const multi = projects.length > 1;
   const SEVERITIES = ["critical", "high", "medium", "low", "info"];
-  const SEVERITY_RANK = Object.fromEntries(SEVERITIES.map((s, i) => [s, i]));
-  const filters = { q: "", severity: "", status: "", role: "", algorithm: "" };
-  // `null`: every project; otherwise an index into `projects`.
-  let scope = null;
+  const MARK = { critical: "◆", high: "▲", medium: "●", low: "○", info: "○" };
+  const RANK = Object.fromEntries(SEVERITIES.map((s, i) => [s, i]));
+  const PAGE = 25;
+  const URGENT = 3;
+  findings.forEach((f, i) => { f.id = i; });
 
   // Every piece of scanned text goes through textContent: never markup.
   function el(tag, attrs, children) {
@@ -17,428 +18,566 @@
       if (value === undefined || value === null || value === false) continue;
       if (key === "text") node.textContent = value;
       else if (key === "class") node.className = value;
+      else if (key === "value") node.value = value;
+      else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
       else node.setAttribute(key, value === true ? "" : value);
     }
-    for (const child of [].concat(children || []).flat(Infinity)) {
+    for (const child of [].concat(children ?? []).flat(Infinity)) {
       if (child === null || child === undefined || child === false) continue;
       node.append(child instanceof Node ? child : document.createTextNode(String(child)));
     }
     return node;
   }
 
-  const plural = (n, one, many) => `${n.toLocaleString()} ${n === 1 ? one : many}`;
-  const statusLabel = (s) => (s === "in_transition" ? "in transition" : "vulnerable");
-  const fileName = (path) => path.split(/[\\/]/).pop();
-  const inScope = (f, index) => index === null || f.project === index;
-
-  /** The counts the overview shows, for some findings. */
-  function summarize(findings, filesScanned) {
-    const bySeverity = {};
-    for (const f of findings) bySeverity[f.severity] = (bySeverity[f.severity] || 0) + 1;
-    return {
-      findings: findings.length,
-      files_scanned: filesScanned,
-      files_with_findings: new Set(findings.map((f) => f.path)).size,
-      in_tests: findings.filter((f) => f.role === "test").length,
-      in_transition: findings.filter((f) => f.status === "in_transition").length,
-      vulnerable: findings.filter((f) => f.status !== "in_transition").length,
-      fixable: findings.filter((f) => f.fix).length,
-      by_severity: bySeverity,
-    };
+  const num = (n) => n.toLocaleString("en-US");
+  const plural = (n, one, many) => `${num(n)} ${n === 1 ? one : many}`;
+  const fileName = (path) => path.split("/").pop();
+  const isTest = (f) => f.role === "test";
+  const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const projectOf = (f) => (f.project === null || f.project === undefined ? null : projects[f.project]);
+  /** A path as people read it: relative to its project. */
+  function shownPath(path) {
+    const owner = findings.find((f) => f.path === path);
+    const project = owner ? projectOf(owner) : projects[0];
+    const root = project ? project.root : "";
+    return root && path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
+  }
+  /** Text that may break after each `/`, never inside a name. */
+  function breakable(path) {
+    return path.split("/").flatMap((part, i, all) => (i < all.length - 1 ? [`${part}/`, el("wbr")] : [part]));
   }
 
-  /** Algorithms by count, most frequent first. */
-  function algorithmCounts(findings) {
-    const counts = new Map();
-    for (const f of findings) {
-      const entry = counts.get(f.algorithm) || { total: 0, test: 0 };
-      entry.total += 1;
-      if (f.role === "test") entry.test += 1;
-      counts.set(f.algorithm, entry);
-    }
-    return [...counts.entries()].sort((a, b) => b[1].total - a[1].total || a[0].localeCompare(b[0]));
-  }
-
-  // ---- Theme -----------------------------------------------------------
+  // ---- Theme ---------------------------------------------------------------
   const THEMES = ["auto", "light", "dark"];
   const toggle = document.getElementById("theme-toggle");
-  function applyTheme(theme) {
+  let theme = "auto";
+  try { theme = localStorage.getItem("shorwatch-theme") || "auto"; } catch (_) { /* storage blocked */ }
+  if (!THEMES.includes(theme)) theme = "auto";
+  function applyTheme() {
     if (theme === "auto") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", theme);
     toggle.textContent = `Theme: ${theme}`;
   }
-  let theme = "auto";
-  try { theme = localStorage.getItem("shorwatch-theme") || "auto"; } catch (_) { /* storage blocked */ }
-  if (!THEMES.includes(theme)) theme = "auto";
-  applyTheme(theme);
+  applyTheme();
   toggle.addEventListener("click", () => {
     theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
-    applyTheme(theme);
+    applyTheme();
     try { localStorage.setItem("shorwatch-theme", theme); } catch (_) { /* storage blocked */ }
   });
 
-  // ---- Tooltip ---------------------------------------------------------
-  const tooltip = document.getElementById("tooltip");
-  function showTip(event, text) {
-    tooltip.textContent = text;
-    tooltip.hidden = false;
-    const x = Math.min(event.clientX + 12, window.innerWidth - tooltip.offsetWidth - 8);
-    tooltip.style.left = `${x}px`;
-    tooltip.style.top = `${event.clientY + 14}px`;
-  }
-  const hideTip = () => { tooltip.hidden = true; };
-  function withTip(node, text) {
-    node.addEventListener("mousemove", (e) => showTip(e, text));
-    node.addEventListener("mouseleave", hideTip);
-    return node;
-  }
-
-  // ---- Projects: tabs and the index ---------------------------------------
-  const projectFindings = projects.map((_, i) => allFindings.filter((f) => f.project === i));
-  // Projects with the most severe findings first, clean ones last.
-  const projectOrder = projects.map((_, i) => i).sort((a, b) => {
-    const worst = (i) => Math.min(9, ...projectFindings[i].map((f) => SEVERITY_RANK[f.severity] ?? 9));
-    return worst(a) - worst(b) || projectFindings[b].length - projectFindings[a].length
-      || projects[a].name.localeCompare(projects[b].name);
-  });
-  const tabs = document.getElementById("tabs");
-
-  function tab(label, count, index) {
-    const button = el("button", { type: "button", class: "tab", role: "tab", "aria-selected": "false" }, [
-      label, el("span", { class: "tab-count", text: count.toLocaleString() }),
-    ]);
-    button.addEventListener("click", () => select(index));
-    button.dataset.scope = index === null ? "all" : String(index);
-    return button;
-  }
-
-  function severityBadges(findings) {
-    const counts = SEVERITIES.map((s) => [s, findings.filter((f) => f.severity === s).length]).filter(([, n]) => n);
-    return el("div", { class: "card-badges" },
-      counts.map(([s, n]) => el("span", { class: `badge sev-${s}`, text: `${n.toLocaleString()} ${s}` })));
-  }
-
-  function projectCard(index) {
-    const project = projects[index];
-    const findings = projectFindings[index];
-    const production = findings.filter((f) => f.role !== "test").length;
-    const most = Math.max(1, ...projectFindings.map((fs) => fs.length));
-    const top = algorithmCounts(findings).slice(0, 4).map(([name, e]) => `${name} ${e.total}`).join(" · ");
-    const card = el("button", { type: "button", class: "card" }, [
-      el("span", { class: "card-name", text: project.name }),
-      project.root ? el("span", { class: "card-root", text: project.root }) : null,
-      findings.length === 0
-        ? el("span", { class: "card-clean", text: `✓ Clean · ${plural(project.files_scanned, "file", "files")} scanned` })
-        : [
-          el("p", { class: "card-figure" }, [findings.length.toLocaleString(),
-            el("span", { text: `${findings.length === 1 ? "finding" : "findings"} · ${production.toLocaleString()} in production` })]),
-          el("span", { class: "card-bar", "aria-hidden": "true" },
-            el("span", { style: `width:${(findings.length / most) * 100}%` })),
-          severityBadges(findings),
-          el("span", { class: "card-algorithms", text: top }),
-        ],
-      el("span", { class: "card-open", text: "Open →" }),
-    ]);
-    card.addEventListener("click", () => select(index));
-    return withTip(card, `${project.name}: ${plural(findings.length, "finding", "findings")} in ${plural(project.files_scanned, "file", "files")} scanned`);
-  }
-
-  if (multi) {
-    tabs.hidden = false;
-    tabs.append(tab("All projects", allFindings.length, null), ...projectOrder.map((i) => tab(projects[i].name, projectFindings[i].length, i)));
-    document.getElementById("project-cards").append(...projectOrder.map(projectCard));
-    const affected = projectFindings.filter((fs) => fs.length).length;
-    document.getElementById("projects-count").textContent =
-      `${affected.toLocaleString()} of ${plural(projects.length, "project", "projects")} with findings`;
-  }
-
-  // ---- Overview of the scope -------------------------------------------------
-  function renderOverview(findings, filesScanned) {
-    const summary = summarize(findings, filesScanned);
-    const name = scope !== null ? projects[scope].name : (projects.length === 1 ? projects[0].name : null);
-    document.getElementById("title").textContent = name
-      ? `${name}: quantum-vulnerable cryptography`
-      : "Quantum-vulnerable cryptography report";
-    const where = scope === null && multi ? ` across ${plural(projects.length, "project", "projects")}` : "";
-    document.getElementById("lede").textContent = summary.findings === 0
-      ? `No quantum-vulnerable cryptography found in ${plural(summary.files_scanned, "file", "files")}${where}.`
-      : `${plural(summary.findings, "finding", "findings")} in ${plural(summary.files_with_findings, "file", "files")}, out of ${plural(summary.files_scanned, "file", "files")} scanned${where}.`;
-
-    const production = summary.findings - summary.in_tests;
-    const shor = findings.filter((f) => f.category === "shor").length;
-    const kpis = [
-      ["Findings", summary.findings, `${plural(summary.files_with_findings, "file", "files")}`],
-      ["In production code", production, `${summary.in_tests.toLocaleString()} more in tests`],
-      ["Broken by Shor", shor, "need post-quantum algorithms"],
-      ["In transition", summary.in_transition, "next to post-quantum code"],
-      ["Auto-fixable", summary.fixable, "mechanical fix available"],
-    ];
-    document.getElementById("kpis").replaceChildren(...kpis.map(([label, value, hint]) =>
-      el("div", { class: "kpi" }, [
-        el("p", { class: "kpi-label", text: label }),
-        el("p", { class: "kpi-value", text: value.toLocaleString() }),
-        el("p", { class: "kpi-hint", text: hint }),
-      ])));
-
-    const ready = summary.findings ? Math.round((summary.in_transition / summary.findings) * 100) : 100;
-    document.getElementById("readiness").replaceChildren(
-      el("p", { class: "meter-figure" }, [`${ready}%`, el("span", { text: "in transition" })]),
-      el("div", {
-        class: "meter", role: "meter", "aria-valuemin": "0", "aria-valuemax": "100",
-        "aria-valuenow": String(ready), "aria-label": "Findings in transition",
-      }, el("div", { class: "meter-fill", style: `width:${ready}%` })),
-      el("div", { class: "meter-legend" }, [
-        el("span", { text: `${summary.in_transition.toLocaleString()} in transition` }),
-        el("span", { text: `${summary.vulnerable.toLocaleString()} vulnerable` }),
-      ]),
-    );
-
-    const severityCounts = SEVERITIES.map((s) => [s, summary.by_severity[s] || 0]).filter(([, n]) => n > 0);
-    const maxSeverity = Math.max(1, ...severityCounts.map(([, n]) => n));
-    const severityBox = document.getElementById("severities");
-    severityBox.replaceChildren();
-    if (severityCounts.length === 0) severityBox.append(el("p", { class: "panel-note", text: "Nothing to report." }));
-    for (const [severity, n] of severityCounts) {
-      severityBox.append(withTip(el("div", { class: "sev-row" }, [
-        el("span", {}, el("span", { class: `badge sev-${severity}`, text: severity })),
-        el("div", { class: "sev-track" }, el("div", { class: `sev-fill fill-${severity}`, style: `width:${(n / maxSeverity) * 100}%` })),
-        el("span", { class: "sev-count", text: n.toLocaleString() }),
-      ]), `${severity}: ${plural(n, "finding", "findings")}`));
+  // ---- Routes: the cover, or a chapter of findings ----------------------------
+  // `#/findings?sev=high&project=keycloak&alg=RSA&cat=shor&f=12` opens a
+  // chapter; anything else is the cover (`#where` scrolls to its section).
+  const FILTERS = ["sev", "project", "alg", "cat"];
+  function chapterHref(params) {
+    const query = new URLSearchParams();
+    for (const key of [...FILTERS, "f"]) {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== "") query.set(key, params[key]);
     }
-
-    // By algorithm: one hue, magnitude, sorted.
-    const algorithms = algorithmCounts(findings);
-    const maxAlgorithm = Math.max(1, ...algorithms.map(([, e]) => e.total));
-    const bars = document.getElementById("algorithms");
-    const tableBody = document.querySelector("#algorithm-table tbody");
-    bars.replaceChildren();
-    tableBody.replaceChildren();
-    if (algorithms.length === 0) bars.append(el("p", { class: "panel-note", text: "Nothing to report." }));
-    for (const [name, entry] of algorithms) {
-      const bar = el("button", { type: "button", class: "bar", "aria-pressed": "false", "data-algorithm": name }, [
-        el("span", { class: "bar-label", text: name }),
-        el("span", { class: "bar-track" }, el("span", { class: "bar-fill", style: `width:${(entry.total / maxAlgorithm) * 100}%` })),
-        el("span", { class: "bar-value", text: entry.total.toLocaleString() }),
-      ]);
-      bar.addEventListener("click", () => {
-        filters.algorithm = filters.algorithm === name ? "" : name;
-        controls.algorithm.value = filters.algorithm;
-        renderFindings();
-      });
-      bars.append(withTip(bar, `${name}: ${plural(entry.total, "finding", "findings")} (${(entry.total - entry.test).toLocaleString()} production, ${entry.test.toLocaleString()} test)`));
-      tableBody.append(el("tr", {}, [
-        el("th", { scope: "row", text: name }),
-        el("td", { text: entry.total.toLocaleString() }),
-        el("td", { text: (entry.total - entry.test).toLocaleString() }),
-        el("td", { text: entry.test.toLocaleString() }),
-      ]));
-    }
-
-    // Filter options follow the scope.
-    controls.severity.replaceChildren(el("option", { value: "", text: "All" }),
-      ...severityCounts.map(([s]) => el("option", { value: s, text: s })));
-    controls.algorithm.replaceChildren(el("option", { value: "", text: "All" }),
-      ...algorithms.map(([name]) => el("option", { value: name, text: name })));
+    const text = query.toString();
+    return `#/findings${text ? `?${text}` : ""}`;
+  }
+  function route() {
+    const hash = window.location.hash;
+    if (!hash.startsWith("#/findings")) return { cover: true, anchor: decodeURIComponent(hash.slice(1)), params: {} };
+    const query = new URLSearchParams(hash.split("?")[1] || "");
+    const params = {};
+    for (const key of [...FILTERS, "f"]) if (query.has(key)) params[key] = query.get(key);
+    return { cover: false, params };
   }
 
-  // ---- Filters -------------------------------------------------------------
-  const controls = {
-    q: document.getElementById("filter-q"),
-    severity: document.getElementById("filter-severity"),
-    status: document.getElementById("filter-status"),
-    role: document.getElementById("filter-role"),
-    algorithm: document.getElementById("filter-algorithm"),
-  };
-  for (const [key, control] of Object.entries(controls)) {
-    control.addEventListener("input", () => { filters[key] = control.value.trim(); renderFindings(); });
-  }
-  function resetFilters() {
-    for (const [key, control] of Object.entries(controls)) { control.value = ""; filters[key] = ""; }
-  }
-  document.getElementById("filter-reset").addEventListener("click", () => { resetFilters(); renderFindings(); });
-
-  function matches(f) {
-    if (filters.severity && f.severity !== filters.severity) return false;
-    if (filters.status && f.status !== filters.status) return false;
-    if (filters.role && f.role !== filters.role) return false;
-    if (filters.algorithm && f.algorithm !== filters.algorithm) return false;
-    if (filters.q) {
-      const haystack = `${f.path} ${f.algorithm} ${f.rule_id} ${f.title} ${f.detail || ""}`.toLowerCase();
-      if (!haystack.includes(filters.q.toLowerCase())) return false;
+  function matches(f, params) {
+    if (params.sev && f.severity !== params.sev) return false;
+    if (params.alg && f.algorithm !== params.alg) return false;
+    if (params.cat && f.category !== params.cat) return false;
+    if (params.project) {
+      const project = projectOf(f);
+      if (!project || project.name !== params.project) return false;
     }
     return true;
   }
 
-  // ---- Findings ------------------------------------------------------------
+  /** `RSA ×3, SHA-1`, most frequent first. */
+  function algorithmList(fs, limit) {
+    const counts = new Map();
+    for (const f of fs) counts.set(f.algorithm, (counts.get(f.algorithm) || 0) + 1);
+    const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const shown = sorted.slice(0, limit || sorted.length).map(([a, n]) => (n > 1 ? `${a} ×${n}` : a));
+    if (limit && sorted.length > limit) shown.push("…");
+    return shown.join(", ");
+  }
+
+  function bySeverity(fs) {
+    const counts = {};
+    for (const f of fs) counts[f.severity] = (counts[f.severity] || 0) + 1;
+    return SEVERITIES.filter((s) => counts[s]).map((s) => [s, counts[s]]);
+  }
+
+  function groupByFile(fs) {
+    const map = new Map();
+    for (const f of fs) {
+      if (!map.has(f.path)) map.set(f.path, []);
+      map.get(f.path).push(f);
+    }
+    return [...map.entries()].map(([path, list]) => ({
+      path,
+      fs: list.sort((a, b) => a.location.start.line - b.location.start.line || a.algorithm.localeCompare(b.algorithm)),
+      test: list.every(isTest),
+    }));
+  }
+
+  // ---- Shared pieces ------------------------------------------------------------
   function codeBlock(f) {
-    if (f.snippet.lines.length === 0) return null;
+    if (!f.snippet || f.snippet.lines.length === 0) return null;
     const start = f.location.start;
     const end = f.location.end;
-    const pre = el("pre", { class: "code", "aria-label": `Source around line ${start.line}` });
-    f.snippet.lines.forEach((text, i) => {
-      const number = f.snippet.first_line + i;
-      const hit = number >= start.line && number <= end.line;
-      const line = el("span", { class: hit ? "code-line hit" : "code-line" }, el("span", { class: "ln", text: number }));
-      if (hit) {
+    return el("pre", { class: "code", "aria-label": `Source around line ${start.line}` },
+      f.snippet.lines.map((text, i) => {
+        const number = f.snippet.first_line + i;
+        const hit = number >= start.line && number <= end.line;
+        if (!hit) return el("span", { class: "code-line" }, [el("span", { class: "ln", text: number }), el("span", { text })]);
         // Columns are Unicode code points, 1-based.
         const chars = Array.from(text);
         const from = number === start.line ? start.column - 1 : 0;
         const to = number === end.line ? end.column - 1 : chars.length;
-        line.append(el("span", {}, [
-          chars.slice(0, from).join(""),
-          el("mark", { text: chars.slice(from, to).join("") }),
-          chars.slice(to).join(""),
-        ]));
-      } else {
-        line.append(el("span", { text }));
-      }
-      pre.append(line);
-    });
-    return pre;
+        return el("span", { class: "code-line hit" }, [
+          el("span", { class: "ln", text: number }),
+          el("span", {}, [chars.slice(0, from).join(""), el("mark", { text: chars.slice(from, to).join("") }), chars.slice(to).join("")]),
+        ]);
+      }));
   }
 
-  function flowDiagram(f) {
+  function flowSteps(f) {
     if (!f.flow || f.flow.length === 0) return null;
     // Steps on the same line ("written here", "passed as x") read as one.
     const merged = [];
-    f.flow.forEach((step, i) => {
+    for (const step of f.flow) {
       const path = step.path || f.path;
       const last = merged[merged.length - 1];
       if (last && last.path === path && last.line === step.location.start.line) last.notes.push(step.note);
-      else merged.push({ path, line: step.location.start.line, notes: [step.note], code: f.flow_lines[i] });
-    });
-    const steps = merged.map((step) => el("li", {}, [
-      el("span", { class: "flow-note", text: step.notes.join(", ") }),
-      el("span", { class: "flow-where", title: step.path, text: `${fileName(step.path)}:${step.line}` }),
-      step.code ? el("code", { class: "flow-code", text: step.code.trim() }) : null,
-    ]));
-    const use = f.snippet.lines[f.location.start.line - f.snippet.first_line];
-    steps.push(el("li", { class: "use" }, [
-      el("span", { class: "flow-note", text: `used here: ${f.algorithm}` }),
-      el("span", { class: "flow-where", text: `${fileName(f.path)}:${f.location.start.line}` }),
-      use ? el("code", { class: "flow-code", text: use.trim() }) : null,
-    ]));
-    return el("div", { class: "flow" }, [
-      el("h3", { text: "How the value gets here" }),
-      el("ol", {}, steps),
+      else merged.push({ path, line: step.location.start.line, notes: [step.note] });
+    }
+    merged.push({ path: f.path, line: f.location.start.line, notes: ["used here"] });
+    return el("ol", { class: "flow", "aria-label": "How the value gets here" }, merged.map((s) =>
+      el("li", {}, [el("strong", { text: s.notes.join(", ") }), el("span", { class: "mono", title: s.path, text: `${fileName(s.path)}:${s.line}` })])));
+  }
+
+  function badge(severity) {
+    return el("span", { class: `badge sev-${severity}`, text: `${MARK[severity] || ""} ${severity}` });
+  }
+
+  function explanation(f) {
+    return el("div", { class: "two-col" }, [
+      el("p", {}, [el("span", { class: "label", text: "Why it matters" }), f.message]),
+      el("p", {}, [el("span", { class: "label", text: "What to do" }), f.suggestion]),
     ]);
   }
 
-  function findingCard(f) {
-    const start = f.location.start;
-    return el("article", { class: "finding" }, [
-      el("div", { class: "finding-head" }, [
-        el("span", { class: `badge sev-${f.severity}`, text: f.severity }),
-        el("span", { class: "algorithm", text: f.algorithm }),
-        el("span", { class: `pill pill-${f.status === "in_transition" ? "transition" : "vulnerable"}`, text: statusLabel(f.status) }),
-        f.role === "test" ? el("span", { class: "pill pill-test", text: "test code" }) : null,
-        f.flow && f.flow.length ? el("span", { class: "pill", text: "via data flow" }) : null,
-        el("span", { class: "rule", text: f.rule_id }),
-        f.snippet.lines.length ? el("span", { class: "where", text: `line ${start.line}, column ${start.column}` }) : null,
+  /** Production first, then the most severe, vulnerable before migrating, then
+   *  different algorithms: the terminal's "most urgent". */
+  function urgent() {
+    const sorted = [...findings].sort((a, b) =>
+      (isTest(a) - isTest(b)) || (RANK[a.severity] - RANK[b.severity])
+      || ((a.status === "in_transition") - (b.status === "in_transition")) || (a.id - b.id));
+    const picked = [];
+    for (const f of sorted) if (picked.length < URGENT && picked.every((p) => p.algorithm !== f.algorithm)) picked.push(f);
+    for (const f of sorted) if (picked.length < URGENT && !picked.includes(f)) picked.push(f);
+    return picked;
+  }
+
+  // ---- Cover ----------------------------------------------------------------------
+  function renderCover() {
+    const summary = data.summary;
+    const production = findings.filter((f) => !isTest(f)).length;
+    const high = findings.filter((f) => f.severity === "high").length;
+    const shor = findings.filter((f) => f.category === "shor").length;
+    const ready = findings.length ? Math.round((summary.in_transition / findings.length) * 100) : 100;
+    const scope = multi
+      ? `${plural(projects.length, "project", "projects")} · ${plural(summary.files_scanned, "file", "files")} scanned`
+      : `${projects[0] ? `${projects[0].name} · ` : ""}${plural(summary.files_scanned, "file", "files")} scanned`;
+    const migrating = summary.in_transition === 0
+      ? "None is migrating yet."
+      : `${num(summary.in_transition)} already ${summary.in_transition === 1 ? "sits" : "sit"} next to post-quantum code.`;
+
+    const hero = el("section", { class: "hero" }, [
+      el("p", { class: "kicker", text: scope }),
+      el("h1", {
+        class: "headline",
+        text: findings.length === 0
+          ? "No quantum-vulnerable cryptography found."
+          : `${num(findings.length)} ${findings.length === 1 ? "place" : "places"} where today’s cryptography ${shor ? "falls to" : "is weakened by"} a quantum computer.`,
+      }),
+      el("p", {
+        class: "lede",
+        text: findings.length === 0
+          ? "No rule matched in the scanned code, configuration or key material."
+          : `${shor
+            ? "RSA, elliptic curves and Diffie-Hellman are broken outright by Shor’s algorithm; data protected with them today can be recorded now and opened later."
+            : "Grover’s algorithm halves the strength of these algorithms; larger keys and hashes fix them."} ${num(production)} of these findings ${production === 1 ? "is" : "are"} in production code. ${migrating}`,
+      }),
+      findings.length === 0 ? null : el("div", { class: "stats" }, [
+        stat(production, "in production code →", chapterHref({})),
+        stat(high, "high severity →", high ? chapterHref({ sev: "high" }) : null, "sev-high"),
+        stat(shor, "broken by Shor’s algorithm →", shor ? chapterHref({ cat: "shor" }) : null),
+        stat(`${ready}%`, "already in transition to ML-KEM / ML-DSA", null),
       ]),
-      el("p", { class: "finding-title", text: f.title }),
-      f.detail ? el("p", { class: "detail", text: f.detail }) : null,
-      codeBlock(f),
-      flowDiagram(f),
-      el("div", { class: "explain" }, [
-        el("p", {}, [el("strong", { text: "Why it matters. " }), f.message]),
-        el("p", {}, [el("strong", { text: "What to do. " }), f.suggestion]),
-        f.hybrid_evidence ? el("p", { class: "note" },
-          `In transition: post-quantum code at line ${f.hybrid_evidence.location.start.line} (${f.hybrid_evidence.text}).`) : null,
-        f.fix ? el("p", { class: "note fix" },
-          `Fix: ${f.fix.description}: replace with “${f.fix.replacement}” at line ${f.fix.location.start.line}.`) : null,
-        f.references && f.references.length ? el("ul", { class: "refs" }, f.references.map((r) =>
-          el("li", {}, el("a", { href: r.url, rel: "noopener noreferrer", target: "_blank", text: r.title })))) : null,
-      ]),
+    ]);
+    const sections = [hero];
+    if (findings.length) sections.push(whereItLives(), fixFirst(), algorithmsSection(), severitySection());
+    document.getElementById("cover").replaceChildren(...sections);
+  }
+
+  function stat(value, label, href, valueClass) {
+    const children = [
+      el("span", { class: `stat-value ${valueClass || ""}`, text: typeof value === "number" ? num(value) : value }),
+      el("span", { class: "stat-label", text: href ? label : label.replace(" →", "") }),
+    ];
+    return href ? el("a", { class: "stat", href }, children) : el("div", { class: "stat" }, children);
+  }
+
+  function sectionHead(id, title, note) {
+    return el("div", { class: "section-head" }, [
+      el("h2", { class: "section-title", id, text: title }),
+      note ? el("p", { class: "section-note", text: note }) : null,
     ]);
   }
 
-  const list = document.getElementById("findings");
-  const shownCount = document.getElementById("shown-count");
-  /** Paths are shown relative to their project when one is open. */
-  const shownPath = (path) => {
-    const open = scope !== null ? projects[scope] : (projects.length === 1 ? projects[0] : null);
-    const root = open ? open.root : "";
-    return root && path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
-  };
+  function severityLinks(fs, params) {
+    return el("div", { class: "sev-links" }, bySeverity(fs).map(([s, n]) =>
+      el("a", { class: `sev-link sev-${s}`, href: chapterHref({ ...params, sev: s }), text: `${MARK[s]} ${num(n)} ${s}` })));
+  }
 
-  function renderFindings() {
-    for (const bar of document.querySelectorAll("#algorithms .bar")) {
-      bar.setAttribute("aria-pressed", String(bar.dataset.algorithm === filters.algorithm));
+  function whereItLives() {
+    if (multi) {
+      const rows = projects.map((p, i) => ({ p, fs: findings.filter((f) => f.project === i) }))
+        .sort((a, b) => b.fs.length - a.fs.length || a.p.name.localeCompare(b.p.name));
+      const most = Math.max(1, ...rows.map((r) => r.fs.length));
+      return el("section", {}, [
+        sectionHead("where", "Where it lives", "Projects by findings. Select a project or a severity to open its chapter."),
+        el("div", { class: "ruled" }, rows.map((r, i) => el("div", { class: "rank-row" }, [
+          el("span", { class: "rank-n", text: String(i + 1).padStart(2, "0") }),
+          el("div", {}, [
+            r.fs.length
+              ? el("a", { class: "rank-name", href: chapterHref({ project: r.p.name }), text: r.p.name })
+              : el("span", { class: "rank-name", text: r.p.name }),
+            el("span", {
+              class: "rank-sub",
+              text: r.fs.length
+                ? `${num(r.fs.filter((f) => !isTest(f)).length)} in production code`
+                : `${plural(r.p.files_scanned, "file", "files")} scanned`,
+            }),
+          ]),
+          el("div", { class: "track", "aria-hidden": "true" }, el("div", { class: "fill", style: `width:${(r.fs.length / most) * 100}%` })),
+          el("span", { class: "rank-total", text: num(r.fs.length) }),
+          r.fs.length ? severityLinks(r.fs, { project: r.p.name }) : el("span", { class: "clean", text: "✓ Clean" }),
+        ]))),
+      ]);
     }
-    const findings = allFindings.filter((f) => inScope(f, scope));
-    const shown = findings.filter(matches);
-    shownCount.textContent = shown.length === findings.length
-      ? plural(findings.length, "finding", "findings")
-      : `${shown.length.toLocaleString()} of ${plural(findings.length, "finding", "findings")}`;
-    list.replaceChildren();
-    if (findings.length === 0) {
-      list.append(el("div", { class: "empty" }, [
-        el("strong", { text: "✓ Nothing quantum-vulnerable found" }),
-        "No rule matched in the scanned files.",
-      ]));
-      return;
-    }
-    if (shown.length === 0) {
-      list.append(el("div", { class: "empty", text: "No finding matches these filters." }));
-      return;
-    }
-    // Production before tests, then the most severe files, then by path.
-    const byFile = new Map();
-    for (const f of shown) {
-      if (!byFile.has(f.path)) byFile.set(f.path, []);
-      byFile.get(f.path).push(f);
-    }
-    const files = [...byFile.entries()].sort((a, b) => {
-      const tests = (fs) => (fs.every((f) => f.role === "test") ? 1 : 0);
-      const worst = (fs) => Math.min(...fs.map((f) => SEVERITY_RANK[f.severity] ?? 9));
-      return tests(a[1]) - tests(b[1]) || worst(a[1]) - worst(b[1]) || a[0].localeCompare(b[0]);
-    });
-    const openAll = files.length <= 12;
-    for (const [path, fileFindings] of files) {
-      const tests = fileFindings.every((f) => f.role === "test");
-      const project = scope === null && multi && fileFindings[0].project !== null && fileFindings[0].project !== undefined
-        ? projects[fileFindings[0].project] : null;
-      list.append(el("details", { class: "file", open: openAll }, [
-        el("summary", {}, [
-          el("span", { class: "file-path", title: path, text: shownPath(path) }),
-          project ? el("span", { class: "pill", text: project.name }) : null,
-          tests ? el("span", { class: "pill pill-test", text: "test code" }) : null,
-          el("span", { class: "file-count", text: plural(fileFindings.length, "finding", "findings") }),
+    // One project: the files with the most findings, production first.
+    const byFile = groupByFile(findings).sort((a, b) => (a.test - b.test) || b.fs.length - a.fs.length || a.path.localeCompare(b.path));
+    const shown = byFile.slice(0, 8);
+    const most = Math.max(1, ...shown.map((r) => r.fs.length));
+    return el("section", {}, [
+      sectionHead("where", "Where it lives", `${plural(byFile.length, "file", "files")} with findings, production code first.`),
+      el("div", { class: "ruled" }, shown.map((r, i) => el("div", { class: "rank-row" }, [
+        el("span", { class: "rank-n", text: String(i + 1).padStart(2, "0") }),
+        el("div", {}, [
+          el("a", { class: "rank-name mono", href: chapterHref({ f: r.fs[0].id }), text: fileName(r.path) }),
+          el("span", { class: "rank-sub" }, [breakable(shownPath(r.path).slice(0, -fileName(r.path).length)), r.test ? " · test code" : ""]),
         ]),
-        ...fileFindings.map(findingCard),
-      ]));
+        el("div", { class: "track", "aria-hidden": "true" }, el("div", { class: "fill", style: `width:${(r.fs.length / most) * 100}%` })),
+        el("span", { class: "rank-total", text: num(r.fs.length) }),
+        el("span", { class: "file-algorithms", text: algorithmList(r.fs, 3) }),
+      ]))),
+      byFile.length > shown.length
+        ? el("p", { class: "section-note" }, el("a", { href: chapterHref({}), text: `All ${plural(byFile.length, "file", "files")} →` }))
+        : null,
+    ]);
+  }
+
+  function fixFirst() {
+    return el("section", {}, [
+      sectionHead("first", "Fix these first", null),
+      el("p", { class: "section-note", text: "Production code, highest severity, different algorithms. When the algorithm is written elsewhere, its path goes from where it is written to where it is used." }),
+      urgent().map((f, i) => el("article", { class: "urgent" }, [
+        el("span", { class: "urgent-n", text: String(i + 1) }),
+        el("div", {}, [
+          el("div", { class: "urgent-head" }, [badge(f.severity), el("h3", { class: "urgent-title", text: f.title })]),
+          el("p", { class: "where" }, el("a", { href: chapterHref({ f: f.id }) }, [
+            multi && projectOf(f) ? `${projectOf(f).name} · ` : "",
+            breakable(`${shownPath(f.path)}:${f.location.start.line}`),
+          ])),
+          f.detail ? el("p", { class: "detail-line", text: f.detail }) : null,
+          codeBlock(f),
+          flowSteps(f),
+          explanation(f),
+        ]),
+      ])),
+    ]);
+  }
+
+  function algorithmsSection() {
+    const counts = new Map();
+    for (const f of findings) counts.set(f.algorithm, (counts.get(f.algorithm) || 0) + 1);
+    const rows = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const most = Math.max(1, ...rows.map(([, n]) => n));
+    return el("section", {}, [
+      sectionHead("algorithms", "By algorithm", "Select one to open its chapter."),
+      el("div", { class: "ruled algorithms" }, rows.map(([name, n]) => el("a", { class: "alg-row", href: chapterHref({ alg: name }) }, [
+        el("span", { class: "alg-name", text: name }),
+        el("span", { class: "track", "aria-hidden": "true" }, el("span", { class: "fill", style: `display:block;width:${(n / most) * 100}%` })),
+        el("span", { class: "alg-count", text: num(n) }),
+      ]))),
+    ]);
+  }
+
+  function severitySection() {
+    return el("section", {}, [
+      sectionHead("severity", "By severity", null),
+      el("div", { class: "ruled" }, bySeverity(findings).map(([s, n]) => {
+        const fs = findings.filter((f) => f.severity === s);
+        return el("a", { class: "sev-row", href: chapterHref({ sev: s }) }, [
+          el("span", { class: "sev-row-title" }, [
+            el("span", { class: `sev-${s}`, text: MARK[s] }), ` ${capitalize(s)} severity`,
+            el("span", { class: "sev-row-count", text: num(n) }),
+          ]),
+          el("span", { class: "sev-row-more", text: `${algorithmList(fs, 3)} · open the chapter →` }),
+        ]);
+      })),
+    ]);
+  }
+
+  // ---- Chapter ------------------------------------------------------------------
+  /** What a chapter shows beyond its route, kept while the route stays. */
+  const view = { key: "", query: "", files: PAGE, testsOpen: false, testFiles: PAGE, openFile: null, openFinding: null };
+
+  function chapterTitle(params) {
+    const parts = [];
+    if (params.sev) parts.push(`${capitalize(params.sev)} severity`);
+    if (params.cat === "shor") parts.push("Broken by Shor’s algorithm");
+    else if (params.cat) parts.push(`${capitalize(params.cat)} findings`);
+    if (params.alg) parts.push(params.alg);
+    return parts.length ? parts.join(": ") : "All findings";
+  }
+
+  function contents(params) {
+    const scoped = findings.filter((f) => matches(f, { project: params.project }));
+    const link = (href, name, n, current) => el("a", { href, "aria-current": current ? "page" : null }, [
+      el("span", { class: "name", text: name }), n === null ? null : el("span", { class: "n", text: num(n) })]);
+    return [
+      el("h2", { text: "Contents" }),
+      link("#", "Cover", null, false),
+      link("#where", "Where it lives", null, false),
+      link("#first", "Fix these first", null, false),
+      link("#algorithms", "By algorithm", null, false),
+      el("h2", { text: params.project ? `Severity in ${params.project}` : "Severity" }),
+      link(chapterHref({ project: params.project }), "All findings", scoped.length, !params.sev && !params.alg && !params.cat),
+      bySeverity(scoped).map(([s, n]) => link(chapterHref({ project: params.project, sev: s }), `${MARK[s]} ${capitalize(s)}`, n,
+        params.sev === s && !params.alg && !params.cat)),
+      multi ? [
+        el("h2", { text: "Projects" }),
+        projects.map((p, i) => ({ p, n: findings.filter((f) => f.project === i).length }))
+          .filter((r) => r.n > 0)
+          .sort((a, b) => b.n - a.n)
+          .map((r) => link(chapterHref({ project: r.p.name }), r.p.name, r.n, params.project === r.p.name)),
+      ] : null,
+    ];
+  }
+
+  function copy(button, text) {
+    const done = () => {
+      const old = button.textContent;
+      button.textContent = "Copied";
+      setTimeout(() => { button.textContent = old; }, 1400);
+    };
+    try {
+      navigator.clipboard.writeText(text).then(done, () => window.prompt("Copy:", text));
+    } catch (_) {
+      window.prompt("Copy:", text);
     }
   }
 
-  // ---- Scope: one project or all, kept in the URL -------------------------------
-  function select(index, push = true) {
-    scope = index;
-    for (const button of tabs.querySelectorAll(".tab")) {
-      const selected = button.dataset.scope === (index === null ? "all" : String(index));
-      button.setAttribute("aria-selected", String(selected));
-      if (selected) button.scrollIntoView({ block: "nearest", inline: "nearest" });
+  function findingDetail(f, params) {
+    const link = `${window.location.href.split("#")[0]}${chapterHref({ ...params, f: f.id })}`;
+    return el("div", { class: "finding-detail", id: `finding-${f.id}` }, [
+      el("h3", { class: "finding-title", text: f.title }),
+      el("div", { class: "finding-tags" }, [
+        badge(f.severity),
+        el("span", {
+          class: `tag ${f.status === "in_transition" ? "transition" : ""}`,
+          text: f.status === "in_transition" ? "in transition" : "vulnerable",
+        }),
+        isTest(f) ? el("span", { class: "tag", text: "test code" }) : null,
+        el("span", { class: "mono tag", text: f.rule_id }),
+      ]),
+      f.detail ? el("p", { class: "detail-line", text: f.detail }) : null,
+      codeBlock(f),
+      flowSteps(f),
+      explanation(f),
+      el("div", { class: "notes" }, [
+        f.hybrid_evidence ? el("p", { text: `In transition: post-quantum code at line ${f.hybrid_evidence.location.start.line} (${f.hybrid_evidence.text}).` }) : null,
+        f.fix ? el("p", { text: `Fix: ${f.fix.description}: replace with “${f.fix.replacement}” at line ${f.fix.location.start.line}.` }) : null,
+      ]),
+      el("div", { class: "actions" }, [
+        el("button", { type: "button", onclick: (e) => copy(e.currentTarget, link), text: "Copy link to this finding" }),
+        el("button", { type: "button", onclick: (e) => copy(e.currentTarget, `${f.path}:${f.location.start.line}`), text: "Copy path" }),
+        (f.references || []).map((r) => el("a", { href: r.url, rel: "noopener noreferrer", target: "_blank", text: r.title })),
+      ]),
+    ]);
+  }
+
+  function fileGroup(group, params) {
+    const open = view.openFile === group.path;
+    const shown = shownPath(group.path);
+    const cut = shown.lastIndexOf("/");
+    return el("div", { class: "file" }, [
+      el("button", {
+        type: "button", class: "file-row", "aria-expanded": String(open),
+        onclick: () => { view.openFile = open ? null : group.path; view.openFinding = null; renderChapter(false); },
+      }, [
+        el("span", { class: "chevron", "aria-hidden": "true", text: open ? "▾" : "▸" }),
+        el("span", { class: "file-path", title: group.path }, [el("span", { class: "dir" }, breakable(shown.slice(0, cut + 1))), shown.slice(cut + 1)]),
+        el("span", { class: "file-count", text: `×${group.fs.length}` }),
+        el("span", { class: "file-algorithms", text: algorithmList(group.fs, 4) }),
+      ]),
+      open ? el("div", { class: "file-body" }, group.fs.map((f) => {
+        const expanded = view.openFinding === f.id;
+        const hasCode = f.snippet && f.snippet.lines.length > 0;
+        const line = hasCode ? f.snippet.lines[f.location.start.line - f.snippet.first_line] : null;
+        return el("div", { class: "finding" }, [
+          el("button", {
+            type: "button", class: "finding-row", "aria-expanded": String(expanded),
+            onclick: () => { view.openFinding = expanded ? null : f.id; renderChapter(false); },
+          }, [
+            el("span", { class: "finding-line", text: hasCode ? `:${f.location.start.line}` : "" }),
+            el("span", { class: "finding-alg" }, [el("span", { class: `sev-${f.severity}`, text: `${MARK[f.severity]} ` }), f.algorithm]),
+            el("span", { class: "finding-code", text: line ? line.trim() : (f.detail || f.title) }),
+          ]),
+          expanded ? findingDetail(f, params) : null,
+        ]);
+      })) : null,
+    ]);
+  }
+
+  function renderChapter(fresh) {
+    const { params } = route();
+    const key = FILTERS.map((k) => params[k] || "").join("|");
+    if (fresh && key !== view.key) {
+      Object.assign(view, { key, query: "", files: PAGE, testsOpen: false, testFiles: PAGE, openFile: null, openFinding: null });
     }
-    document.getElementById("projects-section").hidden = !(multi && index === null);
-    const files = index === null ? data.summary.files_scanned : projects[index].files_scanned;
-    resetFilters();
-    renderOverview(allFindings.filter((f) => inScope(f, index)), files);
-    renderFindings();
-    if (push && multi) {
-      const hash = index === null ? "" : `#project=${encodeURIComponent(projects[index].name)}`;
-      history.replaceState(null, "", hash || window.location.pathname + window.location.search);
-      window.scrollTo({ top: 0 });
+    // A link to one finding opens its file and the finding.
+    if (fresh && params.f !== undefined && findings[Number(params.f)]) {
+      const f = findings[Number(params.f)];
+      view.openFile = f.path;
+      view.openFinding = f.id;
+      view.testsOpen = view.testsOpen || isTest(f);
+    }
+    const scoped = findings.filter((f) => matches(f, params));
+    const q = view.query.toLowerCase();
+    const shown = q
+      ? scoped.filter((f) => `${f.path} ${f.algorithm} ${f.rule_id} ${f.title} ${f.detail || ""}`.toLowerCase().includes(q))
+      : scoped;
+    const groups = groupByFile(shown).sort((a, b) => b.fs.length - a.fs.length || a.path.localeCompare(b.path));
+    const production = groups.filter((g) => !g.test);
+    const tests = groups.filter((g) => g.test);
+    const productionCount = shown.filter((f) => !isTest(f)).length;
+    const testCount = shown.length - productionCount;
+    // A file opened by a link is never hidden behind "show more".
+    const reveal = (list, limit) => Math.max(limit, list.findIndex((g) => g.path === view.openFile) + 1);
+    const filesLimit = reveal(production, view.files);
+    const testLimit = reveal(tests, view.testFiles);
+
+    const title = chapterTitle(params);
+    const fullTitle = params.project ? `${title} in ${params.project}` : title;
+    document.title = `${fullTitle} · Shorwatch`;
+    const chips = FILTERS.filter((k) => params[k]).map((k) => {
+      const label = k === "sev"
+        ? `${MARK[params.sev]} ${capitalize(params.sev)}`
+        : k === "cat" ? (params.cat === "shor" ? "Shor" : capitalize(params.cat)) : params[k];
+      return el("a", { class: "chip", href: chapterHref({ ...params, [k]: undefined, f: undefined }), "aria-label": `Remove filter: ${label}` },
+        [label, el("span", { "aria-hidden": "true", text: "×" })]);
+    });
+    const search = el("input", {
+      type: "search", placeholder: "Search in this chapter", value: view.query, "aria-label": "Search in this chapter",
+      oninput: (e) => { view.query = e.target.value; view.files = PAGE; renderChapter(false); restoreSearch(); },
+    });
+
+    document.getElementById("contents").replaceChildren(...[contents(params)].flat(Infinity).filter(Boolean));
+    document.getElementById("chapter-main").replaceChildren(...[
+      el("p", { class: "crumbs" }, [
+        el("a", { href: "#", text: "Report" }),
+        params.project ? [" › ", el("a", { href: chapterHref({ project: params.project }), text: params.project })] : null,
+        ` › ${title}`,
+      ]),
+      el("h1", { class: "chapter-title" }, [params.sev ? el("span", { class: `sev-${params.sev}`, text: `${MARK[params.sev]} ` }) : null, fullTitle]),
+      el("p", {
+        class: "chapter-lede",
+        text: shown.length === 0
+          ? (q ? "No finding matches this search." : "No finding here.")
+          : `${plural(shown.length, "finding", "findings")}: ${num(productionCount)} in production code, across ${plural(production.length, "file", "files")}, and ${num(testCount)} in tests. Grouped by file, most findings first.`,
+      }),
+      el("div", { class: "filters", role: "search" }, [
+        el("span", { class: "label", text: "Filters" }),
+        chips.length ? chips : el("span", { class: "folded-hint", text: "None" }),
+        el("label", { class: "search" }, search),
+      ]),
+      production.length ? [
+        el("h2", { class: "group-title", text: `Production code · ${plural(productionCount, "finding", "findings")} in ${plural(production.length, "file", "files")}` }),
+        el("div", { class: "files" }, production.slice(0, filesLimit).map((g) => fileGroup(g, params))),
+        production.length > filesLimit ? el("button", {
+          type: "button", class: "more",
+          text: `Show ${Math.min(PAGE, production.length - filesLimit)} more of ${plural(production.length - filesLimit, "file", "files")}`,
+          onclick: () => { view.files = filesLimit + PAGE; renderChapter(false); },
+        }) : null,
+      ] : null,
+      tests.length ? el("div", { class: "folded" }, [
+        el("button", {
+          type: "button", class: "folded-head", "aria-expanded": String(view.testsOpen),
+          onclick: () => { view.testsOpen = !view.testsOpen; renderChapter(false); },
+        }, [
+          el("span", { class: "group-title", text: `${view.testsOpen ? "▾" : "▸"} Test code · ${plural(testCount, "finding", "findings")} in ${plural(tests.length, "file", "files")}` }),
+          el("span", { class: "folded-hint", text: view.testsOpen ? "Hide" : "Folded: test code does not ship. Show" }),
+        ]),
+        view.testsOpen ? [
+          el("div", { class: "files" }, tests.slice(0, testLimit).map((g) => fileGroup(g, params))),
+          tests.length > testLimit ? el("button", {
+            type: "button", class: "more",
+            text: `Show ${Math.min(PAGE, tests.length - testLimit)} more of ${plural(tests.length - testLimit, "test file", "test files")}`,
+            onclick: () => { view.testFiles = testLimit + PAGE; renderChapter(false); },
+          }) : null,
+        ] : null,
+      ]) : null,
+      el("p", { class: "back" }, el("a", { href: "#", text: "← Back to the cover" })),
+    ].flat(Infinity).filter(Boolean));
+
+    if (fresh && view.openFinding !== null) {
+      const target = document.getElementById(`finding-${view.openFinding}`);
+      if (target) target.scrollIntoView({ block: "center" });
     }
   }
 
-  function fromHash() {
-    const match = /^#project=(.+)$/.exec(window.location.hash);
-    if (!match || !multi) return null;
-    const name = decodeURIComponent(match[1]);
-    const index = projects.findIndex((p) => p.name === name);
-    return index < 0 ? null : index;
+  function restoreSearch() {
+    const input = document.querySelector(".search input");
+    if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
   }
 
-  window.addEventListener("hashchange", () => select(fromHash(), false));
-  select(fromHash(), false);
+  // ---- Navigation ---------------------------------------------------------------------
+  function show() {
+    const current = route();
+    document.getElementById("cover").hidden = !current.cover;
+    document.getElementById("chapter").hidden = current.cover;
+    if (current.cover) {
+      document.title = "Shorwatch report";
+      const target = current.anchor && document.getElementById(current.anchor);
+      if (target) target.scrollIntoView();
+      else window.scrollTo(0, 0);
+      return;
+    }
+    renderChapter(true);
+    if (current.params.f === undefined) window.scrollTo(0, 0);
+  }
+
+  renderCover();
+  window.addEventListener("hashchange", show);
+  show();
 })();

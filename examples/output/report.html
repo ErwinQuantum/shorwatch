@@ -3,463 +3,320 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="Shorwatch 0.1.0">
 <title>Shorwatch report</title>
 <style>
-/* Warm paper and ink; the deep blue of the terminal banner as the accent. */
+/* An editorial audit report: white paper, black ink, one cobalt accent,
+   serif display type. Severity colours always come with a mark and a label. */
 :root {
   color-scheme: light;
-  --page: #f7f2ea;
-  --surface: #fffcf7;
-  --surface-2: #f2ebe0;
-  --ink: #221d18;
-  --ink-2: #594f45;
-  --muted: #7a6f63;
-  --hairline: #e6dccd;
-  --border: rgba(60, 40, 20, 0.12);
-  --accent: #256abf;
-  --accent-ink: #1c5cab;
-  --accent-track: #dbe6f5;
-  --highlight: rgba(37, 106, 191, 0.13);
-  --highlight-ink: #1c5cab;
-  --code-bg: #f6f0e6;
-  --mast-from: #1e3a8a;
-  --mast-to: #2f6fc4;
-  --mast-ink: #fdf6ec;
-  --mast-ink-2: rgba(253, 246, 236, 0.78);
-  --critical: #d03b3b;
-  --serious: #ec835a;
-  --warning: #fab219;
-  --good: #0ca30c;
-  --good-ink: #006300;
-  --neutral: #8c8273;
-  --on-fill: #ffffff;
-  --on-warning: #221d18;
-  --radius: 12px;
-  --shadow: 0 1px 2px rgba(60, 40, 20, 0.06), 0 4px 14px rgba(60, 40, 20, 0.05);
+  --page: #fbfbf9;
+  --ink: #121417;
+  --ink-2: #3a3e45;
+  --muted: #5f636b;
+  --rule: #121417;
+  --hairline: #e4e4df;
+  --soft: #d9d9d4;
+  --track: #ecece7;
+  --wash: #f1f0ea;
+  --accent: #1f4fd1;
+  --accent-ink: #1f4fd1;
+  --accent-hover: #163a9e;
+  --code-bg: #121417;
+  --code-ink: #e8e6df;
+  --code-muted: #7d828c;
+  --code-hit: rgba(122, 162, 255, 0.18);
+  --critical: #9f1239;
+  --high: #c2410c;
+  --medium: #a35207;
+  --low: #475569;
+  --info: #5f636b;
+  --good: #15803d;
+  --chip: #121417;
+  --on-chip: #ffffff;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, "Times New Roman", serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --mono: ui-monospace, "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --page: #15120e;
-    --surface: #1f1a15;
-    --surface-2: #2a241d;
-    --ink: #f3ebdf;
-    --ink-2: #cdbfad;
-    --muted: #a59683;
-    --hairline: #342c23;
-    --border: rgba(255, 240, 220, 0.10);
-    --accent: #5598e7;
-    --accent-ink: #86b6ef;
-    --accent-track: #2c2a2b;
-    --highlight: rgba(85, 152, 231, 0.20);
-    --highlight-ink: #86b6ef;
-    --code-bg: #191510;
-    --mast-from: #14254f;
-    --mast-to: #1e4a8a;
-    --good-ink: #3fbf3f;
-    --neutral: #9a8f80;
-    --shadow: none;
+    --page: #131416;
+    --ink: #ecebe6;
+    --ink-2: #c9c8c1;
+    --muted: #a09f98;
+    --rule: #ecebe6;
+    --hairline: #2a2b2e;
+    --soft: #34363a;
+    --track: #26282c;
+    --wash: #1d1f22;
+    --accent: #7aa2ff;
+    --accent-ink: #9bb8ff;
+    --accent-hover: #c2d4ff;
+    --code-bg: #0b0c0e;
+    --high: #f0835a;
+    --medium: #e3a33b;
+    --low: #9aa8bd;
+    --critical: #f2708f;
+    --good: #4ade80;
+    --chip: #ecebe6;
+    --on-chip: #131416;
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #15120e;
-  --surface: #1f1a15;
-  --surface-2: #2a241d;
-  --ink: #f3ebdf;
-  --ink-2: #cdbfad;
-  --muted: #a59683;
-  --hairline: #342c23;
-  --border: rgba(255, 240, 220, 0.10);
-  --accent: #5598e7;
-  --accent-ink: #86b6ef;
-  --accent-track: #2c2a2b;
-  --highlight: rgba(85, 152, 231, 0.20);
-  --highlight-ink: #86b6ef;
-  --code-bg: #191510;
-  --mast-from: #14254f;
-  --mast-to: #1e4a8a;
-  --good-ink: #3fbf3f;
-  --neutral: #9a8f80;
-  --shadow: none;
+  --page: #131416;
+  --ink: #ecebe6;
+  --ink-2: #c9c8c1;
+  --muted: #a09f98;
+  --rule: #ecebe6;
+  --hairline: #2a2b2e;
+  --soft: #34363a;
+  --track: #26282c;
+  --wash: #1d1f22;
+  --accent: #7aa2ff;
+  --accent-ink: #9bb8ff;
+  --accent-hover: #c2d4ff;
+  --code-bg: #0b0c0e;
+  --high: #f0835a;
+  --medium: #e3a33b;
+  --low: #9aa8bd;
+  --critical: #f2708f;
+  --good: #4ade80;
+  --chip: #ecebe6;
+  --on-chip: #131416;
 }
 
 * { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  background: var(--page);
-  color: var(--ink);
-  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-
-.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
-
-.visually-hidden {
-  position: absolute; width: 1px; height: 1px; overflow: hidden;
-  clip: rect(0 0 0 0); white-space: nowrap;
-}
-
-h1, h2, h3 { line-height: 1.25; margin: 0; }
-h1 { font-size: 26px; font-weight: 650; }
-h2 { font-size: 17px; font-weight: 650; }
-
-a { color: var(--accent-ink); }
-
-/* Masthead: the banner's deep blue, warm cream type */
-.masthead {
-  background: linear-gradient(120deg, var(--mast-from), var(--mast-to));
-  color: var(--mast-ink); padding: 28px 0 0; margin-bottom: 24px;
-}
-.masthead-row { display: flex; gap: 16px; justify-content: space-between; align-items: flex-start; padding-bottom: 22px; }
-.eyebrow { margin: 0 0 6px; color: var(--mast-ink-2); font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; }
-.logo { color: #fbbf24; margin-right: 4px; }
-.lede { margin: 8px 0 0; color: var(--mast-ink-2); max-width: 70ch; }
-.masthead .theme-toggle { background: rgba(255, 255, 255, 0.10); color: var(--mast-ink); border-color: rgba(255, 255, 255, 0.25); }
-.masthead .theme-toggle:hover { background: rgba(255, 255, 255, 0.18); }
-
-/* Project tabs, on the masthead's lower edge */
-.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: thin; }
-.tab {
-  display: inline-flex; gap: 8px; align-items: center; white-space: nowrap;
-  border: 0; border-radius: 10px 10px 0 0; padding: 9px 14px; background: transparent;
-  color: var(--mast-ink-2); font-size: 14px;
-}
-.tab:hover { background: rgba(255, 255, 255, 0.10); color: var(--mast-ink); }
-.tab[aria-selected="true"] { background: var(--page); color: var(--ink); font-weight: 650; }
-.tab-count { font-size: 12px; font-variant-numeric: tabular-nums; padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); }
-.tab[aria-selected="true"] .tab-count { background: var(--surface-2); color: var(--ink-2); }
-
-.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 10px; }
-
-/* Project cards */
-#projects-section { margin-bottom: 24px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-.card {
-  display: grid; gap: 8px; align-content: start; text-align: left; width: 100%;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 16px; box-shadow: var(--shadow); color: var(--ink);
-}
-.card:hover { border-color: var(--accent); background: var(--surface); }
-.card-name { font-weight: 650; font-size: 16px; overflow-wrap: anywhere; }
-.card-root { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-.card-figure { font-size: 28px; font-weight: 650; line-height: 1.1; margin: 4px 0 0; }
-.card-figure span { font-size: 13px; font-weight: 400; color: var(--ink-2); margin-left: 6px; }
-.card-badges { display: flex; flex-wrap: wrap; gap: 6px; }
-.card-algorithms { font-size: 13px; color: var(--ink-2); }
-.card-clean { color: var(--good-ink); font-weight: 600; }
-.card-bar { height: 6px; border-radius: 3px; background: var(--accent-track); overflow: hidden; }
-.card-bar span { display: block; height: 100%; background: var(--accent); border-radius: 0 3px 3px 0; }
-.card-open { font-size: 13px; color: var(--accent-ink); }
-
-button, select, input {
-  font: inherit; color: var(--ink); background: var(--surface);
-  border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px;
-}
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.55 var(--sans); }
+a { color: var(--accent-ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--accent-hover); }
+button, input { font: inherit; color: inherit; }
 button { cursor: pointer; }
-button:hover, select:hover { background: var(--surface-2); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.theme-toggle { white-space: nowrap; }
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 32px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mono { font-family: var(--mono); }
+.label { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink); margin-bottom: 4px; }
 
-/* KPI tiles */
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
-.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
-.kpi-label { color: var(--ink-2); font-size: 13px; margin: 0; }
-.kpi-value { font-size: 30px; font-weight: 650; margin: 2px 0 0; }
-.kpi-hint { color: var(--muted); font-size: 12px; margin: 2px 0 0; }
+/* Top bar */
+.topbar { border-bottom: 1px solid var(--rule); }
+.topbar-row { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding-top: 16px; padding-bottom: 16px; }
+.wordmark { font-weight: 700; letter-spacing: 0.32em; font-size: 13px; color: var(--ink); text-decoration: none; }
+.topbar-meta { font-size: 13px; color: var(--muted); margin-right: auto; }
+.theme-toggle { font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--soft); border-radius: 999px; padding: 4px 12px; }
 
-/* Panels */
-.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; box-shadow: var(--shadow); }
-.panel-wide { grid-column: 1 / -1; }
-.panel h2 { margin-bottom: 4px; }
-.panel-note { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+/* Cover */
+.cover[hidden] { display: none; }
+.cover section { padding: 56px 0; border-bottom: 1px solid var(--soft); }
+.cover section.hero { padding-top: 72px; }
+.kicker { margin: 0 0 20px; font-size: 13px; font-weight: 700; letter-spacing: 0.14em; color: var(--accent-ink); text-transform: uppercase; }
+.headline { margin: 0; max-width: 21ch; font-family: var(--serif); font-weight: 500; font-size: clamp(38px, 6vw, 64px); line-height: 1.05; letter-spacing: -0.015em; }
+.lede { margin: 28px 0 0; max-width: 62ch; font-size: 19px; color: var(--ink-2); }
+.stats { margin-top: 48px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--rule); }
+.stat { display: block; padding: 20px 20px 0; border-left: 1px solid var(--soft); color: var(--ink); text-decoration: none; }
+.stat:first-child { border-left: 0; padding-left: 0; }
+.stat-value { display: block; font-family: var(--serif); font-size: clamp(38px, 4.4vw, 52px); line-height: 1; }
+.stat-label { display: block; margin-top: 8px; font-size: 14px; color: var(--muted); }
+a.stat:hover .stat-label { color: var(--accent-ink); }
+.section-head { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: baseline; }
+.section-title { margin: 0; font-family: var(--serif); font-weight: 500; font-size: 36px; }
+.section-note { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+.ruled { margin-top: 28px; border-top: 1px solid var(--rule); }
 
-/* Readiness meter */
-.meter-figure { font-size: 34px; font-weight: 650; margin: 4px 0 8px; }
-.meter-figure span { font-size: 14px; font-weight: 400; color: var(--ink-2); margin-left: 6px; }
-.meter { height: 10px; border-radius: 5px; background: var(--accent-track); overflow: hidden; }
-.meter-fill { height: 100%; border-radius: 5px; background: var(--accent); min-width: 0; }
-.meter-legend { display: flex; justify-content: space-between; color: var(--ink-2); font-size: 13px; margin-top: 6px; }
+/* Ranked rows: projects or files */
+.rank-row { display: grid; grid-template-columns: 36px minmax(0, 2.4fr) minmax(0, 3fr) 72px minmax(0, 2.6fr); gap: 20px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--hairline); }
+.rank-n { font-family: var(--serif); font-size: 22px; color: var(--muted); }
+.rank-name { display: block; font-weight: 600; color: var(--ink); text-decoration: none; overflow-wrap: break-word; }
+a.rank-name:hover { color: var(--accent-ink); }
+.rank-sub { font-family: var(--mono); font-size: 12px; color: var(--muted); overflow-wrap: break-word; }
+.track { height: 10px; background: var(--track); border-radius: 0 5px 5px 0; }
+.fill { height: 100%; background: var(--accent); border-radius: 0 5px 5px 0; min-width: 2px; }
+.rank-total { font-family: var(--serif); font-size: 26px; text-align: right; }
+.sev-links { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14px; }
+.sev-link { font-weight: 600; text-decoration: none; }
+.sev-link:hover { text-decoration: underline; }
+.clean { color: var(--good); font-weight: 600; font-size: 14px; }
 
-/* Severity rows */
-.sev-row { display: grid; grid-template-columns: 96px 1fr 44px; gap: 10px; align-items: center; margin: 6px 0; }
-.sev-track { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
-.sev-fill { height: 100%; border-radius: 0 4px 4px 0; }
-.sev-count { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+/* Severity colours: text with a mark, never colour alone */
+.sev-critical { color: var(--critical); }
+.sev-high { color: var(--high); }
+.sev-medium { color: var(--medium); }
+.sev-low { color: var(--low); }
+.sev-info { color: var(--info); }
+.badge { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; }
+.badge.sev-critical { background: #9f1239; color: #fff; }
+.badge.sev-high { background: #c2410c; color: #fff; }
+.badge.sev-medium { background: #a35207; color: #fff; }
+.badge.sev-low { background: #475569; color: #fff; }
+.badge.sev-info { background: #5f636b; color: #fff; }
+.tag { display: inline-block; font-size: 12px; padding: 2px 8px; border: 1px solid var(--soft); border-radius: 999px; color: var(--muted); }
+.tag.transition { color: var(--good); border-color: var(--good); }
 
-/* Badges carry a label, never color alone */
-.badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 12px; font-weight: 600; line-height: 1;
-  padding: 4px 8px; border-radius: 999px; white-space: nowrap;
-  color: var(--on-fill);
-}
-.badge::before { font-size: 10px; }
-.sev-critical { background: var(--critical); }
-.sev-critical::before { content: "◆"; }
-.sev-high { background: var(--serious); }
-.sev-high::before { content: "▲"; }
-.sev-medium { background: var(--warning); color: var(--on-warning); }
-.sev-medium::before { content: "●"; }
-.sev-low, .sev-info { background: var(--neutral); }
-.sev-low::before, .sev-info::before { content: "○"; }
-.fill-critical { background: var(--critical); }
-.fill-high { background: var(--serious); }
-.fill-medium { background: var(--warning); }
-.fill-low, .fill-info { background: var(--neutral); }
+/* Fix these first */
+.urgent { margin-top: 40px; display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 24px; }
+.urgent-n { font-family: var(--serif); font-size: 64px; line-height: 0.9; color: var(--accent-ink); }
+.urgent-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; }
+.urgent-title { margin: 0; font-family: var(--serif); font-weight: 500; font-size: 26px; }
+.where { margin: 6px 0 0; font-family: var(--mono); font-size: 13px; color: var(--muted); overflow-wrap: break-word; }
+.where a { color: inherit; }
+.two-col { margin-top: 20px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+.two-col p { margin: 0; font-size: 15px; color: var(--ink-2); }
 
-.pill {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 12px; padding: 3px 8px; border-radius: 999px;
-  border: 1px solid var(--border); color: var(--ink-2); background: var(--surface-2); white-space: nowrap;
-}
-.pill-transition { color: var(--good-ink); border-color: var(--good); }
-.pill-transition::before { content: "✓"; }
-.pill-vulnerable::before { content: "!"; font-weight: 700; color: var(--critical); }
-.pill-test::before { content: "⚑"; }
+/* Code and data flow */
+.code { margin: 16px 0 0; padding: 12px 0; background: var(--code-bg); color: var(--code-ink); border-radius: 6px; font: 13px/1.65 var(--mono); overflow-x: auto; }
+.code-line { display: grid; grid-template-columns: 56px 1fr; white-space: pre; min-width: max-content; padding-right: 18px; }
+.code-line .ln { color: var(--code-muted); text-align: right; padding-right: 16px; user-select: none; }
+.code-line.hit { background: var(--code-hit); box-shadow: inset 3px 0 0 #7aa2ff; }
+.code mark { background: transparent; color: inherit; text-decoration: underline 2px #7aa2ff; text-underline-offset: 3px; }
+.flow { margin: 16px 0 0; padding: 0 0 0 16px; list-style: none; border-left: 2px solid var(--accent); display: grid; gap: 6px; }
+.flow li { font-size: 14px; color: var(--ink-2); }
+.flow strong { color: var(--ink); font-weight: 600; }
+.flow .mono { font-size: 12px; color: var(--muted); margin-left: 4px; }
+.detail-line { margin: 10px 0 0; font: 13px/1.5 var(--mono); color: var(--ink-2); overflow-wrap: anywhere; }
 
-/* Algorithm bars */
-.bars { display: grid; gap: 4px; }
-.bar {
-  display: grid; grid-template-columns: minmax(120px, 220px) 1fr 52px; gap: 10px; align-items: center;
-  width: 100%; text-align: left; border: 0; border-radius: 6px; padding: 6px 8px; background: transparent;
-}
-.bar:hover, .bar[aria-pressed="true"] { background: var(--surface-2); }
-.bar[aria-pressed="true"] .bar-label { font-weight: 650; }
-.bar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bar-track { height: 12px; position: relative; }
-.bar-fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 0 4px 4px 0; min-width: 2px; }
-.bar-value { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+/* By algorithm */
+.algorithms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 56px; }
+.alg-row { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) 56px; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairline); color: var(--ink); text-decoration: none; }
+.alg-row:hover .alg-name { color: var(--accent-ink); }
+.alg-row .track { height: 6px; border-radius: 0; }
+.alg-row .fill { border-radius: 0; }
+.alg-count { font-family: var(--mono); font-size: 14px; text-align: right; }
 
-.table-view { margin-top: 12px; }
-.table-view summary, .explainer summary { cursor: pointer; color: var(--ink-2); }
-table { border-collapse: collapse; width: 100%; margin-top: 8px; font-size: 14px; }
-th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--hairline); }
-td + td, th + th { text-align: right; font-variant-numeric: tabular-nums; }
+/* Severity rows on the cover */
+.sev-row { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--hairline); color: var(--ink); text-decoration: none; }
+.sev-row-title { font-family: var(--serif); font-size: 28px; }
+.sev-row-count { color: var(--muted); margin-left: 10px; }
+.sev-row-more { font-size: 15px; color: var(--accent-ink); }
 
-/* Explainer */
-.explainer { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 24px; }
-.explainer-body p { color: var(--ink-2); max-width: 80ch; }
+.empty { padding: 40px 0 0; font-size: 18px; color: var(--ink-2); }
+.empty strong { display: block; font-family: var(--serif); font-weight: 500; font-size: 30px; color: var(--good); margin-bottom: 6px; }
 
-/* Filters */
-.count { margin: 0; color: var(--muted); font-size: 14px; }
-.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
-.filter { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); font-size: 13px; }
-.filter-search { flex: 1 1 240px; }
-.filter-search input { width: 100%; }
-.reset { color: var(--ink-2); }
+/* Chapter */
+.chapter { display: flex; flex-wrap: wrap; gap: 48px; padding-bottom: 72px; }
+.chapter[hidden] { display: none; }
+.contents { flex: 1 1 200px; max-width: 240px; padding-top: 40px; font-size: 14px; }
+.contents h2 { margin: 22px 0 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
+.contents h2:first-child { margin-top: 0; }
+.contents a { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0 5px 12px; color: var(--ink); text-decoration: none; border-left: 2px solid transparent; }
+.contents a:hover { color: var(--accent-ink); }
+.contents a[aria-current="page"] { border-left-color: var(--accent); font-weight: 600; }
+.contents .n { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.contents .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chapter-main { flex: 999 1 620px; min-width: 0; padding-top: 40px; }
+.crumbs { margin: 0; font-size: 13px; color: var(--muted); }
+.chapter-title { margin: 18px 0 0; font-family: var(--serif); font-weight: 500; font-size: clamp(34px, 4.6vw, 52px); line-height: 1.05; letter-spacing: -0.01em; }
+.chapter-lede { margin: 14px 0 0; max-width: 64ch; font-size: 18px; color: var(--ink-2); }
+.filters { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--soft); }
+.filters .label { margin: 0 6px 0 0; color: var(--muted); }
+.chip { display: inline-flex; gap: 8px; align-items: center; min-height: 34px; padding: 0 12px; border: 1px solid var(--chip); border-radius: 999px; background: var(--chip); color: var(--on-chip); text-decoration: none; }
+.chip:hover { color: var(--on-chip); opacity: 0.85; }
+.search { margin-left: auto; display: flex; align-items: center; min-height: 34px; padding: 0 12px; border: 1px solid var(--soft); border-radius: 999px; min-width: 220px; flex: 0 1 300px; }
+.search input { flex: 1; border: 0; outline: none; background: transparent; font-size: 14px; min-width: 0; }
+.group-title { margin: 36px 0 10px; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.files { border-top: 1px solid var(--rule); }
+.file { border-bottom: 1px solid var(--hairline); }
+.file-row { display: grid; grid-template-columns: 22px minmax(0, 4fr) 56px minmax(0, 2.2fr); gap: 14px; align-items: baseline; width: 100%; padding: 14px 0; border: 0; background: none; text-align: left; }
+.chevron { color: var(--muted); }
+.file-path { font-family: var(--mono); font-size: 13px; overflow-wrap: break-word; }
+.file-path .dir { color: var(--muted); }
+.file-count { font-family: var(--serif); font-size: 22px; text-align: right; }
+.file-algorithms { font-size: 13px; color: var(--muted); }
+.file-body { padding: 0 0 18px 36px; }
+.finding { border-top: 1px solid var(--hairline); }
+.finding-row { display: grid; grid-template-columns: 64px minmax(90px, 160px) minmax(0, 1fr); gap: 12px; align-items: baseline; width: 100%; padding: 10px 8px 10px 0; border: 0; background: none; text-align: left; }
+.finding-row[aria-expanded="true"] { background: var(--wash); }
+.finding-line { font-family: var(--mono); font-size: 12px; color: var(--muted); padding-left: 6px; }
+.finding-alg { font-weight: 600; font-size: 14px; }
+.finding-code { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.finding-detail { padding: 8px 0 22px 76px; }
+.finding-title { margin: 0; font-family: var(--serif); font-weight: 500; font-size: 24px; }
+.finding-tags { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.notes { margin: 14px 0 0; display: grid; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.notes p { margin: 0; }
+.actions { margin: 16px 0 0; display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; font-size: 13px; }
+.actions button { background: none; border: 0; padding: 0; color: var(--accent-ink); text-decoration: underline; text-underline-offset: 3px; }
+.more { margin-top: 16px; min-height: 40px; padding: 0 18px; border: 1px solid var(--ink); border-radius: 999px; background: none; font-weight: 600; }
+.folded { margin-top: 44px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--soft); }
+.folded-head { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: baseline; width: 100%; padding: 16px 0; border: 0; background: none; text-align: left; }
+.folded-head .group-title { margin: 0; }
+.folded-hint { font-size: 13px; color: var(--muted); }
+.back { margin: 40px 0 0; font-size: 14px; }
+.nothing { padding: 32px 0; color: var(--muted); }
 
-/* Findings */
-.file { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; box-shadow: var(--shadow); }
-.file > summary {
-  display: flex; gap: 10px; align-items: center; cursor: pointer; padding: 12px 16px;
-  font-family: var(--mono); font-size: 13px; list-style: none;
-}
-.file > summary::-webkit-details-marker { display: none; }
-.file > summary::before { content: "▸"; color: var(--muted); transition: transform .15s; }
-.file[open] > summary::before { transform: rotate(90deg); }
-.file-path { overflow-wrap: anywhere; flex: 1; }
-.file-count { color: var(--muted); font-family: system-ui, sans-serif; white-space: nowrap; }
+.footer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; padding-top: 40px; padding-bottom: 56px; font-size: 13px; color: var(--muted); }
+.footer p { margin: 0; }
 
-.finding { border-top: 1px solid var(--hairline); padding: 16px; }
-.finding-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
-.finding-title { font-size: 15px; font-weight: 650; margin: 4px 0 10px; }
-.algorithm { font-weight: 650; }
-.rule { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-.where { font-family: var(--mono); font-size: 12px; color: var(--ink-2); margin-left: auto; }
-
-.code {
-  margin: 0 0 12px; background: var(--code-bg); border: 1px solid var(--hairline); border-radius: 8px;
-  font: 12.5px/1.6 var(--mono); overflow-x: auto; padding: 8px 0;
-}
-.code-line { display: grid; grid-template-columns: 52px 1fr; white-space: pre; min-width: max-content; }
-.code-line .ln { color: var(--muted); text-align: right; padding-right: 14px; user-select: none; }
-.code-line.hit { background: var(--highlight); }
-.code-line.hit .ln { color: var(--highlight-ink); font-weight: 650; }
-mark { background: transparent; color: inherit; text-decoration: underline 2px var(--accent); text-underline-offset: 3px; font-weight: 650; }
-
-.explain { display: grid; gap: 6px; color: var(--ink-2); max-width: 85ch; }
-.explain p { margin: 0; }
-.explain strong { color: var(--ink); }
-.refs { margin: 4px 0 0; padding-left: 18px; font-size: 13px; }
-.note { border-left: 3px solid var(--good); padding: 4px 10px; color: var(--ink-2); background: var(--surface-2); border-radius: 0 6px 6px 0; }
-.note.fix { border-left-color: var(--accent); }
-.detail { font: 13px/1.5 var(--mono); color: var(--ink-2); margin: -4px 0 10px; overflow-wrap: anywhere; }
-
-/* Data-flow path */
-.flow { margin: 12px 0; padding: 12px 14px; background: var(--surface-2); border-radius: 8px; }
-.flow h3 { font-size: 13px; font-weight: 650; color: var(--ink-2); margin-bottom: 8px; }
-.flow ol { list-style: none; margin: 0; padding: 0; }
-.flow li { position: relative; padding: 0 0 14px 28px; }
-.flow li:last-child { padding-bottom: 0; }
-.flow li::before {
-  content: counter(list-item); position: absolute; left: 0; top: 1px;
-  width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--on-fill);
-  font-size: 11px; font-weight: 700; display: grid; place-items: center;
-}
-.flow li:not(:last-child)::after {
-  content: ""; position: absolute; left: 9px; top: 23px; bottom: 2px; width: 2px; background: var(--accent-track);
-}
-.flow li.use::before { content: "◎"; background: var(--critical); }
-.flow-note { font-weight: 600; }
-.flow-where { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-left: 6px; }
-.flow-code { display: block; font: 12px/1.5 var(--mono); color: var(--ink-2); white-space: pre; overflow-x: auto; margin-top: 2px; }
-
-.empty { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; text-align: center; color: var(--ink-2); }
-.empty strong { display: block; color: var(--good-ink); font-size: 18px; margin-bottom: 4px; }
-
-.footer { color: var(--muted); font-size: 13px; padding-top: 16px; padding-bottom: 32px; }
-
-.tooltip {
-  position: fixed; z-index: 10; pointer-events: none; max-width: 260px;
-  background: var(--ink); color: var(--page); font-size: 12px; padding: 6px 8px; border-radius: 6px;
-}
-
-@media (max-width: 720px) {
-  .panels { grid-template-columns: 1fr; }
-  .masthead-row { flex-direction: column; }
-  .bar { grid-template-columns: minmax(90px, 140px) 1fr 40px; }
-  .where { margin-left: 0; }
+@media (max-width: 760px) {
+  .wrap { padding: 0 16px; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 20px; }
+  .stat:nth-child(3) { border-left: 0; padding-left: 0; }
+  .rank-row { grid-template-columns: 28px minmax(0, 1fr) 56px; }
+  .rank-row .track, .rank-row .sev-links { grid-column: 2 / -1; }
+  .urgent { grid-template-columns: 1fr; gap: 8px; }
+  .two-col, .algorithms, .footer { grid-template-columns: 1fr; gap: 16px; }
+  .contents { max-width: none; padding-top: 24px; }
+  .file-row { grid-template-columns: 18px minmax(0, 1fr) 44px; }
+  .file-algorithms { grid-column: 2 / -1; }
+  .finding-row { grid-template-columns: 56px minmax(0, 1fr); }
+  .finding-code { grid-column: 1 / -1; }
+  .finding-detail { padding-left: 0; }
+  .search { margin-left: 0; flex: 1 1 100%; }
 }
 
 @media print {
   body { background: #fff; color: #000; }
-  .theme-toggle, .filters, .reset, .table-view summary, .tooltip, .tabs { display: none !important; }
-  .masthead { background: none; color: #000; }
-  .eyebrow, .lede { color: #333; }
-  .file, .panel, .kpi, .explainer, .card { break-inside: avoid; border-color: #ccc; box-shadow: none; }
-  details > :not(summary) { display: block !important; }
+  .theme-toggle, .chapter, .filters { display: none !important; }
+  .cover { display: block !important; }
+  .cover section { break-inside: avoid; }
 }
 
 @media (forced-colors: active) {
-  .bar-fill, .meter-fill, .sev-fill, .card-bar span { background: CanvasText; }
-  .tab[aria-selected="true"] { outline: 2px solid CanvasText; }
+  .fill { background: CanvasText; }
   .badge { border: 1px solid CanvasText; }
 }
 
 </style>
 </head>
 <body>
-<header class="masthead">
-  <div class="wrap masthead-row">
-    <div>
-      <p class="eyebrow"><span class="logo" aria-hidden="true">◆</span> Shorwatch 0.1.0</p>
-      <h1 id="title">Quantum-vulnerable cryptography report</h1>
-      <p class="lede" id="lede"></p>
-    </div>
+<header class="topbar">
+  <div class="wrap topbar-row">
+    <a class="wordmark" href="#">SHORWATCH</a>
+    <span class="topbar-meta">Post-quantum cryptography audit · v0.1.0</span>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch color theme">Theme: auto</button>
   </div>
-  <nav class="wrap tabs" id="tabs" role="tablist" aria-label="Projects" hidden></nav>
 </header>
 
-<main class="wrap">
-  <section aria-labelledby="overview-title">
-    <h2 id="overview-title" class="visually-hidden">Overview</h2>
-    <div class="kpis" id="kpis"></div>
-  </section>
+<main id="cover" class="wrap cover" aria-label="Report cover"></main>
 
-  <section id="projects-section" aria-labelledby="projects-title" hidden>
-    <div class="section-head">
-      <h2 id="projects-title">Projects</h2>
-      <p class="count" id="projects-count"></p>
-    </div>
-    <div class="cards" id="project-cards"></div>
-  </section>
-
-  <section class="panels" aria-label="Breakdown">
-    <article class="panel">
-      <h2>Post-quantum readiness</h2>
-      <p class="panel-note">Share of findings already next to post-quantum code (hybrid schemes mid-migration).</p>
-      <div id="readiness"></div>
-    </article>
-    <article class="panel">
-      <h2>By severity</h2>
-      <div id="severities"></div>
-    </article>
-    <article class="panel panel-wide">
-      <h2>By algorithm</h2>
-      <p class="panel-note">Select a bar to show only that algorithm.</p>
-      <div id="algorithms" class="bars"></div>
-      <details class="table-view">
-        <summary>Show as table</summary>
-        <table id="algorithm-table">
-          <thead><tr><th scope="col">Algorithm</th><th scope="col">Findings</th><th scope="col">Production</th><th scope="col">Test</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </details>
-    </article>
-  </section>
-
-  <details class="explainer">
-    <summary>What do these findings mean?</summary>
-    <div class="explainer-body">
-      <p><strong>Shor</strong> findings (RSA, elliptic curves, Diffie-Hellman, DSA) are broken outright by a large quantum computer running Shor's algorithm. No key size helps: the fix is migrating to the NIST post-quantum standards, ML-KEM (FIPS 203) for key exchange and encryption, ML-DSA (FIPS 204) for signatures. Data encrypted today can be recorded and decrypted later ("harvest now, decrypt later").</p>
-      <p><strong>Grover</strong> findings (AES-128, SHA-1, 3DES) are weakened, not broken: Grover's algorithm roughly halves their strength. Larger keys and hashes (AES-256, SHA-256 or better) fix them.</p>
-      <p><strong>In transition</strong> means the classical algorithm sits next to post-quantum code, typically a hybrid scheme such as X25519MLKEM768: the migration is under way. <strong>Test code</strong> findings are labelled so they can be told from what ships.</p>
-      <p>When a finding shows a <strong>path</strong>, the algorithm was written somewhere else and reached the crypto call through variables, parameters or return values; the path goes from where it is written to where it is used. Keys and certificates show what they hold: subject, key size and expiry.</p>
-    </div>
-  </details>
-
-  <section aria-labelledby="findings-title">
-    <div class="section-head">
-      <h2 id="findings-title">Findings</h2>
-      <p class="count" id="shown-count" aria-live="polite"></p>
-    </div>
-    <form class="filters" id="filters" role="search" onsubmit="return false">
-      <label class="filter filter-search">
-        <span class="visually-hidden">Search</span>
-        <input type="search" id="filter-q" placeholder="Search files, algorithms, rules…" autocomplete="off">
-      </label>
-      <label class="filter"><span>Severity</span>
-        <select id="filter-severity"><option value="">All</option></select>
-      </label>
-      <label class="filter"><span>Status</span>
-        <select id="filter-status">
-          <option value="">All</option>
-          <option value="vulnerable">Vulnerable</option>
-          <option value="in_transition">In transition</option>
-        </select>
-      </label>
-      <label class="filter"><span>Code</span>
-        <select id="filter-role">
-          <option value="">All</option>
-          <option value="production">Production</option>
-          <option value="test">Test</option>
-        </select>
-      </label>
-      <label class="filter"><span>Algorithm</span>
-        <select id="filter-algorithm"><option value="">All</option></select>
-      </label>
-      <button type="button" class="reset" id="filter-reset">Reset</button>
-    </form>
-    <div id="findings"></div>
-  </section>
-</main>
+<div id="chapter" class="wrap chapter" hidden>
+  <nav class="contents" id="contents" aria-label="Contents"></nav>
+  <main class="chapter-main" id="chapter-main" aria-live="polite"></main>
+</div>
 
 <footer class="wrap footer">
-  <p>Generated by Shorwatch 0.1.0. Static analysis: findings point at code, configuration and key material that use quantum-vulnerable cryptography; review each before acting.</p>
+  <p><span class="label">Method</span>Static analysis of source code, configuration and key material. Values are followed across files; findings in test code are labelled. Review each finding before acting.</p>
+  <p><span class="label">Standards</span>FIPS 203 (ML-KEM) for key establishment, FIPS 204 (ML-DSA) for signatures, NIST IR 8547 for the transition timeline.</p>
 </footer>
-
-<div class="tooltip" id="tooltip" role="tooltip" hidden></div>
 
 <script type="application/json" id="shorwatch-data">{"tool_version":"0.1.0","summary":{"files_scanned":9,"files_with_findings":9,"findings":17,"vulnerable":16,"in_transition":1,"fixable":1,"in_tests":0,"by_severity":{"low":1,"medium":3,"high":13}},"projects":[{"name":"spring-service","root":"examples/spring-service","files_scanned":9}],"findings":[{"rule_id":"jvm.nimbus.jose-rsa","algorithm":"RSA (JOSE/JWT)","category":"shor","severity":"high","status":"vulnerable","title":"RSA-based JWT/JOSE algorithm is broken by Shor's algorithm","message":"A JWT or JOSE object is signed (RS256/384/512, PS256/384/512) or encrypted (RSA-OAEP, RSA1_5) with RSA. Shor's algorithm recovers the RSA private key from the public key, which is usually published in a JWKS endpoint: anyone could then mint valid tokens for your users, and encrypted tokens recorded today could be opened later.","suggestion":"Plan the move to post-quantum JOSE algorithms: ML-DSA (FIPS 204) for token signatures, as being standardized for JOSE by the IETF COSE working group, and ML-KEM (FIPS 203) for encrypted tokens. Tokens are short-lived, so the urgent part is the signing key and the verifiers: make them algorithm-agile (publish several keys in the JWKS, pin the accepted algorithms per key) so issuers can switch without a flag day. RSA1_5 should be removed today regardless; it is vulnerable to padding-oracle attacks.","references":[{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"IETF draft: ML-DSA for JOSE and COSE","url":"https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/"},{"title":"RFC 7518: JSON Web Algorithms (JWA)","url":"https://www.rfc-editor.org/rfc/rfc7518"}],"path":"examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java","role":"production","location":{"start":{"line":23,"column":25},"end":{"line":23,"column":79},"start_byte":816,"end_byte":870},"crypto":{"primitive":"signature","functions":["sign","verify","encrypt","decrypt"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":21,"lines":["    public JWKSource\u003cSecurityContext> jwkSource() {","        KeyPair keyPair = generateRsaKey();","        RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())","                .privateKey((RSAPrivateKey) keyPair.getPrivate())","                .keyID(UUID.randomUUID().toString())"]},"flow_lines":[]},{"rule_id":"jvm.jca.rsa","algorithm":"RSA","category":"shor","severity":"high","status":"vulnerable","title":"RSA is broken by Shor's algorithm","message":"RSA key generation, encryption or signing detected. A cryptographically relevant quantum computer running Shor's algorithm recovers RSA private keys, and data encrypted today can be harvested now and decrypted later.","suggestion":"Plan a protocol migration, not a drop-in swap. For key establishment and encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS 204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding post-quantum protection.","references":[{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java","role":"production","location":{"start":{"line":32,"column":42},"end":{"line":32,"column":77},"start_byte":1182,"end_byte":1217},"crypto":{"primitive":"pke","functions":["keygen","encrypt","decrypt","sign","verify"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":30,"lines":["    private static KeyPair generateRsaKey() {","        try {","            KeyPairGenerator generator = KeyPairGenerator.getInstance(\"RSA\");","            generator.initialize(2048);","            return generator.generateKeyPair();"]},"flow_lines":[]},{"rule_id":"jvm.nimbus.jose-ecdsa","algorithm":"ECDSA (JOSE/JWT)","category":"shor","severity":"high","status":"vulnerable","title":"ECDSA-based JWT algorithm is forgeable with Shor's algorithm","message":"A JWT or JOSE object is signed with ECDSA (ES256, ES256K, ES384, ES512). Shor's algorithm recovers the private key from the public key, which is usually published in a JWKS endpoint, so a quantum attacker could mint valid tokens for any user.","suggestion":"Plan the move to ML-DSA (FIPS 204) token signatures, being standardized for JOSE by the IETF COSE working group. ML-DSA signatures are around 2.4 to 4.6 KB against 64 to 132 bytes for ECDSA, so check header size limits on proxies and cookies. Make verifiers algorithm-agile now (several keys in the JWKS, accepted algorithms pinned per key) so issuers can switch without a flag day.","references":[{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"IETF draft: ML-DSA for JOSE and COSE","url":"https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/"},{"title":"RFC 7518: JSON Web Algorithms (JWA)","url":"https://www.rfc-editor.org/rfc/rfc7518"}],"path":"examples/spring-service/src/main/java/com/example/payments/auth/TokenSigner.java","role":"production","location":{"start":{"line":14,"column":16},"end":{"line":14,"column":45},"start_byte":417,"end_byte":446},"crypto":{"primitive":"signature","functions":["sign","verify"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":12,"lines":["","    JWSAlgorithm algorithm() {","        return JWSAlgorithm.parse(algorithm);","    }","}"]},"flow_lines":[]},{"rule_id":"jvm.jca.sha1","algorithm":"SHA-1","category":"grover","severity":"medium","status":"vulnerable","title":"SHA-1 is broken classically and weakened further by quantum search","message":"SHA-1 used as a hash or inside a signature detected. Practical SHA-1 collisions have been public since 2017 (SHAttered) and chosen-prefix collisions since 2020, so it must not protect signatures, certificates or integrity checks today. Quantum search only widens the margin further. NIST plans to retire SHA-1 entirely by 2030.","suggestion":"Use SHA-256 or SHA-384 (SHA-2), or SHA3-256. No automatic fix is offered: digests are usually stored, compared or sent to other systems, so changing the algorithm silently would break existing values and interoperability. Migrate the data and its consumers together.","references":[{"title":"NIST: Retiring SHA-1 (transition by December 31, 2030)","url":"https://www.nist.gov/news-events/news/2022/12/nist-retires-sha-1-cryptographic-algorithm"},{"title":"FIPS 180-4: Secure Hash Standard (SHS)","url":"https://csrc.nist.gov/pubs/fips/180-4/upd1/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java","role":"production","location":{"start":{"line":13,"column":16},"end":{"line":13,"column":50},"start_byte":389,"end_byte":423},"crypto":{"primitive":"hash","functions":["digest"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":11,"lines":["","    static byte[] fingerprint(byte[] card) throws Exception {","        return MessageDigest.getInstance(\"SHA-1\").digest(card);","    }",""]},"flow_lines":[]},{"rule_id":"jvm.jca.3des","algorithm":"3DES","category":"grover","severity":"medium","status":"vulnerable","title":"Triple DES is deprecated and has too little margin against Grover's algorithm","message":"Triple DES (TDEA / DESede) detected. Its effective strength is at most 112 bits classically, about 56 bits against Grover's algorithm, and its 64-bit block makes long sessions vulnerable to birthday attacks (Sweet32). NIST disallowed 3DES for encryption after 2023.","suggestion":"Use AES-256, preferably in an authenticated mode such as GCM. No automatic fix is offered: AES needs a different key size, IV length and block size, and data already encrypted with 3DES must be decrypted and re-encrypted.","references":[{"title":"NIST SP 800-131A Rev. 2: Transitioning the Use of Cryptographic Algorithms and Key Lengths","url":"https://csrc.nist.gov/pubs/sp/800/131/a/r2/final"},{"title":"NIST SP 800-67 Rev. 2 (withdrawn): Recommendation for the Triple Data Encryption Algorithm","url":"https://csrc.nist.gov/pubs/sp/800/67/r2/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java","role":"production","location":{"start":{"line":17,"column":16},"end":{"line":17,"column":48},"start_byte":511,"end_byte":543},"crypto":{"primitive":"block-cipher","functions":["keygen","encrypt","decrypt"],"parameter_set":"168","classical_security_level":112,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":15,"lines":["","    static Cipher vaultCipher() throws Exception {","        return Cipher.getInstance(VAULT_CIPHER);","    }",""]},"flow_lines":[]},{"rule_id":"jvm.jca.aes-128","algorithm":"AES-128","category":"grover","severity":"low","status":"vulnerable","title":"AES-128 keeps only about 64 bits of security against Grover's algorithm","message":"A 128-bit AES key detected. Grover's algorithm gives a quadratic speed-up to brute-force key search, so AES-128 drops to roughly 64 bits of quantum security. NIST still accepts AES-128 today (it is the reference point for post-quantum security category 1), but long-lived secrets and frameworks such as NSA CNSA 2.0 call for AES-256.","suggestion":"Use 256-bit keys (AES-256). Unlike public-key migrations this is usually a parameter change: the API, the IV and the authentication tag stay the same. Keys already stored or shared with other systems must be re-generated and re-distributed, so plan a key rotation alongside the code change.","references":[{"title":"FIPS 197: Advanced Encryption Standard (AES)","url":"https://csrc.nist.gov/pubs/fips/197/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"},{"title":"NSA CNSA 2.0 Algorithms (AES-256 required)","url":"https://media.defense.gov/2022/Sep/07/2003071834/-1/-1/0/CSA_CNSA_2.0_ALGORITHMS_.PDF"}],"path":"examples/spring-service/src/main/java/com/example/payments/crypto/LegacyCrypto.java","role":"production","location":{"start":{"line":22,"column":9},"end":{"line":22,"column":28},"start_byte":679,"end_byte":698},"fix":{"description":"Use a 256-bit AES key","location":{"start":{"line":22,"column":24},"end":{"line":22,"column":27},"start_byte":694,"end_byte":697},"replacement":"256"},"crypto":{"primitive":"block-cipher","functions":["keygen","encrypt","decrypt"],"parameter_set":"128","classical_security_level":128,"nist_quantum_security_level":1},"project":0,"snippet":{"first_line":20,"lines":["    static SecretKey sessionKey() throws Exception {","        KeyGenerator generator = KeyGenerator.getInstance(\"AES\");","        generator.init(128);","        return generator.generateKey();","    }"]},"flow_lines":[]},{"rule_id":"jvm.jca.ecdsa","algorithm":"ECDSA","category":"shor","severity":"high","status":"vulnerable","title":"ECDSA signatures are forgeable with Shor's algorithm","message":"ECDSA signing or verification detected. Shor's algorithm recovers the private key from a public key, which lets an attacker forge signatures. Long-lived trust anchors (firmware signing keys, root certificates, code-signing identities) are the most exposed, because they must stay valid for years.","suggestion":"Migrate signatures to ML-DSA (FIPS 204), or SLH-DSA (FIPS 205) where a conservative hash-based scheme is preferred. ML-DSA keys and signatures are much larger than ECDSA ones, so check certificate sizes, wire formats and storage. During the transition, dual (composite) signatures with ECDSA and ML-DSA keep classical verifiers working.","references":[{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"FIPS 205: Stateless Hash-Based Digital Signature Standard (SLH-DSA)","url":"https://csrc.nist.gov/pubs/fips/205/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java","role":"production","location":{"start":{"line":9,"column":28},"end":{"line":9,"column":76},"start_byte":312,"end_byte":360},"flow":[{"location":{"start":{"line":19,"column":24},"end":{"line":19,"column":41},"start_byte":686,"end_byte":703},"note":"\"SHA256withECDSA\" is written here"},{"location":{"start":{"line":17,"column":16},"end":{"line":20,"column":10},"start_byte":596,"end_byte":714},"note":"returned by algorithmFor(...)"}],"crypto":{"primitive":"signature","functions":["keygen","sign","verify"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":7,"lines":["public class StatementSigner {","    byte[] sign(String partnerTier, byte[] statement, PrivateKey key) throws Exception {","        Signature signer = Signature.getInstance(algorithmFor(partnerTier));","        signer.initSign(key);","        signer.update(statement);"]},"flow_lines":["            default -> \"SHA256withECDSA\";","        return switch (partnerTier) {"]},{"rule_id":"jvm.jca.rsa","algorithm":"RSA","category":"shor","severity":"high","status":"vulnerable","title":"RSA is broken by Shor's algorithm","message":"RSA key generation, encryption or signing detected. A cryptographically relevant quantum computer running Shor's algorithm recovers RSA private keys, and data encrypted today can be harvested now and decrypted later.","suggestion":"Plan a protocol migration, not a drop-in swap. For key establishment and encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS 204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding post-quantum protection.","references":[{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java","role":"production","location":{"start":{"line":9,"column":28},"end":{"line":9,"column":76},"start_byte":312,"end_byte":360},"flow":[{"location":{"start":{"line":18,"column":30},"end":{"line":18,"column":43},"start_byte":648,"end_byte":661},"note":"\"SHA1withRSA\" is written here"},{"location":{"start":{"line":17,"column":16},"end":{"line":20,"column":10},"start_byte":596,"end_byte":714},"note":"returned by algorithmFor(...)"}],"crypto":{"primitive":"pke","functions":["keygen","encrypt","decrypt","sign","verify"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":7,"lines":["public class StatementSigner {","    byte[] sign(String partnerTier, byte[] statement, PrivateKey key) throws Exception {","        Signature signer = Signature.getInstance(algorithmFor(partnerTier));","        signer.initSign(key);","        signer.update(statement);"]},"flow_lines":["            case \"legacy\" -> \"SHA1withRSA\";","        return switch (partnerTier) {"]},{"rule_id":"jvm.jca.sha1","algorithm":"SHA-1","category":"grover","severity":"medium","status":"vulnerable","title":"SHA-1 is broken classically and weakened further by quantum search","message":"SHA-1 used as a hash or inside a signature detected. Practical SHA-1 collisions have been public since 2017 (SHAttered) and chosen-prefix collisions since 2020, so it must not protect signatures, certificates or integrity checks today. Quantum search only widens the margin further. NIST plans to retire SHA-1 entirely by 2030.","suggestion":"Use SHA-256 or SHA-384 (SHA-2), or SHA3-256. No automatic fix is offered: digests are usually stored, compared or sent to other systems, so changing the algorithm silently would break existing values and interoperability. Migrate the data and its consumers together.","references":[{"title":"NIST: Retiring SHA-1 (transition by December 31, 2030)","url":"https://www.nist.gov/news-events/news/2022/12/nist-retires-sha-1-cryptographic-algorithm"},{"title":"FIPS 180-4: Secure Hash Standard (SHS)","url":"https://csrc.nist.gov/pubs/fips/180-4/upd1/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java","role":"production","location":{"start":{"line":9,"column":28},"end":{"line":9,"column":76},"start_byte":312,"end_byte":360},"flow":[{"location":{"start":{"line":18,"column":30},"end":{"line":18,"column":43},"start_byte":648,"end_byte":661},"note":"\"SHA1withRSA\" is written here"},{"location":{"start":{"line":17,"column":16},"end":{"line":20,"column":10},"start_byte":596,"end_byte":714},"note":"returned by algorithmFor(...)"}],"crypto":{"primitive":"hash","functions":["digest"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":7,"lines":["public class StatementSigner {","    byte[] sign(String partnerTier, byte[] statement, PrivateKey key) throws Exception {","        Signature signer = Signature.getInstance(algorithmFor(partnerTier));","        signer.initSign(key);","        signer.update(statement);"]},"flow_lines":["            case \"legacy\" -> \"SHA1withRSA\";","        return switch (partnerTier) {"]},{"rule_id":"jvm.jca.ecdh","algorithm":"ECDH","category":"shor","severity":"high","status":"in_transition","title":"Elliptic-curve Diffie-Hellman (including X25519/X448) is broken by Shor's algorithm","message":"Elliptic-curve key agreement detected (ECDH, ECMQV, ECIES or the Montgomery-curve variants X25519/X448). Shor's algorithm solves the elliptic-curve discrete logarithm problem, so recorded key exchanges can be decrypted later (harvest now, decrypt later). X25519 is modern and well-implemented, but it is just as exposed to a quantum attacker.","suggestion":"Move key establishment to ML-KEM (FIPS 203). The recommended transition is a hybrid key exchange such as X25519MLKEM768 (already deployed in TLS 1.3 by major browsers and CDNs): both shared secrets feed the key schedule, so the connection stays secure if either algorithm holds. This changes the handshake, so it is a protocol migration, not a parameter swap.","references":[{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"NIST SP 800-227: Recommendations for Key-Encapsulation Mechanisms","url":"https://csrc.nist.gov/pubs/sp/800/227/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/java/com/example/payments/tls/HybridKeyExchange.java","role":"production","location":{"start":{"line":9,"column":16},"end":{"line":9,"column":50},"start_byte":271,"end_byte":305},"hybrid_evidence":{"text":"ML-KEM","location":{"start":{"line":13,"column":32},"end":{"line":13,"column":40},"start_byte":390,"end_byte":398}},"crypto":{"primitive":"key-agree","functions":["keygen","keyderive"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":7,"lines":["public class HybridKeyExchange {","    KeyAgreement classicalHalf() throws Exception {","        return KeyAgreement.getInstance(\"X25519\");","    }",""]},"flow_lines":[]},{"rule_id":"jvm.nimbus.jose-ecdsa","algorithm":"ECDSA (JOSE/JWT)","category":"shor","severity":"high","status":"vulnerable","title":"ECDSA-based JWT algorithm is forgeable with Shor's algorithm","message":"A JWT or JOSE object is signed with ECDSA (ES256, ES256K, ES384, ES512). Shor's algorithm recovers the private key from the public key, which is usually published in a JWKS endpoint, so a quantum attacker could mint valid tokens for any user.","suggestion":"Plan the move to ML-DSA (FIPS 204) token signatures, being standardized for JOSE by the IETF COSE working group. ML-DSA signatures are around 2.4 to 4.6 KB against 64 to 132 bytes for ECDSA, so check header size limits on proxies and cookies. Make verifiers algorithm-agile now (several keys in the JWKS, accepted algorithms pinned per key) so issuers can switch without a flag day.","references":[{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"IETF draft: ML-DSA for JOSE and COSE","url":"https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/"},{"title":"RFC 7518: JSON Web Algorithms (JWA)","url":"https://www.rfc-editor.org/rfc/rfc7518"}],"path":"examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt","role":"production","location":{"start":{"line":16,"column":29},"end":{"line":16,"column":34},"start_byte":469,"end_byte":474},"crypto":{"primitive":"signature","functions":["sign","verify"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":14,"lines":["class PartnerKeys {","    /** Partners sign their callbacks with ES384. */","    val acceptedAlgorithm = ES384","","    fun newKeyPair(): KeyPair ="]},"flow_lines":[]},{"rule_id":"jvm.jca.ec","algorithm":"ECC","category":"shor","severity":"high","status":"vulnerable","title":"Elliptic-curve keys are broken by Shor's algorithm","message":"Generic elliptic-curve key material detected (\"EC\" key pairs, curve parameters). The same EC key can serve key agreement (ECDH) or signatures (ECDSA), and this call alone does not tell which, so it is reported on its own. Either way, Shor's algorithm recovers the private key from the public key. Where the file also performs the actual ECDH or ECDSA operation, that call gets its own, more specific finding.","suggestion":"Find out what these keys are used for. For key agreement or encryption, move to ML-KEM (FIPS 203), ideally through a hybrid such as X25519MLKEM768 during the transition. For signatures, move to ML-DSA (FIPS 204), possibly as a composite signature alongside ECDSA. Either way, this is a protocol migration, not a parameter swap.","references":[{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt","role":"production","location":{"start":{"line":19,"column":9},"end":{"line":19,"column":43},"start_byte":516,"end_byte":550},"crypto":{"primitive":"other","functions":["keygen"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":17,"lines":["","    fun newKeyPair(): KeyPair =","        KeyPairGenerator.getInstance(\"EC\").apply {","            initialize(ECGenParameterSpec(\"secp384r1\"))","        }.generateKeyPair()"]},"flow_lines":[]},{"rule_id":"jvm.jca.ec","algorithm":"ECC","category":"shor","severity":"high","status":"vulnerable","title":"Elliptic-curve keys are broken by Shor's algorithm","message":"Generic elliptic-curve key material detected (\"EC\" key pairs, curve parameters). The same EC key can serve key agreement (ECDH) or signatures (ECDSA), and this call alone does not tell which, so it is reported on its own. Either way, Shor's algorithm recovers the private key from the public key. Where the file also performs the actual ECDH or ECDSA operation, that call gets its own, more specific finding.","suggestion":"Find out what these keys are used for. For key agreement or encryption, move to ML-KEM (FIPS 203), ideally through a hybrid such as X25519MLKEM768 during the transition. For signatures, move to ML-DSA (FIPS 204), possibly as a composite signature alongside ECDSA. Either way, this is a protocol migration, not a parameter swap.","references":[{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt","role":"production","location":{"start":{"line":20,"column":24},"end":{"line":20,"column":55},"start_byte":582,"end_byte":613},"crypto":{"primitive":"other","functions":["keygen"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":18,"lines":["    fun newKeyPair(): KeyPair =","        KeyPairGenerator.getInstance(\"EC\").apply {","            initialize(ECGenParameterSpec(\"secp384r1\"))","        }.generateKeyPair()","}"]},"flow_lines":[]},{"rule_id":"config.app.jose-ecdsa","algorithm":"ECDSA (JOSE/JWT)","category":"shor","severity":"high","status":"vulnerable","title":"ECDSA-based JWT algorithm is forgeable with Shor's algorithm","message":"A JWT or JOSE object is signed with ECDSA (ES256, ES256K, ES384, ES512). Shor's algorithm recovers the private key from the public key, which is usually published in a JWKS endpoint, so a quantum attacker could mint valid tokens for any user.","suggestion":"Plan the move to ML-DSA (FIPS 204) token signatures, being standardized for JOSE by the IETF COSE working group. ML-DSA signatures are around 2.4 to 4.6 KB against 64 to 132 bytes for ECDSA, so check header size limits on proxies and cookies. Make verifiers algorithm-agile now (several keys in the JWKS, accepted algorithms pinned per key) so issuers can switch without a flag day.","references":[{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"IETF draft: ML-DSA for JOSE and COSE","url":"https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/"},{"title":"RFC 7518: JSON Web Algorithms (JWA)","url":"https://www.rfc-editor.org/rfc/rfc7518"}],"path":"examples/spring-service/src/main/resources/application-prod.yml","role":"production","location":{"start":{"line":4,"column":24},"end":{"line":4,"column":29},"start_byte":104,"end_byte":109},"crypto":{"primitive":"signature","functions":["sign","verify"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":2,"lines":["payments:","  webhooks:","    signing-algorithm: ES256"]},"flow_lines":[]},{"rule_id":"config.spring-boot.jose-rsa","algorithm":"RSA (JOSE/JWT)","category":"shor","severity":"high","status":"vulnerable","title":"RSA-based JWT/JOSE algorithm is broken by Shor's algorithm","message":"A JWT or JOSE object is signed (RS256/384/512, PS256/384/512) or encrypted (RSA-OAEP, RSA1_5) with RSA. Shor's algorithm recovers the RSA private key from the public key, which is usually published in a JWKS endpoint: anyone could then mint valid tokens for your users, and encrypted tokens recorded today could be opened later.","suggestion":"Plan the move to post-quantum JOSE algorithms: ML-DSA (FIPS 204) for token signatures, as being standardized for JOSE by the IETF COSE working group, and ML-KEM (FIPS 203) for encrypted tokens. Tokens are short-lived, so the urgent part is the signing key and the verifiers: make them algorithm-agile (publish several keys in the JWKS, pin the accepted algorithms per key) so issuers can switch without a flag day. RSA1_5 should be removed today regardless; it is vulnerable to padding-oracle attacks.","references":[{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"IETF draft: ML-DSA for JOSE and COSE","url":"https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/"},{"title":"RFC 7518: JSON Web Algorithms (JWA)","url":"https://www.rfc-editor.org/rfc/rfc7518"}],"path":"examples/spring-service/src/main/resources/application.yml","role":"production","location":{"start":{"line":8,"column":28},"end":{"line":8,"column":33},"start_byte":128,"end_byte":133},"crypto":{"primitive":"signature","functions":["sign","verify","encrypt","decrypt"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":6,"lines":["      resourceserver:","        jwt:","          jws-algorithms: [RS256]","","server:"]},"flow_lines":[]},{"rule_id":"config.spring-boot.tls-key-exchange","algorithm":"TLS key exchange","category":"shor","severity":"high","status":"vulnerable","title":"TLS cipher suites with classical key exchange are exposed to harvest-now-decrypt-later","message":"TLS 1.2 cipher suites configured with RSA, DHE or ECDHE key exchange. All three rest on problems Shor's algorithm solves, so TLS traffic recorded today can be decrypted once a large quantum computer exists. Suites with static RSA key exchange (TLS_RSA_WITH_*) also lack forward secrecy: a single leaked server key opens every past session, even without a quantum computer.","suggestion":"Prefer TLS 1.3 and enable a hybrid post-quantum key exchange group such as X25519MLKEM768 wherever your TLS stack and peers support it, keeping a classical group as fallback during the transition. Hybrid key exchange protects recorded traffic now, without waiting for post-quantum certificates. Remove static RSA suites today.","references":[{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"IETF draft: Hybrid key exchange in TLS 1.3","url":"https://datatracker.ietf.org/doc/draft-ietf-tls-hybrid-design/"},{"title":"IETF draft: Post-quantum hybrid ECDHE-MLKEM key agreement for TLS 1.3","url":"https://datatracker.ietf.org/doc/draft-ietf-tls-ecdhe-mlkem/"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/resources/application.yml","role":"production","location":{"start":{"line":14,"column":14},"end":{"line":14,"column":74},"start_byte":215,"end_byte":275},"crypto":{"primitive":"key-agree","functions":["keyderive"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":12,"lines":["  ssl:","    key-store: classpath:payments.p12","    ciphers: TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_AES_256_GCM_SHA384","","payments:"]},"flow_lines":[]},{"rule_id":"keys.material.rsa","algorithm":"RSA","category":"shor","severity":"high","status":"vulnerable","title":"RSA is broken by Shor's algorithm","message":"An RSA key or certificate. Keys and certificates live for years, and whatever they protect or sign until they are replaced can be attacked later: a quantum computer running Shor's algorithm recovers the private key from the public one.","suggestion":"Plan a protocol migration, not a drop-in swap. For key establishment and encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS 204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding post-quantum protection.","references":[{"title":"FIPS 203: Module-Lattice-Based Key-Encapsulation Mechanism Standard (ML-KEM)","url":"https://csrc.nist.gov/pubs/fips/203/final"},{"title":"FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)","url":"https://csrc.nist.gov/pubs/fips/204/final"},{"title":"NIST IR 8547: Transition to Post-Quantum Cryptography Standards","url":"https://csrc.nist.gov/pubs/ir/8547/ipd"}],"path":"examples/spring-service/src/main/resources/certs/partner-signing.pem","role":"production","location":{"start":{"line":1,"column":1},"end":{"line":1,"column":28},"start_byte":0,"end_byte":27},"detail":"certificate \"CN=statements.partner.example, O=Example Partner\": RSA 3072-bit, signed with SHA256withRSA, valid until 2031-10-26","crypto":{"primitive":"pke","functions":["keygen","encrypt","decrypt","sign","verify"],"parameter_set":null,"classical_security_level":null,"nist_quantum_security_level":0},"project":0,"snippet":{"first_line":1,"lines":["-----BEGIN CERTIFICATE-----","MIIExjCCAq6gAwIBAgIUKTE8wiffxJkR9MBKilUTDcqytdMwDQYJKoZIhvcNAQEL","BQAwNzEbMBkGA1UEAwwSRXhhbXBsZSBQYXJ0bmVyIENBMRgwFgYDVQQKDA9FeGFt"]},"flow_lines":[]}]}</script>
 <script>
 "use strict";
 (function () {
   const data = JSON.parse(document.getElementById("shorwatch-data").textContent);
-  const allFindings = data.findings;
+  const findings = data.findings;
   const projects = data.projects || [];
   const multi = projects.length > 1;
   const SEVERITIES = ["critical", "high", "medium", "low", "info"];
-  const SEVERITY_RANK = Object.fromEntries(SEVERITIES.map((s, i) => [s, i]));
-  const filters = { q: "", severity: "", status: "", role: "", algorithm: "" };
-  // `null`: every project; otherwise an index into `projects`.
-  let scope = null;
+  const MARK = { critical: "◆", high: "▲", medium: "●", low: "○", info: "○" };
+  const RANK = Object.fromEntries(SEVERITIES.map((s, i) => [s, i]));
+  const PAGE = 25;
+  const URGENT = 3;
+  findings.forEach((f, i) => { f.id = i; });
 
   // Every piece of scanned text goes through textContent: never markup.
   function el(tag, attrs, children) {
@@ -468,430 +325,568 @@ mark { background: transparent; color: inherit; text-decoration: underline 2px v
       if (value === undefined || value === null || value === false) continue;
       if (key === "text") node.textContent = value;
       else if (key === "class") node.className = value;
+      else if (key === "value") node.value = value;
+      else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
       else node.setAttribute(key, value === true ? "" : value);
     }
-    for (const child of [].concat(children || []).flat(Infinity)) {
+    for (const child of [].concat(children ?? []).flat(Infinity)) {
       if (child === null || child === undefined || child === false) continue;
       node.append(child instanceof Node ? child : document.createTextNode(String(child)));
     }
     return node;
   }
 
-  const plural = (n, one, many) => `${n.toLocaleString()} ${n === 1 ? one : many}`;
-  const statusLabel = (s) => (s === "in_transition" ? "in transition" : "vulnerable");
-  const fileName = (path) => path.split(/[\\/]/).pop();
-  const inScope = (f, index) => index === null || f.project === index;
-
-  /** The counts the overview shows, for some findings. */
-  function summarize(findings, filesScanned) {
-    const bySeverity = {};
-    for (const f of findings) bySeverity[f.severity] = (bySeverity[f.severity] || 0) + 1;
-    return {
-      findings: findings.length,
-      files_scanned: filesScanned,
-      files_with_findings: new Set(findings.map((f) => f.path)).size,
-      in_tests: findings.filter((f) => f.role === "test").length,
-      in_transition: findings.filter((f) => f.status === "in_transition").length,
-      vulnerable: findings.filter((f) => f.status !== "in_transition").length,
-      fixable: findings.filter((f) => f.fix).length,
-      by_severity: bySeverity,
-    };
+  const num = (n) => n.toLocaleString("en-US");
+  const plural = (n, one, many) => `${num(n)} ${n === 1 ? one : many}`;
+  const fileName = (path) => path.split("/").pop();
+  const isTest = (f) => f.role === "test";
+  const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+  const projectOf = (f) => (f.project === null || f.project === undefined ? null : projects[f.project]);
+  /** A path as people read it: relative to its project. */
+  function shownPath(path) {
+    const owner = findings.find((f) => f.path === path);
+    const project = owner ? projectOf(owner) : projects[0];
+    const root = project ? project.root : "";
+    return root && path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
+  }
+  /** Text that may break after each `/`, never inside a name. */
+  function breakable(path) {
+    return path.split("/").flatMap((part, i, all) => (i < all.length - 1 ? [`${part}/`, el("wbr")] : [part]));
   }
 
-  /** Algorithms by count, most frequent first. */
-  function algorithmCounts(findings) {
-    const counts = new Map();
-    for (const f of findings) {
-      const entry = counts.get(f.algorithm) || { total: 0, test: 0 };
-      entry.total += 1;
-      if (f.role === "test") entry.test += 1;
-      counts.set(f.algorithm, entry);
-    }
-    return [...counts.entries()].sort((a, b) => b[1].total - a[1].total || a[0].localeCompare(b[0]));
-  }
-
-  // ---- Theme -----------------------------------------------------------
+  // ---- Theme ---------------------------------------------------------------
   const THEMES = ["auto", "light", "dark"];
   const toggle = document.getElementById("theme-toggle");
-  function applyTheme(theme) {
+  let theme = "auto";
+  try { theme = localStorage.getItem("shorwatch-theme") || "auto"; } catch (_) { /* storage blocked */ }
+  if (!THEMES.includes(theme)) theme = "auto";
+  function applyTheme() {
     if (theme === "auto") document.documentElement.removeAttribute("data-theme");
     else document.documentElement.setAttribute("data-theme", theme);
     toggle.textContent = `Theme: ${theme}`;
   }
-  let theme = "auto";
-  try { theme = localStorage.getItem("shorwatch-theme") || "auto"; } catch (_) { /* storage blocked */ }
-  if (!THEMES.includes(theme)) theme = "auto";
-  applyTheme(theme);
+  applyTheme();
   toggle.addEventListener("click", () => {
     theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
-    applyTheme(theme);
+    applyTheme();
     try { localStorage.setItem("shorwatch-theme", theme); } catch (_) { /* storage blocked */ }
   });
 
-  // ---- Tooltip ---------------------------------------------------------
-  const tooltip = document.getElementById("tooltip");
-  function showTip(event, text) {
-    tooltip.textContent = text;
-    tooltip.hidden = false;
-    const x = Math.min(event.clientX + 12, window.innerWidth - tooltip.offsetWidth - 8);
-    tooltip.style.left = `${x}px`;
-    tooltip.style.top = `${event.clientY + 14}px`;
-  }
-  const hideTip = () => { tooltip.hidden = true; };
-  function withTip(node, text) {
-    node.addEventListener("mousemove", (e) => showTip(e, text));
-    node.addEventListener("mouseleave", hideTip);
-    return node;
-  }
-
-  // ---- Projects: tabs and the index ---------------------------------------
-  const projectFindings = projects.map((_, i) => allFindings.filter((f) => f.project === i));
-  // Projects with the most severe findings first, clean ones last.
-  const projectOrder = projects.map((_, i) => i).sort((a, b) => {
-    const worst = (i) => Math.min(9, ...projectFindings[i].map((f) => SEVERITY_RANK[f.severity] ?? 9));
-    return worst(a) - worst(b) || projectFindings[b].length - projectFindings[a].length
-      || projects[a].name.localeCompare(projects[b].name);
-  });
-  const tabs = document.getElementById("tabs");
-
-  function tab(label, count, index) {
-    const button = el("button", { type: "button", class: "tab", role: "tab", "aria-selected": "false" }, [
-      label, el("span", { class: "tab-count", text: count.toLocaleString() }),
-    ]);
-    button.addEventListener("click", () => select(index));
-    button.dataset.scope = index === null ? "all" : String(index);
-    return button;
-  }
-
-  function severityBadges(findings) {
-    const counts = SEVERITIES.map((s) => [s, findings.filter((f) => f.severity === s).length]).filter(([, n]) => n);
-    return el("div", { class: "card-badges" },
-      counts.map(([s, n]) => el("span", { class: `badge sev-${s}`, text: `${n.toLocaleString()} ${s}` })));
-  }
-
-  function projectCard(index) {
-    const project = projects[index];
-    const findings = projectFindings[index];
-    const production = findings.filter((f) => f.role !== "test").length;
-    const most = Math.max(1, ...projectFindings.map((fs) => fs.length));
-    const top = algorithmCounts(findings).slice(0, 4).map(([name, e]) => `${name} ${e.total}`).join(" · ");
-    const card = el("button", { type: "button", class: "card" }, [
-      el("span", { class: "card-name", text: project.name }),
-      project.root ? el("span", { class: "card-root", text: project.root }) : null,
-      findings.length === 0
-        ? el("span", { class: "card-clean", text: `✓ Clean · ${plural(project.files_scanned, "file", "files")} scanned` })
-        : [
-          el("p", { class: "card-figure" }, [findings.length.toLocaleString(),
-            el("span", { text: `${findings.length === 1 ? "finding" : "findings"} · ${production.toLocaleString()} in production` })]),
-          el("span", { class: "card-bar", "aria-hidden": "true" },
-            el("span", { style: `width:${(findings.length / most) * 100}%` })),
-          severityBadges(findings),
-          el("span", { class: "card-algorithms", text: top }),
-        ],
-      el("span", { class: "card-open", text: "Open →" }),
-    ]);
-    card.addEventListener("click", () => select(index));
-    return withTip(card, `${project.name}: ${plural(findings.length, "finding", "findings")} in ${plural(project.files_scanned, "file", "files")} scanned`);
-  }
-
-  if (multi) {
-    tabs.hidden = false;
-    tabs.append(tab("All projects", allFindings.length, null), ...projectOrder.map((i) => tab(projects[i].name, projectFindings[i].length, i)));
-    document.getElementById("project-cards").append(...projectOrder.map(projectCard));
-    const affected = projectFindings.filter((fs) => fs.length).length;
-    document.getElementById("projects-count").textContent =
-      `${affected.toLocaleString()} of ${plural(projects.length, "project", "projects")} with findings`;
-  }
-
-  // ---- Overview of the scope -------------------------------------------------
-  function renderOverview(findings, filesScanned) {
-    const summary = summarize(findings, filesScanned);
-    const name = scope !== null ? projects[scope].name : (projects.length === 1 ? projects[0].name : null);
-    document.getElementById("title").textContent = name
-      ? `${name}: quantum-vulnerable cryptography`
-      : "Quantum-vulnerable cryptography report";
-    const where = scope === null && multi ? ` across ${plural(projects.length, "project", "projects")}` : "";
-    document.getElementById("lede").textContent = summary.findings === 0
-      ? `No quantum-vulnerable cryptography found in ${plural(summary.files_scanned, "file", "files")}${where}.`
-      : `${plural(summary.findings, "finding", "findings")} in ${plural(summary.files_with_findings, "file", "files")}, out of ${plural(summary.files_scanned, "file", "files")} scanned${where}.`;
-
-    const production = summary.findings - summary.in_tests;
-    const shor = findings.filter((f) => f.category === "shor").length;
-    const kpis = [
-      ["Findings", summary.findings, `${plural(summary.files_with_findings, "file", "files")}`],
-      ["In production code", production, `${summary.in_tests.toLocaleString()} more in tests`],
-      ["Broken by Shor", shor, "need post-quantum algorithms"],
-      ["In transition", summary.in_transition, "next to post-quantum code"],
-      ["Auto-fixable", summary.fixable, "mechanical fix available"],
-    ];
-    document.getElementById("kpis").replaceChildren(...kpis.map(([label, value, hint]) =>
-      el("div", { class: "kpi" }, [
-        el("p", { class: "kpi-label", text: label }),
-        el("p", { class: "kpi-value", text: value.toLocaleString() }),
-        el("p", { class: "kpi-hint", text: hint }),
-      ])));
-
-    const ready = summary.findings ? Math.round((summary.in_transition / summary.findings) * 100) : 100;
-    document.getElementById("readiness").replaceChildren(
-      el("p", { class: "meter-figure" }, [`${ready}%`, el("span", { text: "in transition" })]),
-      el("div", {
-        class: "meter", role: "meter", "aria-valuemin": "0", "aria-valuemax": "100",
-        "aria-valuenow": String(ready), "aria-label": "Findings in transition",
-      }, el("div", { class: "meter-fill", style: `width:${ready}%` })),
-      el("div", { class: "meter-legend" }, [
-        el("span", { text: `${summary.in_transition.toLocaleString()} in transition` }),
-        el("span", { text: `${summary.vulnerable.toLocaleString()} vulnerable` }),
-      ]),
-    );
-
-    const severityCounts = SEVERITIES.map((s) => [s, summary.by_severity[s] || 0]).filter(([, n]) => n > 0);
-    const maxSeverity = Math.max(1, ...severityCounts.map(([, n]) => n));
-    const severityBox = document.getElementById("severities");
-    severityBox.replaceChildren();
-    if (severityCounts.length === 0) severityBox.append(el("p", { class: "panel-note", text: "Nothing to report." }));
-    for (const [severity, n] of severityCounts) {
-      severityBox.append(withTip(el("div", { class: "sev-row" }, [
-        el("span", {}, el("span", { class: `badge sev-${severity}`, text: severity })),
-        el("div", { class: "sev-track" }, el("div", { class: `sev-fill fill-${severity}`, style: `width:${(n / maxSeverity) * 100}%` })),
-        el("span", { class: "sev-count", text: n.toLocaleString() }),
-      ]), `${severity}: ${plural(n, "finding", "findings")}`));
+  // ---- Routes: the cover, or a chapter of findings ----------------------------
+  // `#/findings?sev=high&project=keycloak&alg=RSA&cat=shor&f=12` opens a
+  // chapter; anything else is the cover (`#where` scrolls to its section).
+  const FILTERS = ["sev", "project", "alg", "cat"];
+  function chapterHref(params) {
+    const query = new URLSearchParams();
+    for (const key of [...FILTERS, "f"]) {
+      if (params[key] !== undefined && params[key] !== null && params[key] !== "") query.set(key, params[key]);
     }
-
-    // By algorithm: one hue, magnitude, sorted.
-    const algorithms = algorithmCounts(findings);
-    const maxAlgorithm = Math.max(1, ...algorithms.map(([, e]) => e.total));
-    const bars = document.getElementById("algorithms");
-    const tableBody = document.querySelector("#algorithm-table tbody");
-    bars.replaceChildren();
-    tableBody.replaceChildren();
-    if (algorithms.length === 0) bars.append(el("p", { class: "panel-note", text: "Nothing to report." }));
-    for (const [name, entry] of algorithms) {
-      const bar = el("button", { type: "button", class: "bar", "aria-pressed": "false", "data-algorithm": name }, [
-        el("span", { class: "bar-label", text: name }),
-        el("span", { class: "bar-track" }, el("span", { class: "bar-fill", style: `width:${(entry.total / maxAlgorithm) * 100}%` })),
-        el("span", { class: "bar-value", text: entry.total.toLocaleString() }),
-      ]);
-      bar.addEventListener("click", () => {
-        filters.algorithm = filters.algorithm === name ? "" : name;
-        controls.algorithm.value = filters.algorithm;
-        renderFindings();
-      });
-      bars.append(withTip(bar, `${name}: ${plural(entry.total, "finding", "findings")} (${(entry.total - entry.test).toLocaleString()} production, ${entry.test.toLocaleString()} test)`));
-      tableBody.append(el("tr", {}, [
-        el("th", { scope: "row", text: name }),
-        el("td", { text: entry.total.toLocaleString() }),
-        el("td", { text: (entry.total - entry.test).toLocaleString() }),
-        el("td", { text: entry.test.toLocaleString() }),
-      ]));
-    }
-
-    // Filter options follow the scope.
-    controls.severity.replaceChildren(el("option", { value: "", text: "All" }),
-      ...severityCounts.map(([s]) => el("option", { value: s, text: s })));
-    controls.algorithm.replaceChildren(el("option", { value: "", text: "All" }),
-      ...algorithms.map(([name]) => el("option", { value: name, text: name })));
+    const text = query.toString();
+    return `#/findings${text ? `?${text}` : ""}`;
+  }
+  function route() {
+    const hash = window.location.hash;
+    if (!hash.startsWith("#/findings")) return { cover: true, anchor: decodeURIComponent(hash.slice(1)), params: {} };
+    const query = new URLSearchParams(hash.split("?")[1] || "");
+    const params = {};
+    for (const key of [...FILTERS, "f"]) if (query.has(key)) params[key] = query.get(key);
+    return { cover: false, params };
   }
 
-  // ---- Filters -------------------------------------------------------------
-  const controls = {
-    q: document.getElementById("filter-q"),
-    severity: document.getElementById("filter-severity"),
-    status: document.getElementById("filter-status"),
-    role: document.getElementById("filter-role"),
-    algorithm: document.getElementById("filter-algorithm"),
-  };
-  for (const [key, control] of Object.entries(controls)) {
-    control.addEventListener("input", () => { filters[key] = control.value.trim(); renderFindings(); });
-  }
-  function resetFilters() {
-    for (const [key, control] of Object.entries(controls)) { control.value = ""; filters[key] = ""; }
-  }
-  document.getElementById("filter-reset").addEventListener("click", () => { resetFilters(); renderFindings(); });
-
-  function matches(f) {
-    if (filters.severity && f.severity !== filters.severity) return false;
-    if (filters.status && f.status !== filters.status) return false;
-    if (filters.role && f.role !== filters.role) return false;
-    if (filters.algorithm && f.algorithm !== filters.algorithm) return false;
-    if (filters.q) {
-      const haystack = `${f.path} ${f.algorithm} ${f.rule_id} ${f.title} ${f.detail || ""}`.toLowerCase();
-      if (!haystack.includes(filters.q.toLowerCase())) return false;
+  function matches(f, params) {
+    if (params.sev && f.severity !== params.sev) return false;
+    if (params.alg && f.algorithm !== params.alg) return false;
+    if (params.cat && f.category !== params.cat) return false;
+    if (params.project) {
+      const project = projectOf(f);
+      if (!project || project.name !== params.project) return false;
     }
     return true;
   }
 
-  // ---- Findings ------------------------------------------------------------
+  /** `RSA ×3, SHA-1`, most frequent first. */
+  function algorithmList(fs, limit) {
+    const counts = new Map();
+    for (const f of fs) counts.set(f.algorithm, (counts.get(f.algorithm) || 0) + 1);
+    const sorted = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const shown = sorted.slice(0, limit || sorted.length).map(([a, n]) => (n > 1 ? `${a} ×${n}` : a));
+    if (limit && sorted.length > limit) shown.push("…");
+    return shown.join(", ");
+  }
+
+  function bySeverity(fs) {
+    const counts = {};
+    for (const f of fs) counts[f.severity] = (counts[f.severity] || 0) + 1;
+    return SEVERITIES.filter((s) => counts[s]).map((s) => [s, counts[s]]);
+  }
+
+  function groupByFile(fs) {
+    const map = new Map();
+    for (const f of fs) {
+      if (!map.has(f.path)) map.set(f.path, []);
+      map.get(f.path).push(f);
+    }
+    return [...map.entries()].map(([path, list]) => ({
+      path,
+      fs: list.sort((a, b) => a.location.start.line - b.location.start.line || a.algorithm.localeCompare(b.algorithm)),
+      test: list.every(isTest),
+    }));
+  }
+
+  // ---- Shared pieces ------------------------------------------------------------
   function codeBlock(f) {
-    if (f.snippet.lines.length === 0) return null;
+    if (!f.snippet || f.snippet.lines.length === 0) return null;
     const start = f.location.start;
     const end = f.location.end;
-    const pre = el("pre", { class: "code", "aria-label": `Source around line ${start.line}` });
-    f.snippet.lines.forEach((text, i) => {
-      const number = f.snippet.first_line + i;
-      const hit = number >= start.line && number <= end.line;
-      const line = el("span", { class: hit ? "code-line hit" : "code-line" }, el("span", { class: "ln", text: number }));
-      if (hit) {
+    return el("pre", { class: "code", "aria-label": `Source around line ${start.line}` },
+      f.snippet.lines.map((text, i) => {
+        const number = f.snippet.first_line + i;
+        const hit = number >= start.line && number <= end.line;
+        if (!hit) return el("span", { class: "code-line" }, [el("span", { class: "ln", text: number }), el("span", { text })]);
         // Columns are Unicode code points, 1-based.
         const chars = Array.from(text);
         const from = number === start.line ? start.column - 1 : 0;
         const to = number === end.line ? end.column - 1 : chars.length;
-        line.append(el("span", {}, [
-          chars.slice(0, from).join(""),
-          el("mark", { text: chars.slice(from, to).join("") }),
-          chars.slice(to).join(""),
-        ]));
-      } else {
-        line.append(el("span", { text }));
-      }
-      pre.append(line);
-    });
-    return pre;
+        return el("span", { class: "code-line hit" }, [
+          el("span", { class: "ln", text: number }),
+          el("span", {}, [chars.slice(0, from).join(""), el("mark", { text: chars.slice(from, to).join("") }), chars.slice(to).join("")]),
+        ]);
+      }));
   }
 
-  function flowDiagram(f) {
+  function flowSteps(f) {
     if (!f.flow || f.flow.length === 0) return null;
     // Steps on the same line ("written here", "passed as x") read as one.
     const merged = [];
-    f.flow.forEach((step, i) => {
+    for (const step of f.flow) {
       const path = step.path || f.path;
       const last = merged[merged.length - 1];
       if (last && last.path === path && last.line === step.location.start.line) last.notes.push(step.note);
-      else merged.push({ path, line: step.location.start.line, notes: [step.note], code: f.flow_lines[i] });
-    });
-    const steps = merged.map((step) => el("li", {}, [
-      el("span", { class: "flow-note", text: step.notes.join(", ") }),
-      el("span", { class: "flow-where", title: step.path, text: `${fileName(step.path)}:${step.line}` }),
-      step.code ? el("code", { class: "flow-code", text: step.code.trim() }) : null,
-    ]));
-    const use = f.snippet.lines[f.location.start.line - f.snippet.first_line];
-    steps.push(el("li", { class: "use" }, [
-      el("span", { class: "flow-note", text: `used here: ${f.algorithm}` }),
-      el("span", { class: "flow-where", text: `${fileName(f.path)}:${f.location.start.line}` }),
-      use ? el("code", { class: "flow-code", text: use.trim() }) : null,
-    ]));
-    return el("div", { class: "flow" }, [
-      el("h3", { text: "How the value gets here" }),
-      el("ol", {}, steps),
+      else merged.push({ path, line: step.location.start.line, notes: [step.note] });
+    }
+    merged.push({ path: f.path, line: f.location.start.line, notes: ["used here"] });
+    return el("ol", { class: "flow", "aria-label": "How the value gets here" }, merged.map((s) =>
+      el("li", {}, [el("strong", { text: s.notes.join(", ") }), el("span", { class: "mono", title: s.path, text: `${fileName(s.path)}:${s.line}` })])));
+  }
+
+  function badge(severity) {
+    return el("span", { class: `badge sev-${severity}`, text: `${MARK[severity] || ""} ${severity}` });
+  }
+
+  function explanation(f) {
+    return el("div", { class: "two-col" }, [
+      el("p", {}, [el("span", { class: "label", text: "Why it matters" }), f.message]),
+      el("p", {}, [el("span", { class: "label", text: "What to do" }), f.suggestion]),
     ]);
   }
 
-  function findingCard(f) {
-    const start = f.location.start;
-    return el("article", { class: "finding" }, [
-      el("div", { class: "finding-head" }, [
-        el("span", { class: `badge sev-${f.severity}`, text: f.severity }),
-        el("span", { class: "algorithm", text: f.algorithm }),
-        el("span", { class: `pill pill-${f.status === "in_transition" ? "transition" : "vulnerable"}`, text: statusLabel(f.status) }),
-        f.role === "test" ? el("span", { class: "pill pill-test", text: "test code" }) : null,
-        f.flow && f.flow.length ? el("span", { class: "pill", text: "via data flow" }) : null,
-        el("span", { class: "rule", text: f.rule_id }),
-        f.snippet.lines.length ? el("span", { class: "where", text: `line ${start.line}, column ${start.column}` }) : null,
+  /** Production first, then the most severe, vulnerable before migrating, then
+   *  different algorithms: the terminal's "most urgent". */
+  function urgent() {
+    const sorted = [...findings].sort((a, b) =>
+      (isTest(a) - isTest(b)) || (RANK[a.severity] - RANK[b.severity])
+      || ((a.status === "in_transition") - (b.status === "in_transition")) || (a.id - b.id));
+    const picked = [];
+    for (const f of sorted) if (picked.length < URGENT && picked.every((p) => p.algorithm !== f.algorithm)) picked.push(f);
+    for (const f of sorted) if (picked.length < URGENT && !picked.includes(f)) picked.push(f);
+    return picked;
+  }
+
+  // ---- Cover ----------------------------------------------------------------------
+  function renderCover() {
+    const summary = data.summary;
+    const production = findings.filter((f) => !isTest(f)).length;
+    const high = findings.filter((f) => f.severity === "high").length;
+    const shor = findings.filter((f) => f.category === "shor").length;
+    const ready = findings.length ? Math.round((summary.in_transition / findings.length) * 100) : 100;
+    const scope = multi
+      ? `${plural(projects.length, "project", "projects")} · ${plural(summary.files_scanned, "file", "files")} scanned`
+      : `${projects[0] ? `${projects[0].name} · ` : ""}${plural(summary.files_scanned, "file", "files")} scanned`;
+    const migrating = summary.in_transition === 0
+      ? "None is migrating yet."
+      : `${num(summary.in_transition)} already ${summary.in_transition === 1 ? "sits" : "sit"} next to post-quantum code.`;
+
+    const hero = el("section", { class: "hero" }, [
+      el("p", { class: "kicker", text: scope }),
+      el("h1", {
+        class: "headline",
+        text: findings.length === 0
+          ? "No quantum-vulnerable cryptography found."
+          : `${num(findings.length)} ${findings.length === 1 ? "place" : "places"} where today’s cryptography ${shor ? "falls to" : "is weakened by"} a quantum computer.`,
+      }),
+      el("p", {
+        class: "lede",
+        text: findings.length === 0
+          ? "No rule matched in the scanned code, configuration or key material."
+          : `${shor
+            ? "RSA, elliptic curves and Diffie-Hellman are broken outright by Shor’s algorithm; data protected with them today can be recorded now and opened later."
+            : "Grover’s algorithm halves the strength of these algorithms; larger keys and hashes fix them."} ${num(production)} of these findings ${production === 1 ? "is" : "are"} in production code. ${migrating}`,
+      }),
+      findings.length === 0 ? null : el("div", { class: "stats" }, [
+        stat(production, "in production code →", chapterHref({})),
+        stat(high, "high severity →", high ? chapterHref({ sev: "high" }) : null, "sev-high"),
+        stat(shor, "broken by Shor’s algorithm →", shor ? chapterHref({ cat: "shor" }) : null),
+        stat(`${ready}%`, "already in transition to ML-KEM / ML-DSA", null),
       ]),
-      el("p", { class: "finding-title", text: f.title }),
-      f.detail ? el("p", { class: "detail", text: f.detail }) : null,
-      codeBlock(f),
-      flowDiagram(f),
-      el("div", { class: "explain" }, [
-        el("p", {}, [el("strong", { text: "Why it matters. " }), f.message]),
-        el("p", {}, [el("strong", { text: "What to do. " }), f.suggestion]),
-        f.hybrid_evidence ? el("p", { class: "note" },
-          `In transition: post-quantum code at line ${f.hybrid_evidence.location.start.line} (${f.hybrid_evidence.text}).`) : null,
-        f.fix ? el("p", { class: "note fix" },
-          `Fix: ${f.fix.description}: replace with “${f.fix.replacement}” at line ${f.fix.location.start.line}.`) : null,
-        f.references && f.references.length ? el("ul", { class: "refs" }, f.references.map((r) =>
-          el("li", {}, el("a", { href: r.url, rel: "noopener noreferrer", target: "_blank", text: r.title })))) : null,
-      ]),
+    ]);
+    const sections = [hero];
+    if (findings.length) sections.push(whereItLives(), fixFirst(), algorithmsSection(), severitySection());
+    document.getElementById("cover").replaceChildren(...sections);
+  }
+
+  function stat(value, label, href, valueClass) {
+    const children = [
+      el("span", { class: `stat-value ${valueClass || ""}`, text: typeof value === "number" ? num(value) : value }),
+      el("span", { class: "stat-label", text: href ? label : label.replace(" →", "") }),
+    ];
+    return href ? el("a", { class: "stat", href }, children) : el("div", { class: "stat" }, children);
+  }
+
+  function sectionHead(id, title, note) {
+    return el("div", { class: "section-head" }, [
+      el("h2", { class: "section-title", id, text: title }),
+      note ? el("p", { class: "section-note", text: note }) : null,
     ]);
   }
 
-  const list = document.getElementById("findings");
-  const shownCount = document.getElementById("shown-count");
-  /** Paths are shown relative to their project when one is open. */
-  const shownPath = (path) => {
-    const open = scope !== null ? projects[scope] : (projects.length === 1 ? projects[0] : null);
-    const root = open ? open.root : "";
-    return root && path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
-  };
+  function severityLinks(fs, params) {
+    return el("div", { class: "sev-links" }, bySeverity(fs).map(([s, n]) =>
+      el("a", { class: `sev-link sev-${s}`, href: chapterHref({ ...params, sev: s }), text: `${MARK[s]} ${num(n)} ${s}` })));
+  }
 
-  function renderFindings() {
-    for (const bar of document.querySelectorAll("#algorithms .bar")) {
-      bar.setAttribute("aria-pressed", String(bar.dataset.algorithm === filters.algorithm));
+  function whereItLives() {
+    if (multi) {
+      const rows = projects.map((p, i) => ({ p, fs: findings.filter((f) => f.project === i) }))
+        .sort((a, b) => b.fs.length - a.fs.length || a.p.name.localeCompare(b.p.name));
+      const most = Math.max(1, ...rows.map((r) => r.fs.length));
+      return el("section", {}, [
+        sectionHead("where", "Where it lives", "Projects by findings. Select a project or a severity to open its chapter."),
+        el("div", { class: "ruled" }, rows.map((r, i) => el("div", { class: "rank-row" }, [
+          el("span", { class: "rank-n", text: String(i + 1).padStart(2, "0") }),
+          el("div", {}, [
+            r.fs.length
+              ? el("a", { class: "rank-name", href: chapterHref({ project: r.p.name }), text: r.p.name })
+              : el("span", { class: "rank-name", text: r.p.name }),
+            el("span", {
+              class: "rank-sub",
+              text: r.fs.length
+                ? `${num(r.fs.filter((f) => !isTest(f)).length)} in production code`
+                : `${plural(r.p.files_scanned, "file", "files")} scanned`,
+            }),
+          ]),
+          el("div", { class: "track", "aria-hidden": "true" }, el("div", { class: "fill", style: `width:${(r.fs.length / most) * 100}%` })),
+          el("span", { class: "rank-total", text: num(r.fs.length) }),
+          r.fs.length ? severityLinks(r.fs, { project: r.p.name }) : el("span", { class: "clean", text: "✓ Clean" }),
+        ]))),
+      ]);
     }
-    const findings = allFindings.filter((f) => inScope(f, scope));
-    const shown = findings.filter(matches);
-    shownCount.textContent = shown.length === findings.length
-      ? plural(findings.length, "finding", "findings")
-      : `${shown.length.toLocaleString()} of ${plural(findings.length, "finding", "findings")}`;
-    list.replaceChildren();
-    if (findings.length === 0) {
-      list.append(el("div", { class: "empty" }, [
-        el("strong", { text: "✓ Nothing quantum-vulnerable found" }),
-        "No rule matched in the scanned files.",
-      ]));
-      return;
-    }
-    if (shown.length === 0) {
-      list.append(el("div", { class: "empty", text: "No finding matches these filters." }));
-      return;
-    }
-    // Production before tests, then the most severe files, then by path.
-    const byFile = new Map();
-    for (const f of shown) {
-      if (!byFile.has(f.path)) byFile.set(f.path, []);
-      byFile.get(f.path).push(f);
-    }
-    const files = [...byFile.entries()].sort((a, b) => {
-      const tests = (fs) => (fs.every((f) => f.role === "test") ? 1 : 0);
-      const worst = (fs) => Math.min(...fs.map((f) => SEVERITY_RANK[f.severity] ?? 9));
-      return tests(a[1]) - tests(b[1]) || worst(a[1]) - worst(b[1]) || a[0].localeCompare(b[0]);
-    });
-    const openAll = files.length <= 12;
-    for (const [path, fileFindings] of files) {
-      const tests = fileFindings.every((f) => f.role === "test");
-      const project = scope === null && multi && fileFindings[0].project !== null && fileFindings[0].project !== undefined
-        ? projects[fileFindings[0].project] : null;
-      list.append(el("details", { class: "file", open: openAll }, [
-        el("summary", {}, [
-          el("span", { class: "file-path", title: path, text: shownPath(path) }),
-          project ? el("span", { class: "pill", text: project.name }) : null,
-          tests ? el("span", { class: "pill pill-test", text: "test code" }) : null,
-          el("span", { class: "file-count", text: plural(fileFindings.length, "finding", "findings") }),
+    // One project: the files with the most findings, production first.
+    const byFile = groupByFile(findings).sort((a, b) => (a.test - b.test) || b.fs.length - a.fs.length || a.path.localeCompare(b.path));
+    const shown = byFile.slice(0, 8);
+    const most = Math.max(1, ...shown.map((r) => r.fs.length));
+    return el("section", {}, [
+      sectionHead("where", "Where it lives", `${plural(byFile.length, "file", "files")} with findings, production code first.`),
+      el("div", { class: "ruled" }, shown.map((r, i) => el("div", { class: "rank-row" }, [
+        el("span", { class: "rank-n", text: String(i + 1).padStart(2, "0") }),
+        el("div", {}, [
+          el("a", { class: "rank-name mono", href: chapterHref({ f: r.fs[0].id }), text: fileName(r.path) }),
+          el("span", { class: "rank-sub" }, [breakable(shownPath(r.path).slice(0, -fileName(r.path).length)), r.test ? " · test code" : ""]),
         ]),
-        ...fileFindings.map(findingCard),
-      ]));
+        el("div", { class: "track", "aria-hidden": "true" }, el("div", { class: "fill", style: `width:${(r.fs.length / most) * 100}%` })),
+        el("span", { class: "rank-total", text: num(r.fs.length) }),
+        el("span", { class: "file-algorithms", text: algorithmList(r.fs, 3) }),
+      ]))),
+      byFile.length > shown.length
+        ? el("p", { class: "section-note" }, el("a", { href: chapterHref({}), text: `All ${plural(byFile.length, "file", "files")} →` }))
+        : null,
+    ]);
+  }
+
+  function fixFirst() {
+    return el("section", {}, [
+      sectionHead("first", "Fix these first", null),
+      el("p", { class: "section-note", text: "Production code, highest severity, different algorithms. When the algorithm is written elsewhere, its path goes from where it is written to where it is used." }),
+      urgent().map((f, i) => el("article", { class: "urgent" }, [
+        el("span", { class: "urgent-n", text: String(i + 1) }),
+        el("div", {}, [
+          el("div", { class: "urgent-head" }, [badge(f.severity), el("h3", { class: "urgent-title", text: f.title })]),
+          el("p", { class: "where" }, el("a", { href: chapterHref({ f: f.id }) }, [
+            multi && projectOf(f) ? `${projectOf(f).name} · ` : "",
+            breakable(`${shownPath(f.path)}:${f.location.start.line}`),
+          ])),
+          f.detail ? el("p", { class: "detail-line", text: f.detail }) : null,
+          codeBlock(f),
+          flowSteps(f),
+          explanation(f),
+        ]),
+      ])),
+    ]);
+  }
+
+  function algorithmsSection() {
+    const counts = new Map();
+    for (const f of findings) counts.set(f.algorithm, (counts.get(f.algorithm) || 0) + 1);
+    const rows = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    const most = Math.max(1, ...rows.map(([, n]) => n));
+    return el("section", {}, [
+      sectionHead("algorithms", "By algorithm", "Select one to open its chapter."),
+      el("div", { class: "ruled algorithms" }, rows.map(([name, n]) => el("a", { class: "alg-row", href: chapterHref({ alg: name }) }, [
+        el("span", { class: "alg-name", text: name }),
+        el("span", { class: "track", "aria-hidden": "true" }, el("span", { class: "fill", style: `display:block;width:${(n / most) * 100}%` })),
+        el("span", { class: "alg-count", text: num(n) }),
+      ]))),
+    ]);
+  }
+
+  function severitySection() {
+    return el("section", {}, [
+      sectionHead("severity", "By severity", null),
+      el("div", { class: "ruled" }, bySeverity(findings).map(([s, n]) => {
+        const fs = findings.filter((f) => f.severity === s);
+        return el("a", { class: "sev-row", href: chapterHref({ sev: s }) }, [
+          el("span", { class: "sev-row-title" }, [
+            el("span", { class: `sev-${s}`, text: MARK[s] }), ` ${capitalize(s)} severity`,
+            el("span", { class: "sev-row-count", text: num(n) }),
+          ]),
+          el("span", { class: "sev-row-more", text: `${algorithmList(fs, 3)} · open the chapter →` }),
+        ]);
+      })),
+    ]);
+  }
+
+  // ---- Chapter ------------------------------------------------------------------
+  /** What a chapter shows beyond its route, kept while the route stays. */
+  const view = { key: "", query: "", files: PAGE, testsOpen: false, testFiles: PAGE, openFile: null, openFinding: null };
+
+  function chapterTitle(params) {
+    const parts = [];
+    if (params.sev) parts.push(`${capitalize(params.sev)} severity`);
+    if (params.cat === "shor") parts.push("Broken by Shor’s algorithm");
+    else if (params.cat) parts.push(`${capitalize(params.cat)} findings`);
+    if (params.alg) parts.push(params.alg);
+    return parts.length ? parts.join(": ") : "All findings";
+  }
+
+  function contents(params) {
+    const scoped = findings.filter((f) => matches(f, { project: params.project }));
+    const link = (href, name, n, current) => el("a", { href, "aria-current": current ? "page" : null }, [
+      el("span", { class: "name", text: name }), n === null ? null : el("span", { class: "n", text: num(n) })]);
+    return [
+      el("h2", { text: "Contents" }),
+      link("#", "Cover", null, false),
+      link("#where", "Where it lives", null, false),
+      link("#first", "Fix these first", null, false),
+      link("#algorithms", "By algorithm", null, false),
+      el("h2", { text: params.project ? `Severity in ${params.project}` : "Severity" }),
+      link(chapterHref({ project: params.project }), "All findings", scoped.length, !params.sev && !params.alg && !params.cat),
+      bySeverity(scoped).map(([s, n]) => link(chapterHref({ project: params.project, sev: s }), `${MARK[s]} ${capitalize(s)}`, n,
+        params.sev === s && !params.alg && !params.cat)),
+      multi ? [
+        el("h2", { text: "Projects" }),
+        projects.map((p, i) => ({ p, n: findings.filter((f) => f.project === i).length }))
+          .filter((r) => r.n > 0)
+          .sort((a, b) => b.n - a.n)
+          .map((r) => link(chapterHref({ project: r.p.name }), r.p.name, r.n, params.project === r.p.name)),
+      ] : null,
+    ];
+  }
+
+  function copy(button, text) {
+    const done = () => {
+      const old = button.textContent;
+      button.textContent = "Copied";
+      setTimeout(() => { button.textContent = old; }, 1400);
+    };
+    try {
+      navigator.clipboard.writeText(text).then(done, () => window.prompt("Copy:", text));
+    } catch (_) {
+      window.prompt("Copy:", text);
     }
   }
 
-  // ---- Scope: one project or all, kept in the URL -------------------------------
-  function select(index, push = true) {
-    scope = index;
-    for (const button of tabs.querySelectorAll(".tab")) {
-      const selected = button.dataset.scope === (index === null ? "all" : String(index));
-      button.setAttribute("aria-selected", String(selected));
-      if (selected) button.scrollIntoView({ block: "nearest", inline: "nearest" });
+  function findingDetail(f, params) {
+    const link = `${window.location.href.split("#")[0]}${chapterHref({ ...params, f: f.id })}`;
+    return el("div", { class: "finding-detail", id: `finding-${f.id}` }, [
+      el("h3", { class: "finding-title", text: f.title }),
+      el("div", { class: "finding-tags" }, [
+        badge(f.severity),
+        el("span", {
+          class: `tag ${f.status === "in_transition" ? "transition" : ""}`,
+          text: f.status === "in_transition" ? "in transition" : "vulnerable",
+        }),
+        isTest(f) ? el("span", { class: "tag", text: "test code" }) : null,
+        el("span", { class: "mono tag", text: f.rule_id }),
+      ]),
+      f.detail ? el("p", { class: "detail-line", text: f.detail }) : null,
+      codeBlock(f),
+      flowSteps(f),
+      explanation(f),
+      el("div", { class: "notes" }, [
+        f.hybrid_evidence ? el("p", { text: `In transition: post-quantum code at line ${f.hybrid_evidence.location.start.line} (${f.hybrid_evidence.text}).` }) : null,
+        f.fix ? el("p", { text: `Fix: ${f.fix.description}: replace with “${f.fix.replacement}” at line ${f.fix.location.start.line}.` }) : null,
+      ]),
+      el("div", { class: "actions" }, [
+        el("button", { type: "button", onclick: (e) => copy(e.currentTarget, link), text: "Copy link to this finding" }),
+        el("button", { type: "button", onclick: (e) => copy(e.currentTarget, `${f.path}:${f.location.start.line}`), text: "Copy path" }),
+        (f.references || []).map((r) => el("a", { href: r.url, rel: "noopener noreferrer", target: "_blank", text: r.title })),
+      ]),
+    ]);
+  }
+
+  function fileGroup(group, params) {
+    const open = view.openFile === group.path;
+    const shown = shownPath(group.path);
+    const cut = shown.lastIndexOf("/");
+    return el("div", { class: "file" }, [
+      el("button", {
+        type: "button", class: "file-row", "aria-expanded": String(open),
+        onclick: () => { view.openFile = open ? null : group.path; view.openFinding = null; renderChapter(false); },
+      }, [
+        el("span", { class: "chevron", "aria-hidden": "true", text: open ? "▾" : "▸" }),
+        el("span", { class: "file-path", title: group.path }, [el("span", { class: "dir" }, breakable(shown.slice(0, cut + 1))), shown.slice(cut + 1)]),
+        el("span", { class: "file-count", text: `×${group.fs.length}` }),
+        el("span", { class: "file-algorithms", text: algorithmList(group.fs, 4) }),
+      ]),
+      open ? el("div", { class: "file-body" }, group.fs.map((f) => {
+        const expanded = view.openFinding === f.id;
+        const hasCode = f.snippet && f.snippet.lines.length > 0;
+        const line = hasCode ? f.snippet.lines[f.location.start.line - f.snippet.first_line] : null;
+        return el("div", { class: "finding" }, [
+          el("button", {
+            type: "button", class: "finding-row", "aria-expanded": String(expanded),
+            onclick: () => { view.openFinding = expanded ? null : f.id; renderChapter(false); },
+          }, [
+            el("span", { class: "finding-line", text: hasCode ? `:${f.location.start.line}` : "" }),
+            el("span", { class: "finding-alg" }, [el("span", { class: `sev-${f.severity}`, text: `${MARK[f.severity]} ` }), f.algorithm]),
+            el("span", { class: "finding-code", text: line ? line.trim() : (f.detail || f.title) }),
+          ]),
+          expanded ? findingDetail(f, params) : null,
+        ]);
+      })) : null,
+    ]);
+  }
+
+  function renderChapter(fresh) {
+    const { params } = route();
+    const key = FILTERS.map((k) => params[k] || "").join("|");
+    if (fresh && key !== view.key) {
+      Object.assign(view, { key, query: "", files: PAGE, testsOpen: false, testFiles: PAGE, openFile: null, openFinding: null });
     }
-    document.getElementById("projects-section").hidden = !(multi && index === null);
-    const files = index === null ? data.summary.files_scanned : projects[index].files_scanned;
-    resetFilters();
-    renderOverview(allFindings.filter((f) => inScope(f, index)), files);
-    renderFindings();
-    if (push && multi) {
-      const hash = index === null ? "" : `#project=${encodeURIComponent(projects[index].name)}`;
-      history.replaceState(null, "", hash || window.location.pathname + window.location.search);
-      window.scrollTo({ top: 0 });
+    // A link to one finding opens its file and the finding.
+    if (fresh && params.f !== undefined && findings[Number(params.f)]) {
+      const f = findings[Number(params.f)];
+      view.openFile = f.path;
+      view.openFinding = f.id;
+      view.testsOpen = view.testsOpen || isTest(f);
+    }
+    const scoped = findings.filter((f) => matches(f, params));
+    const q = view.query.toLowerCase();
+    const shown = q
+      ? scoped.filter((f) => `${f.path} ${f.algorithm} ${f.rule_id} ${f.title} ${f.detail || ""}`.toLowerCase().includes(q))
+      : scoped;
+    const groups = groupByFile(shown).sort((a, b) => b.fs.length - a.fs.length || a.path.localeCompare(b.path));
+    const production = groups.filter((g) => !g.test);
+    const tests = groups.filter((g) => g.test);
+    const productionCount = shown.filter((f) => !isTest(f)).length;
+    const testCount = shown.length - productionCount;
+    // A file opened by a link is never hidden behind "show more".
+    const reveal = (list, limit) => Math.max(limit, list.findIndex((g) => g.path === view.openFile) + 1);
+    const filesLimit = reveal(production, view.files);
+    const testLimit = reveal(tests, view.testFiles);
+
+    const title = chapterTitle(params);
+    const fullTitle = params.project ? `${title} in ${params.project}` : title;
+    document.title = `${fullTitle} · Shorwatch`;
+    const chips = FILTERS.filter((k) => params[k]).map((k) => {
+      const label = k === "sev"
+        ? `${MARK[params.sev]} ${capitalize(params.sev)}`
+        : k === "cat" ? (params.cat === "shor" ? "Shor" : capitalize(params.cat)) : params[k];
+      return el("a", { class: "chip", href: chapterHref({ ...params, [k]: undefined, f: undefined }), "aria-label": `Remove filter: ${label}` },
+        [label, el("span", { "aria-hidden": "true", text: "×" })]);
+    });
+    const search = el("input", {
+      type: "search", placeholder: "Search in this chapter", value: view.query, "aria-label": "Search in this chapter",
+      oninput: (e) => { view.query = e.target.value; view.files = PAGE; renderChapter(false); restoreSearch(); },
+    });
+
+    document.getElementById("contents").replaceChildren(...[contents(params)].flat(Infinity).filter(Boolean));
+    document.getElementById("chapter-main").replaceChildren(...[
+      el("p", { class: "crumbs" }, [
+        el("a", { href: "#", text: "Report" }),
+        params.project ? [" › ", el("a", { href: chapterHref({ project: params.project }), text: params.project })] : null,
+        ` › ${title}`,
+      ]),
+      el("h1", { class: "chapter-title" }, [params.sev ? el("span", { class: `sev-${params.sev}`, text: `${MARK[params.sev]} ` }) : null, fullTitle]),
+      el("p", {
+        class: "chapter-lede",
+        text: shown.length === 0
+          ? (q ? "No finding matches this search." : "No finding here.")
+          : `${plural(shown.length, "finding", "findings")}: ${num(productionCount)} in production code, across ${plural(production.length, "file", "files")}, and ${num(testCount)} in tests. Grouped by file, most findings first.`,
+      }),
+      el("div", { class: "filters", role: "search" }, [
+        el("span", { class: "label", text: "Filters" }),
+        chips.length ? chips : el("span", { class: "folded-hint", text: "None" }),
+        el("label", { class: "search" }, search),
+      ]),
+      production.length ? [
+        el("h2", { class: "group-title", text: `Production code · ${plural(productionCount, "finding", "findings")} in ${plural(production.length, "file", "files")}` }),
+        el("div", { class: "files" }, production.slice(0, filesLimit).map((g) => fileGroup(g, params))),
+        production.length > filesLimit ? el("button", {
+          type: "button", class: "more",
+          text: `Show ${Math.min(PAGE, production.length - filesLimit)} more of ${plural(production.length - filesLimit, "file", "files")}`,
+          onclick: () => { view.files = filesLimit + PAGE; renderChapter(false); },
+        }) : null,
+      ] : null,
+      tests.length ? el("div", { class: "folded" }, [
+        el("button", {
+          type: "button", class: "folded-head", "aria-expanded": String(view.testsOpen),
+          onclick: () => { view.testsOpen = !view.testsOpen; renderChapter(false); },
+        }, [
+          el("span", { class: "group-title", text: `${view.testsOpen ? "▾" : "▸"} Test code · ${plural(testCount, "finding", "findings")} in ${plural(tests.length, "file", "files")}` }),
+          el("span", { class: "folded-hint", text: view.testsOpen ? "Hide" : "Folded: test code does not ship. Show" }),
+        ]),
+        view.testsOpen ? [
+          el("div", { class: "files" }, tests.slice(0, testLimit).map((g) => fileGroup(g, params))),
+          tests.length > testLimit ? el("button", {
+            type: "button", class: "more",
+            text: `Show ${Math.min(PAGE, tests.length - testLimit)} more of ${plural(tests.length - testLimit, "test file", "test files")}`,
+            onclick: () => { view.testFiles = testLimit + PAGE; renderChapter(false); },
+          }) : null,
+        ] : null,
+      ]) : null,
+      el("p", { class: "back" }, el("a", { href: "#", text: "← Back to the cover" })),
+    ].flat(Infinity).filter(Boolean));
+
+    if (fresh && view.openFinding !== null) {
+      const target = document.getElementById(`finding-${view.openFinding}`);
+      if (target) target.scrollIntoView({ block: "center" });
     }
   }
 
-  function fromHash() {
-    const match = /^#project=(.+)$/.exec(window.location.hash);
-    if (!match || !multi) return null;
-    const name = decodeURIComponent(match[1]);
-    const index = projects.findIndex((p) => p.name === name);
-    return index < 0 ? null : index;
+  function restoreSearch() {
+    const input = document.querySelector(".search input");
+    if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
   }
 
-  window.addEventListener("hashchange", () => select(fromHash(), false));
-  select(fromHash(), false);
+  // ---- Navigation ---------------------------------------------------------------------
+  function show() {
+    const current = route();
+    document.getElementById("cover").hidden = !current.cover;
+    document.getElementById("chapter").hidden = current.cover;
+    if (current.cover) {
+      document.title = "Shorwatch report";
+      const target = current.anchor && document.getElementById(current.anchor);
+      if (target) target.scrollIntoView();
+      else window.scrollTo(0, 0);
+      return;
+    }
+    renderChapter(true);
+    if (current.params.f === undefined) window.scrollTo(0, 0);
+  }
+
+  renderCover();
+  window.addEventListener("hashchange", show);
+  show();
 })();
 
 </script>

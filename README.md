@@ -204,23 +204,30 @@ Every format for that scan is in [`examples/output/`](examples/output/):
 
 ### HTML report
 
-`--format html` writes one self-contained page to open in a browser or keep
-as a CI artifact (Jenkins `publishHTML`, Azure DevOps, GitLab): a summary,
-the post-quantum readiness of the project, findings by severity and
-algorithm, filters, and every finding with its code, an explanation, the
-migration advice and, when the algorithm was written elsewhere, the path the
-value takes to the crypto call. Styles, script and data are embedded; the
-page loads nothing from the network. Light and dark themes, print styles.
+`--format html` writes one self-contained audit report to open in a browser
+or keep as a CI artifact (Jenkins `publishHTML`, Azure DevOps, GitLab). It
+reads like a printed audit: a cover with the headline numbers, where the
+findings live (projects or files), the three to fix first with their code and
+data-flow path, and the breakdown by algorithm and severity.
 
 ![Shorwatch HTML report](docs/images/html-report.png)
 
-A scan of several projects (a folder of microservices, of repositories, or
-several project paths) opens on an index: totals, then one card per project
-with its findings, severities and algorithms, and a tab per project. A
-project's tab is a report of its own, and its link (`#project=billing`) can
-be shared. A single project opens directly, without tabs.
+Every number is a way in. Selecting a severity, an algorithm or a project
+opens a chapter: production code grouped by file (25 at a time), test code
+folded, each finding opening in place with its code, the path its value
+takes, why it matters and what to do. Chapters and findings have their own
+links (`#/findings?sev=high&project=billing&f=12`), so the page never turns
+into one endless scroll and any finding can be shared.
 
-![Shorwatch HTML report of several projects](docs/images/html-projects.png)
+![A chapter of the HTML report](docs/images/html-chapter.png)
+
+A scan of several projects (a folder of services or repositories) ranks them
+on the cover, and each gets its chapters. The page is plain HTML, CSS and
+script with the data embedded: no framework, no fonts or anything else from
+the network (a Content-Security-Policy forbids it), light and dark themes,
+print styles.
+
+![The cover of a report on several projects](docs/images/html-projects.png)
 
 ### Cryptography Bill of Materials (CBOM)
 

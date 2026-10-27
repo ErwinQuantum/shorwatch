@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
 <meta name="generator" content="Shorwatch {{VERSION}}">
 <title>Shorwatch report</title>
 <style>
@@ -10,107 +11,25 @@
 </style>
 </head>
 <body>
-<header class="masthead">
-  <div class="wrap masthead-row">
-    <div>
-      <p class="eyebrow"><span class="logo" aria-hidden="true">◆</span> Shorwatch {{VERSION}}</p>
-      <h1 id="title">Quantum-vulnerable cryptography report</h1>
-      <p class="lede" id="lede"></p>
-    </div>
+<header class="topbar">
+  <div class="wrap topbar-row">
+    <a class="wordmark" href="#">SHORWATCH</a>
+    <span class="topbar-meta">Post-quantum cryptography audit · v{{VERSION}}</span>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch color theme">Theme: auto</button>
   </div>
-  <nav class="wrap tabs" id="tabs" role="tablist" aria-label="Projects" hidden></nav>
 </header>
 
-<main class="wrap">
-  <section aria-labelledby="overview-title">
-    <h2 id="overview-title" class="visually-hidden">Overview</h2>
-    <div class="kpis" id="kpis"></div>
-  </section>
+<main id="cover" class="wrap cover" aria-label="Report cover"></main>
 
-  <section id="projects-section" aria-labelledby="projects-title" hidden>
-    <div class="section-head">
-      <h2 id="projects-title">Projects</h2>
-      <p class="count" id="projects-count"></p>
-    </div>
-    <div class="cards" id="project-cards"></div>
-  </section>
-
-  <section class="panels" aria-label="Breakdown">
-    <article class="panel">
-      <h2>Post-quantum readiness</h2>
-      <p class="panel-note">Share of findings already next to post-quantum code (hybrid schemes mid-migration).</p>
-      <div id="readiness"></div>
-    </article>
-    <article class="panel">
-      <h2>By severity</h2>
-      <div id="severities"></div>
-    </article>
-    <article class="panel panel-wide">
-      <h2>By algorithm</h2>
-      <p class="panel-note">Select a bar to show only that algorithm.</p>
-      <div id="algorithms" class="bars"></div>
-      <details class="table-view">
-        <summary>Show as table</summary>
-        <table id="algorithm-table">
-          <thead><tr><th scope="col">Algorithm</th><th scope="col">Findings</th><th scope="col">Production</th><th scope="col">Test</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </details>
-    </article>
-  </section>
-
-  <details class="explainer">
-    <summary>What do these findings mean?</summary>
-    <div class="explainer-body">
-      <p><strong>Shor</strong> findings (RSA, elliptic curves, Diffie-Hellman, DSA) are broken outright by a large quantum computer running Shor's algorithm. No key size helps: the fix is migrating to the NIST post-quantum standards, ML-KEM (FIPS 203) for key exchange and encryption, ML-DSA (FIPS 204) for signatures. Data encrypted today can be recorded and decrypted later ("harvest now, decrypt later").</p>
-      <p><strong>Grover</strong> findings (AES-128, SHA-1, 3DES) are weakened, not broken: Grover's algorithm roughly halves their strength. Larger keys and hashes (AES-256, SHA-256 or better) fix them.</p>
-      <p><strong>In transition</strong> means the classical algorithm sits next to post-quantum code, typically a hybrid scheme such as X25519MLKEM768: the migration is under way. <strong>Test code</strong> findings are labelled so they can be told from what ships.</p>
-      <p>When a finding shows a <strong>path</strong>, the algorithm was written somewhere else and reached the crypto call through variables, parameters or return values; the path goes from where it is written to where it is used. Keys and certificates show what they hold: subject, key size and expiry.</p>
-    </div>
-  </details>
-
-  <section aria-labelledby="findings-title">
-    <div class="section-head">
-      <h2 id="findings-title">Findings</h2>
-      <p class="count" id="shown-count" aria-live="polite"></p>
-    </div>
-    <form class="filters" id="filters" role="search" onsubmit="return false">
-      <label class="filter filter-search">
-        <span class="visually-hidden">Search</span>
-        <input type="search" id="filter-q" placeholder="Search files, algorithms, rules…" autocomplete="off">
-      </label>
-      <label class="filter"><span>Severity</span>
-        <select id="filter-severity"><option value="">All</option></select>
-      </label>
-      <label class="filter"><span>Status</span>
-        <select id="filter-status">
-          <option value="">All</option>
-          <option value="vulnerable">Vulnerable</option>
-          <option value="in_transition">In transition</option>
-        </select>
-      </label>
-      <label class="filter"><span>Code</span>
-        <select id="filter-role">
-          <option value="">All</option>
-          <option value="production">Production</option>
-          <option value="test">Test</option>
-        </select>
-      </label>
-      <label class="filter"><span>Algorithm</span>
-        <select id="filter-algorithm"><option value="">All</option></select>
-      </label>
-      <button type="button" class="reset" id="filter-reset">Reset</button>
-    </form>
-    <div id="findings"></div>
-  </section>
-</main>
+<div id="chapter" class="wrap chapter" hidden>
+  <nav class="contents" id="contents" aria-label="Contents"></nav>
+  <main class="chapter-main" id="chapter-main" aria-live="polite"></main>
+</div>
 
 <footer class="wrap footer">
-  <p>Generated by Shorwatch {{VERSION}}. Static analysis: findings point at code, configuration and key material that use quantum-vulnerable cryptography; review each before acting.</p>
+  <p><span class="label">Method</span>Static analysis of source code, configuration and key material. Values are followed across files; findings in test code are labelled. Review each finding before acting.</p>
+  <p><span class="label">Standards</span>FIPS 203 (ML-KEM) for key establishment, FIPS 204 (ML-DSA) for signatures, NIST IR 8547 for the transition timeline.</p>
 </footer>
-
-<div class="tooltip" id="tooltip" role="tooltip" hidden></div>
 
 <script type="application/json" id="shorwatch-data">{{DATA}}</script>
 <script>
