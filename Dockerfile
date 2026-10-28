@@ -17,7 +17,7 @@ COPY shorwatch-report shorwatch-report
 COPY shorwatch-cli shorwatch-cli
 RUN cargo build --release --locked --bin shorwatch
 
-FROM alpine:3.22
+FROM alpine:3.24
 LABEL org.opencontainers.image.title="shorwatch" \
       org.opencontainers.image.description="Find quantum-vulnerable cryptography in Java, Kotlin and Spring code and configuration" \
       org.opencontainers.image.source="https://github.com/ErwinQuantum/shorwatch" \
