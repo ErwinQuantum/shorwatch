@@ -17,7 +17,7 @@ references:
   - title: "FIPS 197: Advanced Encryption Standard (AES)"
     url: https://csrc.nist.gov/pubs/fips/197/final
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
-    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+    url: https://csrc.nist.gov/pubs/ir/8547/final
   - title: "NSA CNSA 2.0 Algorithms (AES-256 required)"
     url: https://media.defense.gov/2022/Sep/07/2003071834/-1/-1/0/CSA_CNSA_2.0_ALGORITHMS_.PDF
 crypto:

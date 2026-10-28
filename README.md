@@ -28,8 +28,12 @@ be years away, but the threat is already here:
 - **The standards are final.** NIST published
   [FIPS 203 (ML-KEM)](https://csrc.nist.gov/pubs/fips/203/final) and
   [FIPS 204 (ML-DSA)](https://csrc.nist.gov/pubs/fips/204/final) in 2024, and
-  [NIST IR 8547](https://csrc.nist.gov/pubs/ir/8547/ipd) sets the timeline to
-  deprecate quantum-vulnerable algorithms.
+  [NIST IR 8547](https://csrc.nist.gov/pubs/ir/8547/final) (final, October
+  2026) sets the timeline: every quantum-vulnerable public-key algorithm (RSA,
+  ECDSA, EdDSA, Diffie-Hellman, ECDH) is **deprecated after 2030 and
+  disallowed after 2035**, whatever its key size. US federal systems that
+  hold the most sensitive data must move to post-quantum key establishment
+  by the end of 2030 and signatures by the end of 2031.
 
 The first step of any migration is knowing where the vulnerable crypto lives.
 Shorwatch automates that inventory.

@@ -16,7 +16,7 @@ references:
   - title: "RFC 7518: JSON Web Algorithms (JWA)"
     url: https://www.rfc-editor.org/rfc/rfc7518
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
-    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+    url: https://csrc.nist.gov/pubs/ir/8547/final
   - title: "NSA CNSA 2.0 Algorithms (AES-256 required)"
     url: https://media.defense.gov/2022/Sep/07/2003071834/-1/-1/0/CSA_CNSA_2.0_ALGORITHMS_.PDF
 crypto:

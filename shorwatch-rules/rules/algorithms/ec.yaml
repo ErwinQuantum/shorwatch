@@ -21,7 +21,7 @@ references:
   - title: "FIPS 204: Module-Lattice-Based Digital Signature Standard (ML-DSA)"
     url: https://csrc.nist.gov/pubs/fips/204/final
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
-    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+    url: https://csrc.nist.gov/pubs/ir/8547/final
 hybrid: pqc
 crypto:
   # The same EC key may serve key agreement or signatures.

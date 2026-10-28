@@ -10,12 +10,12 @@
           could then mint valid tokens for your users, and encrypted tokens recorded
           today could be opened later.
    = help: Plan the move to post-quantum JOSE algorithms: ML-DSA (FIPS 204) for token
-           signatures, as being standardized for JOSE by the IETF COSE working group,
-           and ML-KEM (FIPS 203) for encrypted tokens. Tokens are short-lived, so the
-           urgent part is the signing key and the verifiers: make them algorithm-agile
-           (publish several keys in the JWKS, pin the accepted algorithms per key) so
-           issuers can switch without a flag day. RSA1_5 should be removed today
-           regardless; it is vulnerable to padding-oracle attacks.
+           signatures (standardized for JOSE in RFC 9964: ML-DSA-44, -65, -87), and
+           ML-KEM (FIPS 203) for encrypted tokens. Tokens are short-lived, so the urgent
+           part is the signing key and the verifiers: make them algorithm-agile (publish
+           several keys in the JWKS, pin the accepted algorithms per key) so issuers can
+           switch without a flag day. RSA1_5 should be removed today regardless; it is
+           vulnerable to padding-oracle attacks.
    = ref: https://csrc.nist.gov/pubs/fips/204/final
 
  HIGH  RSA · jvm.jca.rsa · vulnerable
@@ -44,11 +44,12 @@
           Shor's algorithm recovers the private key from the public key, which is
           usually published in a JWKS endpoint, so a quantum attacker could mint valid
           tokens for any user.
-   = help: Plan the move to ML-DSA (FIPS 204) token signatures, being standardized for
-           JOSE by the IETF COSE working group. ML-DSA signatures are around 2.4 to 4.6
-           KB against 64 to 132 bytes for ECDSA, so check header size limits on proxies
-           and cookies. Make verifiers algorithm-agile now (several keys in the JWKS,
-           accepted algorithms pinned per key) so issuers can switch without a flag day.
+   = help: Plan the move to ML-DSA (FIPS 204) token signatures, standardized for JOSE in
+           RFC 9964 (`ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`). ML-DSA signatures are
+           around 2.4 to 4.6 KB against 64 to 132 bytes for ECDSA, so check header size
+           limits on proxies and cookies. Make verifiers algorithm-agile now (several
+           keys in the JWKS, accepted algorithms pinned per key) so issuers can switch
+           without a flag day.
    = ref: https://csrc.nist.gov/pubs/fips/204/final
 
  MEDIUM  SHA-1 · jvm.jca.sha1 · vulnerable
@@ -186,11 +187,12 @@
           Shor's algorithm recovers the private key from the public key, which is
           usually published in a JWKS endpoint, so a quantum attacker could mint valid
           tokens for any user.
-   = help: Plan the move to ML-DSA (FIPS 204) token signatures, being standardized for
-           JOSE by the IETF COSE working group. ML-DSA signatures are around 2.4 to 4.6
-           KB against 64 to 132 bytes for ECDSA, so check header size limits on proxies
-           and cookies. Make verifiers algorithm-agile now (several keys in the JWKS,
-           accepted algorithms pinned per key) so issuers can switch without a flag day.
+   = help: Plan the move to ML-DSA (FIPS 204) token signatures, standardized for JOSE in
+           RFC 9964 (`ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`). ML-DSA signatures are
+           around 2.4 to 4.6 KB against 64 to 132 bytes for ECDSA, so check header size
+           limits on proxies and cookies. Make verifiers algorithm-agile now (several
+           keys in the JWKS, accepted algorithms pinned per key) so issuers can switch
+           without a flag day.
    = ref: https://csrc.nist.gov/pubs/fips/204/final
 
  HIGH  ECC · jvm.jca.ec · vulnerable
@@ -241,11 +243,12 @@
           Shor's algorithm recovers the private key from the public key, which is
           usually published in a JWKS endpoint, so a quantum attacker could mint valid
           tokens for any user.
-   = help: Plan the move to ML-DSA (FIPS 204) token signatures, being standardized for
-           JOSE by the IETF COSE working group. ML-DSA signatures are around 2.4 to 4.6
-           KB against 64 to 132 bytes for ECDSA, so check header size limits on proxies
-           and cookies. Make verifiers algorithm-agile now (several keys in the JWKS,
-           accepted algorithms pinned per key) so issuers can switch without a flag day.
+   = help: Plan the move to ML-DSA (FIPS 204) token signatures, standardized for JOSE in
+           RFC 9964 (`ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`). ML-DSA signatures are
+           around 2.4 to 4.6 KB against 64 to 132 bytes for ECDSA, so check header size
+           limits on proxies and cookies. Make verifiers algorithm-agile now (several
+           keys in the JWKS, accepted algorithms pinned per key) so issuers can switch
+           without a flag day.
    = ref: https://csrc.nist.gov/pubs/fips/204/final
 
  HIGH  RSA (JOSE/JWT) · config.spring-boot.jose-rsa · vulnerable
@@ -260,12 +263,12 @@
           could then mint valid tokens for your users, and encrypted tokens recorded
           today could be opened later.
    = help: Plan the move to post-quantum JOSE algorithms: ML-DSA (FIPS 204) for token
-           signatures, as being standardized for JOSE by the IETF COSE working group,
-           and ML-KEM (FIPS 203) for encrypted tokens. Tokens are short-lived, so the
-           urgent part is the signing key and the verifiers: make them algorithm-agile
-           (publish several keys in the JWKS, pin the accepted algorithms per key) so
-           issuers can switch without a flag day. RSA1_5 should be removed today
-           regardless; it is vulnerable to padding-oracle attacks.
+           signatures (standardized for JOSE in RFC 9964: ML-DSA-44, -65, -87), and
+           ML-KEM (FIPS 203) for encrypted tokens. Tokens are short-lived, so the urgent
+           part is the signing key and the verifiers: make them algorithm-agile (publish
+           several keys in the JWKS, pin the accepted algorithms per key) so issuers can
+           switch without a flag day. RSA1_5 should be removed today regardless; it is
+           vulnerable to padding-oracle attacks.
    = ref: https://csrc.nist.gov/pubs/fips/204/final
 
  HIGH  TLS key exchange · config.spring-boot.tls-key-exchange · vulnerable

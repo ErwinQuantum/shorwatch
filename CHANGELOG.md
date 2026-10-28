@@ -28,7 +28,12 @@ The first release.
   JCEKS keystores, PKCS#12, SSH keys. Each finding names what it found
   (subject, key size or curve, signature, expiry).
 - Hybrid-aware: classical crypto next to post-quantum code (ML-KEM, ML-DSA,
-  BouncyCastle PQC, liboqs, `X25519MLKEM768`) is reported as *in transition*.
+  SLH-DSA, BouncyCastle PQC, liboqs, `X25519MLKEM768`) is reported as *in
+  transition*.
+- Advice and references follow the final NIST IR 8547 (October 2026: every
+  quantum-vulnerable public-key algorithm deprecated after 2030, disallowed
+  after 2035) and the RFCs for ML-DSA in JOSE (RFC 9964) and hybrid TLS key
+  exchange (RFC 9954, RFC 10024).
 - Suggested fixes only where safe (AES-128 → AES-256); a rule for a
   Shor-broken algorithm that declares a fix is rejected.
 - Rules are YAML data; your own load at run time with `--rules`.

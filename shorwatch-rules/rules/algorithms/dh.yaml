@@ -19,7 +19,7 @@ references:
   - title: "NIST SP 800-227: Recommendations for Key-Encapsulation Mechanisms"
     url: https://csrc.nist.gov/pubs/sp/800/227/final
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
-    url: https://csrc.nist.gov/pubs/ir/8547/ipd
+    url: https://csrc.nist.gov/pubs/ir/8547/final
 hybrid: pqc
 crypto:
   primitive: key-agree
