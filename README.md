@@ -12,6 +12,16 @@ the post-quantum replacement and the NIST standard behind it.
 certificates they hold. See [Coverage](#coverage) for exactly what is and
 isn't detected.
 
+## Quick start
+
+```sh
+cargo install --git https://github.com/ErwinQuantum/shorwatch shorwatch-cli
+cd your-project && shorwatch report    # scan, then open the HTML report
+shorwatch ci                           # in a pipeline: SARIF + HTML, exit code
+```
+
+Binaries and a Docker image are in [Install](#install).
+
 ## Why
 
 Most public-key cryptography in production today (RSA, Diffie-Hellman,
@@ -31,9 +41,11 @@ be years away, but the threat is already here:
   [NIST IR 8547](https://csrc.nist.gov/pubs/ir/8547/final) (final, October
   2026) sets the timeline: every quantum-vulnerable public-key algorithm (RSA,
   ECDSA, EdDSA, Diffie-Hellman, ECDH) is **deprecated after 2030 and
-  disallowed after 2035**, whatever its key size. US federal systems that
-  hold the most sensitive data must move to post-quantum key establishment
-  by the end of 2030 and signatures by the end of 2031.
+  disallowed after 2035**, whatever its key size. For US federal high-value
+  assets and high-impact systems, EO 14412 and
+  [OMB M-26-15](https://www.whitehouse.gov/omb/) set earlier deadlines:
+  post-quantum key establishment by the end of 2030 and signatures by the end
+  of 2031.
 
 The first step of any migration is knowing where the vulnerable crypto lives.
 Shorwatch automates that inventory.
@@ -248,15 +260,18 @@ explains the three most urgent; `--details` explains every finding (where,
 why it matters, what to do); `--compact` gives one line per finding.
 
 ```text
- ▲ apereo_cas                                   500 findings · 79 in production · 449 high · 42 medium · 9 low
-   ▲ support/…/jwks/OidcJwksRegistrationEndpointController.java    6  ECDSA (JOSE/JWT) ×2, EdDSA (JOSE/JWT) ×…
-   ▲ support/…/authentication/TokenAuthenticationSecurity.java     6  RSA (JOSE/JWT) ×4, ECDH (JOSE/JWE), ECD…
+ ▲ ktorio_ktor   54 findings · 42 in production · 47 high · 3 medium · 4 low
+   ▲ ktor-network/ktor-network-tls/common/…/tls/CipherSuites.kt   15  TLS key exchange ×11, AES-128 ×4
+   ▲ ktor-server/ktor-server-plugins/…/auth/jwt/JWTUtils.kt       11  ECDSA (JOSE/JWT) ×7, RSA (JOSE/JWT) ×4
    …
- ▲ signalapp_Signal-Server                      8 findings · 6 in production · 7 high · 1 medium
-   ▲ service/src/main/…/gcp/CanonicalRequestSigner.java         3  RSA ×3
-   ▲ service/src/main/…/push/apns-certificates.pem              1  RSA
+ ▲ apache_kafka  33 findings · 4 in production · 31 high · 2 low
+   ▲ clients/src/main/…/secured/assertion/AssertionUtils.java      4  RSA ×2, ECC, ECDSA
    …
 ```
+
+These are inventories, not verdicts: a finding says where classical
+public-key cryptography is used, which is often what a protocol or a standard
+requires, not a flaw in the project.
 
 Every format for that scan is in [`examples/output/`](examples/output/):
 [text](examples/output/report.txt) (also
@@ -481,6 +496,30 @@ shorwatch:
     paths: [shorwatch-report/]
 ```
 
+## Related work
+
+Shorwatch is not the first tool in this space, and it is meant to coexist
+with the others:
+
+- [**Sonar Cryptography**](https://github.com/PQCA/sonar-cryptography) (IBM,
+  now the Post-Quantum Cryptography Alliance, Linux Foundation) detects
+  cryptography in Java, Python and Go as a SonarQube plugin and produces a
+  CBOM; the rest of [CBOMkit](https://github.com/PQCA/cbomkit) builds on it.
+  [CBOMkit-theia](https://github.com/cbomkit/cbomkit-theia) inventories
+  container images and directories (certificates, keys, configuration), not
+  source code.
+- [**PQSwitch**](https://github.com/pqswitch/scanner) (Go) and
+  [**qsafe**](https://pypi.org/project/qsafe/) (Python) scan for
+  quantum-vulnerable patterns in several languages.
+
+What Shorwatch brings is depth on the JVM, as one standalone binary with no
+server: Kotlin next to Java, Spring configuration resolved across profiles and
+`@Value`, values followed across files to the crypto call, the keys and
+keystores a repository holds, hybrid (classical plus post-quantum) detection,
+and a baseline and exit-code gates for CI. Its CBOM is CycloneDX 1.6, the
+format of the PQCA tooling, so the outputs can be combined. This comparison
+reflects what each project documents; check theirs for the current state.
+
 ## Coverage
 
 Java and Kotlin source code and its configuration (`application.yml`,
@@ -596,8 +635,9 @@ cargo test --workspace
 
 [CONTRIBUTING.md](CONTRIBUTING.md) explains how to add a rule or a frontend;
 [AGENTS.md](AGENTS.md) describes the architecture and its invariants for
-coding agents and humans alike. Security issues: see
-[SECURITY.md](SECURITY.md).
+coding agents and humans alike. Shorwatch is built with a coding agent: the
+architecture, the rules and the decisions are the author's, and every change is
+reviewed. Security issues: see [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
