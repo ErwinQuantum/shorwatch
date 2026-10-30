@@ -264,18 +264,18 @@ explains the three most urgent; `--details` explains every finding (where,
 why it matters, what to do); `--compact` gives one line per finding.
 
 ```text
- ▲ ktorio_ktor   54 findings · 42 in production · 47 high · 3 medium · 4 low
-   ▲ ktor-network/ktor-network-tls/common/…/tls/CipherSuites.kt   15  TLS key exchange ×11, AES-128 ×4
-   ▲ ktor-server/ktor-server-plugins/…/auth/jwt/JWTUtils.kt       11  ECDSA (JOSE/JWT) ×7, RSA (JOSE/JWT) ×4
-   …
- ▲ apache_kafka  33 findings · 4 in production · 31 high · 2 low
-   ▲ clients/src/main/…/secured/assertion/AssertionUtils.java      4  RSA ×2, ECC, ECDSA
-   …
+ Files with findings
+   ▲ src/main/java/…/payments/partners/StatementSigner.java        3  ECDSA, RSA, SHA-1
+   ▲ src/main/kotlin/…/example/payments/partners/PartnerKeys.kt    3  ECC ×2, ECDSA (JOSE/JWT)
+   ▲ src/main/resources/application.yml                            2  RSA (JOSE/JWT), TLS key exchange
+   ● src/main/java/…/example/payments/crypto/LegacyCrypto.java     3  3DES, AES-128, SHA-1
+   ◐ src/main/java/…/payments/tls/HybridKeyExchange.java           1  ECDH
 ```
 
-These are inventories, not verdicts: a finding says where classical
-public-key cryptography is used, which is often what a protocol or a standard
-requires, not a flaw in the project.
+When a folder holds several projects, the overview groups the files by
+project. A finding says where classical public-key cryptography is used,
+which is often what a protocol or a standard requires: it is an inventory, not
+a verdict on the code.
 
 Every format for that scan is in [`examples/output/`](examples/output/):
 [text](examples/output/report.txt) (also
