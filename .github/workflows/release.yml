@@ -74,8 +74,9 @@ jobs:
       - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: dist/*
-      # Notes: the CHANGELOG section of this version (`## [0.1.0]`), or
-      # `[Unreleased]` for a pre-release such as `v0.1.0-rc.1`.
+      # Notes: the CHANGELOG section of this version (`## [0.1.0]`); a
+      # pre-release such as `v0.1.0-rc.1` uses the section of the version it
+      # precedes, or `[Unreleased]` while that one is not written yet.
       - env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -84,12 +85,19 @@ jobs:
           section="$version"
           if [[ "$version" == *-* ]]; then
             flags+=(--prerelease)
-            section="Unreleased"
+            section="${version%%-*}"
           fi
-          awk -v section="$section" '
-            /^## \[/ { inside = index($0, "## [" section "]") == 1; next }
-            inside
-          ' CHANGELOG.md > notes.md
+          notes() {
+            awk -v section="$1" '
+              /^## \[/ { inside = index($0, "## [" section "]") == 1; next }
+              inside
+            ' CHANGELOG.md
+          }
+          notes "$section" > notes.md
+          if [ ! -s notes.md ] && [[ "$version" == *-* ]]; then
+            section="Unreleased"
+            notes "$section" > notes.md
+          fi
           if [ ! -s notes.md ]; then
             echo "No CHANGELOG section for $section" >&2
             exit 1

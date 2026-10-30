@@ -46,7 +46,8 @@ be years away, but the threat is already here:
   ECDSA, EdDSA, Diffie-Hellman, ECDH) is **deprecated after 2030 and
   disallowed after 2035**, whatever its key size. For US federal high-value
   assets and high-impact systems, EO 14412 and
-  [OMB M-26-15](https://www.whitehouse.gov/omb/) set earlier deadlines:
+  [OMB M-26-15](https://www.whitehouse.gov/wp-content/uploads/2026/06/M-26-15-Execution-of-the-Migration-to-Post-Quantum-Cryptography.pdf)
+  set earlier deadlines:
   post-quantum key establishment by the end of 2030 and signatures by the end
   of 2031.
 
