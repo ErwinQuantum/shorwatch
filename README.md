@@ -15,12 +15,15 @@ isn't detected.
 ## Quick start
 
 ```sh
-cargo install --git https://github.com/ErwinQuantum/shorwatch shorwatch-cli
+# Docker, nothing else to install
+docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch
+
+# or download a binary from the releases page, then:
 cd your-project && shorwatch report    # scan, then open the HTML report
 shorwatch ci                           # in a pipeline: SARIF + HTML, exit code
 ```
 
-Binaries and a Docker image are in [Install](#install).
+[Install](#install) has the binaries, checksums and building from source (which needs Rust).
 
 ## Why
 
@@ -400,7 +403,8 @@ Publish the folder even when the scan fails (`if: always()`, `when: always`,
 
 SARIF results show up as code scanning alerts on the exact line of a pull
 request; the HTML report is an artifact of the run, linked from the log and
-the job summary:
+the job summary. The job downloads the release binary and checks its
+checksum, so nothing is compiled:
 
 ```yaml
 # .github/workflows/shorwatch.yml
@@ -415,8 +419,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo install --git https://github.com/ErwinQuantum/shorwatch shorwatch-cli
+      - name: Install Shorwatch
+        run: |
+          v=v0.1.0
+          n=shorwatch-$v-x86_64-unknown-linux-gnu
+          url=https://github.com/ErwinQuantum/shorwatch/releases/download/$v
+          curl -sSLO "$url/$n.tar.gz" -O "$url/$n.tar.gz.sha256"
+          sha256sum -c "$n.tar.gz.sha256"
+          tar -xzf "$n.tar.gz"
+          sudo install "$n/shorwatch" /usr/local/bin/
       - run: shorwatch ci --fail-severity high
       - uses: github/codeql-action/upload-sarif@v4
         if: always()
