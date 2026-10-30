@@ -42,7 +42,8 @@ pub(super) fn type_name(written: &str) -> String {
 pub(super) fn enclosing_calls(literal: Node<'_>, src: &str) -> Vec<String> {
     let mut calls = Vec::new();
     let mut child = literal;
-    while let Some(parent) = child.parent() {
+    for _ in 0..crate::depth::MAX_ENCLOSING {
+        let Some(parent) = child.parent() else { break };
         match parent.kind() {
             "method_invocation" if parent.child_by_field_name("arguments") == Some(child) => {
                 if let Some(name) = parent.child_by_field_name("name") {

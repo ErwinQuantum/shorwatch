@@ -80,6 +80,11 @@ The first release.
   reach a report, control characters never reach the terminal or CI logs,
   the HTML report renders text only under a Content-Security-Policy with no
   network access, and Markdown escapes markup from file names.
+- Hostile shapes are bounded: files whose syntax nests deeper than 2,500
+  levels are skipped with a warning (they used to overflow the stack), the
+  scanning threads have a large stack, and the passes that were quadratic or
+  worse over one long line, a long concatenation or a large `.properties`
+  file are linear or bounded.
 - Binaries with SHA-256 checksums and build provenance attestations;
   workflow actions pinned by commit; `cargo deny` in CI. See
   [SECURITY.md](SECURITY.md).

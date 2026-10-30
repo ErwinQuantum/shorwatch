@@ -30,7 +30,30 @@ static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+/// Stack of every thread that scans. The passes over a file's tree recurse
+/// with its nesting (a 2,000-operand concatenation in generated code), and a
+/// thread's default stack (1 MB on Windows main, 2 MB in rayon) is too small
+/// for that; the memory is only reserved, not used. `depth::MAX_DEPTH` in
+/// shorwatch-langs bounds the nesting this has to cover.
+const STACK_BYTES: usize = 256 * 1024 * 1024;
+
 fn main() -> ExitCode {
+    let build = rayon::ThreadPoolBuilder::new()
+        .stack_size(STACK_BYTES)
+        .build_global();
+    if let Err(error) = build {
+        eprintln!("error: {error}");
+        return ExitCode::from(2);
+    }
+    std::thread::Builder::new()
+        .stack_size(STACK_BYTES)
+        .spawn(run)
+        .ok()
+        .and_then(|thread| thread.join().ok())
+        .unwrap_or(ExitCode::from(2))
+}
+
+fn run() -> ExitCode {
     let cli = Cli::parse();
     let result = match cli.command {
         None => scan(&cli.scan),

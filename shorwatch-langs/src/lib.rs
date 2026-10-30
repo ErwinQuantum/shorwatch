@@ -10,6 +10,7 @@ use thiserror::Error;
 
 pub mod bytecode;
 pub mod config;
+mod depth;
 pub mod java;
 mod jvm;
 pub mod keys;
@@ -27,6 +28,8 @@ pub enum LangError {
     Grammar(Language, String),
     #[error("parser gave up on `{0}`")]
     Parse(String),
+    #[error("`{0}` nests deeper than {1} levels")]
+    TooDeep(String, usize),
     #[error("malformed class file: {0}")]
     Class(String),
 }

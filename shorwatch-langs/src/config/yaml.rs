@@ -4,7 +4,7 @@ use shorwatch_core::Language;
 use shorwatch_core::ir::{FactKind, SourceUnit};
 use tree_sitter::{Node, Parser};
 
-use crate::span::byte_range;
+use crate::span::Lines;
 use crate::{Frontend, LangError};
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -27,8 +27,10 @@ impl Frontend for YamlFrontend {
         let tree = parser
             .parse(source, None)
             .ok_or_else(|| LangError::Parse(path.to_owned()))?;
+        crate::depth::check(path, tree.root_node())?;
         let mut lowering = YamlLowering {
             src: source,
+            lines: Lines::new(source),
             unit: SourceUnit::new(path, Language::Yaml),
         };
         lowering.walk(tree.root_node(), String::new());
@@ -38,6 +40,7 @@ impl Frontend for YamlFrontend {
 
 struct YamlLowering<'s> {
     src: &'s str,
+    lines: Lines<'s>,
     unit: SourceUnit,
 }
 
@@ -67,7 +70,7 @@ impl YamlLowering<'_> {
             }
             "plain_scalar" | "double_quote_scalar" | "single_quote_scalar" | "block_scalar" => {
                 if let Some(value) = self.scalar(node) {
-                    let location = byte_range(self.src, node.start_byte(), node.end_byte());
+                    let location = self.lines.range(node.start_byte(), node.end_byte());
                     let kind = FactKind::Property { key: prefix, value };
                     self.unit.push(kind, SourceUnit::ROOT, location);
                 }

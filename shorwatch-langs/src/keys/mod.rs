@@ -13,7 +13,7 @@ use std::fmt::Write as _;
 use shorwatch_core::Language;
 use shorwatch_core::ir::{FactKind, Location, SourceUnit};
 
-use crate::span::byte_range;
+use crate::span::Lines;
 use crate::{Frontend, LangError, decode};
 use keystore::Entry;
 use x509::KeyInfo;
@@ -78,8 +78,9 @@ impl Frontend for KeyMaterialFrontend {
         if blocks.is_empty() {
             ssh_public_keys(&mut unit, &text);
         }
+        let lines = Lines::new(&text);
         for block in blocks {
-            let location = byte_range(&text, block.start, block.end);
+            let location = lines.range(block.start, block.end);
             if let Some((key, label)) = pem_block(block.label, &block.der) {
                 push(&mut unit, key, label, location);
             }
@@ -311,6 +312,7 @@ fn whole_file() -> Location {
 
 /// `ssh-rsa AAAA... comment` lines, as in `id_rsa.pub` or `authorized_keys`.
 fn ssh_public_keys(unit: &mut SourceUnit, text: &str) {
+    let lines = Lines::new(text);
     let mut offset = 0;
     for line in text.split_inclusive('\n') {
         let start = offset;
@@ -324,7 +326,7 @@ fn ssh_public_keys(unit: &mut SourceUnit, text: &str) {
                 Some(comment) => format!("SSH public key \"{comment}\""),
                 None => "SSH public key".to_owned(),
             };
-            let location = byte_range(text, start + key.start, start + key.end);
+            let location = lines.range(start + key.start, start + key.end);
             push(unit, key.key, Label::plain(what), location);
         }
     }

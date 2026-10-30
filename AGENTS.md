@@ -64,6 +64,11 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `vscode://`, and rule references must be http(s). Private key bodies never
   reach the text reports show (`keys::pem::redact_private_keys`). Binary
   parsers are bounded; never `read_to_end` input without a size limit.
+  Syntax trees nest at most `depth::MAX_DEPTH` levels (deeper files are
+  skipped with a warning), so recursion over a tree is safe on the scanning
+  threads' large stack; and no per-fact work may scan from the top of the
+  file (`span::Lines` for positions, bounded climbs for `Node::parent()`,
+  which costs the node's depth).
 - **Shor-category rules can never carry a `fix`** (`RuleError::FixNotAllowed`).
   Their `suggestion` is educational text only.
 - A fix is never offered when the matched value was resolved indirectly

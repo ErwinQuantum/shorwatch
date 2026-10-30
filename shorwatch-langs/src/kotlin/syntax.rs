@@ -129,7 +129,8 @@ pub(super) fn branch_value(node: Node<'_>) -> Node<'_> {
 pub(super) fn enclosing_calls(literal: Node<'_>, src: &str) -> Vec<String> {
     let mut calls = Vec::new();
     let mut child = literal;
-    while let Some(parent) = child.parent() {
+    for _ in 0..crate::depth::MAX_ENCLOSING {
+        let Some(parent) = child.parent() else { break };
         match parent.kind() {
             "call_expression" if child.kind() == "value_arguments" => {
                 let method = parent
