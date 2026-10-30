@@ -24,21 +24,38 @@ fn position(src: &str, byte: usize, point: Point) -> Position {
     }
 }
 
-/// Location of `start..end`, with columns in code points like the Java frontend.
-pub(crate) fn byte_range(src: &str, start: usize, end: usize) -> Location {
-    Location {
-        start: text_position(src, start),
-        end: text_position(src, end),
-        start_byte: start,
-        end_byte: end,
-    }
+/// Where the lines of a text start, to turn byte ranges into locations with
+/// columns in code points like the Java frontend. Built once per file: finding
+/// the line by counting from the top for every fact is quadratic.
+pub(crate) struct Lines<'s> {
+    src: &'s str,
+    starts: Vec<usize>,
 }
 
-fn text_position(src: &str, byte: usize) -> Position {
-    let before = &src[..byte];
-    let line_start = before.rfind('\n').map_or(0, |i| i + 1);
-    Position {
-        line: u32::try_from(before.matches('\n').count() + 1).unwrap_or(u32::MAX),
-        column: u32::try_from(src[line_start..byte].chars().count() + 1).unwrap_or(u32::MAX),
+impl<'s> Lines<'s> {
+    pub(crate) fn new(src: &'s str) -> Self {
+        let newlines = src.bytes().enumerate().filter(|&(_, b)| b == b'\n');
+        let starts = std::iter::once(0)
+            .chain(newlines.map(|(i, _)| i + 1))
+            .collect();
+        Self { src, starts }
+    }
+
+    pub(crate) fn range(&self, start: usize, end: usize) -> Location {
+        Location {
+            start: self.position(start),
+            end: self.position(end),
+            start_byte: start,
+            end_byte: end,
+        }
+    }
+
+    fn position(&self, byte: usize) -> Position {
+        let line = self.starts.partition_point(|&start| start <= byte) - 1;
+        let column = self.src[self.starts[line]..byte].chars().count();
+        Position {
+            line: u32::try_from(line + 1).unwrap_or(u32::MAX),
+            column: u32::try_from(column + 1).unwrap_or(u32::MAX),
+        }
     }
 }

@@ -55,6 +55,7 @@ impl Frontend for JavaFrontend {
         let tree = parser
             .parse(source, None)
             .ok_or_else(|| LangError::Parse(path.to_owned()))?;
+        crate::depth::check(path, tree.root_node())?;
         Ok(Lowering::new(path, source).run(tree.root_node()))
     }
 }
