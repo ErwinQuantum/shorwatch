@@ -176,6 +176,11 @@ fn ssh_public_key_lines() {
         labels("deploy_rsa.pub", fixture!("deploy_rsa.pub")),
         ["SSH public key \"deploy@example\": RSA 3072-bit"]
     );
+    // `ssh-dss` is DSA, fixed at 1024 bits.
+    assert_eq!(
+        labels("legacy_dss.pub", fixture!("legacy-dss.pub")),
+        ["SSH public key \"legacy@example\": DSA 1024-bit"]
+    );
     // Options before the type, as in authorized_keys.
     let line = std::str::from_utf8(fixture!("deploy_rsa.pub")).unwrap();
     let with_options = format!("from=\"10.0.0.0/8\",no-pty {line}");
