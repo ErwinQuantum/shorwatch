@@ -5,7 +5,9 @@ import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.Signature
 import javax.crypto.Cipher
+import org.bouncycastle.crypto.digests.SHA256Digest
 import org.bouncycastle.crypto.engines.RSAEngine
+import org.bouncycastle.crypto.signers.RSADigestSigner
 
 class Vulnerable {
     fun generate(): KeyPair =
@@ -27,6 +29,8 @@ class Vulnerable {
     fun factory(): Any = KeyFactory.getInstance("rsa")
 
     fun lightweight(): Any = RSAEngine()
+
+    fun digestSigner(): Any = RSADigestSigner(SHA256Digest())
 
     fun commentedOut() {
         // KeyPairGenerator.getInstance("RSA")

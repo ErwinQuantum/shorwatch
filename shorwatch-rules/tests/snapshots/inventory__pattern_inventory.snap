@@ -254,6 +254,7 @@ RSA:
   - "Construct { ty: \"org.bouncycastle.crypto.engines.RSABlindedEngine\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.engines.RSAEngine\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.generators.RSAKeyPairGenerator\", arg: None }"
+  - "Construct { ty: \"org.bouncycastle.crypto.signers.RSADigestSigner\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.operator.bc.BcRSAContentSignerBuilder\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.operator.jcajce.JcaContentSignerBuilder\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^(RSASSA-PSS|.+withRSA(andMGF1|/PSS)?)$\" }) }"
   - "Construct { ty: \"org.springframework.security.crypto.encrypt.KeyStoreKeyFactory\", arg: None }"

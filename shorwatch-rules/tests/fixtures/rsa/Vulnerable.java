@@ -5,7 +5,9 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.Signature;
 import javax.crypto.Cipher;
+import org.bouncycastle.crypto.digests.SHA256Digest;
 import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.crypto.signers.RSADigestSigner;
 
 public class Vulnerable {
     private static final String TRANSFORMATION = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
@@ -35,6 +37,10 @@ public class Vulnerable {
 
     Object lightweight() {
         return new RSAEngine();
+    }
+
+    Object digestSigner() {
+        return new RSADigestSigner(new SHA256Digest());
     }
 
     void commentedOut() throws Exception {
