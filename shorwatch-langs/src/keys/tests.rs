@@ -67,6 +67,10 @@ fn public_and_private_keys_in_every_pem_form() {
         labels("dsa.pem", fixture!("dsa-public.pem")),
         ["public key: DSA 2048-bit"]
     );
+    assert_eq!(
+        labels("dh.pem", fixture!("dh-public.pem")),
+        ["public key: DH"]
+    );
     // PKCS#1, after a comment line; PKCS#8.
     let (rsa, _) = keys("legacy-rsa.key", fixture!("legacy-rsa.key"));
     assert_eq!(rsa, [(2, "private key: RSA 1024-bit".to_owned())]);
