@@ -1,0 +1,7 @@
+id: auth0-java-jwt
+name: Auth0 java-jwt
+role: jwt
+summary: Create and verify JSON Web Tokens; jwks-rsa fetches the signing keys of an issuer.
+matches:
+  - group: '^com\.auth0$'
+    artifact: '^(java-jwt|jwks-rsa)$'

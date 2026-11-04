@@ -38,6 +38,11 @@ cargo run --release -- examples/spring-service --format sarif --output report.sa
 - `PartnerKeys.kt` is Kotlin: the same JVM rules apply. The EC key generated
   inside `apply { initialize(...) }` and the `ES384` member import are found
   like their Java equivalents.
+- `pom.xml`: not a finding but an inventory. BouncyCastle 1.70 (through a
+  `${bouncycastle.version}` property) predates the first BouncyCastle with
+  ML-KEM and ML-DSA (1.79), and Nimbus, JSch and Spring Security's JOSE are
+  listed too. The report counts them and the CBOM carries them as `library`
+  components.
 - `application.yml`: an RS256 resource server and a TLS 1.2 ECDHE suite.
 - `certs/partner-signing.pem`: the certificate a partner signs statements
   with, an RSA 3072-bit key valid until 2031. Key material is reported like

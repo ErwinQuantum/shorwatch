@@ -4,7 +4,7 @@
 use std::fmt::Write as _;
 
 use anyhow::{Context, Result};
-use shorwatch_core::{Category, Rule, RuleSet, Severity};
+use shorwatch_core::{Category, LibraryCatalog, Rule, RuleSet, Severity};
 
 use crate::args::RuleSource;
 
@@ -16,6 +16,19 @@ pub fn load(source: &RuleSource) -> Result<RuleSet> {
         rules.extend(extra);
     }
     RuleSet::compile(rules).context("validating rules")
+}
+
+/// The known cryptographic libraries (built-in plus the `libraries/` of
+/// `--rules` directories), for the dependency inventory.
+pub fn libraries(source: &RuleSource) -> Result<LibraryCatalog> {
+    let mut specs =
+        shorwatch_rules::builtin_library_specs().context("loading built-in libraries")?;
+    for dir in &source.dirs {
+        let extra = shorwatch_rules::load_dir_libraries(dir)
+            .with_context(|| format!("loading libraries from `{}`", dir.display()))?;
+        specs.extend(extra);
+    }
+    LibraryCatalog::compile(specs).context("validating libraries")
 }
 
 /// A plain table of the rules, sorted by id.

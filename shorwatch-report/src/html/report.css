@@ -178,6 +178,14 @@ a.rank-name:hover { color: var(--accent-ink); }
 .alg-row .fill { border-radius: 0; }
 .alg-count { font-family: var(--mono); font-size: 14px; text-align: right; }
 
+/* Libraries on the cover */
+.lib-row { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.9fr) minmax(0, 2fr) minmax(0, 2.2fr); gap: 6px 20px; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--hairline); }
+.lib-name { font-weight: 600; overflow-wrap: break-word; }
+.lib-version { font-size: 14px; overflow-wrap: anywhere; }
+.lib-note { font-size: 14px; color: var(--ink-2); }
+.lib-old { color: var(--ink); font-weight: 600; }
+@media (max-width: 720px) { .lib-row { grid-template-columns: minmax(0, 1fr); } }
+
 /* Severity rows on the cover */
 .sev-row { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--hairline); color: var(--ink); text-decoration: none; }
 .sev-row-title { font-family: var(--serif); font-size: 28px; }

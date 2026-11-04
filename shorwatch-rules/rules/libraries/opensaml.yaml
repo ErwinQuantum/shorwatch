@@ -1,0 +1,7 @@
+id: opensaml
+name: OpenSAML
+role: xml-signature
+summary: SAML 2.0 messages with XML signature and encryption.
+matches:
+  - group: '^org\.opensaml$'
+    artifact: '^opensaml'

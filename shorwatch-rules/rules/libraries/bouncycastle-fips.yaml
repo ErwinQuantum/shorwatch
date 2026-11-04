@@ -1,0 +1,7 @@
+id: bouncycastle-fips
+name: BouncyCastle FIPS
+role: provider
+summary: The FIPS 140 validated BouncyCastle modules, versioned apart from the main line.
+matches:
+  - group: '^org\.bouncycastle$'
+    artifact: '^(bc|bcpkix|bctls|bcutil)-fips$'

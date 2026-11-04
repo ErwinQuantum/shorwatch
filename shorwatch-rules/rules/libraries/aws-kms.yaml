@@ -1,0 +1,9 @@
+id: aws-kms
+name: AWS KMS client
+role: kms
+summary: The AWS Key Management Service client, which creates and uses keys the service holds.
+matches:
+  - group: '^software\.amazon\.awssdk$'
+    artifact: '^kms$'
+  - group: '^com\.amazonaws$'
+    artifact: '^aws-java-sdk-kms$'

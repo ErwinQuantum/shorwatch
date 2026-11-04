@@ -65,9 +65,10 @@
            without a flag day.
    = ref: https://csrc.nist.gov/pubs/fips/204/final
 
- Summary  17 findings in 9 files (9 scanned)
+ Summary  17 findings in 9 files (10 scanned)
           13 high · 3 medium · 1 low
           16 vulnerable · 1 in transition · 1 with a suggested fix
+          5 cryptographic libraries in the build files · 1 before post-quantum support (BouncyCastle 1.70)
 
  → --html shorwatch.html  a report to browse
  → --details  every finding, here

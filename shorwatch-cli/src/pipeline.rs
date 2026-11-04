@@ -7,7 +7,10 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use rayon::prelude::*;
-use shorwatch_core::{CodeRole, Finding, Library, RuleSet, Severity, SourceUnit, analyze, link};
+use shorwatch_core::{
+    CodeRole, Finding, Library, LibraryCatalog, RuleSet, Severity, SourceUnit, analyze,
+    dependencies, link,
+};
 use shorwatch_report::{Project, Scan, project_of};
 
 use crate::args::Analysis;
@@ -46,6 +49,7 @@ pub fn run_for_baseline(analysis: &Analysis, version: &str) -> Result<Scan> {
 
 fn analyze_all(analysis: &Analysis, version: &str) -> Result<Scan> {
     let rules = rules::load(&analysis.rules)?;
+    let libraries = rules::libraries(&analysis.rules)?;
     let mut files = discover::files(&analysis.paths)?;
     if analysis.exclude_tests {
         files.retain(|(_, role)| *role == CodeRole::Production);
@@ -65,7 +69,9 @@ fn analyze_all(analysis: &Analysis, version: &str) -> Result<Scan> {
     let cwd = std::env::current_dir().unwrap_or_default();
     let paths: Vec<_> = files.iter().map(|(path, _)| path.clone()).collect();
     let projects = projects::detect(&analysis.paths, &paths, &cwd);
-    Ok(scan(&files, projects, &library, &rules, &options))
+    Ok(scan(
+        &files, projects, &library, &rules, &libraries, &options,
+    ))
 }
 
 pub struct Options {
@@ -78,6 +84,7 @@ pub fn scan(
     projects: Vec<Project>,
     library: &Library,
     rules: &RuleSet,
+    libraries: &LibraryCatalog,
     options: &Options,
 ) -> Scan {
     let cwd = std::env::current_dir().unwrap_or_default();
@@ -111,6 +118,14 @@ pub fn scan(
         (&a.path, a.location.start, &a.rule_id).cmp(&(&b.path, b.location.start, &b.rule_id))
     });
 
+    // The cryptographic libraries the build files declare: an inventory, not
+    // findings.
+    let mut dependencies: Vec<_> = units
+        .iter()
+        .flat_map(|unit| dependencies(unit, libraries))
+        .collect();
+    dependencies.sort_by(|a, b| (&a.path, a.location.start).cmp(&(&b.path, b.location.start)));
+
     // Files with findings, and the files their data-flow paths go through.
     let shown = |path: &str| {
         findings
@@ -131,6 +146,7 @@ pub fn scan(
         projects,
         links: shorwatch_report::SourceLinks::default(),
         suppressed: Vec::new(),
+        dependencies,
     }
 }
 
@@ -138,8 +154,7 @@ pub fn scan(
 /// files). Unreadable files are reported on stderr and skipped, so one bad
 /// file never aborts a scan.
 fn lower(path: &Path, cwd: &Path) -> Option<(SourceUnit, Option<String>)> {
-    let extension = path.extension()?.to_str()?;
-    let frontend = shorwatch_langs::for_extension(extension)?;
+    let frontend = shorwatch_langs::for_path(path)?;
     let bytes = match fs::read(path) {
         Ok(bytes) => bytes,
         Err(error) => {

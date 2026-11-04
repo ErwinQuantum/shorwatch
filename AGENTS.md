@@ -11,17 +11,18 @@ Shorwatch is a SAST tool in Rust that finds quantum-vulnerable cryptography in
 source code and configuration, and suggests migrating to the NIST post-quantum
 standards (FIPS 203 ML-KEM, FIPS 204 ML-DSA). It analyzes statically through
 tree-sitter (no compiling, no binaries): **Java** and **Kotlin** sources plus
-**YAML / `.properties`** configuration (Spring Boot), and the **key material**
-a repository holds (certificates, keys, keystores). Everything in the repo
+**YAML / `.properties`** configuration (Spring Boot), the **key material**
+a repository holds (certificates, keys, keystores) and the cryptographic
+**libraries its build files declare** (`pom.xml`, Gradle, version catalogs). Everything in the repo
 (code, comments, rules, docs, commits) is in English.
 
 ## Architecture (hexagonal workspace)
 
 | Crate | Role | May depend on |
 |---|---|---|
-| `shorwatch-core` | Pure domain: IR (`SourceUnit`, `Fact`, `Scope`), rule model + validation, engine (`analyze`), cross-file `link`, `Finding`. **No I/O.** | serde, regex, thiserror only |
-| `shorwatch-rules` | Built-in YAML rules (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` for external rules | core |
-| `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng), both on the shared `jvm` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written). Nothing tree-sitter leaks out | core |
+| `shorwatch-core` | Pure domain: IR (`SourceUnit`, `Fact`, `Scope`), rule model + validation, engine (`analyze`), cross-file `link`, `Finding`, and the dependency `inventory` (`LibraryCatalog`, `Dependency`). **No I/O.** | serde, regex, thiserror only |
+| `shorwatch-rules` | Built-in YAML rules and known libraries (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` / `load_dir_libraries` for external ones | core |
+| `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng), both on the shared `jvm` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written); `MavenFrontend` (`pom.xml`, quick-xml events), `GradleFrontend` (a tokenizer), `VersionCatalogFrontend` (line-based TOML), which a file's exact *name* selects (`for_path`). Nothing tree-sitter leaks out | core |
 | `shorwatch-report` | Pure renderers over a `Scan` (findings, sources, `projects`, `links`: editor `vscode://` root only for the temporary report, repository host URL templates in CI): terminal (banner; summary + HTML report link by default, `--overview`, `--details`, `--compact`, the failing verdict), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only, CSP forbids the network; an editorial cover + hash-routed chapters `#/findings?sev=&project=&alg=&cat=&f=`, grouped by file, tests folded) | core |
 | `shorwatch-cli` | `shorwatch [scan]` (no command = scan) / `report` (scan + open) / `ci` (SARIF + HTML in `shorwatch-report/`, CI artifact links) / `open` (last HTML report, in the browser) / `rules`; `--watch` polls mtimes: clap args, `ignore` walker, `layout` (test vs production code by path), `projects` (top-most build roots of a scanned folder), rayon pipeline (one `link` per project), output (`--html`, temporary HTML on terminals, `--report-url`), exit codes (`--fail-on`, `--fail-severity`) | all |
 
@@ -37,13 +38,15 @@ Module map (one responsibility per file, tests in sibling `tests.rs`):
 
 ```
 core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: model, error, compile}
+           inventory/{mod: Dependency + dependencies(), spec: LibrarySpec + LibraryCatalog, version}
            engine/{mod: analyze + findings, matching, hybrid, fix}
            link/{mod, library, hierarchy, receivers, flow, config}  finding.rs
-rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules)  error.rs  build.rs
+rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules, libraries)  error.rs  build.rs
 langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
            kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
+           build/{mod, maven, gradle, catalog}  depth.rs (nesting bound)
 cli/src/   args, pipeline, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file)
            printable (control characters out), suppress/{mod: apply, inline: `shorwatch:ignore`,
            baseline: shorwatch-baseline.json}, gate (--fail-on/--fail-severity), output,
@@ -116,6 +119,17 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   still inventories them, and gates ignore them. A finding's identity across
   scans is `report::fingerprint` (rule + whitespace-normalised line, or the
   key label): never the line number.
+- **Dependencies are an inventory, never findings.** A library declared in a
+  build file becomes a `FactKind::Dependency`; `core::dependencies` matches it
+  against the `LibraryCatalog` (`rules/libraries/<id>.yaml`, data like rules)
+  into `Scan::dependencies`. They have no category, severity or status, feed
+  no gate, baseline or SARIF result, and the CBOM lists them as `library`
+  components. A library claims post-quantum support only when the catalog
+  names the first version (`post_quantum.since`, verified against its release
+  notes); a version that is not a plain number (range, `${x}`, unset) is
+  `Unknown`, never guessed. Build files are found by file *name*, not by
+  extension, and are untrusted: bounded nesting and coordinates, no
+  external entities.
 - A receiver's *origin* (`Call.receiver_origin`) still comes only from the
   variable's own initializer; `origin` patterns let unknown origins match
   (no lost detections). Don't hack around missing flow in rules.

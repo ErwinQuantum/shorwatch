@@ -1,0 +1,7 @@
+id: spring-security-rsa
+name: Spring Security RSA
+role: provider
+summary: RSA encryption helpers for Spring (key pairs, encryptors, key stores).
+matches:
+  - group: '^org\.springframework\.security$'
+    artifact: '^spring-security-rsa$'

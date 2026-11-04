@@ -75,6 +75,32 @@ fn clean_report() {
 }
 
 #[test]
+fn the_summary_counts_the_libraries_and_names_the_old_ones() {
+    let mut scan = scan();
+    scan.dependencies = crate::fixtures::dependencies();
+    let text = plain(&render(&scan, &Options::default()));
+    assert!(
+        text.contains(
+            "4 cryptographic libraries in the build files · 2 before post-quantum support (BouncyCastle 1.70)"
+        ),
+        "{text}"
+    );
+}
+
+#[test]
+fn a_clean_scan_still_says_which_libraries_it_saw() {
+    let clean = crate::Scan {
+        files_scanned: 7,
+        dependencies: crate::fixtures::dependencies()[1..2].to_vec(),
+        ..Default::default()
+    };
+    assert_eq!(
+        plain(&render(&clean, &Options::default())),
+        "\n Summary  no quantum-vulnerable cryptography found in 7 files\n          1 cryptographic library in the build files\n"
+    );
+}
+
+#[test]
 fn report_is_coloured_before_stripping() {
     assert!(render(&scan(), &Options::default()).contains("\x1b["));
 }

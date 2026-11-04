@@ -204,3 +204,49 @@ fn every_builtin_rule_describes_its_cryptography() {
         }
     }
 }
+
+#[test]
+fn builtin_libraries_compile() {
+    assert!(!builtin_libraries().unwrap().is_empty());
+}
+
+/// `libraries/jsch.yaml` is the library `jsch`, and every group pattern is
+/// anchored: an unanchored `bouncycastle` would claim every look-alike group.
+#[test]
+fn builtin_libraries_follow_their_conventions() {
+    let catalog = Catalog::builtin().unwrap();
+    assert!(!catalog.libraries.is_empty());
+    for source in &catalog.libraries {
+        let path = source.origin.strip_prefix("builtin:libraries/").unwrap();
+        let id = path.trim_end_matches(".yaml");
+        assert_eq!(
+            source.doc.get("id").and_then(Value::as_str),
+            Some(id),
+            "{path}"
+        );
+    }
+    for library in catalog.libraries().unwrap() {
+        for coordinates in &library.matches {
+            assert!(
+                coordinates.group.starts_with('^') && coordinates.group.ends_with('$'),
+                "{}: group `{}` must be anchored",
+                library.id,
+                coordinates.group
+            );
+            assert!(
+                coordinates.artifact.starts_with('^'),
+                "{}: artifact `{}` must be anchored",
+                library.id,
+                coordinates.artifact
+            );
+        }
+    }
+}
+
+#[test]
+fn libraries_are_not_rules() {
+    let rule = "id: r\nplatform: jvm\npatterns: []\n";
+    let catalog = catalog(&[("libraries/x.yaml", "id: x\n"), ("jvm/r.yaml", rule)]);
+    assert_eq!(catalog.rules.len(), 1);
+    assert_eq!(catalog.libraries.len(), 1);
+}

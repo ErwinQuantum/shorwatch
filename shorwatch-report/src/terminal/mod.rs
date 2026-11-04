@@ -21,6 +21,8 @@ use std::fmt::Write as _;
 pub use banner::banner;
 use style::{accent, bold, dim, failure as rgb_red, paint};
 
+use shorwatch_core::inventory::Support;
+
 use crate::summary::severity_label;
 use crate::{Scan, Summary};
 
@@ -140,6 +142,7 @@ fn summary(scan: &Scan) -> String {
             plural(summary.files_scanned, "file")
         );
         suppressed(&summary, &indent, &mut out);
+        libraries(scan, &indent, &mut out);
         return out;
     }
     let _ = writeln!(
@@ -173,6 +176,7 @@ fn summary(scan: &Scan) -> String {
         );
     }
     suppressed(&summary, &indent, &mut out);
+    libraries(scan, &indent, &mut out);
     if scan.projects.len() > 1 {
         let with_findings: BTreeSet<_> = scan
             .findings
@@ -205,6 +209,51 @@ fn suppressed(summary: &Summary, indent: &str, out: &mut String) {
             paint(format!("not counted: {}", parts.join(" · ")), dim())
         );
     }
+}
+
+/// The cryptographic libraries the build files declare, and the ones whose
+/// version predates their post-quantum support: an inventory line, apart from
+/// the counts of findings.
+fn libraries(scan: &Scan, indent: &str, out: &mut String) {
+    if scan.dependencies.is_empty() {
+        return;
+    }
+    let summary = scan.summary();
+    let mut line = format!(
+        "{} in the build files",
+        if summary.libraries == 1 {
+            "1 cryptographic library".to_owned()
+        } else {
+            format!("{} cryptographic libraries", summary.libraries)
+        }
+    );
+    if summary.libraries_too_old > 0 {
+        let old: Vec<String> = scan
+            .dependencies
+            .iter()
+            .filter(|d| {
+                d.post_quantum
+                    .as_ref()
+                    .is_some_and(|pq| pq.support == Support::TooOld)
+            })
+            .map(|d| format!("{} {}", d.library, d.version.as_deref().unwrap_or("?")))
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
+        let shown = old.iter().take(3).cloned().collect::<Vec<_>>().join(", ");
+        let more = old.len().saturating_sub(3);
+        let _ = write!(
+            line,
+            " · {} before post-quantum support ({shown}{})",
+            summary.libraries_too_old,
+            if more > 0 {
+                format!(", +{more}")
+            } else {
+                String::new()
+            }
+        );
+    }
+    let _ = writeln!(out, "{indent} {}", paint(line, dim()));
 }
 
 fn plural(n: usize, word: &str) -> String {

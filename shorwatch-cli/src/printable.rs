@@ -23,6 +23,17 @@ pub fn scan(scan: &mut Scan) {
             line(&mut evidence.text);
         }
     }
+    for dependency in &mut scan.dependencies {
+        line(&mut dependency.path);
+        line(&mut dependency.group);
+        line(&mut dependency.artifact);
+        for text in [&mut dependency.version, &mut dependency.scope]
+            .into_iter()
+            .flatten()
+        {
+            line(text);
+        }
+    }
     for project in &mut scan.projects {
         line(&mut project.name);
         line(&mut project.root);

@@ -1,0 +1,15 @@
+id: bouncycastle
+name: BouncyCastle
+role: provider
+summary: A cryptography provider and API for Java (ciphers, signatures, certificates, OpenPGP, TLS).
+matches:
+  - group: '^org\.bouncycastle$'
+    artifact: '^(bcprov|bcpkix|bcpg|bctls|bcutil|bcmail|bcjmail)(-ext)?-jdk(18on|15to18|15on|14|16)$'
+# ML-KEM, ML-DSA and SLH-DSA joined the provider and the lightweight API in 1.79
+# (30 October 2024). The `jdk15on` line stopped at 1.70.
+post_quantum:
+  since: '1.79'
+  algorithms: [ML-KEM, ML-DSA, SLH-DSA]
+references:
+  - title: "Bouncy Castle Java 1.79: the NIST post-quantum standards"
+    url: https://www.bouncycastle.org/resources/latest-nist-pqc-standards-and-more-bouncy-castle-java-1-79/

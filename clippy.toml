@@ -1,2 +1,2 @@
 # Names, not code: `doc_markdown` must not ask for backticks around them.
-doc-valid-idents = ["CycloneDX", "JUnit", "ElGamal", "SpEL", "CBOMkit", ".."]
+doc-valid-idents = ["CycloneDX", "JUnit", "ElGamal", "SpEL", "CBOMkit", "BouncyCastle", "OpenSAML", "JSch", "KMS", ".."]

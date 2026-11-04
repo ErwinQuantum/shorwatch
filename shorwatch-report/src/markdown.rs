@@ -1,6 +1,7 @@
 //! A Markdown summary for CI job summaries (`$GITHUB_STEP_SUMMARY`) and
 //! pull-request comments.
 
+use shorwatch_core::inventory::Support;
 use shorwatch_core::{CodeRole, Finding};
 use std::fmt::Write as _;
 
@@ -18,6 +19,7 @@ pub fn render(scan: &Scan) -> String {
             summary.files_scanned,
             suppressed_note(&summary)
         );
+        libraries(scan, &mut out);
         return out;
     }
 
@@ -83,7 +85,40 @@ pub fn render(scan: &Scan) -> String {
             f.rule_id,
         );
     }
+    libraries(scan, &mut out);
     out
+}
+
+/// The cryptographic libraries the build files declare: an inventory, apart
+/// from the findings.
+fn libraries(scan: &Scan, out: &mut String) {
+    if scan.dependencies.is_empty() {
+        return;
+    }
+    let _ = writeln!(
+        out,
+        "\n### Cryptographic libraries\n\n| Library | Version | Post-quantum | Declared in |\n|---|---|---|---|"
+    );
+    for d in &scan.dependencies {
+        let post_quantum = match &d.post_quantum {
+            None => String::new(),
+            Some(pq) => match pq.support {
+                Support::Ready => format!("yes (since {})", cell(&pq.since)),
+                Support::TooOld => format!("not before {}", cell(&pq.since)),
+                Support::Unknown => format!("from {}; version unknown", cell(&pq.since)),
+            },
+        };
+        let _ = writeln!(
+            out,
+            "| {} | {} | {} | {} |",
+            cell(&d.library),
+            d.version
+                .as_deref()
+                .map_or_else(|| "not set".to_owned(), cell),
+            post_quantum,
+            code(&format!("{}:{}", d.path, d.location.start.line)),
+        );
+    }
 }
 
 /// Findings left out, said where a clean result is announced.
@@ -178,6 +213,30 @@ mod tests {
         assert_eq!(cell("a<img src=x>|b"), r"a&lt;img src=x&gt;\|b");
         assert_eq!(cell("[x](http://t)"), r"\[x\]\(http://t\)");
         assert_eq!(code("a`b|c\nd"), r"`a'b\|c d`");
+    }
+
+    #[test]
+    fn libraries_get_their_own_table_after_the_findings() {
+        let mut scan = crate::fixtures::scan();
+        scan.dependencies = crate::fixtures::dependencies();
+        let report = render(&scan);
+        let at = report.find("### Cryptographic libraries").unwrap();
+        assert!(at > report.find("### Findings").unwrap());
+        assert!(report[at..].contains("| BouncyCastle | 1.70 | not before 1.79 | `pom.xml:33` |"));
+        assert!(report[at..].contains("| Nimbus JOSE + JWT | 9.37.3 |  | `build.gradle:12` |"));
+        assert!(report[at..].contains("| BouncyCastle | not set | from 1.79; version unknown |"));
+    }
+
+    #[test]
+    fn a_clean_scan_still_lists_its_libraries() {
+        let clean = Scan {
+            files_scanned: 3,
+            dependencies: crate::fixtures::dependencies(),
+            ..Default::default()
+        };
+        let report = render(&clean);
+        assert!(report.contains("no quantum-vulnerable cryptography found"));
+        assert!(report.contains("### Cryptographic libraries"));
     }
 
     #[test]

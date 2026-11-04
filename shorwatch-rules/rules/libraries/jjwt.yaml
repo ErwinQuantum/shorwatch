@@ -1,0 +1,7 @@
+id: jjwt
+name: jjwt
+role: jwt
+summary: Java JWT, the JSON Web Token library by Les Hazlewood.
+matches:
+  - group: '^io\.jsonwebtoken$'
+    artifact: '^jjwt(-api|-impl|-jackson|-gson|-orgjson)?$'

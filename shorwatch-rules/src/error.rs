@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use shorwatch_core::RuleError;
+use shorwatch_core::{LibraryError, RuleError};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -27,4 +27,6 @@ pub enum LoadError {
     },
     #[error(transparent)]
     Invalid(#[from] RuleError),
+    #[error(transparent)]
+    InvalidLibrary(#[from] LibraryError),
 }

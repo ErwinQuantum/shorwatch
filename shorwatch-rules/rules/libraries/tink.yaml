@@ -1,0 +1,7 @@
+id: tink
+name: Google Tink
+role: provider
+summary: A multi-language library of cryptographic APIs that are hard to misuse.
+matches:
+  - group: '^com\.google\.crypto\.tink$'
+    artifact: '^tink'

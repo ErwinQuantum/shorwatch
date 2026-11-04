@@ -251,8 +251,17 @@ fn cbom_inventories_algorithms_with_their_occurrences() {
     let bom: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(bom["bomFormat"], "CycloneDX");
     assert_eq!(bom["specVersion"], "1.6");
-    let components = bom["components"].as_array().unwrap();
-    for component in components {
+    let all = bom["components"].as_array().unwrap();
+    // The example's `pom.xml` adds its libraries, as components of their own.
+    let libraries: Vec<_> = all.iter().filter(|c| c["type"] == "library").collect();
+    assert_eq!(libraries.len(), 5);
+    assert!(
+        libraries
+            .iter()
+            .all(|c| c["purl"].as_str().unwrap().starts_with("pkg:maven/"))
+    );
+    let components: Vec<_> = all.iter().filter(|c| c["type"] != "library").collect();
+    for component in &components {
         assert_eq!(component["type"], "cryptographic-asset");
         let level =
             &component["cryptoProperties"]["algorithmProperties"]["nistQuantumSecurityLevel"];
@@ -403,4 +412,96 @@ fn ci_writes_sarif_and_html_and_links_the_report() {
     // The verdict follows the summary in the same stream.
     assert!(log.contains("fail the scan (exit code 1)"), "{log}");
     assert!(log.contains("Report file://"), "{log}");
+}
+
+/// A project with a POM, a Gradle script and a version catalog, written to a
+/// folder of its own: build files are found by name, and their libraries are
+/// an inventory (never findings, so the scan stays clean).
+#[test]
+fn build_files_are_inventoried_not_reported_as_findings() {
+    let dir =
+        Path::new(env!("CARGO_TARGET_TMPDIR")).join(format!("build-files-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("gradle")).unwrap();
+    std::fs::write(
+        dir.join("pom.xml"),
+        "<project><properties><bc>1.70</bc></properties><dependencies>\n\
+         <dependency><groupId>org.bouncycastle</groupId><artifactId>bcprov-jdk18on</artifactId><version>${bc}</version></dependency>\n\
+         <dependency><groupId>com.acme</groupId><artifactId>widgets</artifactId><version>1</version></dependency>\n\
+         </dependencies></project>",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("build.gradle.kts"),
+        "dependencies {\n    implementation(\"com.nimbusds:nimbus-jose-jwt:9.37\")\n}\n",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("gradle/libs.versions.toml"),
+        "[versions]\njsch = \"0.1.55\"\n[libraries]\njsch = { module = \"com.jcraft:jsch\", version.ref = \"jsch\" }\n",
+    )
+    .unwrap();
+    // Not a build file by name: must not be read.
+    std::fs::write(
+        dir.join("other.xml"),
+        "<dependency><groupId>org.bouncycastle</groupId></dependency>",
+    )
+    .unwrap();
+
+    let output = shorwatch(&["scan", &dir.display().to_string(), "--format", "json"]);
+    assert_eq!(output.status.code(), Some(0), "libraries are not findings");
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report["summary"]["findings"], 0);
+    assert_eq!(report["summary"]["files_scanned"], 3);
+    assert_eq!(report["summary"]["libraries"], 3);
+    assert_eq!(report["summary"]["libraries_too_old"], 1);
+    let libraries: Vec<_> = report["dependencies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|d| {
+            (
+                d["library_id"].as_str().unwrap(),
+                d["version"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        libraries,
+        [
+            ("nimbus-jose-jwt", "9.37"),
+            ("jsch", "0.1.55"),
+            ("bouncycastle", "1.70")
+        ]
+    );
+
+    let text = stdout(&shorwatch(&["scan", &dir.display().to_string()]));
+    assert!(
+        text.contains("3 cryptographic libraries in the build files"),
+        "{text}"
+    );
+    assert!(
+        text.contains("1 before post-quantum support (BouncyCastle 1.70)"),
+        "{text}"
+    );
+
+    let cbom: serde_json::Value = serde_json::from_str(&stdout(&shorwatch(&[
+        "scan",
+        &dir.display().to_string(),
+        "--format",
+        "cbom",
+    ])))
+    .unwrap();
+    let purls: Vec<_> = cbom["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|c| c["purl"].as_str())
+        .collect();
+    assert!(
+        purls.contains(&"pkg:maven/org.bouncycastle/bcprov-jdk18on@1.70"),
+        "{purls:?}"
+    );
+
+    let _ = std::fs::remove_dir_all(&dir);
 }

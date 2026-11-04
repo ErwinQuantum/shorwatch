@@ -2,7 +2,7 @@
   "tool": "shorwatch",
   "version": "0.1.0",
   "summary": {
-    "files_scanned": 9,
+    "files_scanned": 10,
     "files_with_findings": 9,
     "findings": 17,
     "vulnerable": 16,
@@ -15,13 +15,15 @@
       "high": 13
     },
     "ignored_in_code": 0,
-    "in_baseline": 0
+    "in_baseline": 0,
+    "libraries": 5,
+    "libraries_too_old": 1
   },
   "projects": [
     {
       "name": "spring-service",
       "root": "examples/spring-service",
-      "files_scanned": 9
+      "files_scanned": 10
     }
   ],
   "findings": [
@@ -990,6 +992,120 @@
         "parameter_set": null,
         "classical_security_level": null,
         "nist_quantum_security_level": 0
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "library": "Spring Security (OAuth 2.0 and JOSE)",
+      "library_id": "spring-security-jose",
+      "role": "jwt",
+      "group": "org.springframework.boot",
+      "artifact": "spring-boot-starter-oauth2-resource-server",
+      "path": "examples/spring-service/pom.xml",
+      "location": {
+        "start": {
+          "line": 25,
+          "column": 5
+        },
+        "end": {
+          "line": 25,
+          "column": 17
+        },
+        "start_byte": 666,
+        "end_byte": 678
+      }
+    },
+    {
+      "library": "Spring Security (OAuth 2.0 and JOSE)",
+      "library_id": "spring-security-jose",
+      "role": "jwt",
+      "group": "org.springframework.security",
+      "artifact": "spring-security-oauth2-jose",
+      "path": "examples/spring-service/pom.xml",
+      "location": {
+        "start": {
+          "line": 29,
+          "column": 5
+        },
+        "end": {
+          "line": 29,
+          "column": 17
+        },
+        "start_byte": 825,
+        "end_byte": 837
+      }
+    },
+    {
+      "library": "BouncyCastle",
+      "library_id": "bouncycastle",
+      "role": "provider",
+      "group": "org.bouncycastle",
+      "artifact": "bcprov-jdk18on",
+      "version": "1.70",
+      "path": "examples/spring-service/pom.xml",
+      "location": {
+        "start": {
+          "line": 33,
+          "column": 5
+        },
+        "end": {
+          "line": 33,
+          "column": 17
+        },
+        "start_byte": 973,
+        "end_byte": 985
+      },
+      "post_quantum": {
+        "support": "too_old",
+        "since": "1.79",
+        "algorithms": [
+          "ML-KEM",
+          "ML-DSA",
+          "SLH-DSA"
+        ]
+      }
+    },
+    {
+      "library": "Nimbus JOSE + JWT",
+      "library_id": "nimbus-jose-jwt",
+      "role": "jwt",
+      "group": "com.nimbusds",
+      "artifact": "nimbus-jose-jwt",
+      "version": "9.37.3",
+      "path": "examples/spring-service/pom.xml",
+      "location": {
+        "start": {
+          "line": 38,
+          "column": 5
+        },
+        "end": {
+          "line": 38,
+          "column": 17
+        },
+        "start_byte": 1145,
+        "end_byte": 1157
+      }
+    },
+    {
+      "library": "JSch",
+      "library_id": "jsch",
+      "role": "ssh",
+      "group": "com.jcraft",
+      "artifact": "jsch",
+      "version": "0.1.55",
+      "path": "examples/spring-service/pom.xml",
+      "location": {
+        "start": {
+          "line": 43,
+          "column": 5
+        },
+        "end": {
+          "line": 43,
+          "column": 17
+        },
+        "start_byte": 1297,
+        "end_byte": 1309
       }
     }
   ]

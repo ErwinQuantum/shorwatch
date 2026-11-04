@@ -1,0 +1,7 @@
+id: apache-sshd
+name: Apache MINA SSHD
+role: ssh
+summary: SSH client and server for Java.
+matches:
+  - group: '^org\.apache\.sshd$'
+    artifact: '^sshd-'

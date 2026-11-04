@@ -1,0 +1,9 @@
+id: azure-keyvault
+name: Azure Key Vault client
+role: kms
+summary: Azure Key Vault keys and its JCA provider.
+matches:
+  - group: '^com\.azure$'
+    artifact: '^azure-security-keyvault-(keys|jca)$'
+  - group: '^com\.microsoft\.azure$'
+    artifact: '^azure-keyvault'

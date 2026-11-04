@@ -3,6 +3,7 @@
   const data = JSON.parse(document.getElementById("shorwatch-data").textContent);
   const findings = data.findings;
   const projects = data.projects || [];
+  const dependencies = data.dependencies || [];
   const multi = projects.length > 1;
   const SEVERITIES = ["critical", "high", "medium", "low", "info"];
   const MARK = { critical: "◆", high: "▲", medium: "●", low: "○", info: "○" };
@@ -232,6 +233,7 @@
     ]);
     const sections = [hero];
     if (findings.length) sections.push(whereItLives(), fixFirst(), algorithmsSection(), severitySection());
+    if (dependencies.length) sections.push(librariesSection());
     document.getElementById("cover").replaceChildren(...sections);
   }
 
@@ -352,6 +354,30 @@
           el("span", { class: "sev-row-more", text: `${algorithmList(fs, 3)} · open the chapter →` }),
         ]);
       })),
+    ]);
+  }
+
+  /** What a library's version means for post-quantum cryptography, in words. */
+  function postQuantumNote(d) {
+    const pq = d.post_quantum;
+    if (!pq) return "";
+    const algorithms = pq.algorithms.join(", ");
+    if (pq.support === "ready") return `✓ ${algorithms} since ${pq.since}`;
+    if (pq.support === "too_old") return `▲ no ${algorithms} before ${pq.since}`;
+    return `${algorithms} from ${pq.since}; version not set`;
+  }
+
+  /** The libraries the build files declare: an inventory, apart from the findings. */
+  function librariesSection() {
+    return el("section", {}, [
+      sectionHead("libraries", "Cryptographic libraries",
+        `${plural(dependencies.length, "library", "libraries")} declared in the build files. This is an inventory, not findings: what the code does with them is above.`),
+      el("div", { class: "ruled" }, dependencies.map((d) => el("div", { class: "lib-row" }, [
+        el("span", { class: "lib-name", text: d.library }),
+        el("span", { class: "mono lib-version", text: d.version || "version not set" }),
+        el("span", { class: `lib-note ${d.post_quantum && d.post_quantum.support === "too_old" ? "lib-old" : ""}`, text: postQuantumNote(d) }),
+        el("span", { class: "rank-sub" }, breakable(`${shownPath(d.path)}:${d.location.start.line}${d.scope ? ` · ${d.scope}` : ""}`)),
+      ]))),
     ]);
   }
 

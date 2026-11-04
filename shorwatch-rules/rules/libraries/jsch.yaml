@@ -1,0 +1,7 @@
+id: jsch
+name: JSch
+role: ssh
+summary: An SSH2 client library for Java, from JCraft and its maintained fork.
+matches:
+  - group: '^(com\.jcraft|com\.github\.mwiede)$'
+    artifact: '^jsch$'

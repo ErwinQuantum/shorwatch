@@ -17,6 +17,14 @@ pub enum Language {
     /// and SSH keys.
     #[serde(rename = "key-material")]
     KeyMaterial,
+    /// A Maven `pom.xml`.
+    Maven,
+    /// A Gradle build script, in Groovy (`build.gradle`) or Kotlin
+    /// (`build.gradle.kts`).
+    Gradle,
+    /// A Gradle version catalog (`libs.versions.toml`).
+    #[serde(rename = "version-catalog")]
+    VersionCatalog,
 }
 
 impl Language {
@@ -25,6 +33,7 @@ impl Language {
             Language::Java | Language::Kotlin => Platform::Jvm,
             Language::Properties | Language::Yaml => Platform::Config,
             Language::KeyMaterial => Platform::Keys,
+            Language::Maven | Language::Gradle | Language::VersionCatalog => Platform::Build,
         }
     }
 }
@@ -41,4 +50,7 @@ pub enum Platform {
     /// Key material: the algorithm of keys and certificates themselves,
     /// whatever file holds them.
     Keys,
+    /// Build files: the libraries a project depends on. They are inventoried
+    /// (see [`crate::inventory`]), not matched by rules.
+    Build,
 }

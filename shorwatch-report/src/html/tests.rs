@@ -79,3 +79,18 @@ fn findings_know_their_project() {
     assert_eq!(data["findings"][0]["project"], 0);
     assert_eq!(data["findings"][4]["project"], 1);
 }
+
+#[test]
+fn libraries_travel_in_the_data_beside_the_findings() {
+    let mut scan = scan();
+    assert_eq!(data(&render(&scan))["dependencies"], serde_json::json!([]));
+    scan.dependencies = crate::fixtures::dependencies();
+    let data = data(&render(&scan));
+    assert_eq!(data["findings"].as_array().unwrap().len(), 5);
+    assert_eq!(data["dependencies"].as_array().unwrap().len(), 4);
+    assert_eq!(data["dependencies"][0]["library"], "BouncyCastle");
+    assert_eq!(
+        data["dependencies"][0]["post_quantum"]["support"],
+        "too_old"
+    );
+}
