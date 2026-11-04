@@ -191,5 +191,49 @@ pub(crate) fn scan() -> Scan {
         links: crate::SourceLinks::default(),
         suppressed: Vec::new(),
         projects: Vec::new(),
+        dependencies: Vec::new(),
     }
+}
+
+/// The libraries of a build file: BouncyCastle before its post-quantum
+/// support (declared twice), Nimbus with nothing claimed, and one whose
+/// version the file leaves to a parent.
+pub(crate) fn dependencies() -> Vec<shorwatch_core::Dependency> {
+    use shorwatch_core::inventory::{PostQuantum, Role, Support};
+
+    let bouncycastle = |path: &str, line: u32, support: Support, version: Option<&str>| {
+        shorwatch_core::Dependency {
+            library: "BouncyCastle".into(),
+            library_id: "bouncycastle".into(),
+            role: Role::Provider,
+            group: "org.bouncycastle".into(),
+            artifact: "bcprov-jdk18on".into(),
+            version: version.map(str::to_owned),
+            scope: None,
+            path: path.into(),
+            location: location(line, 5, 17),
+            post_quantum: Some(PostQuantum {
+                support,
+                since: "1.79".into(),
+                algorithms: vec!["ML-KEM".into(), "ML-DSA".into()],
+            }),
+        }
+    };
+    vec![
+        bouncycastle("pom.xml", 33, Support::TooOld, Some("1.70")),
+        shorwatch_core::Dependency {
+            library: "Nimbus JOSE + JWT".into(),
+            library_id: "nimbus-jose-jwt".into(),
+            role: Role::Jwt,
+            group: "com.nimbusds".into(),
+            artifact: "nimbus-jose-jwt".into(),
+            version: Some("9.37.3".into()),
+            scope: Some("implementation".into()),
+            path: "build.gradle".into(),
+            location: location(12, 5, 60),
+            post_quantum: None,
+        },
+        bouncycastle("billing/pom.xml", 20, Support::TooOld, Some("1.70")),
+        bouncycastle("gateway/pom.xml", 9, Support::Unknown, None),
+    ]
 }

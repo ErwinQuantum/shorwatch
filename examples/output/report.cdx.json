@@ -447,6 +447,147 @@
           "value": "vulnerable"
         }
       ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/org.springframework.boot/spring-boot-starter-oauth2-resource-server",
+      "group": "org.springframework.boot",
+      "name": "spring-boot-starter-oauth2-resource-server",
+      "purl": "pkg:maven/org.springframework.boot/spring-boot-starter-oauth2-resource-server",
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/pom.xml",
+            "line": 25,
+            "additionalContext": "Spring Security (OAuth 2.0 and JOSE)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:library",
+          "value": "Spring Security (OAuth 2.0 and JOSE)"
+        },
+        {
+          "name": "shorwatch:role",
+          "value": "jwt"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/org.springframework.security/spring-security-oauth2-jose",
+      "group": "org.springframework.security",
+      "name": "spring-security-oauth2-jose",
+      "purl": "pkg:maven/org.springframework.security/spring-security-oauth2-jose",
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/pom.xml",
+            "line": 29,
+            "additionalContext": "Spring Security (OAuth 2.0 and JOSE)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:library",
+          "value": "Spring Security (OAuth 2.0 and JOSE)"
+        },
+        {
+          "name": "shorwatch:role",
+          "value": "jwt"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/org.bouncycastle/bcprov-jdk18on@1.70",
+      "group": "org.bouncycastle",
+      "name": "bcprov-jdk18on",
+      "version": "1.70",
+      "purl": "pkg:maven/org.bouncycastle/bcprov-jdk18on@1.70",
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/pom.xml",
+            "line": 33,
+            "additionalContext": "BouncyCastle"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:library",
+          "value": "BouncyCastle"
+        },
+        {
+          "name": "shorwatch:role",
+          "value": "provider"
+        },
+        {
+          "name": "shorwatch:post-quantum",
+          "value": "too-old"
+        },
+        {
+          "name": "shorwatch:post-quantum-since",
+          "value": "1.79"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/com.nimbusds/nimbus-jose-jwt@9.37.3",
+      "group": "com.nimbusds",
+      "name": "nimbus-jose-jwt",
+      "version": "9.37.3",
+      "purl": "pkg:maven/com.nimbusds/nimbus-jose-jwt@9.37.3",
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/pom.xml",
+            "line": 38,
+            "additionalContext": "Nimbus JOSE + JWT"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:library",
+          "value": "Nimbus JOSE + JWT"
+        },
+        {
+          "name": "shorwatch:role",
+          "value": "jwt"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:maven/com.jcraft/jsch@0.1.55",
+      "group": "com.jcraft",
+      "name": "jsch",
+      "version": "0.1.55",
+      "purl": "pkg:maven/com.jcraft/jsch@0.1.55",
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/pom.xml",
+            "line": 43,
+            "additionalContext": "JSch"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:library",
+          "value": "JSch"
+        },
+        {
+          "name": "shorwatch:role",
+          "value": "ssh"
+        }
+      ]
     }
   ]
 }

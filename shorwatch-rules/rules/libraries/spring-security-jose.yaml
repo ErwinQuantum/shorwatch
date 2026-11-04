@@ -1,0 +1,9 @@
+id: spring-security-jose
+name: Spring Security (OAuth 2.0 and JOSE)
+role: jwt
+summary: JWT decoding and encoding, resource servers and authorization servers of Spring Security.
+matches:
+  - group: '^org\.springframework\.security$'
+    artifact: '^spring-security-oauth2-(jose|resource-server|authorization-server)$'
+  - group: '^org\.springframework\.boot$'
+    artifact: '^spring-boot-starter-oauth2-(resource-server|client|authorization-server)$'

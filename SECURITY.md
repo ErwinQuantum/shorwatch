@@ -41,6 +41,10 @@ regular issue.
   far below) is skipped with a warning, and every scanning thread has a large
   stack for what is left. A skipped file is reported on stderr, never
   silently: if a scan matters, read its warnings.
+- Build files (`pom.xml`, Gradle scripts, version catalogs) are read as
+  data: XML external entities and DTDs are never fetched, nesting and resolved
+  coordinates are bounded, and every reader is linear in the file; a script is
+  never evaluated.
 - Private key bodies are redacted from the text reports show.
 - Text from scanned files reaches the terminal and the CI log without
   control characters, and the HTML report as text only (`textContent`),

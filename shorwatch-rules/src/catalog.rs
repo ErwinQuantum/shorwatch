@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde_yaml_ng::{Mapping, Value};
-use shorwatch_core::Rule;
+use shorwatch_core::{LibrarySpec, Rule};
 
 use crate::LoadError;
 
@@ -27,6 +27,9 @@ pub struct Catalog {
     pub(crate) profiles: BTreeMap<String, Source>,
     pub(crate) markers: BTreeMap<String, Source>,
     pub(crate) rules: Vec<Source>,
+    /// `libraries/<id>.yaml`: the known cryptographic libraries, which are
+    /// not rules (they feed the dependency inventory).
+    pub(crate) libraries: Vec<Source>,
 }
 
 impl Catalog {
@@ -57,6 +60,10 @@ impl Catalog {
         let table = match path.split('/').next() {
             Some("algorithms") => &mut self.profiles,
             Some("markers") => &mut self.markers,
+            Some("libraries") => {
+                self.libraries.push(source);
+                return Ok(());
+            }
             _ => {
                 self.rules.push(source);
                 return Ok(());
@@ -100,6 +107,11 @@ impl Catalog {
         self.rules.iter().map(|r| self.assemble(r)).collect()
     }
 
+    /// Every known library.
+    pub fn libraries(&self) -> Result<Vec<LibrarySpec>, LoadError> {
+        self.libraries.iter().map(library).collect()
+    }
+
     pub(crate) fn assemble(&self, rule: &Source) -> Result<Rule, LoadError> {
         let mut doc = rule.doc.clone();
         if let Some(profile) = doc.remove("profile") {
@@ -136,6 +148,13 @@ impl Catalog {
 pub(crate) fn deserialize(origin: &str, value: Value) -> Result<Rule, LoadError> {
     serde_yaml_ng::with::singleton_map_recursive::deserialize(value).map_err(|e| LoadError::Parse {
         origin: origin.to_owned(),
+        message: e.to_string(),
+    })
+}
+
+fn library(source: &Source) -> Result<LibrarySpec, LoadError> {
+    serde_yaml_ng::from_value(Value::Mapping(source.doc.clone())).map_err(|e| LoadError::Parse {
+        origin: source.origin.clone(),
         message: e.to_string(),
     })
 }

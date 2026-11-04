@@ -5,6 +5,29 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- The cryptographic libraries a project declares in its build files: Maven
+  `pom.xml`, Gradle `build.gradle` and `build.gradle.kts` (Groovy and Kotlin
+  DSL) and `libs.versions.toml`, found by file name. About 20 known libraries
+  (BouncyCastle, Nimbus, jjwt, JSch, Tink, the cloud KMS clients...) are
+  listed with their version and, where the catalog knows it, whether that
+  version can do post-quantum cryptography (BouncyCastle from 1.79).
+- They are an inventory, not findings: the summary counts them, the JSON
+  report lists `dependencies`, the Markdown and HTML reports have a section,
+  and the CBOM carries them as `library` components with a package URL. They
+  feed no gate, baseline or SARIF result.
+- The catalog of known libraries is data (`rules/libraries/<id>.yaml`), and
+  `--rules` directories may add their own.
+
+### Security
+
+- Build files are read as untrusted input: XML external entities are never
+  read, nesting and resolved coordinates are bounded, and the readers are
+  linear in the file.
+
 ## [0.1.0] - 2026-10-30
 
 The first release.

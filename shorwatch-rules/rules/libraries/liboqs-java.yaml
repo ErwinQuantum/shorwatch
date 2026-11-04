@@ -1,0 +1,7 @@
+id: liboqs-java
+name: liboqs-java
+role: post-quantum
+summary: Java bindings of liboqs, the Open Quantum Safe post-quantum algorithms library.
+matches:
+  - group: '^(org\.openquantumsafe|com\.github\.open-quantum-safe)$'
+    artifact: '^liboqs-java$'

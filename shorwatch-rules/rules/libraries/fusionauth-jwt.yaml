@@ -1,0 +1,7 @@
+id: fusionauth-jwt
+name: FusionAuth JWT
+role: jwt
+summary: A JWT library for Java, with RSA, EC and HMAC signers and verifiers.
+matches:
+  - group: '^io\.fusionauth$'
+    artifact: '^fusionauth-jwt$'

@@ -1,0 +1,7 @@
+id: conscrypt
+name: Conscrypt
+role: provider
+summary: A JCA provider backed by BoringSSL, with its own TLS stack.
+matches:
+  - group: '^org\.conscrypt$'
+    artifact: '^conscrypt-'

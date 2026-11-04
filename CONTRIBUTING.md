@@ -34,6 +34,7 @@ markers/<name>.yaml              signs of post-quantum code (hybrid detection)
 jvm/<library>/<profile>.yaml     the patterns one library exposes
 config/<framework>/<profile>.yaml
 keys/material/<profile>.yaml     keys and certificates a repository holds
+libraries/<id>.yaml              a cryptographic library a build file may declare
 ```
 
 ### Covering a new library for an existing algorithm
@@ -58,6 +59,32 @@ patterns:
 
 That's it: every file under `rules/` is embedded automatically. The message,
 migration advice and NIST references come from `algorithms/rsa.yaml`.
+
+### Teaching Shorwatch a library (the dependency inventory)
+
+A library the build files declare is listed in the reports, with its version,
+when `shorwatch-rules/rules/libraries/<id>.yaml` knows its Maven coordinates.
+It is not a rule and reports no finding:
+
+```yaml
+id: acme-crypto                  # must match the file name
+name: Acme Crypto
+role: provider                   # provider | jwt | ssh | xml-signature | kms | post-quantum
+summary: One line on what it does for a project.
+matches:                         # anchored regexes: ^group$, artifact ^...
+  - group: '^com\.acme$'
+    artifact: '^acme-crypto(-core)?$'
+# Only when you have checked the release notes for the first version that
+# offers post-quantum algorithms; otherwise leave it out and claim nothing.
+post_quantum:
+  since: '2.1'
+  algorithms: [ML-KEM, ML-DSA]
+references:
+  - title: Release notes of 2.1
+    url: https://example.com/releases/2.1
+```
+
+Tests check that the file name is the id and that the patterns are anchored.
 
 ### Pattern kinds
 

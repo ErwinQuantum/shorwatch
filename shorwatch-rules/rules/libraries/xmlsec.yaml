@@ -1,0 +1,7 @@
+id: xmlsec
+name: Apache Santuario (XML Security)
+role: xml-signature
+summary: XML Signature and XML Encryption for Java.
+matches:
+  - group: '^org\.apache\.santuario$'
+    artifact: '^xmlsec$'

@@ -1,0 +1,7 @@
+id: jose4j
+name: jose4j
+role: jwt
+summary: A JOSE and JWT implementation for Java.
+matches:
+  - group: '^org\.bitbucket\.b_c$'
+    artifact: '^jose4j$'

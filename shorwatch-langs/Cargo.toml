@@ -15,6 +15,7 @@ tree-sitter.workspace = true
 tree-sitter-java.workspace = true
 tree-sitter-kotlin-ng.workspace = true
 tree-sitter-yaml.workspace = true
+quick-xml.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]

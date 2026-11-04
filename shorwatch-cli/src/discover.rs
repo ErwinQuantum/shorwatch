@@ -65,9 +65,7 @@ fn role(path: &Path, roots: &[PathBuf]) -> CodeRole {
 }
 
 fn is_supported(path: &Path) -> bool {
-    path.extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| shorwatch_langs::for_extension(e).is_some())
+    shorwatch_langs::for_path(path).is_some()
 }
 
 fn too_large(path: &Path) -> bool {

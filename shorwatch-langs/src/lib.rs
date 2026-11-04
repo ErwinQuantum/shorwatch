@@ -5,9 +5,12 @@
 //! crosses this crate's public API. [`bytecode`] reads the declarations of
 //! compiled dependencies.
 
+use std::path::Path;
+
 use shorwatch_core::{Language, SourceUnit};
 use thiserror::Error;
 
+pub mod build;
 pub mod bytecode;
 pub mod config;
 mod depth;
@@ -17,6 +20,7 @@ pub mod keys;
 pub mod kotlin;
 mod span;
 
+pub use build::{GradleFrontend, MavenFrontend, VersionCatalogFrontend};
 pub use config::{PropertiesFrontend, YamlFrontend};
 pub use java::JavaFrontend;
 pub use keys::KeyMaterialFrontend;
@@ -40,6 +44,12 @@ pub trait Frontend: Send + Sync {
 
     /// File extensions (without the dot) this frontend handles.
     fn extensions(&self) -> &'static [&'static str];
+
+    /// Exact file names it handles whatever their extension (`pom.xml`): for
+    /// files too common in kind to claim by extension.
+    fn file_names(&self) -> &'static [&'static str] {
+        &[]
+    }
 
     /// `path` is only used as the unit's identifier; nothing is read from disk.
     fn lower(&self, path: &str, source: &str) -> Result<SourceUnit, LangError>;
@@ -73,7 +83,20 @@ pub fn frontends() -> Vec<Box<dyn Frontend>> {
         Box::new(KeyMaterialFrontend),
         Box::new(PropertiesFrontend),
         Box::new(YamlFrontend),
+        Box::new(MavenFrontend),
+        Box::new(GradleFrontend),
+        Box::new(VersionCatalogFrontend),
     ]
+}
+
+/// The frontend for a file: by its exact name (`pom.xml`) or else by its
+/// extension.
+pub fn for_path(path: &Path) -> Option<Box<dyn Frontend>> {
+    let name = path.file_name()?.to_str()?;
+    frontends()
+        .into_iter()
+        .find(|f| f.file_names().contains(&name))
+        .or_else(|| for_extension(path.extension()?.to_str()?))
 }
 
 /// The frontend registered for a file extension, if any.

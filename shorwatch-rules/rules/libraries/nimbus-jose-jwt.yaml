@@ -1,0 +1,7 @@
+id: nimbus-jose-jwt
+name: Nimbus JOSE + JWT
+role: jwt
+summary: JSON Web Signature, Encryption and Token (JOSE) for Java; the OAuth 2.0 and OpenID Connect SDK builds on it.
+matches:
+  - group: '^com\.nimbusds$'
+    artifact: '^(nimbus-jose-jwt|oauth2-oidc-sdk)$'

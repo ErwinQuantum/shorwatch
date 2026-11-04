@@ -9,7 +9,7 @@
 //! `textContent`, never as markup.
 
 use serde::Serialize;
-use shorwatch_core::Finding;
+use shorwatch_core::{Dependency, Finding};
 
 use crate::{Project, Scan, SourceLinks, Summary};
 
@@ -27,6 +27,7 @@ pub fn render(scan: &Scan) -> String {
         projects: &scan.projects,
         links: &scan.links,
         findings: scan.findings.iter().map(|f| entry(scan, f)).collect(),
+        dependencies: &scan.dependencies,
     };
     let data = serde_json::to_string(&payload).expect("a scan always serializes");
     TEMPLATE
@@ -73,6 +74,8 @@ struct Payload<'a> {
     projects: &'a [Project],
     links: &'a SourceLinks,
     findings: Vec<Entry<'a>>,
+    /// The cryptographic libraries the build files declare.
+    dependencies: &'a [Dependency],
 }
 
 #[derive(Serialize)]

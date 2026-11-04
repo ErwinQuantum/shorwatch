@@ -81,6 +81,16 @@ its subject, key size or curve, signature and expiry, e.g. `certificate
 "CN=api.example.com": RSA 2048-bit, signed with SHA256withRSA, valid until
 2031-03-01`.
 
+And the **cryptographic libraries** a project declares in its build files
+(`pom.xml`, `build.gradle`, `build.gradle.kts`, `libs.versions.toml`), with
+their version: BouncyCastle, Nimbus, jjwt, JSch, Tink, the cloud KMS clients
+and others. They are an inventory beside the findings, never findings: using
+a library is neither vulnerable nor safe by itself. What it adds is what the
+code cannot say, such as `BouncyCastle 1.70`, a version that predates
+BouncyCastle's ML-KEM, ML-DSA and SLH-DSA (first in 1.79). The summary
+counts them, the HTML report lists them, and the CBOM carries them as
+`library` components with a package URL.
+
 Every finding carries the file, line, severity, an explanation, migration
 advice and links to the relevant NIST documents.
 
@@ -559,6 +569,7 @@ the same findings.
 | Keys and certificates: X.509 certificates and requests, SPKI public keys, PKCS#8, PKCS#1 and SEC 1 private keys (PEM or DER), JKS/JCEKS keystores, unencrypted PKCS#12 content, SSH public keys and OpenSSH private keys. Certificates a keystore only trusts are grouped by algorithm; the SHA-1 signature of a self-signed certificate is not reported (nothing verifies it) | Encrypted content: password-protected private keys and the certificates PKCS#12 encrypts with the store's password (Java's default) |
 | Data flow within and across files: variables, fields set in constructors, parameters of methods and constructors fed by calls anywhere in the project, returned values (`switch`/`when` mappings), constants of other classes, concatenations and templates, `?:`/`if` branches. Calls through interfaces reach every implementation (the type hierarchy comes from the sources), and chained calls such as `Crypto.provider().keyPairGenerator("RSA")` are typed from the declared return type, also along longer chains and for variables without a written type (`var`, Kotlin `val`). With `--classpath`, library types too (`jsch.getSession(...)` returns a `Session`). Findings show the path from the literal to the use, file by file | Overloads; enum properties; values that depend on the order of execution |
 | Kotlin idioms: constructor calls without `new`, `val` / `const val` / `companion object` constants, member imports, `@Value` on constructor parameters, scope functions (`apply`, `run`, `with`, `also`, `let`) | Kotlin extension functions that wrap crypto (needs data flow) |
+| Build files, as an inventory of known cryptographic libraries (20, in [`rules/libraries/`](shorwatch-rules/rules/libraries/)): Maven `pom.xml` (`${properties}` and the project version resolved), Gradle in Groovy and Kotlin (string and named notation, same-file variables, platforms), version catalogs (`version.ref`) | Versions managed by a parent POM or a BOM, and values a Gradle script computes (shown as "version not set"); catalog aliases used from a script (the catalog itself is read); libraries the catalog does not know |
 
 ## Rules
 
@@ -658,8 +669,8 @@ reviewed. Security issues: see [SECURITY.md](SECURITY.md).
 - A GitHub Action on the Marketplace, and `shorwatch fix` to apply the
   suggested fixes
 - A post-quantum maturity score and the NIST IR 8547 deadlines per project
-- Beyond source code: dependency versions (`pom.xml`, `build.gradle`),
-  infrastructure (nginx, Kubernetes, Terraform) and message brokers
+- Beyond source code: infrastructure (nginx, Kubernetes, Terraform) and
+  message brokers
 - More configuration formats (Quarkus, Micronaut, `@ConfigurationProperties`)
 - More languages
 

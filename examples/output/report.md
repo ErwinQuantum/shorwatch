@@ -8,7 +8,7 @@
 | Severity high | 13 |
 | Severity medium | 3 |
 | Severity low | 1 |
-| Files with findings / scanned | 9 / 9 |
+| Files with findings / scanned | 9 / 10 |
 
 ### Findings
 
@@ -31,3 +31,13 @@
 | high | RSA \(JOSE/JWT\) | `examples/spring-service/src/main/resources/application.yml:8` | vulnerable | `config.spring-boot.jose-rsa` |
 | high | TLS key exchange | `examples/spring-service/src/main/resources/application.yml:14` | vulnerable | `config.spring-boot.tls-key-exchange` |
 | high | RSA | `examples/spring-service/src/main/resources/certs/partner-signing.pem:1` (certificate "CN=statements.partner.example, O=Example Partner": RSA 3072-bit, signed with SHA256withRSA, valid until 2031-10-26) | vulnerable | `keys.material.rsa` |
+
+### Cryptographic libraries
+
+| Library | Version | Post-quantum | Declared in |
+|---|---|---|---|
+| Spring Security \(OAuth 2.0 and JOSE\) | not set |  | `examples/spring-service/pom.xml:25` |
+| Spring Security \(OAuth 2.0 and JOSE\) | not set |  | `examples/spring-service/pom.xml:29` |
+| BouncyCastle | 1.70 | not before 1.79 | `examples/spring-service/pom.xml:33` |
+| Nimbus JOSE + JWT | 9.37.3 |  | `examples/spring-service/pom.xml:38` |
+| JSch | 0.1.55 |  | `examples/spring-service/pom.xml:43` |

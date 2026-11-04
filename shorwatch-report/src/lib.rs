@@ -15,7 +15,7 @@
 
 use std::collections::BTreeMap;
 
-use shorwatch_core::Finding;
+use shorwatch_core::{Dependency, Finding};
 
 pub mod cbom;
 pub mod html;
@@ -52,6 +52,9 @@ pub struct Scan {
     /// Findings found but not reported: ignored in the code, or already in
     /// the baseline. Reports count them so nothing disappears silently.
     pub suppressed: Vec<Suppressed>,
+    /// The cryptographic libraries the build files declare. An inventory
+    /// next to the findings: it feeds no gate, baseline or SARIF result.
+    pub dependencies: Vec<Dependency>,
 }
 
 /// The index of the project `path` belongs to: the one with the longest

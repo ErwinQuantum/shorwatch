@@ -1,0 +1,7 @@
+id: i2p-eddsa
+name: EdDSA-Java (net.i2p.crypto)
+role: provider
+summary: Ed25519 signatures for Java, for JDKs that lack them.
+matches:
+  - group: '^net\.i2p\.crypto$'
+    artifact: '^eddsa$'

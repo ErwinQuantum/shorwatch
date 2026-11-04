@@ -3,6 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::Serialize;
+use shorwatch_core::inventory::Support;
 use shorwatch_core::{CodeRole, Severity, Status};
 
 use crate::{Scan, Suppression};
@@ -25,6 +26,18 @@ pub struct Summary {
     pub ignored_in_code: usize,
     /// Findings already in the baseline, left out.
     pub in_baseline: usize,
+    /// Cryptographic libraries the build files declare (see
+    /// [`Scan::dependencies`]).
+    #[serde(skip_serializing_if = "is_zero")]
+    pub libraries: usize,
+    /// Of those, the ones whose declared version predates the library's
+    /// post-quantum algorithms.
+    #[serde(skip_serializing_if = "is_zero")]
+    pub libraries_too_old: usize,
+}
+
+fn is_zero(n: &usize) -> bool {
+    *n == 0
 }
 
 impl Summary {
@@ -58,6 +71,16 @@ impl Summary {
                 .iter()
                 .filter(|s| s.suppression == Suppression::Baseline)
                 .count(),
+            libraries: scan.dependencies.len(),
+            libraries_too_old: scan
+                .dependencies
+                .iter()
+                .filter(|d| {
+                    d.post_quantum
+                        .as_ref()
+                        .is_some_and(|pq| pq.support == Support::TooOld)
+                })
+                .count(),
         }
     }
 
@@ -88,6 +111,16 @@ pub(crate) fn status_label(status: Status) -> &'static str {
 mod tests {
     use super::*;
     use crate::fixtures::scan;
+
+    #[test]
+    fn counts_the_libraries_and_the_ones_before_post_quantum_support() {
+        let mut scan = scan();
+        assert_eq!(scan.summary().libraries, 0);
+        scan.dependencies = crate::fixtures::dependencies();
+        let summary = scan.summary();
+        assert_eq!(summary.libraries, 4);
+        assert_eq!(summary.libraries_too_old, 2);
+    }
 
     #[test]
     fn counts_findings_by_status_severity_and_file() {

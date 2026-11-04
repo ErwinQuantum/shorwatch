@@ -4,13 +4,16 @@
 //! (embedded at compile time) and loads additional rule files from disk, so a
 //! new detection never requires touching or recompiling the engine.
 //!
-//! A rules directory has three kinds of files, told apart by their location:
+//! A rules directory has four kinds of files, told apart by their location:
 //!
 //! - `algorithms/<profile>.yaml`: what an algorithm is and why it matters
 //!   (category, severity, message, migration advice, references, hybrid
 //!   markers). Written once per algorithm.
 //! - `markers/<name>.yaml`: a named set of hybrid markers, referenced from
 //!   profiles as `hybrid: <name>`.
+//! - `libraries/<id>.yaml`: a cryptographic library a build file may declare
+//!   (its Maven coordinates, and from which version it offers post-quantum
+//!   algorithms, if it does). Not a rule: it feeds the dependency inventory.
 //! - anything else, e.g. `jvm/nimbus/jose-rsa.yaml`: a rule, i.e. the patterns
 //!   one library exposes, plus `profile: <profile>`. Its fields override the
 //!   profile's, and a rule may also be fully self-contained.
@@ -22,7 +25,7 @@
 use std::path::Path;
 
 use serde_yaml_ng::Value;
-pub use shorwatch_core::{Rule, RuleError, RuleSet};
+pub use shorwatch_core::{LibraryCatalog, LibrarySpec, Rule, RuleError, RuleSet};
 
 mod catalog;
 mod error;
@@ -51,6 +54,23 @@ pub fn builtin_rules() -> Result<Vec<Rule>, LoadError> {
 /// The built-in rules, compiled.
 pub fn builtin() -> Result<RuleSet, LoadError> {
     Ok(RuleSet::compile(builtin_rules()?)?)
+}
+
+/// The known libraries shipped with Shorwatch.
+pub fn builtin_library_specs() -> Result<Vec<LibrarySpec>, LoadError> {
+    Catalog::builtin()?.libraries()
+}
+
+/// The known libraries shipped with Shorwatch, compiled.
+pub fn builtin_libraries() -> Result<LibraryCatalog, LoadError> {
+    Ok(LibraryCatalog::compile(builtin_library_specs()?)?)
+}
+
+/// The libraries under `dir` (`libraries/<id>.yaml`), to add to the built-in ones.
+pub fn load_dir_libraries(dir: &Path) -> Result<Vec<LibrarySpec>, LoadError> {
+    let mut catalog = Catalog::default();
+    catalog.add_dir(dir)?;
+    catalog.libraries()
 }
 
 /// The rules under `dir`. They may use the built-in profiles and markers as
