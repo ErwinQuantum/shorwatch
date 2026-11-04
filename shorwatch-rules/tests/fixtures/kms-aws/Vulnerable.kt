@@ -3,6 +3,8 @@ package com.example.signing
 import software.amazon.awssdk.core.SdkBytes
 import software.amazon.awssdk.services.kms.KmsClient
 import software.amazon.awssdk.services.kms.model.CreateKeyRequest
+import software.amazon.awssdk.services.kms.model.DeriveSharedSecretRequest
+import software.amazon.awssdk.services.kms.model.KeyAgreementAlgorithmSpec
 import software.amazon.awssdk.services.kms.model.KeySpec
 import software.amazon.awssdk.services.kms.model.KeyUsageType
 import software.amazon.awssdk.services.kms.model.SignRequest
@@ -28,4 +30,12 @@ class Vulnerable {
     ).signature()
 
     fun legacySdk(): KeySpec = KeySpec.ECC_NIST_P256
+
+    /** Key agreement: KMS derives the shared secret with its ECC key. */
+    fun agreement(keyId: String, peerPublicKey: SdkBytes): DeriveSharedSecretRequest =
+        DeriveSharedSecretRequest.builder()
+            .keyId(keyId)
+            .keyAgreementAlgorithm(KeyAgreementAlgorithmSpec.ECDH)
+            .publicKey(peerPublicKey)
+            .build()
 }
