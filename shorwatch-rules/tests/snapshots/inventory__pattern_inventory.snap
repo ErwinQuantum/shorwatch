@@ -229,6 +229,7 @@ EdDSA (JOSE/JWT):
   - "Field { owner: \"io.jsonwebtoken.security.Jwks.CRV\", matches: Some(\"^Ed(25519|448)$\") }"
   - "Property { key: \"(?i)(^|\\\\.)(alg|algorithms?|signing-?algorithms?|signature-?algorithms?)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"^(EdDSA|Ed25519|Ed448)$\") }"
 ElGamal:
+  - "Call { receiver: \"java.security.AlgorithmParameterGenerator\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^ElGamal$\" }), origin: None }"
   - "Call { receiver: \"java.security.KeyFactory\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^ElGamal$\" }), origin: None }"
   - "Call { receiver: \"java.security.KeyPairGenerator\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^ElGamal$\" }), origin: None }"
   - "Call { receiver: \"javax.crypto.Cipher\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^ElGamal(/|$)\" }), origin: None }"
@@ -236,6 +237,8 @@ ElGamal:
   - "Construct { ty: \"org.bouncycastle.crypto.generators.ElGamalKeyPairGenerator\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.generators.ElGamalParametersGenerator\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.params.ElGamalParameters\", arg: None }"
+  - "Construct { ty: \"org.bouncycastle.jce.spec.ElGamalGenParameterSpec\", arg: None }"
+  - "Construct { ty: \"org.bouncycastle.jce.spec.ElGamalParameterSpec\", arg: None }"
   - "Field { owner: \"org.bouncycastle.bcpg.PublicKeyAlgorithmTags\", matches: Some(\"^ELGAMAL_(ENCRYPT|GENERAL)$\") }"
   - "Field { owner: \"org.bouncycastle.openpgp.PGPPublicKey\", matches: Some(\"^ELGAMAL_(ENCRYPT|GENERAL)$\") }"
 RSA:
