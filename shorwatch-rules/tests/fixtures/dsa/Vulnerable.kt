@@ -11,4 +11,12 @@ class Vulnerable {
     fun signer(): Signature = Signature.getInstance("SHA256withDSA")
 
     fun bouncyCastle(): Any = DSASigner()
+
+    // Older names the JDK still accepts for the same signature.
+    fun legacyNames() {
+        Signature.getInstance("DSS")
+        Signature.getInstance("DSAWithSHA1")
+        Signature.getInstance("RawDSA")
+        Signature.getInstance("1.2.840.10040.4.3")
+    }
 }

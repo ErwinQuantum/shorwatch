@@ -1,7 +1,7 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/dsa/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/dsa/Vulnerable.java
 ---
 - rule: jvm.jca.dsa
   at: "9:38"
@@ -11,4 +11,16 @@ input_file: shorwatch-rules/tests/fixtures/java/dsa/Vulnerable.java
   status: vulnerable
 - rule: jvm.bouncycastle.dsa
   at: "19:16"
+  status: vulnerable
+- rule: jvm.jca.dsa
+  at: "24:9"
+  status: vulnerable
+- rule: jvm.jca.dsa
+  at: "25:9"
+  status: vulnerable
+- rule: jvm.jca.dsa
+  at: "26:9"
+  status: vulnerable
+- rule: jvm.jca.dsa
+  at: "27:9"
   status: vulnerable

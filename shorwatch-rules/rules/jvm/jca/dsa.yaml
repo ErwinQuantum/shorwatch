@@ -3,12 +3,16 @@ profile: dsa
 platform: jvm
 
 patterns:
-  # JCA. `SHA256withDSA`, `NONEwithDSA`, BouncyCastle's deterministic `DDSA`.
+  # JCA. `SHA256withDSA`, `NONEwithDSA`, BouncyCastle's deterministic `DDSA`,
+  # and the older names the SUN provider still accepts as aliases: `DSS`,
+  # `DSAWithSHA1`, `SHA1/DSA`, `RawDSA` and the signature OID.
   # `withECDSA` does not contain `withDSA`, so ECDSA names never match here.
   - call:
       type: java.security.Signature
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(D?DSA|.+withD?DSA(inP1363Format)?)$' }
+      arg:
+        index: 0
+        matches: '(?i)^(D?DSA|DSS|RawDSA|DSAWithSHA1|SHA-?1?/DSA|(OID\.)?1\.2\.840\.10040\.4\.3|.+withD?DSA(inP1363Format)?)$'
   - call:
       type: java.security.KeyPairGenerator
       method: getInstance

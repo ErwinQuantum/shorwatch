@@ -45,7 +45,7 @@ DSA:
   - "Call { receiver: \"java.security.AlgorithmParameterGenerator\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^DSA$\" }), origin: None }"
   - "Call { receiver: \"java.security.KeyFactory\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^DSA$\" }), origin: None }"
   - "Call { receiver: \"java.security.KeyPairGenerator\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^DSA$\" }), origin: None }"
-  - "Call { receiver: \"java.security.Signature\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^(D?DSA|.+withD?DSA(inP1363Format)?)$\" }), origin: None }"
+  - "Call { receiver: \"java.security.Signature\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^(D?DSA|DSS|RawDSA|DSAWithSHA1|SHA-?1?/DSA|(OID\\\\.)?1\\\\.2\\\\.840\\\\.10040\\\\.4\\\\.3|.+withD?DSA(inP1363Format)?)$\" }), origin: None }"
   - "Call { receiver: \"org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider\", method: \"setAlgorithm\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^DSA$\" }), origin: None }"
   - "Construct { ty: \"java.security.spec.DSAParameterSpec\", arg: None }"
   - "Construct { ty: \"java.security.spec.DSAPrivateKeySpec\", arg: None }"
