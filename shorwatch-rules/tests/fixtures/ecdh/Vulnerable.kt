@@ -5,6 +5,7 @@ import java.security.KeyPairGenerator
 import java.security.PublicKey
 import javax.crypto.Cipher
 import javax.crypto.KeyAgreement
+import org.bouncycastle.crypto.agreement.ECDHCUnifiedAgreement
 import org.bouncycastle.crypto.agreement.X25519Agreement
 
 class Vulnerable {
@@ -27,4 +28,6 @@ class Vulnerable {
     fun ecies(): Cipher = Cipher.getInstance("ECIESwithAES-CBC")
 
     fun lightweight(): Any = X25519Agreement()
+
+    fun unified(): Any = ECDHCUnifiedAgreement()
 }

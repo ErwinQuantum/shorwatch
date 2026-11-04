@@ -120,6 +120,7 @@ ECDH:
   - "Construct { ty: \"java.security.spec.XECPublicKeySpec\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.agreement.ECDHBasicAgreement\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.agreement.ECDHCBasicAgreement\", arg: None }"
+  - "Construct { ty: \"org.bouncycastle.crypto.agreement.ECDHCUnifiedAgreement\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.agreement.ECMQVBasicAgreement\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.agreement.X25519Agreement\", arg: None }"
   - "Construct { ty: \"org.bouncycastle.crypto.agreement.X448Agreement\", arg: None }"

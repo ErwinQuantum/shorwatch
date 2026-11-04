@@ -7,6 +7,9 @@ patterns:
       type: org.bouncycastle.crypto.agreement.ECDHBasicAgreement
   - construct:
       type: org.bouncycastle.crypto.agreement.ECDHCBasicAgreement
+  # The NIST SP 800-56A "unified model", with static and ephemeral keys.
+  - construct:
+      type: org.bouncycastle.crypto.agreement.ECDHCUnifiedAgreement
   - construct:
       type: org.bouncycastle.crypto.agreement.ECMQVBasicAgreement
   - construct:

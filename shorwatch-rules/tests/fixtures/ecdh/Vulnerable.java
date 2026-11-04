@@ -5,6 +5,7 @@ import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import javax.crypto.Cipher;
 import javax.crypto.KeyAgreement;
+import org.bouncycastle.crypto.agreement.ECDHCUnifiedAgreement;
 import org.bouncycastle.crypto.agreement.X25519Agreement;
 
 public class Vulnerable {
@@ -32,5 +33,9 @@ public class Vulnerable {
 
     Object lightweight() {
         return new X25519Agreement();
+    }
+
+    Object unified() {
+        return new ECDHCUnifiedAgreement();
     }
 }
