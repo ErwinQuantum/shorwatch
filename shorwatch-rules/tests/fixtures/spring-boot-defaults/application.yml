@@ -1,0 +1,7 @@
+# The decoder built from jwk-set-uri verifies RS256 unless told otherwise.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://idp.example.com/.well-known/jwks.json

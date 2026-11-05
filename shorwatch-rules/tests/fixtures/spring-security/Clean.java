@@ -12,11 +12,6 @@ public class Clean {
         return NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build();
     }
 
-    /** Remote JWKS: the algorithm is decided at runtime (needs data flow). */
-    Object jwks() {
-        return NimbusJwtDecoder.withJwkSetUri("https://issuer.example/.well-known/jwks.json").build();
-    }
-
     /** `Encryptors.stronger` is AES-256-GCM; BCrypt-style password hashing is fine. */
     Object symmetric(String password, String salt) {
         PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
