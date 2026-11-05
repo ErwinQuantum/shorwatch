@@ -8,15 +8,15 @@ patterns:
   - call:
       type: java.security.KeyPairGenerator
       method: getInstance
-      arg: { index: 0, matches: '(?i)^EC$' }
+      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?1\.2\.840\.10045\.2\.1)$' }
   - call:
       type: java.security.KeyFactory
       method: getInstance
-      arg: { index: 0, matches: '(?i)^EC$' }
+      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?1\.2\.840\.10045\.2\.1)$' }
   - call:
       type: java.security.AlgorithmParameters
       method: getInstance
-      arg: { index: 0, matches: '(?i)^EC$' }
+      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?1\.2\.840\.10045\.2\.1)$' }
   - construct:
       type: java.security.spec.ECGenParameterSpec
   - construct:

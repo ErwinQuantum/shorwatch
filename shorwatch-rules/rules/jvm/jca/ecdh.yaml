@@ -8,19 +8,24 @@ patterns:
   - call:
       type: javax.crypto.KeyAgreement
       method: getInstance
-      arg: { index: 0, matches: '(?i)^((ECDHC?|ECCDH|ECMQV)(with.+)?|XDH|X25519|X448)$' }
+      arg: { index: 0, matches: '(?i)^((ECDHC?|ECCDH|ECMQV)(with.+)?|XDH|X25519|X448|(OID\.)?1\.3\.101\.11[01])$' }
   - call:
       type: java.security.KeyPairGenerator
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(ECDHC?|ECMQV|XDH|X25519|X448)$' }
+      arg: { index: 0, matches: '(?i)^(ECDHC?|ECMQV|XDH|X25519|X448|(OID\.)?1\.3\.101\.11[01])$' }
   - call:
       type: java.security.KeyFactory
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(ECDHC?|ECMQV|XDH|X25519|X448)$' }
+      arg: { index: 0, matches: '(?i)^(ECDHC?|ECMQV|XDH|X25519|X448|(OID\.)?1\.3\.101\.11[01])$' }
   - call:
       type: javax.crypto.Cipher
       method: getInstance
       arg: { index: 0, matches: '(?i)^ECIES(with[^/]+)?(/|$)' }
+  # JEP 452 (Java 21): HPKE's DHKEM over EC or X25519/X448 keys.
+  - call:
+      type: javax.crypto.KEM
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^DHKEM$' }
   - construct:
       type: java.security.spec.XECPublicKeySpec
   - construct:
