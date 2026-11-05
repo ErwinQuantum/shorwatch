@@ -15,3 +15,9 @@ input_file: shorwatch-rules/tests/fixtures/ecdsa/Vulnerable.kt
 - rule: jvm.bouncycastle.ecdsa
   at: "22:16"
   status: vulnerable
+- rule: jvm.jca.ecdsa
+  at: "27:9"
+  status: vulnerable
+- rule: jvm.jca.ecdsa
+  at: "28:9"
+  status: vulnerable

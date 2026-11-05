@@ -1,7 +1,7 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/ecdsa/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/ecdsa/Vulnerable.java
 ---
 - rule: jvm.jca.ecdsa
   at: "12:31"
@@ -14,4 +14,10 @@ input_file: shorwatch-rules/tests/fixtures/java/ecdsa/Vulnerable.java
   status: vulnerable
 - rule: jvm.bouncycastle.ecdsa
   at: "24:16"
+  status: vulnerable
+- rule: jvm.jca.ecdsa
+  at: "29:9"
+  status: vulnerable
+- rule: jvm.jca.ecdsa
+  at: "30:9"
   status: vulnerable
