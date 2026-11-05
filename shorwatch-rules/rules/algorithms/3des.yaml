@@ -4,14 +4,16 @@ severity: medium
 title: Triple DES is deprecated and has too little margin against Grover's algorithm
 message: >-
   Triple DES (TDEA / DESede) detected. Its effective strength is at most 112
-  bits classically, about 56 bits against Grover's algorithm, and its 64-bit
-  block makes long sessions vulnerable to birthday attacks (Sweet32). NIST
-  disallowed 3DES for encryption after 2023.
+  bits classically, Grover's algorithm shrinks that margin further, and its
+  64-bit block makes long sessions vulnerable to birthday attacks (Sweet32).
+  NIST disallowed 3DES for encryption after 2023.
 suggestion: >-
   Use AES-256, preferably in an authenticated mode such as GCM. No automatic
   fix is offered: AES needs a different key size, IV length and block size,
   and data already encrypted with 3DES must be decrypted and re-encrypted.
 references:
+  - title: "Shorwatch: why 3DES is flagged"
+    url: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/3des.md
   - title: "NIST SP 800-131A Rev. 2: Transitioning the Use of Cryptographic Algorithms and Key Lengths"
     url: https://csrc.nist.gov/pubs/sp/800/131/a/r2/final
   - title: "NIST SP 800-67 Rev. 2 (withdrawn): Recommendation for the Triple Data Encryption Algorithm"
