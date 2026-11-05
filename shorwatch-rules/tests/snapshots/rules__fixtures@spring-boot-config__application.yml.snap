@@ -27,3 +27,6 @@ input_file: shorwatch-rules/tests/fixtures/spring-boot-config/application.yml
 - rule: config.app.jose-eddsa
   at: "28:24"
   status: vulnerable
+- rule: config.app.jose-ecdh
+  at: "31:8"
+  status: vulnerable

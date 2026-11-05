@@ -137,6 +137,7 @@ ECDH:
   - "Field { owner: \"software.amazon.awssdk.services.kms.model.KeyAgreementAlgorithmSpec\", matches: Some(\"^ECDH$\") }"
   - "Key { algorithm: Some(\"^X(25519|448)$\"), signature: None }"
 ECDH (JOSE/JWE):
+  - "Call { receiver: \"com.nimbusds.jose.JWEAlgorithm\", method: \"parse\", arg: Some(ArgPattern { index: 0, matches: \"^ECDH-(ES|1PU)\" }), origin: None }"
   - "Construct { ty: \"com.nimbusds.jose.crypto.ECDHDecrypter\", arg: None }"
   - "Construct { ty: \"com.nimbusds.jose.crypto.ECDHEncrypter\", arg: None }"
   - "Construct { ty: \"com.nimbusds.jose.crypto.X25519Decrypter\", arg: None }"
@@ -146,6 +147,7 @@ ECDH (JOSE/JWE):
   - "Field { owner: \"com.nimbusds.jose.jwk.Curve\", matches: Some(\"^X(25519|448)$\") }"
   - "Field { owner: \"io.jsonwebtoken.Jwts.KEY\", matches: Some(\"^ECDH_ES\") }"
   - "Field { owner: \"io.jsonwebtoken.security.Jwks.CRV\", matches: Some(\"^X(25519|448)$\") }"
+  - "Property { key: \"(?i)(^|\\\\.)(alg|algorithms?)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"^ECDH-(ES|1PU)(\\\\+A(128|192|256)KW)?$\") }"
 ECDSA:
   - "Call { receiver: \"com.google.crypto.tink.KeyTemplates\", method: \"get\", arg: Some(ArgPattern { index: 0, matches: \"^ECDSA_\" }), origin: None }"
   - "Call { receiver: \"com.jcraft.jsch.JSch\", method: \"setConfig\", arg: Some(ArgPattern { index: 1, matches: \"(^|,)ecdsa-sha2-nistp(256|384|521)(,|$)\" }), origin: None }"

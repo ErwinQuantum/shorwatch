@@ -26,3 +26,6 @@ token:
   signing-algorithm: ES384
 partner:
   signature-algorithm: Ed25519
+mailbox:
+  # An encrypted token (JWE): key agreement, not a signature.
+  alg: ECDH-ES+A256KW
