@@ -4,6 +4,8 @@
 //! post-quantum code nearby, [`fix`] derives safe mechanical edits; this module
 //! ties them into [`Finding`]s.
 
+use std::collections::HashSet;
+
 use crate::finding::{Finding, Status};
 use crate::ir::{Fact, FactKind, SourceUnit};
 use crate::rule::{CompiledRule, RuleSet};
@@ -21,6 +23,11 @@ use matching::{Match, match_pattern};
 /// Evaluates every rule for the unit's platform against the unit.
 ///
 /// Pure and deterministic: findings are ordered by position, then rule id.
+/// A rule reports a line once, however many matching values it holds
+/// (`Family.EC.contains(a)` next to `new ECDSAVerifier(k)`, a cipher suite
+/// written under its IANA and OpenSSL names): it is one place to fix, and the
+/// baseline already treats it as one (see `report::fingerprint`). Findings
+/// with a fix, or about a key (their line is not where the key is), stay.
 pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
     let platform = unit.language().platform();
     let mut findings = Vec::new();
@@ -32,6 +39,12 @@ pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
         }
     }
     findings.sort_by(|a, b| (a.location.start, &a.rule_id).cmp(&(b.location.start, &b.rule_id)));
+    let mut reported = HashSet::new();
+    findings.retain(|f| {
+        f.fix.is_some()
+            || f.detail.is_some()
+            || reported.insert((f.rule_id.clone(), f.location.start.line))
+    });
     findings
 }
 

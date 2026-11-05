@@ -445,3 +445,24 @@ fn receiver_origin_tells_aes_from_hmac_key_generators() {
     assert_eq!(found(None), 1);
     assert_eq!(found(Some(vec![unknown])), 1);
 }
+
+#[test]
+fn a_rule_reports_a_line_once() {
+    // Two RSA names on one line: one thing to fix, one finding. The same
+    // rule on another line still reports.
+    let (mut unit, _, method) = unit_with_method();
+    for (alg, line) in [("RSA", 3), ("RSA", 3), ("RSA", 4)] {
+        get_instance(
+            &mut unit,
+            method,
+            "java.security.KeyPairGenerator",
+            alg,
+            line,
+        );
+    }
+    let lines: Vec<_> = analyze(&unit, &rules())
+        .iter()
+        .map(|f| f.location.start.line)
+        .collect();
+    assert_eq!(lines, [3, 4]);
+}
