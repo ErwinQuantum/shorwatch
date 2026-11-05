@@ -68,6 +68,10 @@ fn public_and_private_keys_in_every_pem_form() {
         ["public key: X448"]
     );
     assert_eq!(
+        labels("ed448.pem", fixture!("signer-ed448.pub.pem")),
+        ["public key: Ed448"]
+    );
+    assert_eq!(
         labels("dsa.pem", fixture!("dsa-public.pem")),
         ["public key: DSA 2048-bit"]
     );
