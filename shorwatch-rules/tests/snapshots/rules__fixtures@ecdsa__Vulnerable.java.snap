@@ -21,3 +21,6 @@ input_file: shorwatch-rules/tests/fixtures/ecdsa/Vulnerable.java
 - rule: jvm.jca.ecdsa
   at: "30:9"
   status: vulnerable
+- rule: jvm.jca.sha1
+  at: "30:9"
+  status: vulnerable
