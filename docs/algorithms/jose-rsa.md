@@ -98,6 +98,9 @@ key-distribution problems.
 - Shorwatch matches constants and configuration keys, not strings in code. A
   header value written as a plain `"RS256"` literal is not reported
   (`JWSAlgorithm.parse("RS256")` and `SignatureAlgorithm.forName("RS256")` are).
+- Only the libraries above are read. jose4j and fusionauth-jwt appear in the
+  dependency inventory when a build file declares them, but their code is not
+  scanned for algorithms.
 - RS256 as a *default* is not reported. `NimbusJwtDecoder.withJwkSetUri(...)`
   and the `jwk-set-uri` property verify with RS256 unless told otherwise, and
   Shorwatch does not infer that.
