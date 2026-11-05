@@ -54,6 +54,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   - Smaller additions: ElGamal parameter generators and BouncyCastle specs,
     BouncyCastle's `RSADigestSigner` and unified-model ECDH, and XML Signature
     algorithms written as URIs.
+- A rule now reports a line once: a second match of the same rule on the same
+  line (a cipher suite written under its IANA and OpenSSL names, two algorithm
+  names in one expression) is no longer a second finding. The baseline already
+  treated them as one. Scans can therefore report fewer findings than before.
 - Reference links in findings start with the Shorwatch page for the algorithm.
   The reports in `examples/output` were regenerated for that.
 

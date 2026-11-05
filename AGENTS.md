@@ -130,6 +130,11 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `Unknown`, never guessed. Build files are found by file *name*, not by
   extension, and are untrusted: bounded nesting and coordinates, no
   external entities.
+- **A rule reports a line once** (`analyze`): a second match of the same rule
+  on the same line (two suite names, `Family.EC.contains(a)` beside
+  `new ECDSAVerifier(k)`) is folded into the first, which is also how
+  `report::fingerprint` already identifies findings. Findings with a fix and
+  key findings (their line is not where the key is) are never folded.
 - A receiver's *origin* (`Call.receiver_origin`) still comes only from the
   variable's own initializer; `origin` patterns let unknown origins match
   (no lost detections). Don't hack around missing flow in rules.
