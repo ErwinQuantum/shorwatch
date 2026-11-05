@@ -56,6 +56,12 @@ pub(crate) struct JvmFile {
     pub(crate) return_types: HashMap<ScopeId, String>,
     /// Type scopes and the supertypes they name, as written.
     pub(crate) type_decls: Vec<(ScopeId, Vec<String>)>,
+    /// The constants of each enum scope, in order: `name()` of an enum value
+    /// is one of them.
+    pub(crate) enum_constants: HashMap<ScopeId, Vec<(String, Location)>>,
+    /// Kotlin's primary-constructor properties (`class K(val jce: String)`)
+    /// by type scope: reading `k.jce` is calling an accessor.
+    pub(crate) properties: HashMap<ScopeId, Vec<(String, Location)>>,
     /// Calls that may target a method of this file, gathered in phase two.
     local_calls: Vec<LocalCall>,
     /// Type scopes by name and method scopes by declaring type, name and
@@ -81,6 +87,8 @@ impl JvmFile {
             returns: Vec::new(),
             return_types: HashMap::new(),
             type_decls: Vec::new(),
+            enum_constants: HashMap::new(),
+            properties: HashMap::new(),
             local_calls: Vec::new(),
             type_scopes: HashMap::new(),
             method_scopes: HashMap::new(),

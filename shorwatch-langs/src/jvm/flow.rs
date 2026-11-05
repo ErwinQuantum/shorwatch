@@ -19,7 +19,7 @@ use shorwatch_core::ir::{
     TypeRef,
 };
 
-use super::{ArgSource, Assignment, JvmFile, PendingArg};
+use super::{ArgSource, Assignment, JvmFile, PendingArg, Receiver};
 
 /// How many assignments, calls and returns a path may go through.
 const MAX_DEPTH: usize = 6;
@@ -85,6 +85,89 @@ impl JvmFile {
                 });
             }
         }
+        summaries.extend(self.enum_name_summaries());
+        summaries.extend(self.property_summaries());
+        summaries
+    }
+
+    /// A primary-constructor property is read like a method: `k.jce` returns
+    /// what the constructor was given.
+    fn property_summaries(&self) -> Vec<MethodSummary> {
+        let mut summaries = Vec::new();
+        for (scope, properties) in &self.properties {
+            let Some(owner) = self.owner(*scope) else {
+                continue;
+            };
+            for (name, location) in properties {
+                let returns =
+                    self.variable(*scope, name, false, *location, &mut Context::default());
+                if !returns.is_empty() {
+                    summaries.push(MethodSummary {
+                        owner: owner.clone(),
+                        name: name.clone(),
+                        arity: 0,
+                        return_type: None,
+                        returns,
+                    });
+                }
+            }
+        }
+        summaries.sort_by(|a, b| (&a.owner, &a.name).cmp(&(&b.owner, &b.name)));
+        summaries
+    }
+
+    /// `k.jce` where `k` is a variable of a declared type: what that type's
+    /// accessor `jce` returns, for `link` to look up.
+    fn property_read(&self, scope: ScopeId, owner: &str, name: &str) -> Vec<Candidate> {
+        if owner.contains('.') {
+            return Vec::new();
+        }
+        let Some(declared) = self.lookup_scope(scope, owner) else {
+            return Vec::new();
+        };
+        let has_type = self.symbols[&(declared, owner.to_owned())].ty.is_some();
+        match self.resolve_receiver(&Receiver::Name(owner.to_owned()), scope) {
+            Some(ty) if has_type => vec![Candidate {
+                value: ArgValue::Returns {
+                    owner: ty,
+                    method: name.to_owned(),
+                    args: Vec::new(),
+                },
+                flow: Vec::new(),
+            }],
+            _ => Vec::new(),
+        }
+    }
+
+    /// `name()` and `toString()` of an enum value are the name of one of its
+    /// constants, unless the enum declares its own `toString()`.
+    fn enum_name_summaries(&self) -> Vec<MethodSummary> {
+        let mut summaries = Vec::new();
+        for (scope, constants) in &self.enum_constants {
+            let Some(owner) = self.owner(*scope) else {
+                continue;
+            };
+            let returns: Vec<Candidate> = constants
+                .iter()
+                .map(|(name, location)| Candidate {
+                    value: ArgValue::Str(name.clone()),
+                    flow: vec![step(*location, format!("{name} is a constant of the enum"))],
+                })
+                .collect();
+            for method in ["name", "toString"] {
+                if method == "toString" && !self.methods_of(Some(*scope), method, 0).is_empty() {
+                    continue;
+                }
+                summaries.push(MethodSummary {
+                    owner: owner.clone(),
+                    name: method.to_owned(),
+                    arity: 0,
+                    return_type: None,
+                    returns: returns.clone(),
+                });
+            }
+        }
+        summaries.sort_by(|a, b| (&a.owner, &a.name).cmp(&(&b.owner, &b.name)));
         summaries
     }
 
@@ -122,14 +205,13 @@ impl JvmFile {
                 let value = self
                     .member_constant(scope, owner, name)
                     .or_else(|| self.foreign_constant(scope, owner, name));
-                value
-                    .map(|value| {
-                        vec![Candidate {
-                            value,
-                            flow: vec![step(arg.location, note)],
-                        }]
-                    })
-                    .unwrap_or_default()
+                match value {
+                    Some(value) => vec![Candidate {
+                        value,
+                        flow: vec![step(arg.location, note)],
+                    }],
+                    None => self.property_read(scope, owner, name),
+                }
             }
             ArgSource::Concat(parts) => self.concat(parts, scope, cx),
             ArgSource::Choice(options) => options

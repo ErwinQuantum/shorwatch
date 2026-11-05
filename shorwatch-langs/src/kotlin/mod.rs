@@ -156,6 +156,18 @@ impl<'s> Lowering<'s> {
                 let id = self.file.unit.add_scope(ScopeKind::Type, name, scope);
                 let supertypes = self.supertypes(node);
                 self.file.type_decls.push((id, supertypes));
+                if let Some(body) = child_of_kind(node, "enum_class_body") {
+                    let mut cursor = body.walk();
+                    let constants = body
+                        .named_children(&mut cursor)
+                        .filter(|c| c.kind() == "enum_entry")
+                        .filter_map(|c| {
+                            let name = child_of_kind(c, "identifier")?;
+                            Some((self.text(name).to_owned(), self.location(c)))
+                        })
+                        .collect();
+                    self.file.enum_constants.insert(id, constants);
+                }
                 Some(id)
             }
             "function_declaration" => {
@@ -184,8 +196,20 @@ impl<'s> Lowering<'s> {
                 // The primary constructor's parameters belong to the class.
                 if let Some(name) = child_of_kind(node, "identifier") {
                     let name = self.text(name).to_owned();
+                    if has_child(node, "val") || has_child(node, "var") {
+                        let location = self.location(node);
+                        self.file
+                            .properties
+                            .entry(scope)
+                            .or_default()
+                            .push((name.clone(), location));
+                    }
                     self.file.params.entry(scope).or_default().push(name);
                 }
+                Some(scope)
+            }
+            "enum_entry" => {
+                self.enum_entry(node, scope);
                 Some(scope)
             }
             "function_value_parameters" => {
@@ -276,6 +300,23 @@ impl<'s> Lowering<'s> {
     }
 
     /// `val NAME = "RSA"` / `var x: Cipher = ...`, with `@Value` injection.
+    /// `LEGACY("RSA")` in an enum class is a construction of the enum: see
+    /// the Java frontend.
+    fn enum_entry(&mut self, node: Node<'_>, scope: ScopeId) {
+        let Some(ty) = node
+            .parent()
+            .and_then(|body| body.parent())
+            .and_then(|decl| self.field_text(decl, "name"))
+            .map(str::to_owned)
+        else {
+            return;
+        };
+        if child_of_kind(node, "value_arguments").is_some() {
+            let args = self.args(node);
+            self.defer(Pending::Construct { ty, args }, scope, node);
+        }
+    }
+
     fn declare_property(&mut self, node: Node<'_>, scope: ScopeId) {
         let Some(variable) = child_of_kind(node, "variable_declaration") else {
             return;

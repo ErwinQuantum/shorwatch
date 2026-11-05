@@ -522,3 +522,58 @@ fn a_call_knows_which_methods_are_chained_after_it() {
     let algorithm = chains.iter().find(|(m, _)| m == "algorithm").unwrap();
     assert_eq!(algorithm.1, ["build"]);
 }
+
+/// What the enum's `name()` may return, as the names of its constants.
+fn enum_names(unit: &SourceUnit, owner: &str, method: &str) -> Vec<String> {
+    unit.methods()
+        .iter()
+        .find(|m| m.owner == owner && m.name == method)
+        .map(|m| {
+            m.returns
+                .iter()
+                .flat_map(|c| c.value.texts())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
+}
+
+/// The arguments of the constructions of `ty`, one list per construction.
+fn constructions(unit: &SourceUnit, ty: &str) -> Vec<Vec<ArgValue>> {
+    unit.facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Construct { ty: t, args } if t.is(ty) => {
+                Some(args.iter().map(|a| a.value.clone()).collect())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn enum_entries_are_constructions_and_have_names() {
+    let unit = lower(
+        "enum class Kind(val jce: String) {
+    LEGACY(\"RSA\"),
+    SIGNING(\"EC\");
+}
+",
+    );
+    assert_eq!(
+        constructions(&unit, "Kind"),
+        [[ArgValue::Str("RSA".into())], [ArgValue::Str("EC".into())]]
+    );
+    assert_eq!(enum_names(&unit, "Kind", "name"), ["LEGACY", "SIGNING"]);
+}
+
+#[test]
+fn a_constructor_property_is_read_like_an_accessor() {
+    let unit = lower(
+        "class Gen(val alg: String, other: String)
+",
+    );
+    let names: Vec<_> = unit.methods().iter().map(|m| m.name.as_str()).collect();
+    // `alg` is a property; `other` is only a parameter.
+    assert!(names.contains(&"alg"));
+    assert!(!names.contains(&"other"));
+}
