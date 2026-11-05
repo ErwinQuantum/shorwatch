@@ -3,9 +3,10 @@
 // report, is classified by hand when a name is new.
 //
 //   javac Dump.java && java Dump > names.raw.tsv
+//   javac -cp bcprov.jar Dump.java && java -cp bcprov.jar:. Dump bc > bc.raw.tsv
 //
 // names.tsv holds the JDK 21 (Temurin) providers' services and aliases for the
-// types Shorwatch reads, and the `Alg.Alias.*` entries that map OIDs and old
+// types Shorwatch reads (bouncycastle.tsv: BouncyCastle 1.85, from `bc`), and the `Alg.Alias.*` entries that map OIDs and old
 // names to them.
 import java.security.Provider;
 import java.security.Security;
@@ -15,7 +16,18 @@ import java.util.TreeSet;
 public class Dump {
   public static void main(String[] args) {
     Set<String> out = new TreeSet<>();
-    for (Provider p : Security.getProviders()) {
+    Provider[] providers = Security.getProviders();
+    if (args.length > 0 && args[0].equals("bc")) {
+      try {
+        providers = new Provider[] {
+          (Provider) Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider")
+              .getDeclaredConstructor().newInstance()
+        };
+      } catch (ReflectiveOperationException e) {
+        throw new IllegalStateException("put bcprov on the class path", e);
+      }
+    }
+    for (Provider p : providers) {
       for (Provider.Service s : p.getServices()) {
         out.add(s.getType() + "\t" + s.getAlgorithm() + "\t" + s.getAlgorithm());
       }
