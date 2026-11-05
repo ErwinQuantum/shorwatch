@@ -12,6 +12,8 @@ public class Clean {
         params.setProtocols(new String[] {"TLSv1.3"});
         System.setProperty("jdk.tls.namedGroups", "X25519MLKEM768");
         System.setProperty("app.name", "TLS_RSA gateway");
+        // Looks like an OpenSSL suite name, but is not one.
+        System.setProperty("app.padding", "AES256-SHAKE");
         return params;
     }
 

@@ -25,6 +25,10 @@ class Vulnerable {
         factory.setIncludeCipherSuites("TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256")
     }
 
+    /** OpenSSL names: static RSA has no key-exchange prefix, static ECDH does. */
+    fun openSsl(builder: SslContextBuilder): SslContextBuilder =
+        builder.ciphers(listOf("AES128-GCM-SHA256:AES256-SHA", "ECDH-RSA-AES128-SHA"))
+
     fun jvmWide() {
         System.setProperty("jdk.tls.namedGroups", "x25519,secp256r1")
     }

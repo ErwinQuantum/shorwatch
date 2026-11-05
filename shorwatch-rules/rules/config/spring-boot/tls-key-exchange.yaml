@@ -3,10 +3,12 @@ profile: tls-key-exchange
 platform: config
 
 patterns:
-  # `server.ssl.ciphers`, SSL bundles (`spring.ssl.bundle.*.*.options.ciphers`)
-  # and the `*.ssl.ciphers` of Spring Boot's clients (Kafka, RabbitMQ...).
+  # `server.ssl.ciphers`, SSL bundles (`spring.ssl.bundle.*.*.options.ciphers`),
+  # any other `*.ssl.ciphers` / `*.ssl.cipher-suites` key (Quarkus, Micronaut...)
+  # and Kafka's own `ssl.cipher.suites`, which has a dot inside the name.
   # Values are lists, comma-separated in `.properties`; IANA names
-  # (TLS_ECDHE_RSA_...) or OpenSSL names (ECDHE-RSA-...), which Tomcat accepts.
+  # (TLS_ECDHE_RSA_...) or OpenSSL names (ECDHE-RSA-..., AES256-SHA), which
+  # Tomcat accepts.
   - property:
-      key: '(?i)(^|\.)(ssl|options)\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\[\d+\])?$'
-      matches: '(?i)(^|[,:\s])(TLS_(RSA|DHE?|ECDHE?)_|(ECDHE|DHE|EDH)-(RSA|ECDSA|DSS)-)'
+      key: '(?i)(^|\.)(ssl|options)\.(ciphers|cipher-?suites|cipher\.suites|enabled-?cipher-?suites)(\[\d+\])?$'
+      matches: '(?i)(^|[,:\s])(TLS_(RSA|DHE?|ECDHE?)_|(ECDHE?|DHE?|EDH)-(RSA|ECDSA|DSS)-|(AES(128|256)(-GCM)?-SHA(256|384)?|CAMELLIA(128|256)-SHA(256)?|DES-CBC3-SHA|RC4-(MD5|SHA)|SEED-SHA)($|[,:\s]))'

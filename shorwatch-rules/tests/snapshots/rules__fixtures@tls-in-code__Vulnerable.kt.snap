@@ -25,5 +25,11 @@ input_file: shorwatch-rules/tests/fixtures/tls-in-code/Vulnerable.kt
   at: "25:40"
   status: vulnerable
 - rule: jvm.tls.tls-key-exchange
-  at: "29:9"
+  at: "30:32"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "30:64"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "33:9"
   status: vulnerable

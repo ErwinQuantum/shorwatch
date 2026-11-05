@@ -345,5 +345,5 @@ SHA-1:
 TLS key exchange:
   - "Call { receiver: \"java.lang.System\", method: \"setProperty\", arg: Some(ArgPattern { index: 1, matches: \"(?i)(^|,)\\\\s*(x25519|x448|secp(256|384|521)r1|ffdhe\\\\d+)\\\\s*(,|$)\" }), origin: None }"
   - "Field { owner: \"okhttp3.CipherSuite\", matches: Some(\"^(TLS|SSL)_(RSA|DHE?|ECDHE?)_\") }"
-  - "Literal { matches: \"(^|[,:\\\\s])((TLS|SSL)_(RSA|DHE?|ECDHE?)_\\\\w*WITH_\\\\w+|(ECDHE|DHE|EDH)-(RSA|ECDSA|DSS)-)\", unless_call: Some(\"(?i)(exclude|disable|remove|deny|block|reject)\") }"
-  - "Property { key: \"(?i)(^|\\\\.)(ssl|options)\\\\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)(^|[,:\\\\s])(TLS_(RSA|DHE?|ECDHE?)_|(ECDHE|DHE|EDH)-(RSA|ECDSA|DSS)-)\") }"
+  - "Literal { matches: \"(^|[,:\\\\s])((TLS|SSL)_(RSA|DHE?|ECDHE?)_\\\\w*WITH_\\\\w+|(ECDHE?|DHE?|EDH)-(RSA|ECDSA|DSS)-|(AES(128|256)(-GCM)?-SHA(256|384)?|CAMELLIA(128|256)-SHA(256)?|DES-CBC3-SHA|RC4-(MD5|SHA)|SEED-SHA)($|[,:\\\\s]))\", unless_call: Some(\"(?i)(exclude|disable|remove|deny|block|reject)\") }"
+  - "Property { key: \"(?i)(^|\\\\.)(ssl|options)\\\\.(ciphers|cipher-?suites|cipher\\\\.suites|enabled-?cipher-?suites)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)(^|[,:\\\\s])(TLS_(RSA|DHE?|ECDHE?)_|(ECDHE?|DHE?|EDH)-(RSA|ECDSA|DSS)-|(AES(128|256)(-GCM)?-SHA(256|384)?|CAMELLIA(128|256)-SHA(256)?|DES-CBC3-SHA|RC4-(MD5|SHA)|SEED-SHA)($|[,:\\\\s]))\") }"

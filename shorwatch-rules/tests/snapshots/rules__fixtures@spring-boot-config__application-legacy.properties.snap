@@ -16,5 +16,8 @@ input_file: shorwatch-rules/tests/fixtures/spring-boot-config/application-legacy
   at: "4:28"
   status: vulnerable
 - rule: config.spring-boot.tls-key-exchange
-  at: "7:47"
+  at: "7:43"
+  status: vulnerable
+- rule: config.spring-boot.tls-key-exchange
+  at: "9:47"
   status: vulnerable
