@@ -12,7 +12,7 @@ patterns:
       method: getInstance
       arg:
         index: 0
-        matches: '(?i)^(ECD?DSA|(OID\.)?(1\.2\.840\.10045\.4\.(1|3\.[1-4])|2\.16\.840\.1\.101\.3\.4\.3\.(9|1[0-2]))|.+with(PLAIN-|CVC-)?ECD?DSA(inP1363Format)?)$'
+        matches: '(?i)^(ECD?DSA|DETECDSA|ECNR|ECDSAwith.+|(OID\.)?(1\.2\.840\.10045\.4\.(1|3\.[1-4])|2\.16\.840\.1\.101\.3\.4\.3\.(9|1[0-2])|1\.3\.36\.3\.3\.2\.[12]|1\.3\.6\.1\.5\.5\.7\.6\.3[23]|0\.4\.0\.127\.0\.7\.(1\.1\.4\.1|2\.2\.2\.2)\.\d+)|[\w-]+/(PLAIN-|CVC-)?ECDSA|.+with(PLAIN-|CVC-|DET)?(ECD?DSA|ECNR)(inP1363Format)?)$'
   # BouncyCastle registers ECDSA-specific key pair names. Plain "EC" key pairs
   # are covered by the `ec` profile.
   - call:

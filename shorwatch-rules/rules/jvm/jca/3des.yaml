@@ -10,21 +10,25 @@ patterns:
   - call:
       type: javax.crypto.Cipher
       method: getInstance
-      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)(Wrap)?(/|$)|(PBEWith\w+And(TripleDES|DESede)|(OID\.)?1\.2\.840\.113549\.1\.12\.1\.3)$)' }
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES|TDEA)(Wrap|RFC32(11|17)Wrap)?(/|$)|(D?H?IES|ECIES)with(SHA\d+and)?DESede(-CBC)?$|(PBEWith\w+And(\d-?Key)?(TripleDES|DESede)(-CBC)?|(OID\.)?1\.2\.840\.113549\.1\.12\.1\.[34])$)' }
   - call:
       type: javax.crypto.KeyGenerator
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(DESede|TripleDES|3DES)$' }
+      arg: { index: 0, matches: '(?i)^(DESede|TripleDES|3DES|TDEA)(Wrap)?$' }
   - call:
       type: javax.crypto.SecretKeyFactory
       method: getInstance
-      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)|PBEWith\w+And(TripleDES|DESede)|(OID\.)?1\.2\.840\.113549\.1\.12\.1\.3)$' }
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES|TDEA)|PBEWith\w+And(\d-?Key)?(TripleDES|DESede)(-CBC)?|(OID\.)?(1\.2\.840\.113549\.1\.12\.1\.[34]|1\.2\.840\.113549\.3\.7))$' }
   - call:
       type: java.security.AlgorithmParameters
       method: getInstance
-      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)|PBEWith\w+And(TripleDES|DESede)|(OID\.)?1\.2\.840\.113549\.1\.12\.1\.3)$' }
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES|TDEA)|PBEWith\w+And(\d-?Key)?(TripleDES|DESede)(-CBC)?|(OID\.)?(1\.2\.840\.113549\.1\.12\.1\.[34]|1\.2\.840\.113549\.3\.7))$' }
   - construct:
       type: javax.crypto.spec.SecretKeySpec
       arg: { index: 1, matches: '(?i)^(DESede|TripleDES|3DES)$' }
   - construct:
       type: javax.crypto.spec.DESedeKeySpec
+  - call:
+      type: java.security.AlgorithmParameterGenerator
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES|TDEA)|(OID\.)?1\.2\.840\.113549\.3\.7)$' }

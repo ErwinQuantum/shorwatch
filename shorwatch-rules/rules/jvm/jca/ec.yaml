@@ -8,15 +8,15 @@ patterns:
   - call:
       type: java.security.KeyPairGenerator
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?1\.2\.840\.10045\.2\.1)$' }
+      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?(1\.2\.840\.10045\.2\.1|1\.3\.132\.1\.1[14]\.[0-3]|1\.3\.133\.16\.840\.63\.0\.[23]))$' }
   - call:
       type: java.security.KeyFactory
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?1\.2\.840\.10045\.2\.1)$' }
+      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?(1\.2\.840\.10045\.2\.1|1\.3\.132\.1\.1[14]\.[0-3]|1\.3\.133\.16\.840\.63\.0\.[23]))$' }
   - call:
       type: java.security.AlgorithmParameters
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?1\.2\.840\.10045\.2\.1)$' }
+      arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?(1\.2\.840\.10045\.2\.1|1\.3\.132\.1\.1[145]\.[0-3]|1\.3\.133\.16\.840\.63\.0\.(2|3|16)))$' }
   - construct:
       type: java.security.spec.ECGenParameterSpec
   - construct:

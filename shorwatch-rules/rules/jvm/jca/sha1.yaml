@@ -11,7 +11,7 @@ patterns:
   - call:
       type: java.security.MessageDigest
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(SHA(-?1)?|(OID\.)?1\.3\.14\.3\.2\.26)$' }
+      arg: { index: 0, matches: '(?i)^(SHA(-?1(-?INTERLEAVE)?)?|(OID\.)?1\.3\.14\.3\.2\.26)$' }
   # `SHA1withRSA`, and the older aliases of the SHA-1 signatures: `DSAWithSHA1`,
   # `SHAwithDSA`, `SHA1/DSA`, plain `DSA` and `DSS` (the JDK resolves both to
   # SHA1withDSA), TLS 1.0's `MD5andSHA1withRSA`, and the OIDs of sha1WithRSA (1.2.840.113549.1.1.5,
@@ -21,4 +21,4 @@ patterns:
       method: getInstance
       arg:
         index: 0
-        matches: '(?i)^(SHA-?1with.+|SHAwithDSA|DSAWithSHA1|SHA-?1?/DSA|DSA|DSS|MD5andSHA1withRSA|(OID\.)?(1\.2\.840\.10040\.4\.3|1\.2\.840\.10045\.4\.1|1\.2\.840\.113549\.1\.1\.5|1\.3\.14\.3\.2\.(13|27|29)))$'
+        matches: '(?i)^(SHA-?1with.+|SHAwithDSA|DSAWithSHA1|SHA-?1?/DSA|SHA-?1/(RSA|(PLAIN-|CVC-)?ECDSA)|ECDSAwithSHA1|1\.3\.14\.3\.2\.26with1\.2\.840\.10040\.4\.[13]|DSA|DSS|MD5andSHA1withRSA|(OID\.)?(1\.2\.840\.10040\.4\.[13]|1\.2\.840\.10045\.4\.1|0\.4\.0\.127\.0\.7\.(1\.1\.4\.1|2\.2\.2\.2)\.1|1\.2\.840\.113549\.1\.1\.5|1\.3\.14\.3\.2\.(13|27|29)))$'
