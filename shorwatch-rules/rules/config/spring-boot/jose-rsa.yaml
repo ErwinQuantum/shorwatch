@@ -11,3 +11,8 @@ patterns:
   # supports RSA keys here.
   - property:
       key: '(?i)^spring\.security\.oauth2\.resourceserver\.jwt\.public-?key-?location$'
+  # The decoder built from `jwk-set-uri` verifies RS256 unless
+  # `jws-algorithms` lists others (those are reported above).
+  - property:
+      key: '(?i)^spring\.security\.oauth2\.resourceserver\.jwt\.jwk-?set-?uri$'
+      unless_property: '(?i)^spring\.security\.oauth2\.resourceserver\.jwt\.jws-?algorithms?(\[\d+\])?$'

@@ -19,6 +19,7 @@ fn get_instance(unit: &mut SourceUnit, scope: crate::ir::ScopeId, ty: &str, alg:
             args: vec![Arg::str(alg, loc(line))],
             receiver_origin: None,
             receiver_call: None,
+            chain: Vec::new(),
         },
         scope,
         loc(line),
@@ -91,6 +92,7 @@ fn unknown_argument_value_does_not_match() {
             }],
             receiver_origin: None,
             receiver_call: None,
+            chain: Vec::new(),
         },
         method,
         loc(3),
@@ -200,6 +202,7 @@ fn aes_rule() -> Rule {
                 index: 0,
                 matches: "(?i)^AES".into(),
             }),
+            unless_chain: None,
         }],
         hybrid: None,
         fix: Some(FixSpec {
@@ -225,6 +228,7 @@ fn key_generator_init_from(arg: Arg, origin: Option<Vec<Arg>>) -> SourceUnit {
             args: vec![arg],
             receiver_origin: origin,
             receiver_call: None,
+            chain: Vec::new(),
         },
         method,
         loc(4),
@@ -391,6 +395,7 @@ fn pqc_field_owner_is_hybrid_evidence() {
         method: "getInstance".into(),
         arg: None,
         origin: None,
+        unless_chain: None,
     });
     rule.hybrid.as_mut().unwrap().markers = vec![crate::rule::Marker::Type("(?i)ml-?dsa".into())];
     let set = RuleSet::compile([rule]).unwrap();
@@ -465,4 +470,69 @@ fn a_rule_reports_a_line_once() {
         .map(|f| f.location.start.line)
         .collect();
     assert_eq!(lines, [3, 4]);
+}
+
+#[test]
+fn unless_chain_skips_a_call_followed_by_a_choice() {
+    let call = |chain: &[&str]| {
+        let (mut unit, _, method) = unit_with_method();
+        unit.push(
+            FactKind::Call {
+                receiver: Some(TypeRef::qualified("org.x.Decoder")),
+                method: "withUri".into(),
+                args: vec![],
+                receiver_origin: None,
+                receiver_call: None,
+                chain: chain.iter().map(|s| (*s).to_owned()).collect(),
+            },
+            method,
+            loc(3),
+        );
+        unit
+    };
+    let mut rule = rsa_rule();
+    rule.patterns = vec![Pattern::Call {
+        receiver: "org.x.Decoder".into(),
+        method: "withUri".into(),
+        arg: None,
+        origin: None,
+        unless_chain: Some("^algorithm$".into()),
+    }];
+    let rules = RuleSet::compile([rule]).unwrap();
+    assert_eq!(analyze(&call(&["build"]), &rules).len(), 1);
+    assert!(analyze(&call(&["algorithm", "build"]), &rules).is_empty());
+}
+
+#[test]
+fn unless_property_skips_an_entry_another_one_overrides() {
+    let config = |keys: &[&str]| {
+        let mut unit = SourceUnit::new("application.yml", Language::Yaml);
+        for (line, key) in (1..).zip(keys) {
+            unit.push(
+                FactKind::Property {
+                    key: (*key).to_owned(),
+                    value: "x".into(),
+                },
+                SourceUnit::ROOT,
+                loc(line),
+            );
+        }
+        unit
+    };
+    let mut rule = rsa_rule();
+    rule.platform = crate::ir::Platform::Config;
+    rule.patterns = vec![Pattern::Property {
+        key: r"^jwt\.jwk-set-uri$".into(),
+        matches: None,
+        unless_property: Some(r"^jwt\.jws-algorithms".into()),
+    }];
+    let rules = RuleSet::compile([rule]).unwrap();
+    assert_eq!(analyze(&config(&["jwt.jwk-set-uri"]), &rules).len(), 1);
+    assert!(
+        analyze(
+            &config(&["jwt.jwk-set-uri", "jwt.jws-algorithms[0]"]),
+            &rules
+        )
+        .is_empty()
+    );
 }

@@ -1,0 +1,17 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/jwt-defaults/Vulnerable.kt
+---
+- rule: jvm.spring-security.jose-rsa
+  at: "13:48"
+  status: vulnerable
+- rule: jvm.spring-security.jose-rsa
+  at: "16:9"
+  status: vulnerable
+- rule: jvm.spring-security.jose-rsa
+  at: "19:9"
+  status: vulnerable
+- rule: jvm.spring-security.jose-ecdsa
+  at: "23:58"
+  status: vulnerable

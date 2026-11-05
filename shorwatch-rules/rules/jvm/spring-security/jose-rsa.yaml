@@ -12,3 +12,25 @@ patterns:
   # Decoders built from an RSA public key verify RS256 by default.
   - call: { type: org.springframework.security.oauth2.jwt.NimbusJwtDecoder, method: withPublicKey }
   - call: { type: org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder, method: withPublicKey }
+  # Builders that name no algorithm verify RS256. A `.jwsAlgorithm(...)` or
+  # `.jwsAlgorithms(...)` later in the chain is a choice: it is reported on its
+  # own (`SignatureAlgorithm.ES256` is a field), so the default is not. So is a
+  # `.jwtProcessorCustomizer(...)`, which takes over the key selection.
+  # `withIssuerLocation` is not here: it takes the algorithms from the issuer's
+  # JWK Set (RSA and EC families), not from this default.
+  - call:
+      type: org.springframework.security.oauth2.jwt.NimbusJwtDecoder
+      method: withJwkSetUri
+      unless_chain: '^(jwsAlgorithms?|jwtProcessorCustomizer)$'
+  - call:
+      type: org.springframework.security.oauth2.jwt.NimbusJwtDecoder
+      method: withJwkSource
+      unless_chain: '^(jwsAlgorithms?|jwtProcessorCustomizer)$'
+  - call:
+      type: org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
+      method: withJwkSetUri
+      unless_chain: '^(jwsAlgorithms?|jwtProcessorCustomizer)$'
+  - call:
+      type: org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder
+      method: withJwkSource
+      unless_chain: '^(jwsAlgorithms?|jwtProcessorCustomizer)$'

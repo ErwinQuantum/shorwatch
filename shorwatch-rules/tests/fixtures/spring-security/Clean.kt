@@ -11,10 +11,6 @@ class Clean {
     fun hmacDecoder(key: SecretKey): Any =
         NimbusJwtDecoder.withSecretKey(key).macAlgorithm(MacAlgorithm.HS256).build()
 
-    /** Remote JWKS: the algorithm is decided at runtime (needs data flow). */
-    fun jwks(): Any =
-        NimbusJwtDecoder.withJwkSetUri("https://issuer.example/.well-known/jwks.json").build()
-
     /** `Encryptors.stronger` is AES-256-GCM; BCrypt-style password hashing is fine. */
     fun symmetric(password: String, salt: String): Any {
         val encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder()

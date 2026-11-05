@@ -394,15 +394,34 @@ impl<'s> Lowering<'s> {
             .child_by_field_name("object")
             .and_then(|object| self.receiver(object, 0));
         let args = self.args(node);
+        let chain = self.chain_after(node);
         self.defer(
             Pending::Call {
                 receiver,
                 method,
                 args,
+                chain,
             },
             scope,
             node,
         );
+    }
+
+    /// The methods called on `node`'s result in the same chain, nearest
+    /// first: `build` and `jwsAlgorithm` for `withJwkSetUri(u).jwsAlgorithm(a).build()`.
+    fn chain_after(&self, node: Node<'_>) -> Vec<String> {
+        let mut chain = Vec::new();
+        let mut current = node;
+        while chain.len() < MAX_CHAIN
+            && let Some(parent) = current.parent()
+            && parent.kind() == "method_invocation"
+            && parent.child_by_field_name("object") == Some(current)
+            && let Some(name) = self.field_text(parent, "name")
+        {
+            chain.push(name.to_owned());
+            current = parent;
+        }
+        chain
     }
 
     fn construct(&mut self, node: Node<'_>, scope: ScopeId) {

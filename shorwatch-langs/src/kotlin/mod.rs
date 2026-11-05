@@ -549,6 +549,7 @@ impl<'s> Lowering<'s> {
                             receiver: None,
                             method: name,
                             args,
+                            chain: self.chain_after(node),
                         },
                         scope,
                         node,
@@ -564,6 +565,7 @@ impl<'s> Lowering<'s> {
                             receiver,
                             method: name,
                             args,
+                            chain: self.chain_after(node),
                         },
                         scope,
                         node,
@@ -614,6 +616,7 @@ impl<'s> Lowering<'s> {
                             receiver,
                             method,
                             args,
+                            chain: self.chain_after(node),
                         },
                         scope,
                         node,
@@ -631,6 +634,7 @@ impl<'s> Lowering<'s> {
                             receiver: Some(receiver),
                             method,
                             args,
+                            chain: self.chain_after(node),
                         },
                         scope,
                         node,
@@ -911,6 +915,26 @@ impl<'s> Lowering<'s> {
             "number_literal" => int_value(self.text(node)).map(ArgValue::Int),
             _ => None,
         }
+    }
+
+    /// The methods called on `node`'s result in the same chain, nearest
+    /// first (`a.b().c().d()` gives `c`, `d` for `b`). A call is a
+    /// `navigation_expression` whose object is the previous call.
+    fn chain_after(&self, node: Node<'_>) -> Vec<String> {
+        let mut chain = Vec::new();
+        let mut current = node;
+        while chain.len() < MAX_CHAIN
+            && let Some(navigation) = current.parent()
+            && let Some((object, member)) = navigation_parts(navigation)
+            && object == current
+            && let Some(call) = navigation.parent()
+            && call.kind() == "call_expression"
+            && call.named_child(0) == Some(navigation)
+        {
+            chain.push(self.text(member).to_owned());
+            current = call;
+        }
+        chain
     }
 
     fn defer(&mut self, pending: Pending, scope: ScopeId, node: Node<'_>) {

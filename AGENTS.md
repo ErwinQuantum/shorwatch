@@ -130,6 +130,12 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `Unknown`, never guessed. Build files are found by file *name*, not by
   extension, and are untrusted: bounded nesting and coordinates, no
   external entities.
+- **Defaults are patterns with conditions**: `call` takes `unless_chain` (a
+  regex on the methods called later on its result: `FactKind::Call::chain`,
+  filled by both JVM frontends) and `property` takes `unless_property` (a
+  regex on another key of the same file). They let a rule report a library
+  default (`withJwkSetUri(u).build()` verifies RS256) only when nothing
+  chooses another.
 - **A rule reports a line once** (`analyze`): a second match of the same rule
   on the same line (two suite names, `Family.EC.contains(a)` beside
   `new ECDSAVerifier(k)`) is folded into the first, which is also how

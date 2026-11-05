@@ -1,0 +1,8 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/spring-boot-defaults/application-legacy.properties
+---
+- rule: config.spring-boot.jose-rsa
+  at: "1:55"
+  status: vulnerable

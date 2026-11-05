@@ -1,0 +1,10 @@
+# issuer-uri is not reported: Spring's documentation does not say what it
+# defaults to. The jwk-set-uri names its algorithm.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://idp.example.com
+          jwk-set-uri: https://idp.example.com/.well-known/jwks.json
+          jws-algorithms: HS256

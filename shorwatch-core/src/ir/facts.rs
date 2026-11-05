@@ -202,6 +202,12 @@ pub enum FactKind {
         /// declared return type, wherever the method is declared.
         #[serde(skip_serializing_if = "Option::is_none")]
         receiver_call: Option<CallRef>,
+        /// The methods called on this call's result later in the same chain,
+        /// nearest first: `["jwsAlgorithm", "build"]` for
+        /// `withJwkSetUri(u).jwsAlgorithm(a).build()`. A rule can tell a
+        /// default from a choice by what follows (`unless_chain`).
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        chain: Vec<String>,
     },
     /// An object instantiation.
     Construct { ty: TypeRef, args: Vec<Arg> },
