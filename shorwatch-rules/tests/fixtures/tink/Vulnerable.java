@@ -17,6 +17,12 @@ public class Vulnerable {
         return KeysetHandle.generateNew(KeyTemplates.get("AES128_GCM"));
     }
 
+    Object ecdsa() throws Exception {
+        KeysetHandle.generateNew(KeyTemplates.get("ECDSA_P256"));
+        KeysetHandle.generateNew(SignatureKeyTemplates.ECDSA_P256);
+        return KeysetHandle.generateNew(PredefinedSignatureParameters.ECDSA_P256);
+    }
+
     Object legacy() {
         return new Object[] {
             SignatureKeyTemplates.RSA_SSA_PKCS1_3072_SHA256_F4,

@@ -15,6 +15,12 @@ class Vulnerable {
         return KeysetHandle.generateNew(KeyTemplates.get("AES128_GCM"))
     }
 
+    fun ecdsa(): Any {
+        KeysetHandle.generateNew(KeyTemplates.get("ECDSA_P256"))
+        KeysetHandle.generateNew(SignatureKeyTemplates.ECDSA_P256)
+        return KeysetHandle.generateNew(PredefinedSignatureParameters.ECDSA_P256)
+    }
+
     fun legacy(): List<Any> = listOf(
         SignatureKeyTemplates.RSA_SSA_PKCS1_3072_SHA256_F4,
         HybridKeyTemplates.ECIES_P256_HKDF_HMAC_SHA256_AES128_GCM,
