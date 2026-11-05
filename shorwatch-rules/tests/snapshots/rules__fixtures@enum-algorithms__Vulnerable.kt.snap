@@ -1,0 +1,49 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/enum-algorithms/Vulnerable.kt
+---
+- rule: jvm.jca.ec
+  at: "8:9"
+  status: vulnerable
+  flow:
+    - "KeyKind.java:6: \"EC\" is written here"
+    - "KeyKind.java:6: passed as jceName to KeyKind(...)"
+- rule: jvm.jca.rsa
+  at: "8:9"
+  status: vulnerable
+  flow:
+    - "KeyKind.java:5: \"RSA\" is written here"
+    - "KeyKind.java:5: passed as jceName to KeyKind(...)"
+- rule: jvm.jca.ec
+  at: "12:9"
+  status: vulnerable
+  flow:
+    - "KeyKind.java:6: \"EC\" is written here"
+    - "KeyKind.java:6: passed as jceName to KeyKind(...)"
+- rule: jvm.jca.rsa
+  at: "12:9"
+  status: vulnerable
+  flow:
+    - "KeyKind.java:5: \"RSA\" is written here"
+    - "KeyKind.java:5: passed as jceName to KeyKind(...)"
+- rule: jvm.jca.ec
+  at: "17:9"
+  status: vulnerable
+  flow:
+    - "Algorithm.java:5: EC is a constant of the enum"
+- rule: jvm.jca.rsa
+  at: "17:9"
+  status: vulnerable
+  flow:
+    - "Algorithm.java:4: RSA is a constant of the enum"
+- rule: jvm.jca.ec
+  at: "21:9"
+  status: vulnerable
+  flow:
+    - "Algorithm.java:5: EC is a constant of the enum"
+- rule: jvm.jca.rsa
+  at: "21:9"
+  status: vulnerable
+  flow:
+    - "Algorithm.java:4: RSA is a constant of the enum"
