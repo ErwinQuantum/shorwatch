@@ -2,7 +2,9 @@ id: jvm.tls.aes-128
 profile: aes-128
 platform: jvm
 
+# IANA names write `AES_128`; OpenSSL names write `AES128` and always follow
+# it with the mode or MAC (`ECDHE-RSA-AES128-GCM-SHA256`, `AES128-SHA`).
 patterns:
   - literal:
-      matches: '(^|[,:\s])TLS_\w*AES_128_'
+      matches: '(^|[,:\s])(TLS_\w*AES_128_|([A-Z0-9]+-)*AES128-(GCM-SHA256|SHA(256)?|CCM8?)($|[,:\s]))'
       unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'

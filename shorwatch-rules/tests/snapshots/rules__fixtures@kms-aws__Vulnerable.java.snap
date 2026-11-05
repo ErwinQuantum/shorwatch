@@ -4,14 +4,17 @@ expression: findings
 input_file: shorwatch-rules/tests/fixtures/kms-aws/Vulnerable.java
 ---
 - rule: jvm.aws-kms.rsa
-  at: "19:34"
+  at: "21:34"
   status: vulnerable
 - rule: jvm.aws-kms.ecdsa
-  at: "30:43"
+  at: "32:43"
   status: vulnerable
 - rule: jvm.aws-kms.ec
-  at: "36:16"
+  at: "38:16"
+  status: vulnerable
+- rule: jvm.aws-kms.aes-128
+  at: "43:70"
   status: vulnerable
 - rule: jvm.aws-kms.ecdh
-  at: "43:40"
+  at: "50:40"
   status: vulnerable

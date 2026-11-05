@@ -25,6 +25,9 @@ class Vulnerable {
         return generator.generateKey()
     }
 
+    /** OpenSSL names write the key size without an underscore. */
+    fun openSslSuites(): Array<String> = arrayOf("ECDHE-RSA-AES128-GCM-SHA256", "AES128-SHA")
+
     /** Created elsewhere: the algorithm is unknown, so it is still reported. */
     fun injected(generator: KeyGenerator): SecretKey {
         generator.init(128)

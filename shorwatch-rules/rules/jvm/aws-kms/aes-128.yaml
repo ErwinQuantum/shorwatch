@@ -1,0 +1,13 @@
+id: jvm.aws-kms.aes-128
+profile: aes-128
+platform: jvm
+
+# `GenerateDataKey` with `DataKeySpec.AES_128`: envelope encryption with a
+# 128-bit data key. AWS KMS keys themselves are AES-256 (`SYMMETRIC_DEFAULT`).
+patterns:
+  - field:
+      type: software.amazon.awssdk.services.kms.model.DataKeySpec
+      matches: '^AES_128$'
+  - field:
+      type: com.amazonaws.services.kms.model.DataKeySpec
+      matches: '^AES_128$'
