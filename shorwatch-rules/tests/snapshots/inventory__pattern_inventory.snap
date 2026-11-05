@@ -3,9 +3,9 @@ source: shorwatch-rules/tests/inventory.rs
 expression: inventory
 ---
 3DES:
-  - "Call { receiver: \"javax.crypto.Cipher\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^(DESede|TripleDES|3DES)(/|$)\" }), origin: None }"
+  - "Call { receiver: \"javax.crypto.Cipher\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^((DESede|TripleDES|3DES)(Wrap)?(/|$)|PBEWith\\\\w+And(TripleDES|DESede)$)\" }), origin: None }"
   - "Call { receiver: \"javax.crypto.KeyGenerator\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^(DESede|TripleDES|3DES)$\" }), origin: None }"
-  - "Call { receiver: \"javax.crypto.SecretKeyFactory\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^(DESede|TripleDES|3DES)$\" }), origin: None }"
+  - "Call { receiver: \"javax.crypto.SecretKeyFactory\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^((DESede|TripleDES|3DES)|PBEWith\\\\w+And(TripleDES|DESede))$\" }), origin: None }"
   - "Construct { ty: \"javax.crypto.spec.DESedeKeySpec\", arg: None }"
   - "Construct { ty: \"javax.crypto.spec.SecretKeySpec\", arg: Some(ArgPattern { index: 1, matches: \"(?i)^(DESede|TripleDES|3DES)$\" }) }"
   - "Construct { ty: \"org.bouncycastle.crypto.engines.DESedeEngine\", arg: None }"
@@ -16,8 +16,9 @@ expression: inventory
   - "Field { owner: \"org.bouncycastle.openpgp.PGPEncryptedData\", matches: Some(\"^TRIPLE_DES$\") }"
   - "Field { owner: \"org.opensaml.xml.encryption.EncryptionConstants\", matches: Some(\"^ALGO_ID_(BLOCKCIPHER|KEYWRAP)_TRIPLEDES\") }"
   - "Field { owner: \"org.opensaml.xmlsec.encryption.support.EncryptionConstants\", matches: Some(\"^ALGO_ID_(BLOCKCIPHER|KEYWRAP)_TRIPLEDES\") }"
-  - "Literal { matches: \"(^|[,:\\\\s])(TLS|SSL)_\\\\w*3DES_EDE\", unless_call: Some(\"(?i)(exclude|disable|remove|deny|block|reject)\") }"
-  - "Property { key: \"(?i)(^|\\\\.)(ssl|options)\\\\.(ciphers|cipher-?suites|enabled-?cipher-?suites)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)3DES_EDE\") }"
+  - "Literal { matches: \"(^|[,:\\\\s])((TLS|SSL)_\\\\w*3DES_EDE|([A-Z0-9]+-)*DES-CBC3-SHA($|[,:\\\\s]))\", unless_call: Some(\"(?i)(exclude|disable|remove|deny|block|reject)\") }"
+  - "Property { key: \"(?i)(^|\\\\.)(ssl|options)\\\\.(ciphers|cipher-?suites|cipher\\\\.suites|enabled-?cipher-?suites)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)(3DES_EDE|(^|[,:\\\\s])([A-Z0-9]+-)*DES-CBC3-SHA($|[,:\\\\s]))\") }"
+  - "Property { key: \"(?i)^jasypt\\\\.encryptor\\\\.algorithm$\", matches: Some(\"(?i)^PBEWith\\\\w+And(TripleDES|DESede)$\") }"
 AES-128:
   - "Call { receiver: \"com.google.crypto.tink.KeyTemplates\", method: \"get\", arg: Some(ArgPattern { index: 0, matches: \"^AES128_\" }), origin: None }"
   - "Call { receiver: \"javax.crypto.Cipher\", method: \"getInstance\", arg: Some(ArgPattern { index: 0, matches: \"(?i)^AES_128(/|$)\" }), origin: None }"

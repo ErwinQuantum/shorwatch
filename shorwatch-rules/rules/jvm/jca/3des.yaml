@@ -4,11 +4,13 @@ platform: jvm
 
 patterns:
   # JCA / JCE. Single DES ("DES") is a different, already broken algorithm
-  # and does not match here.
+  # and does not match here. `DESedeWrap` is the key-wrapping cipher, and
+  # `PBEWithMD5AndTripleDES` / `PBEWithSHA1AndDESede` are password-based
+  # encryption over Triple DES.
   - call:
       type: javax.crypto.Cipher
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(DESede|TripleDES|3DES)(/|$)' }
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)(Wrap)?(/|$)|PBEWith\w+And(TripleDES|DESede)$)' }
   - call:
       type: javax.crypto.KeyGenerator
       method: getInstance
@@ -16,7 +18,7 @@ patterns:
   - call:
       type: javax.crypto.SecretKeyFactory
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(DESede|TripleDES|3DES)$' }
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)|PBEWith\w+And(TripleDES|DESede))$' }
   - construct:
       type: javax.crypto.spec.SecretKeySpec
       arg: { index: 1, matches: '(?i)^(DESede|TripleDES|3DES)$' }

@@ -1,0 +1,12 @@
+id: config.jasypt.3des
+profile: 3des
+platform: config
+
+patterns:
+  # Jasypt's Spring Boot starter: `jasypt.encryptor.algorithm`. The password
+  # based names over Triple DES are `PBEWithMD5AndTripleDES` and
+  # `PBEWithSHA1AndDESede`. Single DES (`PBEWithMD5AndDES`) is another,
+  # already broken algorithm and does not match.
+  - property:
+      key: '(?i)^jasypt\.encryptor\.algorithm$'
+      matches: '(?i)^PBEWith\w+And(TripleDES|DESede)$'

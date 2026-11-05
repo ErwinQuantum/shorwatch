@@ -2,7 +2,10 @@ id: jvm.tls.3des
 profile: 3des
 platform: jvm
 
+# IANA names write `3DES_EDE`; OpenSSL names write `DES-CBC3` (`DES-CBC3-SHA`,
+# `ECDHE-RSA-DES-CBC3-SHA`). A bare `3DES` is not matched: in OpenSSL cipher
+# strings it is mostly written as an exclusion (`HIGH:!3DES`).
 patterns:
   - literal:
-      matches: '(^|[,:\s])(TLS|SSL)_\w*3DES_EDE'
+      matches: '(^|[,:\s])((TLS|SSL)_\w*3DES_EDE|([A-Z0-9]+-)*DES-CBC3-SHA($|[,:\s]))'
       unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'
