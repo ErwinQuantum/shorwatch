@@ -52,7 +52,9 @@ be years away, but the threat is already here:
   of 2031.
 
 The first step of any migration is knowing where the vulnerable crypto lives.
-Shorwatch automates that inventory.
+Shorwatch automates that inventory. Every finding links to a short page that
+explains *why* the algorithm is a problem and how urgent it is, not only what to
+change: start at [docs/algorithms](docs/algorithms/README.md).
 
 ## What it detects
 
