@@ -13,6 +13,10 @@ patterns:
       type: com.nimbusds.jose.JWSAlgorithm
       method: parse
       arg: { index: 0, matches: '^(RS|PS)(256|384|512)$' }
+  - call:
+      type: com.nimbusds.jose.JWEAlgorithm
+      method: parse
+      arg: { index: 0, matches: '^RSA(1_5|-OAEP(-(256|384|512))?)$' }
   - construct: { type: com.nimbusds.jose.crypto.RSASSASigner }
   - construct: { type: com.nimbusds.jose.crypto.RSASSAVerifier }
   - construct: { type: com.nimbusds.jose.crypto.RSAEncrypter }

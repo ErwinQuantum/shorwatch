@@ -32,6 +32,11 @@ public class Vulnerable {
         return JWEAlgorithm.RSA_OAEP_256;
     }
 
+    /** The same algorithm read from its JOSE name. */
+    JWEAlgorithm parsedHeader() {
+        return JWEAlgorithm.parse("RSA-OAEP-256");
+    }
+
     /** jjwt 0.12: key pair and signature in one idiom. */
     String jjwt() {
         KeyPair pair = Jwts.SIG.PS256.keyPair().build();

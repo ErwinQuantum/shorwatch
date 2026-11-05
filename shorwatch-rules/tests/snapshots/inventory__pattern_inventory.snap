@@ -305,6 +305,7 @@ RSA (JOSE/JWT):
   - "Call { receiver: \"com.auth0.jwt.algorithms.Algorithm\", method: \"RSA384\", arg: None, origin: None }"
   - "Call { receiver: \"com.auth0.jwt.algorithms.Algorithm\", method: \"RSA512\", arg: None, origin: None }"
   - "Call { receiver: \"com.google.crypto.tink.KeyTemplates\", method: \"get\", arg: Some(ArgPattern { index: 0, matches: \"^JWT_(RS|PS)\\\\d+\" }), origin: None }"
+  - "Call { receiver: \"com.nimbusds.jose.JWEAlgorithm\", method: \"parse\", arg: Some(ArgPattern { index: 0, matches: \"^RSA(1_5|-OAEP(-(256|384|512))?)$\" }), origin: None }"
   - "Call { receiver: \"com.nimbusds.jose.JWSAlgorithm\", method: \"parse\", arg: Some(ArgPattern { index: 0, matches: \"^(RS|PS)(256|384|512)$\" }), origin: None }"
   - "Call { receiver: \"io.jsonwebtoken.SignatureAlgorithm\", method: \"forName\", arg: Some(ArgPattern { index: 0, matches: \"^(RS|PS)(256|384|512)$\" }), origin: None }"
   - "Call { receiver: \"org.springframework.security.oauth2.jwt.NimbusJwtDecoder\", method: \"withPublicKey\", arg: None, origin: None }"

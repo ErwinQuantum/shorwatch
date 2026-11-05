@@ -18,12 +18,15 @@ input_file: shorwatch-rules/tests/fixtures/jwt-rsa/Vulnerable.kt
 - rule: jvm.nimbus.jose-rsa
   at: "28:34"
   status: vulnerable
-- rule: jvm.jjwt.jose-rsa
-  at: "32:29"
+- rule: jvm.nimbus.jose-rsa
+  at: "31:40"
   status: vulnerable
 - rule: jvm.jjwt.jose-rsa
-  at: "37:29"
+  at: "35:29"
+  status: vulnerable
+- rule: jvm.jjwt.jose-rsa
+  at: "40:29"
   status: vulnerable
 - rule: jvm.auth0.jose-rsa
-  at: "40:62"
+  at: "43:62"
   status: vulnerable
