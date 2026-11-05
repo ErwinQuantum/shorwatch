@@ -20,3 +20,7 @@ server:
 jwt:
   issuer: https://auth.example.com
   algorithm: PS512
+
+# A second, application-defined JWT setting, with an ECDSA name.
+token:
+  signing-algorithm: ES384
