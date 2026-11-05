@@ -59,6 +59,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   - Smaller additions: ElGamal parameter generators and BouncyCastle specs,
     BouncyCastle's `RSADigestSigner` and unified-model ECDH, and XML Signature
     algorithms written as URIs.
+- Algorithms chosen through an enum are now followed: `Cipher.getInstance(kind.getJceName())`
+  where `kind` is an enum whose constants carry the algorithm in their constructor
+  (`LEGACY("RSA")`), `algorithm.name()` for enums named after algorithms, and the
+  Kotlin equivalents (`kind.jceName`, `algorithm.name`). Every constant that can
+  reach the call is reported, so a call that accepts any constant of a mixed enum
+  gives one finding per vulnerable algorithm. A specific constant is not read.
 - RS256 used as a default is now reported: `NimbusJwtDecoder.withJwkSetUri(...)`
   and `withJwkSource(...)` (plain and reactive) when the chain names no
   algorithm, and Spring Boot's `jwk-set-uri` when no `jws-algorithms` is set.
