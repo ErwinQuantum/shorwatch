@@ -449,3 +449,70 @@ fn a_call_knows_which_methods_are_chained_after_it() {
     let algorithm = chains.iter().find(|(m, _)| m == "algorithm").unwrap();
     assert_eq!(algorithm.1, ["build"]);
 }
+
+/// What the enum's `name()` may return, as the names of its constants.
+fn enum_names(unit: &SourceUnit, owner: &str, method: &str) -> Vec<String> {
+    unit.methods()
+        .iter()
+        .find(|m| m.owner == owner && m.name == method)
+        .map(|m| {
+            m.returns
+                .iter()
+                .flat_map(|c| c.value.texts())
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default()
+}
+
+/// The arguments of the constructions of `ty`, one list per construction.
+fn constructions(unit: &SourceUnit, ty: &str) -> Vec<Vec<ArgValue>> {
+    unit.facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Construct { ty: t, args } if t.is(ty) => {
+                Some(args.iter().map(|a| a.value.clone()).collect())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn enum_constants_are_constructions_and_have_names() {
+    let unit = lower(
+        r#"
+            enum Kind {
+                LEGACY("RSA"), SIGNING("EC"), PLAIN;
+                private final String jce;
+                Kind(String jce) { this.jce = jce; }
+            }
+        "#,
+    );
+    assert_eq!(
+        constructions(&unit, "Kind"),
+        [[ArgValue::Str("RSA".into())], [ArgValue::Str("EC".into())]]
+    );
+    assert_eq!(
+        enum_names(&unit, "Kind", "name"),
+        ["LEGACY", "SIGNING", "PLAIN"]
+    );
+    assert_eq!(enum_names(&unit, "Kind", "toString").len(), 3);
+}
+
+#[test]
+fn an_enum_that_declares_to_string_keeps_its_own() {
+    let unit = lower(
+        r#"
+            enum Kind {
+                A, B;
+                public String toString() { return "x"; }
+            }
+        "#,
+    );
+    assert_eq!(enum_names(&unit, "Kind", "name"), ["A", "B"]);
+    assert!(
+        enum_names(&unit, "Kind", "toString")
+            .iter()
+            .all(|n| n == "x")
+    );
+}

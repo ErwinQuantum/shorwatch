@@ -117,6 +117,10 @@ impl<'s> Lowering<'s> {
                 let id = self.file.unit.add_scope(ScopeKind::Type, name, scope);
                 let supertypes = self.supertypes(node);
                 self.file.type_decls.push((id, supertypes));
+                if kind == "enum_declaration" {
+                    let constants = self.enum_constant_names(node);
+                    self.file.enum_constants.insert(id, constants);
+                }
                 if matches!(
                     kind,
                     "interface_declaration" | "annotation_type_declaration"
@@ -196,6 +200,10 @@ impl<'s> Lowering<'s> {
             }
             "object_creation_expression" => {
                 self.construct(node, scope);
+                Some(scope)
+            }
+            "enum_constant" => {
+                self.enum_constant(node, scope);
                 Some(scope)
             }
             "field_access" => self.field_access(node, scope),
@@ -422,6 +430,35 @@ impl<'s> Lowering<'s> {
             current = parent;
         }
         chain
+    }
+
+    fn enum_constant_names(&self, decl: Node<'_>) -> Vec<(String, Location)> {
+        let Some(body) = decl.child_by_field_name("body") else {
+            return Vec::new();
+        };
+        let mut cursor = body.walk();
+        body.named_children(&mut cursor)
+            .filter(|c| c.kind() == "enum_constant")
+            .filter_map(|c| Some((self.field_text(c, "name")?.to_owned(), self.location(c))))
+            .collect()
+    }
+
+    /// `LEGACY("RSA")` in an enum is a construction of the enum: its
+    /// arguments are what the constructor's parameters (and the fields they
+    /// set) hold, so `kind.getJceName()` can be followed to them.
+    fn enum_constant(&mut self, node: Node<'_>, scope: ScopeId) {
+        let Some(ty) = node
+            .parent()
+            .and_then(|body| body.parent())
+            .and_then(|decl| self.field_text(decl, "name"))
+            .map(str::to_owned)
+        else {
+            return;
+        };
+        if node.child_by_field_name("arguments").is_some() {
+            let args = self.args(node);
+            self.defer(Pending::Construct { ty, args }, scope, node);
+        }
     }
 
     fn construct(&mut self, node: Node<'_>, scope: ScopeId) {

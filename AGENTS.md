@@ -90,6 +90,15 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `Finding::flow`. Order-insensitive, bounded (depth 6, 16 candidates);
   overloaded targets and cycles stay unknown. A call's return binds the
   callee's parameters to that call's arguments.
+- **Enums that carry an algorithm**: each constant with arguments is lowered as
+  a construction of the enum (`LEGACY("RSA")` = `new Kind("RSA")`), so the
+  constructor parameter, the field it sets and the getter that returns it
+  resolve through the existing machinery to every constant's value. `name()` /
+  `toString()` (Kotlin `.name`) are synthetic `MethodSummary`s listing the
+  constants (`jvm/flow.rs::enum_name_summaries`); a Kotlin primary-constructor
+  `val` is published as an accessor, and `k.prop` on a typed variable is a
+  `Returns` candidate. A *specific* constant (`Kind.LEGACY.getJceName()`) is
+  not resolved: the union of all constants would be wrong for it.
 - **Cross-file data flow** (`core/src/link/`): what a file cannot resolve
   stays as `ArgValue::Param` (a parameter, constructors included),
   `ArgValue::Returns` (another type's method, with the call's args) or
