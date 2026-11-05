@@ -15,6 +15,9 @@ input_file: shorwatch-rules/tests/fixtures/dsa/Vulnerable.java
 - rule: jvm.jca.dsa
   at: "24:9"
   status: vulnerable
+- rule: jvm.jca.sha1
+  at: "24:9"
+  status: vulnerable
 - rule: jvm.jca.dsa
   at: "25:9"
   status: vulnerable

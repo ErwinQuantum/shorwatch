@@ -13,11 +13,12 @@ patterns:
       method: init
       arg: { index: 0, matches: '^128$' }
       origin: { index: 0, matches: '(?i)^AES' }
-  # Size-pinned JCA transformations: `AES_128/GCM/NoPadding`.
+  # Size-pinned JCA transformations: `AES_128/GCM/NoPadding`, the key-wrap
+  # names `AESWrap_128` / `AESWrapPad_128`, and the AES-128 mode OIDs.
   - call:
       type: javax.crypto.Cipher
       method: getInstance
-      arg: { index: 0, matches: '(?i)^AES_128(/|$)' }
+      arg: { index: 0, matches: '(?i)^(AES_128(/|$)|AESWrap(Pad)?_128$|(OID\.)?2\.16\.840\.1\.101\.3\.4\.1\.[1-68]$)' }
 
 # Applied to the argument as written: `128` -> `256`,
 # `"AES_128/GCM/NoPadding"` -> `"AES_256/GCM/NoPadding"`. Values written in

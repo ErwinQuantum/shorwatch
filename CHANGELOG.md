@@ -45,6 +45,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
     `EncryptionMethod.parse("A128GCM")`).
   - Kafka's `ssl.cipher.suites`, Commons Codec's deprecated `shaHex` family
     and `DESedeWrap` / password-based Triple DES names.
+  - Every name the JDK 21 providers register: the OIDs of RSA, DSA and ECDSA
+    signatures (including the SHA-3 ones), `PSS`, `EllipticCurve`, the key and
+    X25519/X448/Ed25519/Ed448 OIDs, `AlgorithmParameters` for RSASSA-PSS, DSA,
+    DH, EC and Triple DES, `KEM.getInstance("DHKEM")`, `AESWrap_128`, and plain
+    `DSA` / `DSS` / `MD5andSHA1withRSA`, which also use SHA-1. A test calls all
+    632 names the JDK accepts and checks what each produces.
   - Smaller additions: ElGamal parameter generators and BouncyCastle specs,
     BouncyCastle's `RSADigestSigner` and unified-model ECDH, and XML Signature
     algorithms written as URIs.

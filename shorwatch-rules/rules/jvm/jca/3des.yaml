@@ -10,7 +10,7 @@ patterns:
   - call:
       type: javax.crypto.Cipher
       method: getInstance
-      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)(Wrap)?(/|$)|PBEWith\w+And(TripleDES|DESede)$)' }
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)(Wrap)?(/|$)|(PBEWith\w+And(TripleDES|DESede)|(OID\.)?1\.2\.840\.113549\.1\.12\.1\.3)$)' }
   - call:
       type: javax.crypto.KeyGenerator
       method: getInstance
@@ -18,7 +18,11 @@ patterns:
   - call:
       type: javax.crypto.SecretKeyFactory
       method: getInstance
-      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)|PBEWith\w+And(TripleDES|DESede))$' }
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)|PBEWith\w+And(TripleDES|DESede)|(OID\.)?1\.2\.840\.113549\.1\.12\.1\.3)$' }
+  - call:
+      type: java.security.AlgorithmParameters
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES)|PBEWith\w+And(TripleDES|DESede)|(OID\.)?1\.2\.840\.113549\.1\.12\.1\.3)$' }
   - construct:
       type: javax.crypto.spec.SecretKeySpec
       arg: { index: 1, matches: '(?i)^(DESede|TripleDES|3DES)$' }

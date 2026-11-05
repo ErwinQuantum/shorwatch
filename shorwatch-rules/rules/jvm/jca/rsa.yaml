@@ -6,11 +6,11 @@ patterns:
   - call:
       type: java.security.KeyPairGenerator
       method: getInstance
-      arg: { index: 0, matches: '(?i)^RSA(SSA-PSS)?$' }
+      arg: { index: 0, matches: '(?i)^(RSA(SSA-PSS)?|PSS|(OID\.)?1\.2\.840\.113549\.1\.1(\.1|\.10)?)$' }
   - call:
       type: java.security.KeyFactory
       method: getInstance
-      arg: { index: 0, matches: '(?i)^RSA(SSA-PSS)?$' }
+      arg: { index: 0, matches: '(?i)^(RSA(SSA-PSS)?|PSS|(OID\.)?1\.2\.840\.113549\.1\.1(\.1|\.10)?)$' }
   - call:
       type: javax.crypto.Cipher
       method: getInstance
@@ -18,6 +18,10 @@ patterns:
   - call:
       type: java.security.Signature
       method: getInstance
-      arg: { index: 0, matches: '(?i)^(RSASSA-PSS|.+withRSA(andMGF1|/PSS|/ISO9796-2|/X9\.31)?)$' }
+      arg: { index: 0, matches: '(?i)^(RSASSA-PSS|PSS|(OID\.)?(1\.2\.840\.113549\.1\.1\.(2|4|5|10|1[1-6])|1\.3\.14\.3\.2\.29|2\.16\.840\.1\.101\.3\.4\.3\.1[3-6])|.+withRSA(andMGF1|/PSS|/ISO9796-2|/X9\.31)?)$' }
+  - call:
+      type: java.security.AlgorithmParameters
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(RSASSA-PSS|PSS|(OID\.)?1\.2\.840\.113549\.1\.1\.10)$' }
   - construct:
       type: java.security.spec.RSAKeyGenParameterSpec
