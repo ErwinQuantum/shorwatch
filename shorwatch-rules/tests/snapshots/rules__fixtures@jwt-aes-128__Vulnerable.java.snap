@@ -1,7 +1,7 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/jwt-aes-128/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/jwt-aes-128/Vulnerable.java
 ---
 - rule: jvm.nimbus.jose-aes-128
   at: "10:30"
@@ -16,8 +16,14 @@ input_file: shorwatch-rules/tests/fixtures/java/jwt-aes-128/Vulnerable.java
   at: "15:16"
   status: vulnerable
 - rule: jvm.nimbus.jose-aes-128
-  at: "20:16"
+  at: "20:9"
+  status: vulnerable
+- rule: jvm.nimbus.jose-aes-128
+  at: "21:16"
+  status: vulnerable
+- rule: jvm.nimbus.jose-aes-128
+  at: "26:16"
   status: vulnerable
 - rule: jvm.nimbus.jose-ecdh
-  at: "20:16"
+  at: "26:16"
   status: vulnerable

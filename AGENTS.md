@@ -204,6 +204,10 @@ config/<framework>/<profile>.yaml
 ```
 
 Rule fields override profile fields. A rule file may also be self-contained.
+Every profile has a page, `docs/algorithms/<profile>.md` (why it is a problem,
+urgency, what to do), and its first reference links to it; a test enforces
+both directions. A new profile needs its page; keep the tone plain and every
+technical claim traceable to a standard or paper.
 Tests enforce: id = path, platform = top folder, file name = profile, every
 profile/marker set used. `build.rs` embeds everything under `rules/`.
 
@@ -216,15 +220,15 @@ Profiles (17): `rsa dh ecdh ecdsa ec eddsa dsa elgamal` (shor, high),
 medium, no fix), `jose-rsa jose-ecdsa jose-eddsa jose-ecdh` (shor, JWT advice),
 `jose-aes-128` (grover), `tls-key-exchange` (shor, TLS suites).
 
-Libraries (127 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
+Libraries (132 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
 jsch, apache-sshd, tls (suite-name literals, `jdk.tls.namedGroups`), okhttp,
 aws-kms, azure-keyvault, gcp-kms, tink, opensaml,
 xml-security (JSR 105 + Santuario), android-keystore, spring-security, jjwt,
 nimbus (incl. `JWSAlgorithm.Family`), auth0, i2p-eddsa, commons-codec, guava
 · `config/` spring-boot
 (jws-algorithms, public-key-location, `*.ssl.ciphers`), spring-cloud-config
-(`encrypt.key-store`, `encrypt.rsa`), app (custom `*.alg`/`*.algorithm`
-keys with exact JOSE names) · `keys/` material (RSA, EC, ECDSA, DSA, EdDSA,
+(`encrypt.key-store`, `encrypt.rsa`), jasypt (`jasypt.encryptor.algorithm`),
+app (custom `*.alg`/`*.algorithm`/`*.enc` keys with exact JOSE names) · `keys/` material (RSA, EC, ECDSA, DSA, EdDSA,
 X25519/X448, DH keys; SHA-1 certificate signatures).
 
 Notable design calls: generic `"EC"` keys and EC JWKs → `ec` profile (could

@@ -4,17 +4,20 @@ expression: findings
 input_file: shorwatch-rules/tests/fixtures/ecdh/Vulnerable.kt
 ---
 - rule: jvm.jca.ecdh
-  at: "12:14"
+  at: "13:14"
   status: vulnerable
 - rule: jvm.jca.ecdh
-  at: "18:29"
+  at: "19:29"
   status: vulnerable
 - rule: jvm.jca.ecdh
-  at: "21:25"
+  at: "22:25"
   status: vulnerable
 - rule: jvm.jca.ecdh
-  at: "27:27"
+  at: "28:27"
   status: vulnerable
 - rule: jvm.bouncycastle.ecdh
-  at: "29:30"
+  at: "30:30"
+  status: vulnerable
+- rule: jvm.bouncycastle.ecdh
+  at: "32:26"
   status: vulnerable

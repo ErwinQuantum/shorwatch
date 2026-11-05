@@ -10,6 +10,8 @@ class Clean {
         protocols = arrayOf("TLSv1.3")
         System.setProperty("jdk.tls.namedGroups", "X25519MLKEM768")
         System.setProperty("app.name", "TLS_RSA gateway")
+        // Looks like an OpenSSL suite name, but is not one.
+        System.setProperty("app.padding", "AES256-SHAKE")
     }
 
     fun hardening(factory: SslContextFactory.Server, suites: MutableList<String>) {

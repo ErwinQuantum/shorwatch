@@ -1,7 +1,7 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/jwt-rsa/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/jwt-rsa/Vulnerable.java
 ---
 - rule: jvm.nimbus.jose-rsa
   at: "20:42"
@@ -18,12 +18,15 @@ input_file: shorwatch-rules/tests/fixtures/java/jwt-rsa/Vulnerable.java
 - rule: jvm.nimbus.jose-rsa
   at: "32:16"
   status: vulnerable
-- rule: jvm.jjwt.jose-rsa
-  at: "37:24"
+- rule: jvm.nimbus.jose-rsa
+  at: "37:16"
   status: vulnerable
 - rule: jvm.jjwt.jose-rsa
-  at: "43:16"
+  at: "42:24"
+  status: vulnerable
+- rule: jvm.jjwt.jose-rsa
+  at: "48:16"
   status: vulnerable
 - rule: jvm.auth0.jose-rsa
-  at: "48:16"
+  at: "53:16"
   status: vulnerable

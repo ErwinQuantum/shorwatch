@@ -1,7 +1,7 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/jwt-ecdh/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/jwt-ecdh/Vulnerable.java
 ---
 - rule: jvm.nimbus.jose-ecdh
   at: "14:35"
@@ -14,4 +14,7 @@ input_file: shorwatch-rules/tests/fixtures/java/jwt-ecdh/Vulnerable.java
   status: vulnerable
 - rule: jvm.jjwt.jose-ecdh
   at: "20:16"
+  status: vulnerable
+- rule: jvm.nimbus.jose-ecdh
+  at: "25:16"
   status: vulnerable

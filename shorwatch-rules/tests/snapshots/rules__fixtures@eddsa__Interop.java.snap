@@ -1,0 +1,17 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/eddsa/Interop.java
+---
+- rule: jvm.jsch.eddsa
+  at: "11:9"
+  status: vulnerable
+- rule: jvm.jsch.eddsa
+  at: "12:34"
+  status: vulnerable
+- rule: jvm.openpgp.eddsa
+  at: "16:16"
+  status: vulnerable
+- rule: jvm.xml-security.eddsa
+  at: "20:16"
+  status: vulnerable

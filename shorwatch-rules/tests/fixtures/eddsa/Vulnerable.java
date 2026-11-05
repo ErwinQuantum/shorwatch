@@ -25,4 +25,10 @@ public class Vulnerable {
     Object ssh() {
         return new EdDSAEngine();
     }
+
+    // The OIDs, which the JDK also accepts as names.
+    void oids() throws Exception {
+        Signature.getInstance("1.3.101.112");
+        Signature.getInstance("OID.1.3.101.113");
+    }
 }

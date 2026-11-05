@@ -1,0 +1,13 @@
+id: jvm.spring-security.sha1
+profile: sha1
+platform: jvm
+
+# Password encoders over a bare SHA-1 digest. `MessageDigestPasswordEncoder`
+# takes the algorithm name as an argument; `LdapShaPasswordEncoder` is the
+# LDAP `{SHA}` scheme, which is SHA-1.
+patterns:
+  - construct:
+      type: org.springframework.security.crypto.password.MessageDigestPasswordEncoder
+      arg: { index: 0, matches: '(?i)^SHA(-?1)?$' }
+  - construct:
+      type: org.springframework.security.crypto.password.LdapShaPasswordEncoder

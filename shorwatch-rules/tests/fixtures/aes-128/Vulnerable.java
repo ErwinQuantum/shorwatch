@@ -31,6 +31,11 @@ public class Vulnerable {
         return generator.generateKey();
     }
 
+    /** OpenSSL names write the key size without an underscore. */
+    String[] openSslSuites() {
+        return new String[] {"ECDHE-RSA-AES128-GCM-SHA256", "AES128-SHA"};
+    }
+
     /** Created elsewhere: the algorithm is unknown, so it is still reported. */
     SecretKey injected(KeyGenerator generator) {
         generator.init(128);

@@ -13,6 +13,8 @@ suggestion: >-
   consumer must accept the new algorithm before producers switch, and
   key-wrapping changes also need 256-bit keys.
 references:
+  - title: "Shorwatch: why AES-128 (JOSE/JWE) is flagged"
+    url: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/jose-aes-128.md
   - title: "RFC 7518: JSON Web Algorithms (JWA)"
     url: https://www.rfc-editor.org/rfc/rfc7518
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"

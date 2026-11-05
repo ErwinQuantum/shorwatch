@@ -132,6 +132,42 @@ fn every_builtin_profile_and_marker_set_is_used() {
     }
 }
 
+/// `docs/algorithms/<profile>.md` explains why a profile is flagged, and the
+/// profile links to it: neither can exist without the other.
+#[test]
+fn every_profile_links_to_its_explanation_page() {
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../docs/algorithms");
+    let catalog = Catalog::builtin().unwrap();
+    for (name, profile) in &catalog.profiles {
+        assert!(
+            dir.join(format!("{name}.md")).is_file(),
+            "docs/algorithms/{name}.md is missing"
+        );
+        let linked = profile
+            .doc
+            .get("references")
+            .and_then(Value::as_sequence)
+            .is_some_and(|refs| {
+                refs.iter().any(|r| {
+                    r.get("url")
+                        .and_then(Value::as_str)
+                        .is_some_and(|u| u.ends_with(&format!("/docs/algorithms/{name}.md")))
+                })
+            });
+        assert!(linked, "profile {name} does not link to its page");
+    }
+    for entry in std::fs::read_dir(&dir).unwrap() {
+        let file = entry.unwrap().file_name().to_string_lossy().into_owned();
+        let Some(stem) = file.strip_suffix(".md") else {
+            continue;
+        };
+        assert!(
+            stem == "README" || catalog.profiles.contains_key(stem),
+            "docs/algorithms/{file} has no profile"
+        );
+    }
+}
+
 #[test]
 fn shor_rules_point_to_a_pqc_standard() {
     for rule in builtin_rules().unwrap() {

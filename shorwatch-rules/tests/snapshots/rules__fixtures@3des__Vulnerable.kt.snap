@@ -4,14 +4,29 @@ expression: findings
 input_file: shorwatch-rules/tests/fixtures/3des/Vulnerable.kt
 ---
 - rule: jvm.jca.3des
-  at: "10:28"
+  at: "11:28"
   status: vulnerable
 - rule: jvm.jca.3des
-  at: "12:33"
+  at: "13:33"
   status: vulnerable
 - rule: jvm.jca.3des
-  at: "14:43"
+  at: "15:43"
   status: vulnerable
 - rule: jvm.bouncycastle.3des
-  at: "16:30"
+  at: "17:30"
+  status: vulnerable
+- rule: jvm.jca.3des
+  at: "21:9"
+  status: vulnerable
+- rule: jvm.jca.3des
+  at: "22:9"
+  status: vulnerable
+- rule: jvm.jca.3des
+  at: "23:9"
+  status: vulnerable
+- rule: jvm.tls.3des
+  at: "27:50"
+  status: vulnerable
+- rule: jvm.tls.tls-key-exchange
+  at: "27:50"
   status: vulnerable

@@ -6,6 +6,10 @@ patterns:
   - field:
       type: com.nimbusds.jose.JWEAlgorithm
       matches: '^ECDH_(ES|1PU)'
+  - call:
+      type: com.nimbusds.jose.JWEAlgorithm
+      method: parse
+      arg: { index: 0, matches: '^ECDH-(ES|1PU)' }
   - field:
       type: com.nimbusds.jose.jwk.Curve
       matches: '^X(25519|448)$'

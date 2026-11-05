@@ -4,11 +4,20 @@ expression: findings
 input_file: shorwatch-rules/tests/fixtures/ec/Vulnerable.kt
 ---
 - rule: jvm.jca.ec
-  at: "11:25"
+  at: "14:25"
   status: vulnerable
 - rule: jvm.jca.ec
-  at: "12:30"
+  at: "15:30"
   status: vulnerable
 - rule: jvm.jca.ecdsa
-  at: "17:31"
+  at: "20:31"
+  status: vulnerable
+- rule: jvm.bouncycastle.ec
+  at: "23:30"
+  status: vulnerable
+- rule: jvm.apache-sshd.ec
+  at: "26:9"
+  status: vulnerable
+- rule: jvm.apache-sshd.ec
+  at: "27:25"
   status: vulnerable

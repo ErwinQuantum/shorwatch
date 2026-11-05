@@ -20,3 +20,14 @@ server:
 jwt:
   issuer: https://auth.example.com
   algorithm: PS512
+
+# More application-defined JWT settings: ECDSA and EdDSA names.
+token:
+  signing-algorithm: ES384
+partner:
+  signature-algorithm: Ed25519
+mailbox:
+  # An encrypted token (JWE): key agreement, not a signature.
+  alg: ECDH-ES+A256KW
+  # Its content encryption: a 128-bit AES key.
+  enc: A128GCM

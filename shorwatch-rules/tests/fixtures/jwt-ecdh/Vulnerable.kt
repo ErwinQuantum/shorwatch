@@ -17,4 +17,7 @@ class Vulnerable {
     }
 
     fun jjwt(): Any = Jwts.KEY.ECDH_ES_A256KW
+
+    /** The algorithm read from its JOSE name. */
+    fun parsed(): JWEAlgorithm = JWEAlgorithm.parse("ECDH-ES+A256KW")
 }

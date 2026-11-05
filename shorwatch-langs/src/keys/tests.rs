@@ -64,8 +64,20 @@ fn public_and_private_keys_in_every_pem_form() {
         ["public key: X25519"]
     );
     assert_eq!(
+        labels("x448.pem", fixture!("agreement-x448.pub.pem")),
+        ["public key: X448"]
+    );
+    assert_eq!(
+        labels("ed448.pem", fixture!("signer-ed448.pub.pem")),
+        ["public key: Ed448"]
+    );
+    assert_eq!(
         labels("dsa.pem", fixture!("dsa-public.pem")),
         ["public key: DSA 2048-bit"]
+    );
+    assert_eq!(
+        labels("dh.pem", fixture!("dh-public.pem")),
+        ["public key: DH"]
     );
     // PKCS#1, after a comment line; PKCS#8.
     let (rsa, _) = keys("legacy-rsa.key", fixture!("legacy-rsa.key"));
@@ -171,6 +183,11 @@ fn ssh_public_key_lines() {
     assert_eq!(
         labels("deploy_rsa.pub", fixture!("deploy_rsa.pub")),
         ["SSH public key \"deploy@example\": RSA 3072-bit"]
+    );
+    // `ssh-dss` is DSA, fixed at 1024 bits.
+    assert_eq!(
+        labels("legacy_dss.pub", fixture!("legacy-dss.pub")),
+        ["SSH public key \"legacy@example\": DSA 1024-bit"]
     );
     // Options before the type, as in authorized_keys.
     let line = std::str::from_utf8(fixture!("deploy_rsa.pub")).unwrap();

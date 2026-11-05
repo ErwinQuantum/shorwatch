@@ -11,3 +11,8 @@ patterns:
       type: org.bouncycastle.crypto.generators.ElGamalParametersGenerator
   - construct:
       type: org.bouncycastle.crypto.params.ElGamalParameters
+  # The provider-level (JCE) way to give a key generator its group.
+  - construct:
+      type: org.bouncycastle.jce.spec.ElGamalParameterSpec
+  - construct:
+      type: org.bouncycastle.jce.spec.ElGamalGenParameterSpec

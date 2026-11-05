@@ -4,17 +4,20 @@ expression: findings
 input_file: shorwatch-rules/tests/fixtures/rsa/Vulnerable.kt
 ---
 - rule: jvm.jca.rsa
-  at: "12:9"
+  at: "14:9"
   status: vulnerable
 - rule: jvm.jca.rsa
-  at: "15:22"
+  at: "17:22"
   status: vulnerable
 - rule: jvm.jca.rsa
-  at: "21:9"
+  at: "23:9"
   status: vulnerable
 - rule: jvm.jca.rsa
-  at: "27:26"
+  at: "29:26"
   status: vulnerable
 - rule: jvm.bouncycastle.rsa
-  at: "29:30"
+  at: "31:30"
+  status: vulnerable
+- rule: jvm.bouncycastle.rsa
+  at: "33:31"
   status: vulnerable

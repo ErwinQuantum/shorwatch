@@ -21,6 +21,35 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   feed no gate, baseline or SARIF result.
 - The catalog of known libraries is data (`rules/libraries/<id>.yaml`), and
   `--rules` directories may add their own.
+- `docs/algorithms/`: one page per algorithm Shorwatch flags (RSA, ECDSA,
+  AES-128, SHA-1, the JOSE variants...) explaining why it is a problem, how
+  urgent it is and what to do, plus an introduction to Shor, Grover and
+  harvest-now-decrypt-later. Every finding's references now start with a link
+  to its page, and a test keeps profiles and pages in step.
+- Five rules for places that were not read: Jasypt's
+  `jasypt.encryptor.algorithm` over Triple DES, AWS KMS `DataKeySpec.AES_128`,
+  Spring Security's SHA-1 password encoders (`MessageDigestPasswordEncoder`,
+  `LdapShaPasswordEncoder`), and application-defined JWE settings (`alg` and
+  `enc` keys naming ECDH-ES or a 128-bit AES algorithm).
+
+### Changed
+
+- The same algorithm is now recognised under more of the names code uses, so a
+  scan can report more findings than 0.1.0 on the same code:
+  - Names the JDK accepts as aliases or OIDs for signatures and digests
+    (`DSAWithSHA1`, `SHA1/DSA`, `DSS`, `1.2.840.10045.4.3.2`...).
+  - OpenSSL cipher names next to the IANA ones, including static RSA suites
+    that carry no key-exchange prefix (`AES256-SHA`, `AES128-GCM-SHA256`,
+    `DES-CBC3-SHA`) and `ECDH-RSA-...`.
+  - JOSE names read from text (`JWEAlgorithm.parse("ECDH-ES")`,
+    `EncryptionMethod.parse("A128GCM")`).
+  - Kafka's `ssl.cipher.suites`, Commons Codec's deprecated `shaHex` family
+    and `DESedeWrap` / password-based Triple DES names.
+  - Smaller additions: ElGamal parameter generators and BouncyCastle specs,
+    BouncyCastle's `RSADigestSigner` and unified-model ECDH, and XML Signature
+    algorithms written as URIs.
+- Reference links in findings start with the Shorwatch page for the algorithm.
+  The reports in `examples/output` were regenerated for that.
 
 ### Security
 

@@ -1,20 +1,23 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/ecdh/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/ecdh/Vulnerable.java
 ---
 - rule: jvm.jca.ecdh
-  at: "12:34"
+  at: "13:34"
   status: vulnerable
 - rule: jvm.jca.ecdh
-  at: "19:16"
+  at: "20:16"
   status: vulnerable
 - rule: jvm.jca.ecdh
-  at: "23:25"
+  at: "24:25"
   status: vulnerable
 - rule: jvm.jca.ecdh
-  at: "30:16"
+  at: "31:16"
   status: vulnerable
 - rule: jvm.bouncycastle.ecdh
-  at: "34:16"
+  at: "35:16"
+  status: vulnerable
+- rule: jvm.bouncycastle.ecdh
+  at: "39:16"
   status: vulnerable

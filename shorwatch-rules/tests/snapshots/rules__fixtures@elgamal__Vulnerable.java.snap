@@ -1,17 +1,26 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/elgamal/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/elgamal/Vulnerable.java
 ---
 - rule: jvm.jca.elgamal
-  at: "10:9"
+  at: "13:9"
   status: vulnerable
 - rule: jvm.jca.elgamal
-  at: "11:16"
+  at: "14:16"
   status: vulnerable
 - rule: jvm.bouncycastle.elgamal
-  at: "15:9"
+  at: "18:9"
   status: vulnerable
 - rule: jvm.bouncycastle.elgamal
-  at: "16:16"
+  at: "19:16"
+  status: vulnerable
+- rule: jvm.jca.elgamal
+  at: "24:9"
+  status: vulnerable
+- rule: jvm.bouncycastle.elgamal
+  at: "25:9"
+  status: vulnerable
+- rule: jvm.bouncycastle.elgamal
+  at: "26:16"
   status: vulnerable

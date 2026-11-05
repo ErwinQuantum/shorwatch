@@ -1,0 +1,11 @@
+id: config.app.jose-ecdh
+profile: jose-ecdh
+platform: config
+
+patterns:
+  # Application-defined JWE key-management settings such as `mail.jwe.alg`,
+  # usually injected with @Value. Only exact JOSE names count, so unrelated
+  # "algorithm" settings stay quiet.
+  - property:
+      key: '(?i)(^|\.)(alg|algorithms?)(\[\d+\])?$'
+      matches: '^ECDH-(ES|1PU)(\+A(128|192|256)KW)?$'

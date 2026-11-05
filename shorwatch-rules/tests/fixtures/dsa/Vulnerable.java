@@ -18,4 +18,12 @@ public class Vulnerable {
     Object bouncyCastle() {
         return new DSASigner();
     }
+
+    // Older names the JDK still accepts for the same signature.
+    void legacyNames() throws Exception {
+        Signature.getInstance("DSS");
+        Signature.getInstance("DSAWithSHA1");
+        Signature.getInstance("RawDSA");
+        Signature.getInstance("1.2.840.10040.4.3");
+    }
 }

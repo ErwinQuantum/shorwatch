@@ -19,4 +19,9 @@ public class Vulnerable {
     Object jjwt() {
         return Jwts.KEY.ECDH_ES_A256KW;
     }
+
+    /** The algorithm read from its JOSE name. */
+    JWEAlgorithm parsed() {
+        return JWEAlgorithm.parse("ECDH-ES+A256KW");
+    }
 }

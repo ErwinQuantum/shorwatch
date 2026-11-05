@@ -4,6 +4,9 @@ import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.Signature
 import java.security.spec.ECGenParameterSpec
+import org.apache.sshd.common.config.keys.KeyUtils
+import org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
+import org.bouncycastle.crypto.generators.ECKeyPairGenerator
 
 class Vulnerable {
     /** Key generation alone: ECDH or ECDSA? Reported as generic ECC. */
@@ -15,4 +18,12 @@ class Vulnerable {
 
     /** The signature itself is unambiguous and gets the ECDSA finding. */
     fun signer(): Signature = Signature.getInstance("SHA256withECDSA")
+
+    /** BouncyCastle's own generator, and the SSH host key provider's type. */
+    fun lightweight(): Any = ECKeyPairGenerator()
+
+    fun hostKey(keys: SimpleGeneratorHostKeyProvider) {
+        keys.setAlgorithm("EC")
+        val algorithm = KeyUtils.EC_ALGORITHM
+    }
 }

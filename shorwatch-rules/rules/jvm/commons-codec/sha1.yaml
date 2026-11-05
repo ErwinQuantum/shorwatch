@@ -6,3 +6,11 @@ patterns:
   - call: { type: org.apache.commons.codec.digest.DigestUtils, method: sha1 }
   - call: { type: org.apache.commons.codec.digest.DigestUtils, method: sha1Hex }
   - call: { type: org.apache.commons.codec.digest.DigestUtils, method: getSha1Digest }
+  # The deprecated names of the same functions.
+  - call: { type: org.apache.commons.codec.digest.DigestUtils, method: sha }
+  - call: { type: org.apache.commons.codec.digest.DigestUtils, method: shaHex }
+  - call: { type: org.apache.commons.codec.digest.DigestUtils, method: getShaDigest }
+  # `new DigestUtils(MessageDigestAlgorithms.SHA_1)`, `DigestUtils.getDigest(...)`.
+  - field:
+      type: org.apache.commons.codec.digest.MessageDigestAlgorithms
+      matches: '^SHA_1$'

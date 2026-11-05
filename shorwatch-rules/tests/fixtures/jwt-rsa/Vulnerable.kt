@@ -27,6 +27,9 @@ class Vulnerable {
     /** Nimbus JWE with RSA-OAEP-256 key encryption. */
     fun encryptedHeader(): Any = JWEAlgorithm.RSA_OAEP_256
 
+    /** The same algorithm read from its JOSE name. */
+    fun parsedHeader(): JWEAlgorithm = JWEAlgorithm.parse("RSA-OAEP-256")
+
     /** jjwt 0.12: key pair and signature in one idiom. */
     fun jjwt(): String {
         val pair: KeyPair = Jwts.SIG.PS256.keyPair().build()

@@ -14,6 +14,8 @@ suggestion: >-
   the algorithm silently would break existing values and interoperability.
   Migrate the data and its consumers together.
 references:
+  - title: "Shorwatch: why SHA-1 is flagged"
+    url: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/sha1.md
   - title: "NIST: Retiring SHA-1 (transition by December 31, 2030)"
     url: https://www.nist.gov/news-events/news/2022/12/nist-retires-sha-1-cryptographic-algorithm
   - title: "FIPS 180-4: Secure Hash Standard (SHS)"

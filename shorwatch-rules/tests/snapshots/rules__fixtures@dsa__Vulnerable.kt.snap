@@ -12,3 +12,21 @@ input_file: shorwatch-rules/tests/fixtures/dsa/Vulnerable.kt
 - rule: jvm.bouncycastle.dsa
   at: "13:31"
   status: vulnerable
+- rule: jvm.jca.dsa
+  at: "17:9"
+  status: vulnerable
+- rule: jvm.jca.dsa
+  at: "18:9"
+  status: vulnerable
+- rule: jvm.jca.sha1
+  at: "18:9"
+  status: vulnerable
+- rule: jvm.jca.dsa
+  at: "19:9"
+  status: vulnerable
+- rule: jvm.jca.dsa
+  at: "20:9"
+  status: vulnerable
+- rule: jvm.jca.sha1
+  at: "20:9"
+  status: vulnerable

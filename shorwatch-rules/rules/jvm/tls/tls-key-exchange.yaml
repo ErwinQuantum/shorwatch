@@ -7,9 +7,13 @@ platform: jvm
 # connectors...). Suite names go through arrays, lists and constants that
 # argument patterns cannot follow, but they are specific enough to match as
 # plain string literals. Suites passed to an exclusion method are skipped.
+#
+# OpenSSL names write the key exchange as a prefix (`ECDHE-RSA-...`), except
+# for static RSA, which has none (`AES256-SHA`, `AES128-GCM-SHA256`): those
+# are listed by name, closed by a separator so `AES256-SHAKE` stays out.
 patterns:
   - literal:
-      matches: '(^|[,:\s])((TLS|SSL)_(RSA|DHE?|ECDHE?)_\w*WITH_\w+|(ECDHE|DHE|EDH)-(RSA|ECDSA|DSS)-)'
+      matches: '(^|[,:\s])((TLS|SSL)_(RSA|DHE?|ECDHE?)_\w*WITH_\w+|(ECDHE?|DHE?|EDH)-(RSA|ECDSA|DSS)-|(AES(128|256)(-GCM)?-SHA(256|384)?|CAMELLIA(128|256)-SHA(256)?|DES-CBC3-SHA|RC4-(MD5|SHA)|SEED-SHA)($|[,:\s]))'
       unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'
   # `System.setProperty("jdk.tls.namedGroups", "x25519,secp256r1")` with a
   # classical group in the list.

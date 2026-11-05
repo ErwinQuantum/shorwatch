@@ -9,3 +9,12 @@ patterns:
   - field:
       type: com.nimbusds.jose.JWEAlgorithm
       matches: '(^|_)A128(GCM)?KW$'
+  # The same algorithms read from their JOSE names (`A128KW`, `ECDH-ES+A128KW`).
+  - call:
+      type: com.nimbusds.jose.EncryptionMethod
+      method: parse
+      arg: { index: 0, matches: '^A128(GCM|CBC-HS256)$' }
+  - call:
+      type: com.nimbusds.jose.JWEAlgorithm
+      method: parse
+      arg: { index: 0, matches: '(^|\+)A128(GCM)?KW$' }

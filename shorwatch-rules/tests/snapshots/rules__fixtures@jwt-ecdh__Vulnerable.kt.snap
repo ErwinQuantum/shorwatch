@@ -15,3 +15,6 @@ input_file: shorwatch-rules/tests/fixtures/jwt-ecdh/Vulnerable.kt
 - rule: jvm.jjwt.jose-ecdh
   at: "19:23"
   status: vulnerable
+- rule: jvm.nimbus.jose-ecdh
+  at: "22:34"
+  status: vulnerable

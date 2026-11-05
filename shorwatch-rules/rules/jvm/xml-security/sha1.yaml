@@ -17,3 +17,7 @@ patterns:
   - field:
       type: org.apache.xml.security.algorithms.MessageDigestAlgorithm
       matches: '^ALGO_ID_DIGEST_SHA1$'
+  # The same algorithms written as their URIs, as in WS-Security and SAML
+  # configuration code. `#hmac-sha1` is deliberately not matched.
+  - literal:
+      matches: 'xmldsig(-more)?#((rsa|dsa|ecdsa)-)?sha1$'

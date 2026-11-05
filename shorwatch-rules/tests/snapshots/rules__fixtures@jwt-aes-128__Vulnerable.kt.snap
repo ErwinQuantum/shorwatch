@@ -16,8 +16,14 @@ input_file: shorwatch-rules/tests/fixtures/jwt-aes-128/Vulnerable.kt
   at: "13:16"
   status: vulnerable
 - rule: jvm.nimbus.jose-aes-128
-  at: "17:36"
+  at: "18:9"
+  status: vulnerable
+- rule: jvm.nimbus.jose-aes-128
+  at: "19:16"
+  status: vulnerable
+- rule: jvm.nimbus.jose-aes-128
+  at: "23:36"
   status: vulnerable
 - rule: jvm.nimbus.jose-ecdh
-  at: "17:36"
+  at: "23:36"
   status: vulnerable

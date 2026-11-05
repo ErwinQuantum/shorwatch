@@ -21,4 +21,10 @@ class Vulnerable {
         KeyPairGenerator.getInstance("ECDSA", "BC")
         return ECDSASigner()
     }
+
+    // The signature OIDs, which the JDK also accepts as names.
+    fun oids() {
+        Signature.getInstance("1.2.840.10045.4.3.2")
+        Signature.getInstance("OID.1.2.840.10045.4.1")
+    }
 }

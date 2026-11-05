@@ -1,0 +1,11 @@
+id: config.app.jose-aes-128
+profile: jose-aes-128
+platform: config
+
+patterns:
+  # Application-defined JWE settings such as `mail.jwe.alg` (key management)
+  # and `mail.jwe.enc` (content encryption), usually injected with @Value.
+  # Only exact JOSE names count, so unrelated settings stay quiet.
+  - property:
+      key: '(?i)(^|\.)(alg|algorithms?|enc)(\[\d+\])?$'
+      matches: '^(A128(GCM|CBC-HS256|KW|GCMKW)|(ECDH-ES|ECDH-1PU|PBES2-HS256)\+A128KW)$'

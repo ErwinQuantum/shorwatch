@@ -1,4 +1,6 @@
 /target
+# Maven build output of the example projects (the IDE creates it on import)
+examples/**/target/
 **/*.rs.bk
 *.pdb
 

@@ -9,15 +9,30 @@ input_file: shorwatch-rules/tests/fixtures/tink/Vulnerable.kt
 - rule: jvm.tink.jose-ecdsa
   at: "13:34"
   status: vulnerable
-- rule: jvm.tink.ecdh
+- rule: jvm.tink.jose-rsa
   at: "14:34"
   status: vulnerable
-- rule: jvm.tink.aes-128
-  at: "15:41"
-  status: vulnerable
-- rule: jvm.tink.rsa
-  at: "19:9"
+- rule: jvm.tink.jose-rsa
+  at: "15:34"
   status: vulnerable
 - rule: jvm.tink.ecdh
-  at: "20:9"
+  at: "16:34"
+  status: vulnerable
+- rule: jvm.tink.aes-128
+  at: "17:41"
+  status: vulnerable
+- rule: jvm.tink.ecdsa
+  at: "21:34"
+  status: vulnerable
+- rule: jvm.tink.ecdsa
+  at: "22:34"
+  status: vulnerable
+- rule: jvm.tink.ecdsa
+  at: "23:41"
+  status: vulnerable
+- rule: jvm.tink.rsa
+  at: "27:9"
+  status: vulnerable
+- rule: jvm.tink.ecdh
+  at: "28:9"
   status: vulnerable
