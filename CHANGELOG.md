@@ -51,6 +51,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
     DH, EC and Triple DES, `KEM.getInstance("DHKEM")`, `AESWrap_128`, and plain
     `DSA` / `DSS` / `MD5andSHA1withRSA`, which also use SHA-1. A test calls all
     632 names the JDK accepts and checks what each produces.
+  - Every name BouncyCastle 1.85 registers through the JCA: `MD5withRSAEncryption`,
+    `RSAPSS`, `SHA256/ECDSA`, `DETECDSA`, `ECNR`, `ECCDHU`, `X25519UwithSHA256KDF`,
+    `PBEWITHSHAAND3-KEYTRIPLEDES-CBC`, `TDEA`, the OIDs of ECDSA over BSI curves,
+    and ElGamal and ECIES parameters. The post-quantum and composite names are
+    not reported as classical algorithms. A test covers 4,175 names.
   - Smaller additions: ElGamal parameter generators and BouncyCastle specs,
     BouncyCastle's `RSADigestSigner` and unified-model ECDH, and XML Signature
     algorithms written as URIs.

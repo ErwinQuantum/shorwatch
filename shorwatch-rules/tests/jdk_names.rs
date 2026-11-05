@@ -1,7 +1,8 @@
-//! Coverage of the names the JDK itself accepts.
+//! Coverage of the names the JDK and BouncyCastle accept.
 //!
 //! `tests/jdk/names.tsv` lists every algorithm and alias the JDK 21 providers
-//! register for the types Shorwatch reads (`Signature`, `KeyPairGenerator`,
+//! register, and `tests/jdk/bouncycastle.tsv` the ones BouncyCastle 1.85
+//! registers, for the types Shorwatch reads (`Signature`, `KeyPairGenerator`,
 //! `Cipher`...), with the profiles each name must produce (`-` for none).
 //! Aliases and OIDs are valid algorithm names (`Signature.getInstance(
 //! "1.2.840.113549.1.1.11")` is `SHA256withRSA`), and a rule that misses one is a
@@ -9,8 +10,8 @@
 //! test calls every name through its factory and compares, per call, the
 //! profiles reported with the ones expected.
 //!
-//! A JDK that adds a name does not change this file: add the row when you
-//! update `names.tsv`, and the test says what the rules do with it.
+//! A provider that adds a name does not change this file: add the row when you
+//! update its table, and the test says what the rules do with it.
 
 use std::collections::BTreeSet;
 use std::fmt::Write;
@@ -43,8 +44,8 @@ struct Row {
     expected: BTreeSet<String>,
 }
 
-fn rows() -> Vec<Row> {
-    include_str!("jdk/names.tsv")
+fn rows(table: &str) -> Vec<Row> {
+    table
         .lines()
         .map(|line| {
             let c: Vec<_> = line.split('\t').collect();
@@ -65,7 +66,16 @@ fn rows() -> Vec<Row> {
 
 #[test]
 fn every_name_the_jdk_accepts_is_read() {
-    let rows = rows();
+    check("JDK", include_str!("jdk/names.tsv"));
+}
+
+#[test]
+fn every_name_bouncycastle_accepts_is_read() {
+    check("BouncyCastle", include_str!("jdk/bouncycastle.tsv"));
+}
+
+fn check(provider: &str, table: &str) {
+    let rows = rows(table);
     // One call per line, so a finding's line says which name it belongs to.
     let mut source = String::from("class Probe {\n  void probe() throws Exception {\n");
     for row in &rows {
@@ -106,7 +116,7 @@ fn every_name_the_jdk_accepts_is_read() {
         .collect();
     assert!(
         wrong.is_empty(),
-        "{} of {} JDK names are read differently than expected:\n{}",
+        "{} of {} {provider} names are read differently than expected:\n{}",
         wrong.len(),
         rows.len(),
         wrong.join("\n")

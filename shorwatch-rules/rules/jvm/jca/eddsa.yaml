@@ -17,6 +17,10 @@ patterns:
       type: java.security.KeyFactory
       method: getInstance
       arg: { index: 0, matches: '(?i)^(EdDSA|Ed25519|Ed448|(OID\.)?1\.3\.101\.11[23])$' }
+  - call:
+      type: java.security.AlgorithmParameters
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(EdDSA|Ed25519|Ed448|(OID\.)?1\.3\.101\.11[23])$' }
   - construct:
       type: java.security.spec.EdECPublicKeySpec
   - construct:

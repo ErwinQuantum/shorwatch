@@ -11,12 +11,16 @@ patterns:
   - call:
       type: java.security.KeyPairGenerator
       method: getInstance
-      arg: { index: 0, matches: '(?i)^ElGamal$' }
+      arg: { index: 0, matches: '(?i)^(ElGamal|(OID\.)?1\.3\.14\.7\.2\.1\.1)$' }
   - call:
       type: java.security.KeyFactory
       method: getInstance
-      arg: { index: 0, matches: '(?i)^ElGamal$' }
+      arg: { index: 0, matches: '(?i)^(ElGamal|(OID\.)?1\.3\.14\.7\.2\.1\.1)$' }
   - call:
       type: java.security.AlgorithmParameterGenerator
       method: getInstance
-      arg: { index: 0, matches: '(?i)^ElGamal$' }
+      arg: { index: 0, matches: '(?i)^(ElGamal|(OID\.)?1\.3\.14\.7\.2\.1\.1)$' }
+  - call:
+      type: java.security.AlgorithmParameters
+      method: getInstance
+      arg: { index: 0, matches: '(?i)^(ElGamal|(OID\.)?1\.3\.14\.7\.2\.1\.1)$' }
