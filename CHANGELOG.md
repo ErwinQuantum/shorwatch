@@ -59,6 +59,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   - Smaller additions: ElGamal parameter generators and BouncyCastle specs,
     BouncyCastle's `RSADigestSigner` and unified-model ECDH, and XML Signature
     algorithms written as URIs.
+- RS256 used as a default is now reported: `NimbusJwtDecoder.withJwkSetUri(...)`
+  and `withJwkSource(...)` (plain and reactive) when the chain names no
+  algorithm, and Spring Boot's `jwk-set-uri` when no `jws-algorithms` is set.
+  Rules can say this with two new conditions, `unless_chain` (a method called
+  later in the same chain) and `unless_property` (another key in the same file).
 - A rule now reports a line once: a second match of the same rule on the same
   line (a cipher suite written under its IANA and OpenSSL names, two algorithm
   names in one expression) is no longer a second finding. The baseline already

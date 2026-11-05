@@ -83,13 +83,26 @@ key-distribution problems.
   and `SignatureAlgorithm`, and `SignatureAlgorithm.forName`.
 - **auth0 java-jwt:** `Algorithm.RSA256`, `RSA384` and `RSA512` (the `PS*`
   algorithms are not covered).
-- **Spring Security:** the `RS*` and `PS*` constants, and
-  `NimbusJwtDecoder.withPublicKey` (plain and reactive).
+- **Spring Security:** the `RS*` and `PS*` constants,
+  `NimbusJwtDecoder.withPublicKey` (plain and reactive), and the decoders that
+  name no algorithm and so verify RS256 (see below).
 - **Tink:** the `JWT_RS*` and `JWT_PS*` key templates.
 - **Configuration:** `alg`, `algorithm(s)`, `signing-algorithm(s)` and
   `signature-algorithm(s)` keys set to an exact `RS*` / `PS*` name, and in
   Spring Boot `jws-algorithms` and `public-key-location` (Spring Boot only
-  supports RSA keys there).
+  supports RSA keys there), and `jwk-set-uri` when no `jws-algorithms` is set.
+
+### RS256 as a default
+
+Spring Security's documentation says that, by default, `NimbusJwtDecoder` "will
+only trust and verify tokens using `RS256`". Shorwatch reports the builders
+that rely on that default: `NimbusJwtDecoder.withJwkSetUri(...)` and
+`withJwkSource(...)` (plain and reactive), and the Spring Boot property
+`spring.security.oauth2.resourceserver.jwt.jwk-set-uri`. The report is skipped
+when the chain goes on to choose: `.jwsAlgorithm(...)`, `.jwsAlgorithms(...)`
+or `.jwtProcessorCustomizer(...)`, and, in a configuration file, when the same
+file sets `jws-algorithms`. What the code chooses is reported on its own
+(`SignatureAlgorithm.ES256` is an ECDSA finding).
 
 ## False positives and limits
 
@@ -101,9 +114,14 @@ key-distribution problems.
 - Only the libraries above are read. jose4j and fusionauth-jwt appear in the
   dependency inventory when a build file declares them, but their code is not
   scanned for algorithms.
-- RS256 as a *default* is not reported. `NimbusJwtDecoder.withJwkSetUri(...)`
-  and the `jwk-set-uri` property verify with RS256 unless told otherwise, and
-  Shorwatch does not infer that.
+- The RS256 default is read from the call chain and from one file. A builder
+  kept in a variable and configured later (`b.jwsAlgorithm(...)`) is still
+  reported as the default, and so is a `jwk-set-uri` whose `jws-algorithms`
+  lives in another file (`application-prod.yml`).
+- `NimbusJwtDecoder.withIssuerLocation(...)`, `JwtDecoders.fromIssuerLocation`
+  and the `issuer-uri` property are not reported: the first takes the
+  algorithms from the issuer's JWK Set, and Spring's documentation does not
+  say what the others default to.
 - Config values are matched exactly. JOSE names are case-sensitive, so `rs256`
   is not reported.
 - Parsing an RSA key from a JWK (`RSAKey.parse`, `RSAKey.load`) is not
