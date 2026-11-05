@@ -11,6 +11,8 @@ class Vulnerable {
 
     fun byName(): KeysetHandle {
         KeysetHandle.generateNew(KeyTemplates.get("JWT_ES256"))
+        KeysetHandle.generateNew(KeyTemplates.get("JWT_RS256_2048_F4"))
+        KeysetHandle.generateNew(KeyTemplates.get("JWT_PS384_3072_F4"))
         KeysetHandle.generateNew(KeyTemplates.get("DHKEM_X25519_HKDF_SHA256_HKDF_SHA256_AES_256_GCM"))
         return KeysetHandle.generateNew(KeyTemplates.get("AES128_GCM"))
     }
