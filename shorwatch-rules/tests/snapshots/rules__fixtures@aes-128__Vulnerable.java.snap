@@ -23,12 +23,6 @@ input_file: shorwatch-rules/tests/fixtures/aes-128/Vulnerable.java
 - rule: jvm.tls.tls-key-exchange
   at: "36:30"
   status: vulnerable
-- rule: jvm.tls.aes-128
-  at: "36:61"
-  status: vulnerable
-- rule: jvm.tls.tls-key-exchange
-  at: "36:61"
-  status: vulnerable
 - rule: jvm.jca.aes-128
   at: "41:9"
   status: vulnerable

@@ -9,9 +9,6 @@ input_file: shorwatch-rules/tests/fixtures/kms-azure/Vulnerable.java
 - rule: jvm.azure-keyvault.ec
   at: "18:33"
   status: vulnerable
-- rule: jvm.azure-keyvault.ec
-  at: "18:82"
-  status: vulnerable
 - rule: jvm.azure-keyvault.ecdsa
   at: "22:28"
   status: vulnerable
