@@ -94,6 +94,12 @@ pub enum Pattern {
         /// still matches: the rule errs on the side of reporting.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         origin: Option<ArgPattern>,
+        /// Skips the call when a method matching this regex is called on its
+        /// result later in the chain. Lets a rule report a library *default*
+        /// (`withJwkSetUri(u).build()` verifies with RS256) only when nothing
+        /// in the chain chooses another (`.jwsAlgorithm(ES256)`).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        unless_chain: Option<String>,
     },
     /// `new Type(...)`.
     Construct {
@@ -126,6 +132,11 @@ pub enum Pattern {
         key: String,
         #[serde(default)]
         matches: Option<String>,
+        /// Skips the entry when another entry of the same file has a key
+        /// matching this regex: `jwk-set-uri` verifies with RS256 only while
+        /// no `jws-algorithms` says otherwise.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        unless_property: Option<String>,
     },
     /// A key or certificate whose public key `algorithm` and, for
     /// certificates, `signature` algorithm match (either absent: any).

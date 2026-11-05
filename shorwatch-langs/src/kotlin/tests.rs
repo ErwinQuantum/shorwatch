@@ -489,3 +489,36 @@ fun t() = KeyType.RSA
     );
     assert!(on_demand.is(azure));
 }
+
+/// `(method, methods chained after it)` of every call, in source order.
+fn chains(unit: &SourceUnit) -> Vec<(String, Vec<String>)> {
+    unit.facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Call { method, chain, .. } => Some((method.clone(), chain.clone())),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn a_call_knows_which_methods_are_chained_after_it() {
+    let unit = lower(
+        r#"
+            class A {
+                fun run() {
+                    Decoder.withUri(u).algorithm(a).build()
+                    Decoder.withUri(u)
+                    outer(Decoder.withUri(u))
+                }
+            }
+        "#,
+    );
+    let chains = chains(&unit);
+    let with_uri: Vec<_> = chains.iter().filter(|(m, _)| m == "withUri").collect();
+    assert_eq!(with_uri[0].1, ["algorithm", "build"]);
+    assert!(with_uri[1].1.is_empty());
+    assert!(with_uri[2].1.is_empty());
+    let algorithm = chains.iter().find(|(m, _)| m == "algorithm").unwrap();
+    assert_eq!(algorithm.1, ["build"]);
+}

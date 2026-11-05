@@ -20,6 +20,7 @@ impl JvmFile {
                     receiver: None,
                     method,
                     args,
+                    ..
                 } => Some(LocalCall {
                     scope: *scope,
                     method: method.clone(),
@@ -34,7 +35,9 @@ impl JvmFile {
                     receiver,
                     method,
                     args,
+                    chain,
                 } => FactKind::Call {
+                    chain,
                     receiver_call: receiver.as_ref().and_then(|r| self.receiver_call(r, scope)),
                     receiver_origin: receiver
                         .as_ref()

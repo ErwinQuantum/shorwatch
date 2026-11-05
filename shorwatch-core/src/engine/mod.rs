@@ -33,7 +33,11 @@ pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
     let mut findings = Vec::new();
     for rule in rules.rules.iter().filter(|r| r.rule.platform == platform) {
         for fact in unit.facts() {
-            if let Some(matched) = rule.patterns.iter().find_map(|p| match_pattern(p, fact)) {
+            if let Some(matched) = rule
+                .patterns
+                .iter()
+                .find_map(|p| match_pattern(p, fact, unit))
+            {
                 findings.push(build_finding(unit, rule, fact, matched));
             }
         }

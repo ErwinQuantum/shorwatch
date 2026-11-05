@@ -103,6 +103,8 @@ pub(crate) enum Pending {
         receiver: Option<Receiver>,
         method: String,
         args: Vec<PendingArg>,
+        /// Methods called on the result later in the chain, nearest first.
+        chain: Vec<String>,
     },
     Construct {
         ty: String,

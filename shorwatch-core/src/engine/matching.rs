@@ -1,6 +1,6 @@
 //! Whether a compiled pattern matches one fact.
 
-use crate::ir::{Arg, ArgValue, Fact, FactKind, FlowStep};
+use crate::ir::{Arg, ArgValue, Fact, FactKind, FlowStep, SourceUnit};
 use crate::rule::{CompiledArg, CompiledPattern};
 
 pub(super) struct Match<'a> {
@@ -17,7 +17,11 @@ impl Match<'_> {
     };
 }
 
-pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Option<Match<'a>> {
+pub(super) fn match_pattern<'a>(
+    pattern: &CompiledPattern,
+    fact: &'a Fact,
+    unit: &SourceUnit,
+) -> Option<Match<'a>> {
     // An absent regex accepts anything.
     let optional =
         |re: &Option<regex::Regex>, text: &str| re.as_ref().is_none_or(|re| re.is_match(text));
@@ -28,17 +32,22 @@ pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Op
                 method,
                 arg,
                 origin,
+                unless_chain,
             },
             FactKind::Call {
                 receiver: Some(actual),
                 method: actual_method,
                 args,
                 receiver_origin,
+                chain,
                 ..
             },
         ) if actual_method == method
             && actual.is(receiver)
-            && origin_allows(origin.as_ref(), receiver_origin.as_deref()) =>
+            && origin_allows(origin.as_ref(), receiver_origin.as_deref())
+            && !unless_chain
+                .as_ref()
+                .is_some_and(|re| chain.iter().any(|next| re.is_match(next))) =>
         {
             (args, arg)
         }
@@ -68,8 +77,20 @@ pub(super) fn match_pattern<'a>(pattern: &CompiledPattern, fact: &'a Fact) -> Op
                 .is_some_and(|re| calls.iter().any(|call| re.is_match(call)));
             return (value.is_match(literal) && !excluded).then_some(Match::NONE);
         }
-        (CompiledPattern::Property { key, value }, FactKind::Property { key: k, value: v }) => {
-            return (key.is_match(k) && optional(value, v)).then_some(Match::NONE);
+        (
+            CompiledPattern::Property {
+                key,
+                value,
+                unless_property,
+            },
+            FactKind::Property { key: k, value: v },
+        ) => {
+            let overridden = unless_property.as_ref().is_some_and(|re| {
+                unit.facts()
+                    .iter()
+                    .any(|f| matches!(&f.kind, FactKind::Property { key, .. } if re.is_match(key)))
+            });
+            return (key.is_match(k) && optional(value, v) && !overridden).then_some(Match::NONE);
         }
         (
             CompiledPattern::Key {
