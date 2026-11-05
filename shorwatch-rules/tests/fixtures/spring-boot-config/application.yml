@@ -29,3 +29,5 @@ partner:
 mailbox:
   # An encrypted token (JWE): key agreement, not a signature.
   alg: ECDH-ES+A256KW
+  # Its content encryption: a 128-bit AES key.
+  enc: A128GCM

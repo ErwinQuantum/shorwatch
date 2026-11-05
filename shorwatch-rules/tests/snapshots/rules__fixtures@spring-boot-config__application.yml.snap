@@ -30,3 +30,6 @@ input_file: shorwatch-rules/tests/fixtures/spring-boot-config/application.yml
 - rule: config.app.jose-ecdh
   at: "31:8"
   status: vulnerable
+- rule: config.app.jose-aes-128
+  at: "33:8"
+  status: vulnerable

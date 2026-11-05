@@ -37,10 +37,13 @@ AES-128:
   - "Literal { matches: \"(^|[,:\\\\s])(TLS_\\\\w*AES_128_|([A-Z0-9]+-)*AES128-(GCM-SHA256|SHA(256)?|CCM8?)($|[,:\\\\s]))\", unless_call: Some(\"(?i)(exclude|disable|remove|deny|block|reject)\") }"
   - "Property { key: \"(?i)(^|\\\\.)(ssl|options)\\\\.(ciphers|cipher-?suites|cipher\\\\.suites|enabled-?cipher-?suites)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"(?i)(^|[,:\\\\s])(TLS_\\\\w*AES_128_|([A-Z0-9]+-)*AES128-(GCM-SHA256|SHA(256)?|CCM8?)($|[,:\\\\s]))\") }"
 AES-128 (JOSE/JWE):
+  - "Call { receiver: \"com.nimbusds.jose.EncryptionMethod\", method: \"parse\", arg: Some(ArgPattern { index: 0, matches: \"^A128(GCM|CBC-HS256)$\" }), origin: None }"
+  - "Call { receiver: \"com.nimbusds.jose.JWEAlgorithm\", method: \"parse\", arg: Some(ArgPattern { index: 0, matches: \"(^|\\\\+)A128(GCM)?KW$\" }), origin: None }"
   - "Field { owner: \"com.nimbusds.jose.EncryptionMethod\", matches: Some(\"^A128(GCM|CBC_HS256)$\") }"
   - "Field { owner: \"com.nimbusds.jose.JWEAlgorithm\", matches: Some(\"(^|_)A128(GCM)?KW$\") }"
   - "Field { owner: \"io.jsonwebtoken.Jwts.ENC\", matches: Some(\"^A128(GCM|CBC_HS256)$\") }"
   - "Field { owner: \"io.jsonwebtoken.Jwts.KEY\", matches: Some(\"(^|_)A128(GCM)?KW$\") }"
+  - "Property { key: \"(?i)(^|\\\\.)(alg|algorithms?|enc)(\\\\[\\\\d+\\\\])?$\", matches: Some(\"^(A128(GCM|CBC-HS256|KW|GCMKW)|(ECDH-ES|ECDH-1PU|PBES2-HS256)\\\\+A128KW)$\") }"
 DSA:
   - "Call { receiver: \"com.jcraft.jsch.JSch\", method: \"setConfig\", arg: Some(ArgPattern { index: 1, matches: \"(^|,)ssh-dss(,|$)\" }), origin: None }"
   - "Call { receiver: \"com.jcraft.jsch.Session\", method: \"setConfig\", arg: Some(ArgPattern { index: 1, matches: \"(^|,)ssh-dss(,|$)\" }), origin: None }"
