@@ -19,4 +19,10 @@ class Vulnerable {
     fun bouncyCastle(): Any = Ed25519Signer()
 
     fun ssh(): Any = EdDSAEngine()
+
+    // The OIDs, which the JDK also accepts as names.
+    fun oids() {
+        Signature.getInstance("1.3.101.112")
+        Signature.getInstance("OID.1.3.101.113")
+    }
 }
