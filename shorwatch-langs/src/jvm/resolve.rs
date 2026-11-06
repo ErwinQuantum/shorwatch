@@ -9,8 +9,42 @@ use shorwatch_core::ir::{
 };
 
 impl JvmFile {
+    /// A `@ConfigurationProperties` type's fields hold what the configuration
+    /// says under `<prefix>.<field>` (Spring binds them through setters or the
+    /// constructor), like an `@Value` field. A literal initializer is the
+    /// default for when the key is absent; constants (`final` literals) and
+    /// fields already injected are left alone.
+    fn bind_configuration_properties(&mut self) {
+        for (scope, prefix) in std::mem::take(&mut self.config_prefixes) {
+            let names: Vec<String> = self
+                .symbols
+                .iter()
+                .filter(|((s, _), symbol)| *s == scope && symbol.constant.is_none())
+                .map(|((_, name), _)| name.clone())
+                .collect();
+            for name in names {
+                let default = self
+                    .assignments
+                    .iter()
+                    .find(|a| a.scope == scope && a.name == name)
+                    .and_then(|a| match &a.value.source {
+                        ArgSource::Value(ArgValue::Str(text)) => Some(text.clone()),
+                        _ => None,
+                    });
+                if let Some(symbol) = self.symbols.get_mut(&(scope, name.clone())) {
+                    symbol.constant = Some(ArgValue::Injected {
+                        key: format!("{prefix}.{name}"),
+                        default,
+                        resolved: Vec::new(),
+                    });
+                }
+            }
+        }
+    }
+
     pub(crate) fn resolve(mut self) -> SourceUnit {
         self.index_scopes();
+        self.bind_configuration_properties();
         self.local_calls = self
             .pending
             .iter()

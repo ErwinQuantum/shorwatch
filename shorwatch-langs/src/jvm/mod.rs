@@ -62,6 +62,9 @@ pub(crate) struct JvmFile {
     /// Kotlin's primary-constructor properties (`class K(val jce: String)`)
     /// by type scope: reading `k.jce` is calling an accessor.
     pub(crate) properties: HashMap<ScopeId, Vec<(String, Location)>>,
+    /// Types annotated `@ConfigurationProperties(prefix = "...")`: their
+    /// fields are bound to `<prefix>.<field>` keys of the configuration.
+    pub(crate) config_prefixes: HashMap<ScopeId, String>,
     /// Calls that may target a method of this file, gathered in phase two.
     local_calls: Vec<LocalCall>,
     /// Type scopes by name and method scopes by declaring type, name and
@@ -89,6 +92,7 @@ impl JvmFile {
             type_decls: Vec::new(),
             enum_constants: HashMap::new(),
             properties: HashMap::new(),
+            config_prefixes: HashMap::new(),
             local_calls: Vec::new(),
             type_scopes: HashMap::new(),
             method_scopes: HashMap::new(),
