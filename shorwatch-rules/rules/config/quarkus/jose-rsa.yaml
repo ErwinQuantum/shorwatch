@@ -1,0 +1,16 @@
+id: config.quarkus.jose-rsa
+profile: jose-rsa
+platform: config
+
+patterns:
+  # MicroProfile JWT as Quarkus documents it: a verification key with no
+  # `mp.jwt.verify.publickey.algorithm` is verified with RS256 (ES256 must be
+  # asked for). An explicit algorithm is read by `config.app` and reported on
+  # its own.
+  - property:
+      key: '^mp\.jwt\.verify\.publickey(\.location)?$'
+      unless_property: '^mp\.jwt\.verify\.publickey\.algorithm$'
+  # The decryption key defaults to RSA-OAEP / RSA-OAEP-256 the same way.
+  - property:
+      key: '^mp\.jwt\.decrypt\.key(\.location)?$'
+      unless_property: '^mp\.jwt\.decrypt\.key\.algorithm$'

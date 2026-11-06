@@ -1,0 +1,8 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/quarkus-config/application-es.properties
+---
+- rule: config.app.jose-ecdsa
+  at: "3:35"
+  status: vulnerable
