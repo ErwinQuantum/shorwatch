@@ -7,88 +7,86 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.2.0] - Unreleased
+
+Shorwatch now follows more of the ways code names an algorithm, reads more
+places where one is chosen, and explains every finding. On the same code a scan
+reports more than 0.1.0 and loses nothing: on 8 open-source projects (20,000
+files) no finding disappeared and 63 were added, and every production finding
+was read by hand (none named an algorithm the code does not use).
+
 ### Added
 
-- The cryptographic libraries a project declares in its build files: Maven
-  `pom.xml`, Gradle `build.gradle` and `build.gradle.kts` (Groovy and Kotlin
-  DSL) and `libs.versions.toml`, found by file name. About 20 known libraries
-  (BouncyCastle, Nimbus, jjwt, JSch, Tink, the cloud KMS clients...) are
-  listed with their version and, where the catalog knows it, whether that
-  version can do post-quantum cryptography (BouncyCastle from 1.79).
-- They are an inventory, not findings: the summary counts them, the JSON
-  report lists `dependencies`, the Markdown and HTML reports have a section,
-  and the CBOM carries them as `library` components with a package URL. They
-  feed no gate, baseline or SARIF result.
-- The catalog of known libraries is data (`rules/libraries/<id>.yaml`), and
-  `--rules` directories may add their own.
-- `docs/algorithms/`: one page per algorithm Shorwatch flags (RSA, ECDSA,
-  AES-128, SHA-1, the JOSE variants...) explaining why it is a problem, how
+- **A dependency inventory.** The cryptographic libraries a project declares in
+  `pom.xml`, `build.gradle`, `build.gradle.kts` and `libs.versions.toml` (found
+  by file name) are listed with their version and, where the catalog knows it,
+  whether that version can do post-quantum cryptography (BouncyCastle from
+  1.79). About 20 libraries are known (BouncyCastle, Nimbus, jjwt, JSch, Tink,
+  the cloud KMS clients...). They are an inventory, not findings: the summary
+  counts them, the JSON report lists `dependencies`, the Markdown and HTML
+  reports have a section, and the CBOM carries them as `library` components
+  with a package URL. They feed no gate, baseline or SARIF result. The catalog
+  is data (`rules/libraries/<id>.yaml`) and `--rules` directories may add their
+  own.
+- **A page for every algorithm** in `docs/algorithms/`: why it is a problem, how
   urgent it is and what to do, plus an introduction to Shor, Grover and
-  harvest-now-decrypt-later. Every finding's references now start with a link
-  to its page, and a test keeps profiles and pages in step.
-- Five rules for places that were not read: Jasypt's
+  harvest-now-decrypt-later. Every finding's references now start with a link to
+  its page, in the terminal, SARIF, JSON and HTML reports, and a test keeps
+  profiles and pages in step.
+- **Six rules for places that were not read**: Jasypt's
   `jasypt.encryptor.algorithm` over Triple DES, AWS KMS `DataKeySpec.AES_128`,
-  Spring Security's SHA-1 password encoders (`MessageDigestPasswordEncoder`,
-  `LdapShaPasswordEncoder`), and application-defined JWE settings (`alg` and
-  `enc` keys naming ECDH-ES or a 128-bit AES algorithm).
+  Spring Security's SHA-1 password encoders, application-defined JWE settings
+  (`alg` and `enc` keys: two rules), and Quarkus's MicroProfile JWT keys that
+  name no algorithm (RS256 by default). 133 rules in all.
+- **Two rule conditions**, for library defaults: `unless_chain` (a method called
+  later on the same call chain) and `unless_property` (another key of the same
+  file).
 
 ### Changed
 
-- The same algorithm is now recognised under more of the names code uses, so a
-  scan can report more findings than 0.1.0 on the same code:
-  - Names the JDK accepts as aliases or OIDs for signatures and digests
-    (`DSAWithSHA1`, `SHA1/DSA`, `DSS`, `1.2.840.10045.4.3.2`...).
-  - OpenSSL cipher names next to the IANA ones, including static RSA suites
-    that carry no key-exchange prefix (`AES256-SHA`, `AES128-GCM-SHA256`,
-    `DES-CBC3-SHA`) and `ECDH-RSA-...`.
-  - JOSE names read from text (`JWEAlgorithm.parse("ECDH-ES")`,
-    `EncryptionMethod.parse("A128GCM")`).
-  - Kafka's `ssl.cipher.suites`, Commons Codec's deprecated `shaHex` family
-    and `DESedeWrap` / password-based Triple DES names.
-  - Every name the JDK 21 providers register: the OIDs of RSA, DSA and ECDSA
-    signatures (including the SHA-3 ones), `PSS`, `EllipticCurve`, the key and
-    X25519/X448/Ed25519/Ed448 OIDs, `AlgorithmParameters` for RSASSA-PSS, DSA,
-    DH, EC and Triple DES, `KEM.getInstance("DHKEM")`, `AESWrap_128`, and plain
-    `DSA` / `DSS` / `MD5andSHA1withRSA`, which also use SHA-1. A test calls all
-    632 names the JDK accepts and checks what each produces.
-  - Every name BouncyCastle 1.85 registers through the JCA: `MD5withRSAEncryption`,
-    `RSAPSS`, `SHA256/ECDSA`, `DETECDSA`, `ECNR`, `ECCDHU`, `X25519UwithSHA256KDF`,
-    `PBEWITHSHAAND3-KEYTRIPLEDES-CBC`, `TDEA`, the OIDs of ECDSA over BSI curves,
-    and ElGamal and ECIES parameters. The post-quantum and composite names are
-    not reported as classical algorithms. A test covers 4,175 names.
-  - Smaller additions: ElGamal parameter generators and BouncyCastle specs,
-    BouncyCastle's `RSADigestSigner` and unified-model ECDH, and XML Signature
-    algorithms written as URIs.
-- Settings bound with `@ConfigurationProperties` are now followed to the crypto
-  call: a class (or Java record, Kotlin data class) with `prefix = "app.jwt"`
-  has its fields bound to `app.jwt.*`, so `Signature.getInstance(props.getAlgorithm())`
-  reports what the configuration says, relaxed binding included, and the
-  field's initializer when the key is absent.
-- A Quarkus rule for the RS256 default: `mp.jwt.verify.publickey` (and
-  `.location`, and the decryption key) without an `.algorithm`. 133 rules.
-- Algorithms chosen through an enum are now followed: `Cipher.getInstance(kind.getJceName())`
-  where `kind` is an enum whose constants carry the algorithm in their constructor
-  (`LEGACY("RSA")`), `algorithm.name()` for enums named after algorithms, and the
-  Kotlin equivalents (`kind.jceName`, `algorithm.name`). Every constant that can
-  reach the call is reported, so a call that accepts any constant of a mixed enum
-  gives one finding per vulnerable algorithm. A specific constant is not read.
-- RS256 used as a default is now reported: `NimbusJwtDecoder.withJwkSetUri(...)`
-  and `withJwkSource(...)` (plain and reactive) when the chain names no
-  algorithm, and Spring Boot's `jwk-set-uri` when no `jws-algorithms` is set.
-  Rules can say this with two new conditions, `unless_chain` (a method called
-  later in the same chain) and `unless_property` (another key in the same file).
-- A rule now reports a line once: a second match of the same rule on the same
-  line (a cipher suite written under its IANA and OpenSSL names, two algorithm
-  names in one expression) is no longer a second finding. The baseline already
-  treated them as one. Scans can therefore report fewer findings than before.
-- Reference links in findings start with the Shorwatch page for the algorithm.
-  The reports in `examples/output` were regenerated for that.
+- **More names are recognised.** Every algorithm and alias the JDK 21 providers
+  register (632 names) and every name BouncyCastle 1.85 registers through the
+  JCA (4,175) is checked by a test. Among the names that must be reported,
+  v0.1.0 reported 38% of the JDK's and 42% of BouncyCastle's; now all of them.
+  That covers the OIDs of RSA, DSA and ECDSA signatures (SHA-3 included), `PSS`,
+  `EllipticCurve`, the X25519/X448/Ed25519/Ed448 OIDs, `AlgorithmParameters`,
+  `KEM.getInstance("DHKEM")`, `AESWrap_128`, `DSA` and `DSS` (which sign with
+  SHA-1), OpenSSL cipher names next to the IANA ones (including static RSA
+  suites such as `AES256-SHA`, and Kafka's `ssl.cipher.suites`), JOSE names read from text
+  (`JWEAlgorithm.parse("ECDH-ES")`), XML Signature URIs, `shaHex`, `DESedeWrap`
+  and password-based Triple DES. Post-quantum and composite names are not
+  reported as classical algorithms.
+- **More ways of choosing an algorithm are followed to the crypto call.**
+  - Through an enum: `Cipher.getInstance(kind.getJceName())` where the constants
+    carry the algorithm (`LEGACY("RSA")`), `algorithm.name()`, and the Kotlin
+    equivalents. Every constant that can reach the call is reported. A specific
+    constant (`Kind.LEGACY.getJceName()`) is not read.
+  - Through `@ConfigurationProperties`: a class, Java record or Kotlin data class
+    with `prefix = "app.jwt"` has its fields bound to `app.jwt.*`, relaxed
+    binding included, with the field's initializer as the default.
+  - Library defaults: `NimbusJwtDecoder.withJwkSetUri(...)` and
+    `withJwkSource(...)` (plain and reactive) verify RS256 unless the chain
+    chooses another algorithm, as does Spring Boot's `jwk-set-uri` without
+    `jws-algorithms`.
+- **A rule reports a line once.** A second match of the same rule on the same
+  line (one cipher suite under its IANA and OpenSSL names, two algorithm names in
+  one expression) is no longer a second finding; the baseline already treated
+  them as one. A scan can therefore report fewer findings than before for that
+  code.
+- The reports in `examples/output` were regenerated.
+
+### Fixed
+
+- A field of a configuration class was reported with its initializer even when
+  the configuration overrides it (`algorithm = "SHA256withECDSA"` in code,
+  `SHA1withRSA` in `application.yml`): the value that runs is now the one
+  reported.
 
 ### Security
 
-- Build files are read as untrusted input: XML external entities are never
-  read, nesting and resolved coordinates are bounded, and the readers are
-  linear in the file.
+- Build files are read as untrusted input: XML external entities are never read,
+  nesting and resolved coordinates are bounded, and the readers are linear in
+  the file.
 
 ## [0.1.0] - 2026-10-30
 
