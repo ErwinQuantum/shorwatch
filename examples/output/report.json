@@ -1,6 +1,6 @@
 {
   "tool": "shorwatch",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "summary": {
     "files_scanned": 10,
     "files_with_findings": 9,
@@ -1080,8 +1080,8 @@
           "line": 25,
           "column": 17
         },
-        "start_byte": 666,
-        "end_byte": 678
+        "start_byte": 735,
+        "end_byte": 747
       }
     },
     {
@@ -1100,8 +1100,8 @@
           "line": 29,
           "column": 17
         },
-        "start_byte": 825,
-        "end_byte": 837
+        "start_byte": 894,
+        "end_byte": 906
       }
     },
     {
@@ -1121,8 +1121,8 @@
           "line": 33,
           "column": 17
         },
-        "start_byte": 973,
-        "end_byte": 985
+        "start_byte": 1042,
+        "end_byte": 1054
       },
       "post_quantum": {
         "support": "too_old",
@@ -1151,8 +1151,8 @@
           "line": 38,
           "column": 17
         },
-        "start_byte": 1145,
-        "end_byte": 1157
+        "start_byte": 1214,
+        "end_byte": 1226
       }
     },
     {
@@ -1172,8 +1172,8 @@
           "line": 43,
           "column": 17
         },
-        "start_byte": 1297,
-        "end_byte": 1309
+        "start_byte": 1366,
+        "end_byte": 1378
       }
     }
   ]

@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.88"
 license = "Apache-2.0"
@@ -18,10 +18,10 @@ keywords = ["sast", "post-quantum", "cryptography", "security", "static-analysis
 categories = ["development-tools", "cryptography"]
 
 [workspace.dependencies]
-shorwatch-core = { path = "shorwatch-core", version = "0.1.0" }
-shorwatch-rules = { path = "shorwatch-rules", version = "0.1.0" }
-shorwatch-langs = { path = "shorwatch-langs", version = "0.1.0" }
-shorwatch-report = { path = "shorwatch-report", version = "0.1.0" }
+shorwatch-core = { path = "shorwatch-core", version = "0.2.0" }
+shorwatch-rules = { path = "shorwatch-rules", version = "0.2.0" }
+shorwatch-langs = { path = "shorwatch-langs", version = "0.2.0" }
+shorwatch-report = { path = "shorwatch-report", version = "0.2.0" }
 
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

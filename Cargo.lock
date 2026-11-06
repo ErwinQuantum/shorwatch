@@ -612,7 +612,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 
 [[package]]
 name = "shorwatch-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anstream",
  "anyhow",
@@ -631,7 +631,7 @@ dependencies = [
 
 [[package]]
 name = "shorwatch-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "insta",
  "regex",
@@ -641,7 +641,7 @@ dependencies = [
 
 [[package]]
 name = "shorwatch-langs"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "insta",
  "quick-xml",
@@ -655,7 +655,7 @@ dependencies = [
 
 [[package]]
 name = "shorwatch-report"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anstream",
  "insta",
@@ -667,7 +667,7 @@ dependencies = [
 
 [[package]]
 name = "shorwatch-rules"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "insta",
  "serde",
