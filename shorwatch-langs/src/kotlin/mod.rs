@@ -156,6 +156,9 @@ impl<'s> Lowering<'s> {
                 let id = self.file.unit.add_scope(ScopeKind::Type, name, scope);
                 let supertypes = self.supertypes(node);
                 self.file.type_decls.push((id, supertypes));
+                if let Some(prefix) = self.config_prefix(node) {
+                    self.file.config_prefixes.insert(id, prefix);
+                }
                 if let Some(body) = child_of_kind(node, "enum_class_body") {
                     let mut cursor = body.walk();
                     let constants = body
@@ -324,6 +327,15 @@ impl<'s> Lowering<'s> {
         let Some(name) = child_of_kind(variable, "identifier").map(|n| self.text(n)) else {
             return;
         };
+        // A property of a class is read like an accessor (`props.algorithm`).
+        if self.file.unit.scope(scope).kind == ScopeKind::Type {
+            let location = self.location(node);
+            self.file
+                .properties
+                .entry(scope)
+                .or_default()
+                .push((name.to_owned(), location));
+        }
         let value = self.initializer(node, variable);
         let declared = declared_type(variable, self.src);
         let call = match (&declared, value) {
@@ -419,6 +431,36 @@ impl<'s> Lowering<'s> {
 
     /// `@Value("\${key}")` or `@Value("\${key:default}")` among `modifiers`
     /// (Spring). SpEL (`#{...}`) and templates are not interpreted.
+    /// The prefix of a class's `@ConfigurationProperties("p")` or
+    /// `(prefix = "p")`.
+    fn config_prefix(&self, declaration: Node<'_>) -> Option<String> {
+        let modifiers = child_of_kind(declaration, "modifiers")?;
+        let mut cursor = modifiers.walk();
+        let invocation = modifiers
+            .named_children(&mut cursor)
+            .filter(|a| a.kind() == "annotation")
+            .filter_map(|a| child_of_kind(a, "constructor_invocation"))
+            .find(|invocation| {
+                child_of_kind(*invocation, "user_type")
+                    .and_then(|t| syntax::type_name(t, self.src))
+                    .is_some_and(|n| {
+                        n == "ConfigurationProperties" || n.ends_with(".ConfigurationProperties")
+                    })
+            })?;
+        let arguments = child_of_kind(invocation, "value_arguments")?;
+        let mut cursor = arguments.walk();
+        arguments
+            .named_children(&mut cursor)
+            .filter(|a| a.kind() == "value_argument")
+            .find_map(|argument| {
+                let literal = argument.named_child(argument.named_child_count().checked_sub(1)?)?;
+                match self.literal(literal)? {
+                    ArgValue::Str(text) => Some(text),
+                    _ => None,
+                }
+            })
+    }
+
     fn value_annotation(&self, modifiers: Node<'_>) -> Option<ArgValue> {
         let mut cursor = modifiers.walk();
         let invocation = modifiers

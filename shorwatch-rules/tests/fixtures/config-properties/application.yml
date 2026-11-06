@@ -1,0 +1,8 @@
+app:
+  jwt:
+    algorithm: SHA1withRSA
+    key-type: RSA
+  token:
+    signature: SHA256withRSA
+  safe:
+    digest: SHA-256

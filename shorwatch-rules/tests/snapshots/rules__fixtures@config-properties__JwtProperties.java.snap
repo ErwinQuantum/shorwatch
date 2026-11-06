@@ -1,0 +1,6 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/config-properties/JwtProperties.java
+---
+[]

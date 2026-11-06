@@ -1,0 +1,30 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/config-properties/Vulnerable.kt
+---
+- rule: jvm.jca.rsa
+  at: "14:9"
+  status: vulnerable
+  flow:
+    - "JwtProperties.kt:8: algorithm is injected from ${app.jwt.algorithm}"
+- rule: jvm.jca.sha1
+  at: "14:9"
+  status: vulnerable
+  flow:
+    - "JwtProperties.kt:8: algorithm is injected from ${app.jwt.algorithm}"
+- rule: jvm.jca.rsa
+  at: "16:9"
+  status: vulnerable
+  flow:
+    - "JwtProperties.kt:9: keyType is injected from ${app.jwt.keyType}"
+- rule: jvm.jca.sha1
+  at: "18:9"
+  status: vulnerable
+  flow:
+    - "LegacyProperties.kt:8: digest is injected from ${app.legacy.digest}"
+- rule: jvm.jca.rsa
+  at: "20:9"
+  status: vulnerable
+  flow:
+    - "TokenProperties.java:6: signature is injected from ${app.token.signature}"

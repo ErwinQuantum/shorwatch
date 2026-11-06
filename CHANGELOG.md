@@ -59,6 +59,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   - Smaller additions: ElGamal parameter generators and BouncyCastle specs,
     BouncyCastle's `RSADigestSigner` and unified-model ECDH, and XML Signature
     algorithms written as URIs.
+- Settings bound with `@ConfigurationProperties` are now followed to the crypto
+  call: a class (or Java record, Kotlin data class) with `prefix = "app.jwt"`
+  has its fields bound to `app.jwt.*`, so `Signature.getInstance(props.getAlgorithm())`
+  reports what the configuration says, relaxed binding included, and the
+  field's initializer when the key is absent.
+- A Quarkus rule for the RS256 default: `mp.jwt.verify.publickey` (and
+  `.location`, and the decryption key) without an `.algorithm`. 133 rules.
 - Algorithms chosen through an enum are now followed: `Cipher.getInstance(kind.getJceName())`
   where `kind` is an enum whose constants carry the algorithm in their constructor
   (`LEGACY("RSA")`), `algorithm.name()` for enums named after algorithms, and the

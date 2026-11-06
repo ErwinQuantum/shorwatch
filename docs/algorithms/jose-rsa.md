@@ -91,6 +91,9 @@ key-distribution problems.
   `signature-algorithm(s)` keys set to an exact `RS*` / `PS*` name, and in
   Spring Boot `jws-algorithms` and `public-key-location` (Spring Boot only
   supports RSA keys there), and `jwk-set-uri` when no `jws-algorithms` is set.
+  In Quarkus, `mp.jwt.verify.publickey` and its `.location` (and the decryption
+  key) when no `.algorithm` names another: Quarkus's guide documents RS256 and
+  RSA-OAEP as their defaults.
 
 ### RS256 as a default
 
@@ -118,6 +121,8 @@ file sets `jws-algorithms`. What the code chooses is reported on its own
   kept in a variable and configured later (`b.jwsAlgorithm(...)`) is still
   reported as the default, and so is a `jwk-set-uri` whose `jws-algorithms`
   lives in another file (`application-prod.yml`).
+- Micronaut's JWT settings and Quarkus's TLS cipher suites are not read: their
+  property names are not verified yet.
 - `NimbusJwtDecoder.withIssuerLocation(...)`, `JwtDecoders.fromIssuerLocation`
   and the `issuer-uri` property are not reported: the first takes the
   algorithms from the issuer's JWK Set, and Spring's documentation does not

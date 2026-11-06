@@ -117,6 +117,9 @@ impl<'s> Lowering<'s> {
                 let id = self.file.unit.add_scope(ScopeKind::Type, name, scope);
                 let supertypes = self.supertypes(node);
                 self.file.type_decls.push((id, supertypes));
+                if let Some(prefix) = self.config_prefix(node) {
+                    self.file.config_prefixes.insert(id, prefix);
+                }
                 if kind == "enum_declaration" {
                     let constants = self.enum_constant_names(node);
                     self.file.enum_constants.insert(id, constants);
@@ -173,6 +176,25 @@ impl<'s> Lowering<'s> {
                             .entry(scope)
                             .or_default()
                             .push(name.to_owned());
+                    }
+                    // A record's components are its canonical constructor's
+                    // parameters and are read through accessors.
+                    let of_record = node
+                        .parent()
+                        .and_then(|p| p.parent())
+                        .is_some_and(|d| d.kind() == "record_declaration");
+                    if of_record {
+                        let location = self.location(node);
+                        self.file
+                            .params
+                            .entry(scope)
+                            .or_default()
+                            .push(name.to_owned());
+                        self.file
+                            .properties
+                            .entry(scope)
+                            .or_default()
+                            .push((name.to_owned(), location));
                     }
                     let symbol = Symbol {
                         ty: Some(type_name(self.text(ty))),
@@ -344,6 +366,38 @@ impl<'s> Lowering<'s> {
             key: key.to_owned(),
             default,
             resolved: Vec::new(),
+        })
+    }
+
+    /// The prefix of a type's `@ConfigurationProperties("p")` /
+    /// `(prefix = "p")` / `(value = "p")`.
+    fn config_prefix(&self, declaration: Node<'_>) -> Option<String> {
+        let mut cursor = declaration.walk();
+        let modifiers = declaration
+            .children(&mut cursor)
+            .find(|c| c.kind() == "modifiers")?;
+        let mut cursor = modifiers.walk();
+        let annotation = modifiers.children(&mut cursor).find(|a| {
+            a.kind() == "annotation"
+                && self.field_text(*a, "name").is_some_and(|n| {
+                    n == "ConfigurationProperties" || n.ends_with(".ConfigurationProperties")
+                })
+        })?;
+        let arguments = annotation.child_by_field_name("arguments")?;
+        let mut cursor = arguments.walk();
+        arguments.named_children(&mut cursor).find_map(|argument| {
+            let literal = match argument.kind() {
+                "string_literal" => argument,
+                "element_value_pair"
+                    if self
+                        .field_text(argument, "key")
+                        .is_some_and(|k| k == "prefix" || k == "value") =>
+                {
+                    argument.child_by_field_name("value")?
+                }
+                _ => return None,
+            };
+            string_value(self.text(literal))
         })
     }
 

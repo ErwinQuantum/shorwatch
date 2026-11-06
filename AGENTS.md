@@ -99,6 +99,13 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `val` is published as an accessor, and `k.prop` on a typed variable is a
   `Returns` candidate. A *specific* constant (`Kind.LEGACY.getJceName()`) is
   not resolved: the union of all constants would be wrong for it.
+- **`@ConfigurationProperties`**: a type annotated with a prefix binds its
+  fields (and a record's or Kotlin primary constructor's properties) to
+  `<prefix>.<field>`, as `ArgValue::Injected` with the field's literal
+  initializer as default (`jvm/resolve.rs::bind_configuration_properties`).
+  Getters, record accessors and Kotlin property reads then resolve through the
+  same cross-file flow as `@Value`; relaxed binding is `link::config`'s.
+  Nested objects and collections are not bound.
 - **Cross-file data flow** (`core/src/link/`): what a file cannot resolve
   stays as `ArgValue::Param` (a parameter, constructors included),
   `ArgValue::Returns` (another type's method, with the call's args) or
@@ -240,14 +247,14 @@ Profiles (17): `rsa dh ecdh ecdsa ec eddsa dsa elgamal` (shor, high),
 medium, no fix), `jose-rsa jose-ecdsa jose-eddsa jose-ecdh` (shor, JWT advice),
 `jose-aes-128` (grover), `tls-key-exchange` (shor, TLS suites).
 
-Libraries (132 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
+Libraries (133 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
 jsch, apache-sshd, tls (suite-name literals, `jdk.tls.namedGroups`), okhttp,
 aws-kms, azure-keyvault, gcp-kms, tink, opensaml,
 xml-security (JSR 105 + Santuario), android-keystore, spring-security, jjwt,
 nimbus (incl. `JWSAlgorithm.Family`), auth0, i2p-eddsa, commons-codec, guava
 · `config/` spring-boot
 (jws-algorithms, public-key-location, `*.ssl.ciphers`), spring-cloud-config
-(`encrypt.key-store`, `encrypt.rsa`), jasypt (`jasypt.encryptor.algorithm`),
+(`encrypt.key-store`, `encrypt.rsa`), quarkus (`mp.jwt.verify.publickey*` without an algorithm), jasypt (`jasypt.encryptor.algorithm`),
 app (custom `*.alg`/`*.algorithm`/`*.enc` keys with exact JOSE names) · `keys/` material (RSA, EC, ECDSA, DSA, EdDSA,
 X25519/X448, DH keys; SHA-1 certificate signatures).
 
