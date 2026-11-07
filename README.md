@@ -8,8 +8,8 @@ into a syntax tree, matches it against declarative rules, and reports every use
 of cryptography that a quantum computer would break or weaken, together with
 the post-quantum replacement and the NIST standard behind it.
 
-**Status: v0.1.** Java, Kotlin and Spring projects, and the keys and
-certificates they hold. See [Coverage](#coverage) for exactly what is and
+**Status: v0.2.** Java, Kotlin and Spring projects, their configuration, the
+libraries their build files declare, and the keys and certificates they hold. See [Coverage](#coverage) for exactly what is and
 isn't detected.
 
 ## Quick start
@@ -434,7 +434,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Shorwatch
         run: |
-          v=v0.1.0
+          v=v0.2.0
           n=shorwatch-$v-x86_64-unknown-linux-gnu
           url=https://github.com/ErwinQuantum/shorwatch/releases/download/$v
           curl -sSLO "$url/$n.tar.gz" -O "$url/$n.tar.gz.sha256"
