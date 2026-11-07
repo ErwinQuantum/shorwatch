@@ -14,6 +14,7 @@ class Vulnerable {
         cipherSuites = arrayOf(
             "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384", "TLS_DHE_RSA_WITH_AES_128_GCM_SHA256", LEGACY_SUITE,
         )
+        setNamedGroups(arrayOf("secp256r1", "ffdhe2048"))
     }
 
     fun netty(cert: File, key: File): SslContext =
