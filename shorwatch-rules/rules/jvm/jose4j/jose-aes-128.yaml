@@ -1,0 +1,19 @@
+id: jvm.jose4j.jose-aes-128
+profile: jose-aes-128
+platform: jvm
+
+patterns:
+  - field:
+      type: org.jose4j.jwe.ContentEncryptionAlgorithmIdentifiers
+      matches: '^AES_128_(GCM|CBC_HMAC_SHA_256)$'
+  - field:
+      type: org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
+      matches: '(^|_)A128(GCM)?KW$'
+  - call:
+      type: org.jose4j.jwe.JsonWebEncryption
+      method: setEncryptionMethodHeaderParameter
+      arg: { index: 0, matches: '^A128(GCM|CBC-HS256)$' }
+  - call:
+      type: org.jose4j.jwe.JsonWebEncryption
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '(^|\+)A128(GCM)?KW$' }

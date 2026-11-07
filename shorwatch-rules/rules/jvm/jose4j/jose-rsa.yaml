@@ -1,0 +1,22 @@
+id: jvm.jose4j.jose-rsa
+profile: jose-rsa
+platform: jvm
+
+patterns:
+  # org.jose4j: AlgorithmIdentifiers (JWS), KeyManagementAlgorithmIdentifiers (JWE).
+  - field:
+      type: org.jose4j.jws.AlgorithmIdentifiers
+      matches: '^RSA_(PSS_)?USING_SHA(256|384|512)$'
+  - field:
+      type: org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
+      matches: '^RSA(1_5|_OAEP(_256)?)$'
+  - call:
+      type: org.jose4j.jws.JsonWebSignature
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '^((RS|PS)(256|384|512)|RSA1_5|RSA-OAEP(-256)?)$' }
+  - call:
+      type: org.jose4j.jwe.JsonWebEncryption
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '^((RS|PS)(256|384|512)|RSA1_5|RSA-OAEP(-256)?)$' }
+  - call: { type: org.jose4j.jwk.RsaJwkGenerator, method: generateJwk }
+  - construct: { type: org.jose4j.jwk.RsaJsonWebKey }

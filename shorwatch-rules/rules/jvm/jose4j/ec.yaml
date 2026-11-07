@@ -1,0 +1,8 @@
+id: jvm.jose4j.ec
+profile: ec
+platform: jvm
+
+patterns:
+  # EC JWKs: the same key may sign (ES256) or agree on keys (ECDH-ES).
+  - call: { type: org.jose4j.jwk.EcJwkGenerator, method: generateJwk }
+  - construct: { type: org.jose4j.jwk.EllipticCurveJsonWebKey }

@@ -1,0 +1,16 @@
+id: jvm.jose4j.jose-eddsa
+profile: jose-eddsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.jose4j.jws.AlgorithmIdentifiers
+      matches: '^EDDSA$'
+  - call:
+      type: org.jose4j.jws.JsonWebSignature
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '^EdDSA$' }
+  - call:
+      type: org.jose4j.jwe.JsonWebEncryption
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '^EdDSA$' }

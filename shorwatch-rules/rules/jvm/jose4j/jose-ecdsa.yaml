@@ -1,0 +1,16 @@
+id: jvm.jose4j.jose-ecdsa
+profile: jose-ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: org.jose4j.jws.AlgorithmIdentifiers
+      matches: '^ECDSA_USING_'
+  - call:
+      type: org.jose4j.jws.JsonWebSignature
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '^ES(256K?|384|512)$' }
+  - call:
+      type: org.jose4j.jwe.JsonWebEncryption
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '^ES(256K?|384|512)$' }

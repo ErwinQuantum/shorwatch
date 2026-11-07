@@ -1,0 +1,16 @@
+id: jvm.jose4j.jose-ecdh
+profile: jose-ecdh
+platform: jvm
+
+patterns:
+  - field:
+      type: org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
+      matches: '^ECDH_ES'
+  - call:
+      type: org.jose4j.jws.JsonWebSignature
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '^ECDH-ES' }
+  - call:
+      type: org.jose4j.jwe.JsonWebEncryption
+      method: setAlgorithmHeaderValue
+      arg: { index: 0, matches: '^ECDH-ES' }
