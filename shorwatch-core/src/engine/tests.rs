@@ -198,6 +198,7 @@ fn aes_rule() -> Rule {
                 index: 0,
                 matches: "^128$".into(),
             }),
+            with_arg: None,
             origin: Some(ArgPattern {
                 index: 0,
                 matches: "(?i)^AES".into(),
@@ -338,6 +339,7 @@ fn literal_pattern_matches_string_literals_anywhere() {
         patterns: vec![Pattern::Literal {
             matches: "^TLS_(RSA|DHE?|ECDHE?)_".into(),
             unless_call: None,
+            in_call: None,
         }],
         ..rsa_rule()
     };
@@ -366,6 +368,7 @@ fn literal_pattern_skips_literals_passed_to_excluded_calls() {
         patterns: vec![Pattern::Literal {
             matches: "^TLS_RSA_".into(),
             unless_call: Some("(?i)exclude".into()),
+            in_call: None,
         }],
         ..rsa_rule()
     };
@@ -394,6 +397,7 @@ fn pqc_field_owner_is_hybrid_evidence() {
         receiver: "java.security.Signature".into(),
         method: "getInstance".into(),
         arg: None,
+        with_arg: None,
         origin: None,
         unless_chain: None,
     });
@@ -495,6 +499,7 @@ fn unless_chain_skips_a_call_followed_by_a_choice() {
         receiver: "org.x.Decoder".into(),
         method: "withUri".into(),
         arg: None,
+        with_arg: None,
         origin: None,
         unless_chain: Some("^algorithm$".into()),
     }];
@@ -535,4 +540,72 @@ fn unless_property_skips_an_entry_another_one_overrides() {
         )
         .is_empty()
     );
+}
+
+#[test]
+fn literal_pattern_can_require_the_call_it_is_passed_to() {
+    let (mut unit, _, method) = unit_with_method();
+    for calls in [vec!["setNamedGroups"], vec!["println"]] {
+        unit.push(
+            FactKind::Literal {
+                value: "secp256r1".into(),
+                calls: calls.into_iter().map(str::to_owned).collect(),
+            },
+            method,
+            loc(4),
+        );
+    }
+    let rule = Rule {
+        id: "jvm.tls.tls-key-exchange".into(),
+        patterns: vec![Pattern::Literal {
+            matches: "^secp256r1$".into(),
+            unless_call: None,
+            in_call: Some("^setNamedGroups$".into()),
+        }],
+        ..rsa_rule()
+    };
+    let set = RuleSet::compile([rule]).unwrap();
+    assert_eq!(analyze(&unit, &set).len(), 1);
+}
+
+#[test]
+fn call_pattern_can_constrain_two_arguments() {
+    let (mut unit, _, method) = unit_with_method();
+    for (key, value) in [
+        ("jdk.tls.namedGroups", "x25519"),
+        ("other.setting", "x25519"),
+    ] {
+        unit.push(
+            FactKind::Call {
+                receiver: Some(TypeRef::qualified("java.lang.System")),
+                method: "setProperty".into(),
+                args: vec![Arg::str(key, loc(5)), Arg::str(value, loc(5))],
+                receiver_origin: None,
+                receiver_call: None,
+                chain: Vec::new(),
+            },
+            method,
+            loc(5),
+        );
+    }
+    let rule = Rule {
+        id: "jvm.tls.tls-key-exchange".into(),
+        patterns: vec![Pattern::Call {
+            receiver: "java.lang.System".into(),
+            method: "setProperty".into(),
+            arg: Some(ArgPattern {
+                index: 1,
+                matches: "^x25519$".into(),
+            }),
+            with_arg: Some(ArgPattern {
+                index: 0,
+                matches: "^jdk[.]tls[.]namedGroups$".into(),
+            }),
+            origin: None,
+            unless_chain: None,
+        }],
+        ..rsa_rule()
+    };
+    let set = RuleSet::compile([rule]).unwrap();
+    assert_eq!(analyze(&unit, &set).len(), 1);
 }

@@ -26,6 +26,7 @@ pub(crate) fn rsa_rule() -> Rule {
                     index: 0,
                     matches: "(?i)^RSA$".into(),
                 }),
+                with_arg: None,
                 origin: None,
                 unless_chain: None,
             },
