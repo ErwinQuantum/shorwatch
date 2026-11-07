@@ -555,7 +555,7 @@ the same findings.
 |---|---|
 | JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | Groovy and Scala |
 | BouncyCastle lightweight API (engines, signers, generators) and PKIX certificate signing (`JcaContentSignerBuilder`) | `@ConfigurationProperties` binding |
-| JWT/JOSE: jjwt (0.11 and 0.12), Nimbus JOSE + JWT, Auth0 java-jwt | Algorithms chosen at runtime, e.g. from a remote JWKS |
+| JWT/JOSE: jjwt (0.11 and 0.12), Nimbus JOSE + JWT, jose4j, fusionauth-jwt, Auth0 java-jwt | Algorithms chosen at runtime, e.g. from a remote JWKS |
 | Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Quarkus and Micronaut configuration keys |
 | Spring Boot config: `jws-algorithms`, `public-key-location`, `jwk-set-uri` (RS256 default), TLS cipher suites (`*.ssl.ciphers`); Quarkus MicroProfile JWT keys without an algorithm (RS256 default); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Crypto inside compiled `.jar` dependencies (their types are read with `--classpath`, their code is not analyzed) |
 | Values injected with `@Value("${key:default}")`, and the fields of `@ConfigurationProperties` classes (Java classes and records, Kotlin classes and data classes, relaxed binding `key-type` = `keyType`), resolved against every profile's config file; a field's initializer is the default when the key is absent | Nested objects (`prefix.nested.field`), collections and `@Bean @ConfigurationProperties` methods |

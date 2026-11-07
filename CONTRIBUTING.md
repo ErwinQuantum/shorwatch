@@ -90,10 +90,10 @@ Tests check that the file name is the id and that the patterns are anchored.
 
 | Pattern | Matches | Example |
 |---|---|---|
-| `call` | `Type.method(...)` or `variable.method(...)` where the variable has that type; optional `arg: { index, matches }` regex on a literal argument; optional `origin: { index, matches }` on the factory that created the variable (`KeyGenerator.getInstance("AES")`), where an unknown origin still matches | `Cipher.getInstance("RSA/ECB/...")`, `generator.init(128)` |
+| `call` | `Type.method(...)` or `variable.method(...)` where the variable has that type; optional `arg: { index, matches }` regex on a literal argument and `with_arg` for a second one (`System.setProperty(key, value)`); optional `origin: { index, matches }` on the factory that created the variable (`KeyGenerator.getInstance("AES")`), where an unknown origin still matches | `Cipher.getInstance("RSA/ECB/...")`, `generator.init(128)` |
 | `construct` | `new Type(...)`, with the same optional `arg` | `new RSAEngine()` |
 | `field` | A static constant `Type.NAME`, with an optional `matches` regex on the name | `JWSAlgorithm.RS256` |
-| `literal` | A string literal anywhere in the code, by `matches` regex; optional `unless_call` regex on the methods it is passed to. Only for names specific enough to stand alone | `"TLS_ECDHE_RSA_WITH_..."`, but not in `setExcludeCipherSuites(...)` |
+| `literal` | A string literal anywhere in the code, by `matches` regex; optional `unless_call` / `in_call` regexes on the methods it is passed to. Only for names specific enough to stand alone | `"TLS_ECDHE_RSA_WITH_..."`, but not in `setExcludeCipherSuites(...)` |
 | `property` | A config entry: `key` regex, optional `matches` regex on the value | `server.ssl.ciphers: TLS_RSA_...` |
 | `key` | A key or certificate in a key file: `algorithm` and/or `signature` regexes | `key: { signature: '^SHA1with' }` |
 

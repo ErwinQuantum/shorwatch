@@ -44,6 +44,10 @@ the later switch into a rollout instead of a flag day.
 
 ## Where Shorwatch finds it
 
+- **jose4j:** `AlgorithmIdentifiers.EDDSA`, and `"EdDSA"` passed to
+  `setAlgorithmHeaderValue`.
+- **fusionauth-jwt:** the `Ed25519` and `Ed448` values of `Algorithm`, and the
+  `EdDSASigner` and `EdDSAVerifier` factories.
 - **Nimbus JOSE+JWT:** the `EdDSA`, `Ed25519` and `Ed448` algorithm constants,
   `JWSAlgorithm.parse`, `Ed25519Signer`, `Ed25519Verifier` and the EdDSA
   algorithm family. The `Ed25519` and `Ed448` curves are reported too, so
@@ -63,9 +67,8 @@ signatures: they are on the [ECDH in JOSE](jose-ecdh.md) page.
 - Shorwatch matches constants and configuration keys, not strings in code. A
   header value written as a plain `"EdDSA"` literal is not reported
   (`JWSAlgorithm.parse("EdDSA")` is).
-- Only Nimbus and jjwt have EdDSA rules. There is none for auth0 java-jwt,
-  Spring Security or Tink. jose4j and fusionauth-jwt appear in the dependency
-  inventory when a build file declares them, but their code is not scanned.
+- Nimbus, jjwt, jose4j and fusionauth-jwt have EdDSA rules. There is none for
+  auth0 java-jwt, Spring Security or Tink.
 - Configuration values are matched exactly, and JOSE names are
   case-sensitive: `eddsa` is not reported.
 - Parsing a key from a JWK (`OctetKeyPair.parse`) is not reported by itself.

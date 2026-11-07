@@ -4,14 +4,26 @@ expression: findings
 input_file: shorwatch-rules/tests/fixtures/ssh-jsch/Vulnerable.kt
 ---
 - rule: jvm.jsch.rsa
-  at: "9:67"
+  at: "10:67"
   status: vulnerable
 - rule: jvm.jsch.dh
-  at: "13:9"
+  at: "14:9"
   status: vulnerable
 - rule: jvm.jsch.ecdh
-  at: "13:9"
+  at: "14:9"
   status: vulnerable
 - rule: jvm.jsch.ecdsa
-  at: "17:9"
+  at: "18:9"
+  status: vulnerable
+- rule: jvm.jsch.rsa
+  at: "24:25"
+  status: vulnerable
+- rule: jvm.jsch.dsa
+  at: "24:59"
+  status: vulnerable
+- rule: jvm.jsch.ecdsa
+  at: "25:29"
+  status: vulnerable
+- rule: jvm.jsch.eddsa
+  at: "25:65"
   status: vulnerable

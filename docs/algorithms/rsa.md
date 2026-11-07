@@ -63,8 +63,9 @@ why Shorwatch does not offer a fix.
 - **BouncyCastle:** the RSA engines, `RSAKeyPairGenerator` and
   `RSADigestSigner`; with bcpkix, the certificate signer builders
   (`JcaContentSignerBuilder("SHA256withRSA")`).
-- **OpenPGP, JSch, Apache SSHD:** RSA key types and the `ssh-rsa` and
-  `rsa-sha2-*` algorithm names.
+- **OpenPGP, JSch, Apache SSHD:** RSA key types, the `ssh-rsa` and
+  `rsa-sha2-*` algorithm names, and the `HostKey.SSHRSA` and
+  `KeyPairProvider.SSH_RSA` constants.
 - **XML Signature and OpenSAML:** the RSA signature and key-transport
   constants.
 - **Tink and the cloud KMS clients** (AWS, Azure, GCP), **Android Keystore**

@@ -55,6 +55,8 @@ libraries don't offer it yet. Until they do:
 
 ## Where Shorwatch finds it
 
+- **jose4j:** the `ECDH_ES*` constants of `KeyManagementAlgorithmIdentifiers`,
+  and `ECDH-ES*` passed to `setAlgorithmHeaderValue`.
 - **Nimbus JOSE+JWT:** the `ECDH_ES*` and `ECDH_1PU*` algorithm constants,
   `JWEAlgorithm.parse("ECDH-ES")`, the `X25519` and `X448` curves,
   `ECDHEncrypter` / `ECDHDecrypter`, `X25519Encrypter` / `X25519Decrypter`,
@@ -71,9 +73,8 @@ libraries don't offer it yet. Until they do:
 - Shorwatch matches constants, classes and configuration values, not strings
   in code. A header value written as a plain `"ECDH-ES"` literal is not
   reported (`JWEAlgorithm.parse("ECDH-ES")` is).
-- Only Nimbus and jjwt have rules for ECDH in JOSE. jose4j and fusionauth-jwt
-  appear in the dependency inventory when a build file declares them, but
-  their code is not scanned.
+- Nimbus, jjwt and jose4j have rules for ECDH in JOSE. fusionauth-jwt has no
+  JWE support to scan.
 - Older jjwt versions (before 0.12) use a different API and are not covered.
 - Configuration values are matched exactly, and JOSE names are
   case-sensitive. A key named something other than `alg` or `algorithm`, such

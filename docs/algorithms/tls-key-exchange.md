@@ -66,7 +66,8 @@ Severity: **High**. Shorwatch never offers an automatic fix for this class.
   variants). Static DH and ECDH suites (`TLS_DH_…`, `TLS_ECDH_…`) and the
   PSK variants that still use RSA or ECDHE are matched as well.
   A call that sets `jdk.tls.namedGroups` to a classical group (`x25519`,
-  `x448`, `secp256r1`, `ffdhe…`) is reported too.
+  `x448`, `secp256r1`, `ffdhe…`) is reported too, and so is a classical group
+  name passed to `SSLParameters.setNamedGroups`.
 - **OkHttp:** the `CipherSuite` constants in a `ConnectionSpec`.
 - **Configuration:** Spring Boot's `server.ssl.ciphers`, the management
   server's, SSL bundles (`spring.ssl.bundle.*.options.ciphers`), any other
@@ -87,12 +88,12 @@ Severity: **High**. Shorwatch never offers an automatic fix for this class.
   is not reported as enabled.
 - Because Shorwatch matches suite names as text, a name in a log message or
   a test can produce a finding.
-- The `jdk.tls.namedGroups` check looks at the value, not at the property
-  name: any `System.setProperty` whose value is a classical group name is
-  reported, and `jdk.tls.client.namedGroups` / `jdk.tls.server.namedGroups`
-  are reported through that same rule.
-- Groups set on a connection object (`SSLParameters.setNamedGroups`, JDK 20
-  and later) are not read.
+- The `jdk.tls.namedGroups` check reads `System.setProperty` calls whose key
+  is `jdk.tls.namedGroups` (or the same name with a one-word prefix between
+  `tls.` and `namedGroups`); the same group under another key is not reported.
+- `SSLParameters.setNamedGroups` is read only when the group names are written
+  in the call (a literal array or arguments), not when the array comes from a
+  variable.
 - Pure pre-shared-key suites (`TLS_PSK_WITH_…`) have no public-key exchange
   and are not reported. SRP suites (`TLS_SRP_…`) are not matched either.
 - Only what is written in code and in Spring-style configuration is read. A

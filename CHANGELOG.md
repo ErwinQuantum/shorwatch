@@ -7,6 +7,27 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- JOSE rules for **jose4j** (`AlgorithmIdentifiers`,
+  `KeyManagementAlgorithmIdentifiers`, `ContentEncryptionAlgorithmIdentifiers`,
+  the names passed to `setAlgorithmHeaderValue`, its RSA and EC JWK generators)
+  and **fusionauth-jwt** (the `Algorithm` values and the RSA, RSA-PSS, EC and
+  EdDSA signer and verifier factories). Names checked against both libraries'
+  sources. Before, both only showed up in the dependency inventory.
+- Nimbus `RSAKey.parse` / `load` and `ECKey.parse` / `load`.
+- SSH key type constants: JSch `HostKey.SSHRSA`, `SSHDSS`, `ECDSA*`, `ED*` and
+  Apache SSHD `KeyPairProvider.SSH_RSA`, `SSH_DSS`, `SSH_ED25519`,
+  `ECDSA_SHA2_NISTP*` (and their certificate forms).
+- Classical groups passed to `SSLParameters.setNamedGroups`.
+- Two rule conditions: `with_arg` (a `call` constrains a second argument) and
+  `in_call` (a `literal` counts only inside a named method).
+
+### Fixed
+
+- `System.setProperty(key, value)` with a classical group name was reported for
+  any key; it is now reported only for `jdk.tls.namedGroups`.
+
 ## [0.2.0] - 2026-11-06
 
 Shorwatch now follows more of the ways code names an algorithm, reads more

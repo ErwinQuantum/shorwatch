@@ -49,6 +49,10 @@ then drop the old algorithm.
 
 ## Where Shorwatch finds it
 
+- **jose4j:** `AES_128_GCM` and `AES_128_CBC_HMAC_SHA_256` of
+  `ContentEncryptionAlgorithmIdentifiers`, the `A128KW` and `A128GCMKW` key
+  wrap constants, and the same names passed to `setEncryptionMethodHeaderParameter`
+  and `setAlgorithmHeaderValue`.
 - **Nimbus JOSE+JWT:** the `EncryptionMethod` and `JWEAlgorithm` constants
   with a 128-bit AES key, and the same names read with
   `EncryptionMethod.parse("A128GCM")` or `JWEAlgorithm.parse("A128KW")`.
@@ -65,9 +69,8 @@ then drop the old algorithm.
 - A value like `ECDH-ES+A128KW` gives two findings: the key agreement
   ([ECDH in JWE](jose-ecdh.md)) and the 128-bit key wrap on this page. Each has
   its own fix.
-- Only Nimbus and jjwt have rules for JWE. jose4j and fusionauth-jwt appear in
-  the dependency inventory when a build file declares them, but their code is
-  not scanned.
+- Nimbus, jjwt and jose4j have rules for JWE. fusionauth-jwt has no JWE
+  support to scan.
 - Older jjwt versions (before 0.12) use a different API and are not covered.
 - Configuration values are matched exactly, and JOSE names are
   case-sensitive. A key named something other than `alg`, `algorithm` or
