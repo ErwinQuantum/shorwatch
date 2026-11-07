@@ -18,9 +18,11 @@ Two separate reasons, and the first would be enough.
    A quantum attacker derives the private key from the public one and signs
    whatever they like.
 2. It was already considered obsolete. FIPS 186-5 (2023) no longer approves DSA
-   for generating new signatures, and OpenSSH disabled `ssh-dss` by default
-   years ago. The SSH form, `ssh-dss`, is limited to 1024-bit keys, which is
-   weak even against classical attackers.
+   for generating digital signatures: it may only verify signatures generated
+   earlier. OpenSSH disabled `ssh-dss` by default in 2015 and removed DSA in
+   version 10.0 (2025). The SSH form, `ssh-dss`, follows FIPS 186-2: its
+   signature values are 160 bits (RFC 4253, section 6.6) and OpenSSH requires
+   keys of exactly 1024 bits, which is weak even against classical attackers.
 
 ## How urgent
 
@@ -85,3 +87,5 @@ long-lived with the new scheme.
 - [FIPS 204 (ML-DSA)](https://csrc.nist.gov/pubs/fips/204/final)
 - [FIPS 205 (SLH-DSA)](https://csrc.nist.gov/pubs/fips/205/final)
 - [NIST IR 8547, Transition to Post-Quantum Cryptography Standards](https://csrc.nist.gov/pubs/ir/8547/final)
+- [RFC 4253, The Secure Shell (SSH) Transport Layer Protocol, section 6.6 (`ssh-dss`)](https://www.rfc-editor.org/rfc/rfc4253#section-6.6)
+- [OpenSSH release notes (10.0 removed DSA)](https://www.openssh.org/releasenotes.html)

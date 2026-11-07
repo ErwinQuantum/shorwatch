@@ -45,8 +45,11 @@ support before assuming an upgrade is enough.
 For application-level protocols (your own handshake, ECIES, message
 encryption) it is a real redesign. ML-KEM is a KEM, not Diffie-Hellman: you
 encapsulate a key to the recipient and use it with an AEAD. When combining it
-with a classical secret, use a combiner approved by NIST SP 800-227 (§4.6),
-not a plain concatenation.
+with a classical secret, use one of the key combiners NIST SP 800-227
+approves (§4.6.2: a key-derivation method of SP 800-56C or a key-combination
+method of SP 800-133). If you combine by concatenation, pass the result through
+a KDF and encode the inputs with their lengths, as NIST asks; the raw
+concatenation is not a key.
 
 ## Where Shorwatch finds it
 
