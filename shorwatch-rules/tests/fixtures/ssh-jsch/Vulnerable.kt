@@ -1,5 +1,6 @@
 package com.example.deploy
 
+import com.jcraft.jsch.HostKey
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.KeyPair
 import com.jcraft.jsch.Session
@@ -17,4 +18,9 @@ class Vulnerable {
         session.setConfig("server_host_key", "ecdsa-sha2-nistp256")
         return session
     }
+
+    fun hostKeyTypes(hostKey: HostKey): Boolean =
+        // Comparing a host key type names the algorithm too.
+        hostKey.type == HostKey.SSHRSA || hostKey.type == HostKey.SSHDSS ||
+            hostKey.type == HostKey.ECDSA256 || hostKey.type == HostKey.ED25519
 }

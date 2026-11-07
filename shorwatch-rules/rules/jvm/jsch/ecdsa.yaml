@@ -14,3 +14,7 @@ patterns:
       type: com.jcraft.jsch.Session
       method: setConfig
       arg: { index: 1, matches: '(^|,)ecdsa-sha2-nistp(256|384|521)(,|$)' }
+  # Host key type constants (`HostKey.SSHRSA`), used to ask for or compare a host key type.
+  - field:
+      type: com.jcraft.jsch.HostKey
+      matches: '^ECDSA(256|384|521)$'
