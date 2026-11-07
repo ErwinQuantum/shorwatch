@@ -1,0 +1,16 @@
+id: jvm.fusionauth-jwt.jose-rsa
+profile: jose-rsa
+platform: jvm
+
+patterns:
+  - field:
+      type: io.fusionauth.jwt.domain.Algorithm
+      matches: '^(RS|PS)(256|384|512)$'
+  - call: { type: io.fusionauth.jwt.rsa.RSASigner, method: newSHA256Signer }
+  - call: { type: io.fusionauth.jwt.rsa.RSASigner, method: newSHA384Signer }
+  - call: { type: io.fusionauth.jwt.rsa.RSASigner, method: newSHA512Signer }
+  - call: { type: io.fusionauth.jwt.rsa.RSAVerifier, method: newVerifier }
+  - call: { type: io.fusionauth.jwt.rsa.RSAPSSSigner, method: newSHA256Signer }
+  - call: { type: io.fusionauth.jwt.rsa.RSAPSSSigner, method: newSHA384Signer }
+  - call: { type: io.fusionauth.jwt.rsa.RSAPSSSigner, method: newSHA512Signer }
+  - call: { type: io.fusionauth.jwt.rsa.RSAPSSVerifier, method: newVerifier }

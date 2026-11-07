@@ -14,3 +14,7 @@ patterns:
       type: org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
       method: setAlgorithm
       arg: { index: 0, matches: '(?i)^RSA$' }
+  # Key type identifiers (`KeyPairProvider.SSH_RSA`), used to ask for or compare a key type.
+  - field:
+      type: org.apache.sshd.common.keyprovider.KeyPairProvider
+      matches: '^SSH_RSA(_CERT)?$'

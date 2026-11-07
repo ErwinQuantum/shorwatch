@@ -216,7 +216,7 @@ fn rules_lists_every_builtin_rule() {
     assert!(
         text.contains("jvm.jca.aes-128") && text.contains("config.spring-boot.tls-key-exchange")
     );
-    assert!(text.trim_end().ends_with("133 rules"), "{text}");
+    assert!(text.trim_end().ends_with("142 rules"), "{text}");
 }
 
 fn examples(folder: &str) -> String {

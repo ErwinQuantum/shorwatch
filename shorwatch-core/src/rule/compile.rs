@@ -20,6 +20,7 @@ pub(crate) enum CompiledPattern {
         receiver: String,
         method: String,
         arg: Option<CompiledArg>,
+        with_arg: Option<CompiledArg>,
         origin: Option<CompiledArg>,
         unless_chain: Option<Regex>,
     },
@@ -34,6 +35,7 @@ pub(crate) enum CompiledPattern {
     Literal {
         value: Regex,
         unless_call: Option<Regex>,
+        in_call: Option<Regex>,
     },
     Property {
         key: Regex,
@@ -146,12 +148,14 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     receiver,
                     method,
                     arg: a,
+                    with_arg,
                     origin,
                     unless_chain,
                 } => CompiledPattern::Call {
                     receiver: receiver.clone(),
                     method: method.clone(),
                     arg: arg(a)?,
+                    with_arg: arg(with_arg)?,
                     origin: arg(origin)?,
                     unless_chain: unless_chain.as_deref().map(regex).transpose()?,
                 },
@@ -166,9 +170,11 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                 Pattern::Literal {
                     matches,
                     unless_call,
+                    in_call,
                 } => CompiledPattern::Literal {
                     value: regex(matches)?,
                     unless_call: unless_call.as_deref().map(regex).transpose()?,
+                    in_call: in_call.as_deref().map(regex).transpose()?,
                 },
                 Pattern::Property {
                     key,

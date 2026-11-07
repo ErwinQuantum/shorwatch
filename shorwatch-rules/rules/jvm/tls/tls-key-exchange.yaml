@@ -20,4 +20,10 @@ patterns:
   - call:
       type: java.lang.System
       method: setProperty
+      with_arg: { index: 0, matches: '^jdk\.tls\.([a-z]+\.)?namedGroups$' }
       arg: { index: 1, matches: '(?i)(^|,)\s*(x25519|x448|secp(256|384|521)r1|ffdhe\d+)\s*(,|$)' }
+  # `SSLParameters.setNamedGroups(new String[] {"secp256r1"})`: group names are
+  # too common as words to match anywhere, so they count only inside that call.
+  - literal:
+      matches: '(?i)^\s*(x25519|x448|secp(256|384|521)r1|ffdhe\d+)\s*$'
+      in_call: '^setNamedGroups$'

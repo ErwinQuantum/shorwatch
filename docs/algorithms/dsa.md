@@ -59,7 +59,8 @@ long-lived with the new scheme.
   (`SHA256withDSA`, `BcDSAContentSignerBuilder`).
 - **OpenPGP:** the DSA public key tag.
 - **JSch and Apache SSHD:** `ssh-dss` in an algorithm list, `KeyPair.DSA`,
-  `BuiltinSignatures.dsa*` and `KeyUtils.DSS_ALGORITHM`.
+  `HostKey.SSHDSS`, `KeyPairProvider.SSH_DSS`, `BuiltinSignatures.dsa*` and
+  `KeyUtils.DSS_ALGORITHM`.
 - **XML Signature and OpenSAML:** `SignatureMethod.DSA_*` and the
   `ALGO_ID_SIGNATURE_DSA*` constants.
 - **Key material:** DSA keys and certificates in PEM and DER files, Java
@@ -73,8 +74,6 @@ long-lived with the new scheme.
   than one that signs. Shorwatch reports both.
 - An SSH configuration that lists `ssh-dss` among the algorithms it accepts is
   reported because it is offered, even if no peer ever uses it.
-- The bare SSH constants `HostKey.SSHDSS` (JSch) and `KeyPairProvider.SSH_DSS`
-  (Apache SSHD) are not reported by themselves. RSA has the same gap.
 - A DSA key that BouncyCastle only describes (`DSAParameters`,
   `DSAPublicKeyParameters`) is not reported until something signs, verifies or
   generates a key with it.

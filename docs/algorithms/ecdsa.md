@@ -62,7 +62,8 @@ together so existing verifiers keep working.
 - **BouncyCastle:** `ECDSASigner`; with bcpkix, the certificate signer builders
   (`SHA256withECDSA`, `BcECContentSignerBuilder`).
 - **OpenPGP:** the ECDSA public key tag.
-- **JSch and Apache SSHD:** `ecdsa-sha2-nistp*` in an algorithm list,
+- **JSch and Apache SSHD:** `ecdsa-sha2-nistp*` in an algorithm list, the
+  `HostKey.ECDSA*` and `KeyPairProvider.ECDSA_SHA2_NISTP*` key type constants,
   `KeyPair.ECDSA` and `BuiltinSignatures.nistp*`.
 - **XML Signature and OpenSAML:** the `ECDSA_*` signature method constants.
 - **Tink:** the ECDSA templates and parameters.
@@ -82,9 +83,6 @@ JWT uses are on [their own page](jose-ecdsa.md).
   at runtime from a keystore, an HSM or a load balancer is not visible to it.
 - A certificate that was *signed with* ECDSA is not reported for that reason.
   Only its key is (as generic EC), and the SHA-1 case has its own finding.
-- The bare SSH constants `HostKey.ECDSA256` (JSch) and
-  `KeyPairProvider.ECDSA_SHA2_NISTP256` (Apache SSHD) are not reported by
-  themselves.
 - Only ECDSA is matched. SM2 signatures (the Chinese elliptic-curve scheme)
   appear in the AWS KMS rule but not in BouncyCastle's `SM2Signer`.
 

@@ -31,6 +31,7 @@ pub(super) fn match_pattern<'a>(
                 receiver,
                 method,
                 arg,
+                with_arg,
                 origin,
                 unless_chain,
             },
@@ -44,6 +45,9 @@ pub(super) fn match_pattern<'a>(
             },
         ) if actual_method == method
             && actual.is(receiver)
+            && with_arg
+                .as_ref()
+                .is_none_or(|p| args.get(p.index).is_some_and(|a| arg_matches(p, a)))
             && origin_allows(origin.as_ref(), receiver_origin.as_deref())
             && !unless_chain
                 .as_ref()
@@ -66,7 +70,11 @@ pub(super) fn match_pattern<'a>(
             return (actual.is(owner) && optional(name, field)).then_some(Match::NONE);
         }
         (
-            CompiledPattern::Literal { value, unless_call },
+            CompiledPattern::Literal {
+                value,
+                unless_call,
+                in_call,
+            },
             FactKind::Literal {
                 value: literal,
                 calls,
@@ -75,7 +83,10 @@ pub(super) fn match_pattern<'a>(
             let excluded = unless_call
                 .as_ref()
                 .is_some_and(|re| calls.iter().any(|call| re.is_match(call)));
-            return (value.is_match(literal) && !excluded).then_some(Match::NONE);
+            let inside = in_call
+                .as_ref()
+                .is_none_or(|re| calls.iter().any(|call| re.is_match(call)));
+            return (value.is_match(literal) && !excluded && inside).then_some(Match::NONE);
         }
         (
             CompiledPattern::Property {

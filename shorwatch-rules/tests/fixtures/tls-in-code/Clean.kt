@@ -9,6 +9,9 @@ class Clean {
         cipherSuites = arrayOf("TLS_AES_256_GCM_SHA384", "TLS_CHACHA20_POLY1305_SHA256")
         protocols = arrayOf("TLSv1.3")
         System.setProperty("jdk.tls.namedGroups", "X25519MLKEM768")
+        setNamedGroups(arrayOf("X25519MLKEM768"))
+        // A group name stored under another key is not the JVM's setting.
+        System.setProperty("app.curve", "x25519")
         System.setProperty("app.name", "TLS_RSA gateway")
         // Looks like an OpenSSL suite name, but is not one.
         System.setProperty("app.padding", "AES256-SHAKE")

@@ -1,0 +1,12 @@
+id: jvm.fusionauth-jwt.jose-ecdsa
+profile: jose-ecdsa
+platform: jvm
+
+patterns:
+  - field:
+      type: io.fusionauth.jwt.domain.Algorithm
+      matches: '^ES(256|384|512)$'
+  - call: { type: io.fusionauth.jwt.ec.ECSigner, method: newSHA256Signer }
+  - call: { type: io.fusionauth.jwt.ec.ECSigner, method: newSHA384Signer }
+  - call: { type: io.fusionauth.jwt.ec.ECSigner, method: newSHA512Signer }
+  - call: { type: io.fusionauth.jwt.ec.ECVerifier, method: newVerifier }

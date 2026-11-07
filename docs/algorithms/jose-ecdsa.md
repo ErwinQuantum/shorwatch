@@ -49,6 +49,10 @@ supports them before you plan around it.
 
 - **Nimbus JOSE+JWT:** the `ES256`, `ES256K`, `ES384` and `ES512` algorithm
   constants, `ECDSASigner` and `ECDSAVerifier`.
+- **jose4j:** the `ECDSA_USING_*` constants of `AlgorithmIdentifiers`, and
+  the `ES*` names passed to `setAlgorithmHeaderValue`.
+- **fusionauth-jwt:** the `ES*` values of `Algorithm`, and the `ECSigner` and
+  `ECVerifier` factories.
 - **jjwt:** `ES256`, `ES384` and `ES512` in `Jwts.SIG` and `SignatureAlgorithm`.
 - **auth0 java-jwt:** `Algorithm.ECDSA256`, `ECDSA256K`, `ECDSA384` and
   `ECDSA512`.

@@ -27,3 +27,6 @@ patterns:
   # any of them means depending on RSA.
   - field: { type: com.nimbusds.jose.JWSAlgorithm.Family, matches: '^RSA$' }
   - field: { type: com.nimbusds.jose.JWEAlgorithm.Family, matches: '^RSA$' }
+  # Reading an RSA JWK, a certificate or a keystore entry.
+  - call: { type: com.nimbusds.jose.jwk.RSAKey, method: parse }
+  - call: { type: com.nimbusds.jose.jwk.RSAKey, method: load }

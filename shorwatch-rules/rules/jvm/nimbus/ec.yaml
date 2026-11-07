@@ -6,3 +6,6 @@ patterns:
   # EC JWKs: the same key may sign (ES256) or agree on keys (ECDH-ES).
   - construct: { type: com.nimbusds.jose.jwk.gen.ECKeyGenerator }
   - construct: { type: com.nimbusds.jose.jwk.ECKey.Builder }
+  # Reading an EC JWK, a certificate or a keystore entry.
+  - call: { type: com.nimbusds.jose.jwk.ECKey, method: parse }
+  - call: { type: com.nimbusds.jose.jwk.ECKey, method: load }

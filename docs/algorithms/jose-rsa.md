@@ -77,8 +77,14 @@ key-distribution problems.
 
 - **Nimbus JOSE+JWT:** the `RS*` and `PS*` signature constants, the `RSA1_5`
   and `RSA-OAEP*` encryption constants, `RSASSASigner` / `RSASSAVerifier`,
-  `RSAEncrypter` / `RSADecrypter`, `RSAKeyGenerator`, `RSAKey.Builder` and
-  the RSA algorithm families.
+  `RSAEncrypter` / `RSADecrypter`, `RSAKeyGenerator`, `RSAKey.Builder`,
+  `RSAKey.parse` / `RSAKey.load` and the RSA algorithm families.
+- **jose4j:** the `RSA_USING_SHA*` and `RSA_PSS_USING_SHA*` constants of
+  `AlgorithmIdentifiers`, the `RSA1_5` and `RSA_OAEP*` constants of
+  `KeyManagementAlgorithmIdentifiers`, the same names passed to
+  `setAlgorithmHeaderValue`, `RsaJwkGenerator` and `RsaJsonWebKey`.
+- **fusionauth-jwt:** the `RS*` and `PS*` values of `Algorithm`, and the
+  `RSASigner`, `RSAVerifier`, `RSAPSSSigner` and `RSAPSSVerifier` factories.
 - **jjwt:** the `RS*`, `PS*` and `RSA*` constants in `Jwts.SIG`, `Jwts.KEY`
   and `SignatureAlgorithm`, and `SignatureAlgorithm.forName`.
 - **auth0 java-jwt:** `Algorithm.RSA256`, `RSA384` and `RSA512` (the `PS*`

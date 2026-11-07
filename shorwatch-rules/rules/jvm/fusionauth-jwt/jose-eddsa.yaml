@@ -1,0 +1,10 @@
+id: jvm.fusionauth-jwt.jose-eddsa
+profile: jose-eddsa
+platform: jvm
+
+patterns:
+  - field:
+      type: io.fusionauth.jwt.domain.Algorithm
+      matches: '^Ed(25519|448)$'
+  - call: { type: io.fusionauth.jwt.ed.EdDSASigner, method: newSigner }
+  - call: { type: io.fusionauth.jwt.ed.EdDSAVerifier, method: newVerifier }

@@ -53,7 +53,8 @@ during the transition.
   `JcaContentSignerBuilder("Ed25519")`.
 - **OpenPGP:** the EdDSA public key tags (`EDDSA_LEGACY`, `Ed25519`, `Ed448`).
 - **JSch and Apache SSHD:** `ssh-ed25519` and `ssh-ed448` in an algorithm
-  list, `KeyPair.ED25519`, `BuiltinSignatures.ed25519` and `KeyUtils.EDDSA`.
+  list, `HostKey.ED25519`, `KeyPairProvider.SSH_ED25519`, `KeyPair.ED25519`,
+  `BuiltinSignatures.ed25519` and `KeyUtils.EDDSA`.
 - **XML Signature:** Santuario's `ALGO_ID_SIGNATURE_EDDSA_*` constants.
 - **Tink:** the Ed25519 templates and parameters.
 - **GCP KMS:** `EC_SIGN_ED25519`.
@@ -71,8 +72,7 @@ The JWT flavour is on [its own page](jose-eddsa.md).
   runtime from a keystore or an HSM is not visible to it.
 - A certificate that was *signed with* EdDSA is not reported for that reason,
   only its own key is.
-- The bare SSH constants (`KeyPairProvider.SSH_ED25519` in Apache SSHD) and
-  classes that only describe a key (`Ed25519PrivateKeyParameters`,
+- Classes that only describe a key (`Ed25519PrivateKeyParameters`,
   `NamedParameterSpec.ED25519`, I2P's `EdDSAPublicKey`) are not reported by
   themselves. The signer or generator that uses them is.
 - OpenPGP key files (`.asc`, `.gpg`) are not read.

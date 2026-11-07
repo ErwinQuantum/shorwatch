@@ -4,20 +4,32 @@ expression: findings
 input_file: shorwatch-rules/tests/fixtures/ssh-apache-sshd/Vulnerable.kt
 ---
 - rule: jvm.apache-sshd.rsa
-  at: "13:9"
+  at: "14:9"
   status: vulnerable
 - rule: jvm.apache-sshd.rsa
-  at: "18:9"
-  status: vulnerable
-- rule: jvm.apache-sshd.ecdsa
   at: "19:9"
   status: vulnerable
-- rule: jvm.apache-sshd.eddsa
+- rule: jvm.apache-sshd.ecdsa
   at: "20:9"
   status: vulnerable
-- rule: jvm.apache-sshd.ecdh
+- rule: jvm.apache-sshd.eddsa
   at: "21:9"
   status: vulnerable
-- rule: jvm.apache-sshd.dh
+- rule: jvm.apache-sshd.ecdh
   at: "22:9"
+  status: vulnerable
+- rule: jvm.apache-sshd.dh
+  at: "23:9"
+  status: vulnerable
+- rule: jvm.apache-sshd.rsa
+  at: "27:9"
+  status: vulnerable
+- rule: jvm.apache-sshd.dsa
+  at: "28:9"
+  status: vulnerable
+- rule: jvm.apache-sshd.eddsa
+  at: "29:9"
+  status: vulnerable
+- rule: jvm.apache-sshd.ecdsa
+  at: "30:9"
   status: vulnerable

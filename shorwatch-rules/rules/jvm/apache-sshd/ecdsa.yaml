@@ -6,3 +6,7 @@ patterns:
   - field:
       type: org.apache.sshd.common.signature.BuiltinSignatures
       matches: '^(nistp(256|384|521)|sk_ecdsa)'
+  # Key type identifiers (`KeyPairProvider.SSH_RSA`), used to ask for or compare a key type.
+  - field:
+      type: org.apache.sshd.common.keyprovider.KeyPairProvider
+      matches: '^(SSH_)?ECDSA_SHA2_NISTP(256|384|521)(_CERT)?$'
