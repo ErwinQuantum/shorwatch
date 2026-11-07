@@ -42,8 +42,9 @@ Shorwatch offers no automatic fix for it.
 
 During the transition, run a hybrid: combine the classical shared secret and
 the ML-KEM one so that the result holds if either does. Use an approved
-combiner, not a hand-rolled one: NIST SP 800-227 (Section 4.6) covers how to
-combine key-establishment schemes. Prefer an established hybrid in your
+combiner, not a hand-rolled one: NIST SP 800-227 (Section 4.6, "Multi-Algorithm
+KEMs and PQ/T Hybrids") describes how to combine key-establishment schemes, and
+its Section 4.6.2 lists the approved key combiners. Prefer an established hybrid in your
 protocol or library over building your own, such as `X25519MLKEM768` in
 TLS 1.3 (see [TLS key exchange](tls-key-exchange.md)).
 
