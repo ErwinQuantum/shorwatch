@@ -11,7 +11,7 @@ use shorwatch_core::{
     CodeRole, Finding, Library, LibraryCatalog, RuleSet, Severity, SourceUnit, analyze,
     dependencies, link,
 };
-use shorwatch_report::{Project, Scan, project_of};
+use shorwatch_report::{LanguageFiles, Project, Scan, project_of};
 
 use crate::args::Analysis;
 use crate::discover::{self, display_path};
@@ -50,7 +50,14 @@ pub fn run_for_baseline(analysis: &Analysis, version: &str) -> Result<Scan> {
 fn analyze_all(analysis: &Analysis, version: &str) -> Result<Scan> {
     let rules = rules::load(&analysis.rules)?;
     let libraries = rules::libraries(&analysis.rules)?;
-    let mut files = discover::files(&analysis.paths)?;
+    let discovered = discover::discover(&analysis.paths)?;
+    let unanalyzed = LanguageFiles::sorted(
+        discovered
+            .unanalyzed
+            .iter()
+            .map(|(language, files)| ((*language).to_owned(), *files)),
+    );
+    let mut files = discovered.files;
     if analysis.exclude_tests {
         files.retain(|(_, role)| *role == CodeRole::Production);
     }
@@ -69,9 +76,9 @@ fn analyze_all(analysis: &Analysis, version: &str) -> Result<Scan> {
     let cwd = std::env::current_dir().unwrap_or_default();
     let paths: Vec<_> = files.iter().map(|(path, _)| path.clone()).collect();
     let projects = projects::detect(&analysis.paths, &paths, &cwd);
-    Ok(scan(
-        &files, projects, &library, &rules, &libraries, &options,
-    ))
+    let mut scan = scan(&files, projects, &library, &rules, &libraries, &options);
+    scan.unanalyzed = unanalyzed;
+    Ok(scan)
 }
 
 pub struct Options {
@@ -143,11 +150,24 @@ pub fn scan(
         findings,
         sources,
         files_scanned: units.len(),
+        languages: language_counts(&units),
+        unanalyzed: Vec::new(),
         projects,
         links: shorwatch_report::SourceLinks::default(),
         suppressed: Vec::new(),
         dependencies,
     }
+}
+
+/// The scanned files by language.
+fn language_counts(units: &[SourceUnit]) -> Vec<LanguageFiles> {
+    let mut counts = std::collections::BTreeMap::new();
+    for unit in units {
+        *counts
+            .entry(unit.language().label().to_owned())
+            .or_insert(0) += 1;
+    }
+    LanguageFiles::sorted(counts)
 }
 
 /// Reads and lowers one file, with the text reports show (none for binary

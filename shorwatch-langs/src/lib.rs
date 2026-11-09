@@ -20,6 +20,7 @@ pub mod keys;
 pub mod kotlin;
 mod managed;
 mod span;
+mod unsupported;
 
 pub use build::{GradleFrontend, MavenFrontend, VersionCatalogFrontend};
 pub use config::{PropertiesFrontend, YamlFrontend};
@@ -27,6 +28,7 @@ pub use csharp::CSharpFrontend;
 pub use java::JavaFrontend;
 pub use keys::KeyMaterialFrontend;
 pub use kotlin::KotlinFrontend;
+pub use unsupported::unsupported_language;
 
 #[derive(Debug, Error)]
 pub enum LangError {

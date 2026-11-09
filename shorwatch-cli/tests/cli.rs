@@ -505,3 +505,28 @@ fn build_files_are_inventoried_not_reported_as_findings() {
 
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+/// A folder of Python and Go next to one Java file: the report must not read
+/// as clean for the languages it never looked at.
+#[test]
+fn a_report_names_the_languages_it_skipped() {
+    let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("unanalyzed-languages");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("svc")).unwrap();
+    std::fs::write(dir.join("svc/A.java"), "class A {}").unwrap();
+    for file in ["a.py", "b.py", "main.go"] {
+        std::fs::write(dir.join("svc").join(file), "x").unwrap();
+    }
+    let output = shorwatch(&["--format", "markdown", dir.to_str().unwrap()]);
+    let text = stdout(&output);
+    assert!(text.contains("Analyzed: 1 Java."), "{text}");
+    assert!(text.contains("**Not analyzed:** 2 Python · 1 Go"), "{text}");
+
+    let json = shorwatch(&["--format", "json", dir.to_str().unwrap()]);
+    let json = stdout(&json);
+    assert!(json.contains("\"unanalyzed\""), "{json}");
+    assert!(
+        json.contains("\"language\": \"Python\"") || json.contains("\"language\":\"Python\""),
+        "{json}"
+    );
+}

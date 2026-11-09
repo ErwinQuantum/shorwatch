@@ -19,11 +19,11 @@ use std::collections::BTreeSet;
 use std::fmt::Write as _;
 
 pub use banner::banner;
-use style::{accent, bold, dim, failure as rgb_red, paint};
+use style::{accent, bold, dim, failure as rgb_red, paint, warning};
 
 use shorwatch_core::inventory::Support;
 
-use crate::summary::severity_label;
+use crate::summary::{language_counts, severity_label};
 use crate::{Scan, Summary};
 
 #[derive(Debug, Clone, Default)]
@@ -134,6 +134,12 @@ fn summary(scan: &Scan) -> String {
     let label = paint(" Summary ", accent());
     let mut out = String::new();
     let indent = " ".repeat(" Summary ".len());
+    if summary.findings == 0 && summary.files_scanned == 0 && !summary.unanalyzed.is_empty() {
+        // Nothing was read: "no findings" would be a claim about nothing.
+        let _ = writeln!(out, "\n{label} no files Shorwatch can analyze were found");
+        coverage(&summary, &indent, &mut out);
+        return out;
+    }
     if summary.findings == 0 {
         let _ = writeln!(
             out,
@@ -141,6 +147,7 @@ fn summary(scan: &Scan) -> String {
             if summary.in_baseline > 0 { "new " } else { "" },
             plural(summary.files_scanned, "file")
         );
+        coverage(&summary, &indent, &mut out);
         suppressed(&summary, &indent, &mut out);
         libraries(scan, &indent, &mut out);
         return out;
@@ -175,6 +182,7 @@ fn summary(scan: &Scan) -> String {
             summary.in_tests
         );
     }
+    coverage(&summary, &indent, &mut out);
     suppressed(&summary, &indent, &mut out);
     libraries(scan, &indent, &mut out);
     if scan.projects.len() > 1 {
@@ -214,6 +222,34 @@ fn suppressed(summary: &Summary, indent: &str, out: &mut String) {
 /// The cryptographic libraries the build files declare, and the ones whose
 /// version predates their post-quantum support: an inventory line, apart from
 /// the counts of findings.
+/// What was analyzed, and what was skipped for want of a frontend: 0
+/// findings in a Python project says nothing about Python.
+fn coverage(summary: &Summary, indent: &str, out: &mut String) {
+    if !summary.languages.is_empty() {
+        let _ = writeln!(
+            out,
+            "{indent} {}",
+            paint(
+                format!("analyzed: {}", language_counts(&summary.languages)),
+                dim()
+            )
+        );
+    }
+    if !summary.unanalyzed.is_empty() {
+        let _ = writeln!(
+            out,
+            "{indent} {}",
+            paint(
+                format!(
+                    "NOT analyzed: {} (no frontend for them yet)",
+                    language_counts(&summary.unanalyzed)
+                ),
+                warning()
+            )
+        );
+    }
+}
+
 fn libraries(scan: &Scan, indent: &str, out: &mut String) {
     if scan.dependencies.is_empty() {
         return;

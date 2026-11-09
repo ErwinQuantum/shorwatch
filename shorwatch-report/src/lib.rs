@@ -43,6 +43,11 @@ pub struct Scan {
     pub sources: BTreeMap<String, String>,
     /// How many files were analyzed, findings or not.
     pub files_scanned: usize,
+    /// The same files by language, most numerous first.
+    pub languages: Vec<LanguageFiles>,
+    /// Source files of languages Shorwatch has no frontend for, skipped:
+    /// a scan of them says nothing, and the report must not read as clean.
+    pub unanalyzed: Vec<LanguageFiles>,
     /// The projects scanned together, such as the services of a folder of
     /// microservices. Empty or a single entry for one project; reports
     /// split findings by project only when there are several.
@@ -71,6 +76,29 @@ pub fn project_of(projects: &[Project], path: &str) -> Option<usize> {
         })
         .max_by_key(|(_, p)| p.root.len())
         .map(|(i, _)| i)
+}
+
+/// A language and how many files of it a scan met.
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize)]
+pub struct LanguageFiles {
+    pub language: String,
+    pub files: usize,
+}
+
+impl LanguageFiles {
+    /// Counts per language, most numerous first (ties by name).
+    pub fn sorted(counts: impl IntoIterator<Item = (String, usize)>) -> Vec<Self> {
+        let mut sorted: Vec<_> = counts
+            .into_iter()
+            .map(|(language, files)| Self { language, files })
+            .collect();
+        sorted.sort_by(|a, b| {
+            b.files
+                .cmp(&a.files)
+                .then_with(|| a.language.cmp(&b.language))
+        });
+        sorted
+    }
 }
 
 /// A project of a scan: the findings whose path is under `root`.

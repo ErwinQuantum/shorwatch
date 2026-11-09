@@ -23,6 +23,11 @@ pub(crate) fn dim() -> Style {
     rgb(DIM)
 }
 
+/// Something the reader should not miss, short of a failure.
+pub(crate) fn warning() -> Style {
+    rgb((250, 204, 21))
+}
+
 /// A failed scan.
 pub(crate) fn failure() -> Style {
     rgb((248, 113, 113)).bold()

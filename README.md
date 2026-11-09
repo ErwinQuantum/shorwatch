@@ -546,6 +546,12 @@ reflects what each project documents; check theirs for the current state.
 
 ## Coverage
 
+Shorwatch picks each file's frontend by its extension (`.java`, `.kt`, `.cs`,
+`.yml`...) or its exact name (`pom.xml`), and a rule only ever runs on files of
+its own platform. Source in a language without a frontend (Python, Go,
+TypeScript...) is not analyzed, and every report says so (`NOT analyzed: 340
+Python`), so a scan with no findings is never mistaken for a clean one.
+
 Java and Kotlin source code and its configuration (`application.yml`,
 `.properties`). Rules are written per platform, not per language: one JVM rule
 covers both, and every Java test fixture has a Kotlin twin that must produce

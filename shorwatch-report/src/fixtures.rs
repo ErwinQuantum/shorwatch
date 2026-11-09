@@ -188,6 +188,8 @@ pub(crate) fn scan() -> Scan {
         .map(|(p, s)| (p.to_owned(), s.to_owned()))
         .collect(),
         files_scanned: 12,
+        languages: Vec::new(),
+        unanalyzed: Vec::new(),
         links: crate::SourceLinks::default(),
         suppressed: Vec::new(),
         projects: Vec::new(),

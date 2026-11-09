@@ -112,3 +112,40 @@ fn verdict_says_why_the_scan_fails() {
         "\n ✖ 2 findings fail the scan (exit code 1) · see --fail-on, --fail-severity\n   Report https://ci.example/run/7\n"
     );
 }
+
+fn language(language: &str, files: usize) -> crate::LanguageFiles {
+    crate::LanguageFiles {
+        language: language.into(),
+        files,
+    }
+}
+
+#[test]
+fn a_scan_says_which_languages_it_analyzed() {
+    let scan = Scan {
+        languages: vec![language("Java", 120), language("C#", 12)],
+        ..crate::fixtures::scan()
+    };
+    let out = summary(&scan);
+    assert!(out.contains("analyzed: 120 Java · 12 C#"), "{out}");
+    assert!(!out.contains("NOT analyzed"), "{out}");
+}
+
+#[test]
+fn skipped_languages_are_called_out_even_when_nothing_was_found() {
+    let scan = Scan {
+        findings: Vec::new(),
+        languages: vec![language("YAML", 2)],
+        unanalyzed: vec![language("Python", 340), language("Go", 80)],
+        ..crate::fixtures::scan()
+    };
+    let out = summary(&scan);
+    assert!(
+        out.contains("no quantum-vulnerable cryptography found"),
+        "{out}"
+    );
+    assert!(
+        out.contains("NOT analyzed: 340 Python · 80 Go (no frontend for them yet)"),
+        "{out}"
+    );
+}

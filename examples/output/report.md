@@ -10,6 +10,8 @@
 | Severity low | 1 |
 | Files with findings / scanned | 9 / 10 |
 
+Analyzed: 5 Java · 2 YAML · 1 Kotlin · 1 Maven · 1 key material.
+
 ### Findings
 
 | Severity | Algorithm | Location | Status | Rule |

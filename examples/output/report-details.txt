@@ -310,4 +310,5 @@
  Summary  17 findings in 9 files (10 scanned)
           13 high · 3 medium · 1 low
           16 vulnerable · 1 in transition · 1 with a suggested fix
+          analyzed: 5 Java · 2 YAML · 1 Kotlin · 1 Maven · 1 key material
           5 cryptographic libraries in the build files · 1 before post-quantum support (BouncyCastle 1.70)
