@@ -100,7 +100,7 @@ fn findings(path: &Path) -> Vec<Compact> {
 #[test]
 fn fixtures() {
     insta::glob!(
-        "fixtures/**/*.{java,kt,yml,yaml,properties,pem,crt,der,key,pub,jks,p12}",
+        "fixtures/**/*.{java,kt,cs,yml,yaml,properties,pem,crt,der,key,pub,jks,p12}",
         |path| {
             let findings = findings(path);
             if path.file_stem().is_some_and(|s| s == "Clean") {

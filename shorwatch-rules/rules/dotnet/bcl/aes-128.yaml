@@ -1,0 +1,12 @@
+id: dotnet.bcl.aes-128
+profile: aes-128
+platform: dotnet
+
+# `aes.KeySize = 128`: a property is set, which is the call `set_KeySize`.
+# `Aes.Create()` alone is AES-256, so only an explicit 128 is reported.
+patterns:
+  - call: { type: System.Security.Cryptography.Aes, method: set_KeySize, arg: { index: 0, matches: '^128$' } }
+  - call: { type: System.Security.Cryptography.AesManaged, method: set_KeySize, arg: { index: 0, matches: '^128$' } }
+  - call: { type: System.Security.Cryptography.AesCryptoServiceProvider, method: set_KeySize, arg: { index: 0, matches: '^128$' } }
+  - call: { type: System.Security.Cryptography.AesCng, method: set_KeySize, arg: { index: 0, matches: '^128$' } }
+  - call: { type: System.Security.Cryptography.SymmetricAlgorithm, method: set_KeySize, arg: { index: 0, matches: '^128$' }, origin: { index: 0, matches: '(?i)aes' } }

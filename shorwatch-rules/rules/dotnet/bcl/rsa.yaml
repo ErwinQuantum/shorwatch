@@ -1,0 +1,20 @@
+id: dotnet.bcl.rsa
+profile: rsa
+platform: dotnet
+
+# .NET's base class library (System.Security.Cryptography). The abstract
+# factories (`RSA.Create`), the concrete classes, and the padding objects
+# every RSA signature or encryption names.
+patterns:
+  - call: { type: System.Security.Cryptography.RSA, method: Create }
+  - construct: { type: System.Security.Cryptography.RSACryptoServiceProvider }
+  - construct: { type: System.Security.Cryptography.RSACng }
+  - construct: { type: System.Security.Cryptography.RSAOpenSsl }
+  - field: { type: System.Security.Cryptography.RSAEncryptionPadding, matches: '^(Pkcs1|OaepSHA(1|256|384|512|3_(256|384|512)))$' }
+  - call: { type: System.Security.Cryptography.RSAEncryptionPadding, method: CreateOaep }
+  - field: { type: System.Security.Cryptography.RSASignaturePadding, matches: '^(Pkcs1|Pss)$' }
+  # The key of a certificate, read through the extension methods.
+  - call: { type: System.Security.Cryptography.X509Certificates.X509Certificate2, method: GetRSAPublicKey }
+  - call: { type: System.Security.Cryptography.X509Certificates.X509Certificate2, method: GetRSAPrivateKey }
+  - call: { type: System.Security.Cryptography.CryptoConfig, method: CreateFromName, arg: { index: 0, matches: '(?i)^(RSA|System\.Security\.Cryptography\.RSA(CryptoServiceProvider)?)$' } }
+  - call: { type: System.Security.Cryptography.AsymmetricAlgorithm, method: Create, arg: { index: 0, matches: '(?i)^(RSA|System\.Security\.Cryptography\.RSA(CryptoServiceProvider)?)$' } }
