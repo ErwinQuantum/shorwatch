@@ -268,6 +268,7 @@ fn jws_rule(matches: Option<&str>) -> Rule {
         patterns: vec![Pattern::Field {
             owner: "com.nimbusds.jose.JWSAlgorithm".into(),
             matches: matches.map(str::to_owned),
+            unless_call: None,
         }],
         ..rsa_rule()
     }
@@ -278,6 +279,7 @@ fn field(unit: &mut SourceUnit, scope: crate::ir::ScopeId, owner: TypeRef, name:
         FactKind::Field {
             owner,
             name: name.into(),
+            calls: Vec::new(),
         },
         scope,
         loc(4),
@@ -603,6 +605,33 @@ fn call_pattern_can_constrain_two_arguments() {
             }),
             origin: None,
             unless_chain: None,
+        }],
+        ..rsa_rule()
+    };
+    let set = RuleSet::compile([rule]).unwrap();
+    assert_eq!(analyze(&unit, &set).len(), 1);
+}
+
+#[test]
+fn field_pattern_skips_reads_passed_to_excluded_calls() {
+    let (mut unit, _, method) = unit_with_method();
+    for calls in [vec!["Pbkdf2"], vec!["SignData"]] {
+        unit.push(
+            FactKind::Field {
+                owner: TypeRef::qualified("System.Security.Cryptography.HashAlgorithmName"),
+                name: "SHA1".into(),
+                calls: calls.into_iter().map(str::to_owned).collect(),
+            },
+            method,
+            loc(4),
+        );
+    }
+    let rule = Rule {
+        id: "dotnet.bcl.sha1".into(),
+        patterns: vec![Pattern::Field {
+            owner: "System.Security.Cryptography.HashAlgorithmName".into(),
+            matches: Some("^SHA1$".into()),
+            unless_call: Some("^Pbkdf2$".into()),
         }],
         ..rsa_rule()
     };

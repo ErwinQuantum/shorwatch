@@ -9,6 +9,9 @@ use serde::{Deserialize, Serialize};
 pub enum Language {
     Java,
     Kotlin,
+    /// C# sources (`.cs`).
+    #[serde(rename = "csharp")]
+    CSharp,
     /// `.properties` files (Spring Boot, Quarkus, Micronaut...).
     Properties,
     /// YAML configuration files.
@@ -31,6 +34,7 @@ impl Language {
     pub fn platform(self) -> Platform {
         match self {
             Language::Java | Language::Kotlin => Platform::Jvm,
+            Language::CSharp => Platform::Dotnet,
             Language::Properties | Language::Yaml => Platform::Config,
             Language::KeyMaterial => Platform::Keys,
             Language::Maven | Language::Gradle | Language::VersionCatalog => Platform::Build,
@@ -46,6 +50,9 @@ impl Language {
 #[non_exhaustive]
 pub enum Platform {
     Jvm,
+    /// .NET: the base class library and its packages. Rules describe APIs
+    /// that C# (and, later, F# and Visual Basic) call the same way.
+    Dotnet,
     Config,
     /// Key material: the algorithm of keys and certificates themselves,
     /// whatever file holds them.

@@ -31,6 +31,7 @@ pub(crate) enum CompiledPattern {
     Field {
         owner: String,
         name: Option<Regex>,
+        unless_call: Option<Regex>,
     },
     Literal {
         value: Regex,
@@ -163,9 +164,14 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     ty: ty.clone(),
                     arg: arg(a)?,
                 },
-                Pattern::Field { owner, matches } => CompiledPattern::Field {
+                Pattern::Field {
+                    owner,
+                    matches,
+                    unless_call,
+                } => CompiledPattern::Field {
                     owner: owner.clone(),
                     name: matches.as_deref().map(regex).transpose()?,
+                    unless_call: unless_call.as_deref().map(regex).transpose()?,
                 },
                 Pattern::Literal {
                     matches,

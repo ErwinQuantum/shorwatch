@@ -54,12 +54,23 @@ impl TypeRef {
     pub fn is(&self, wanted: &str) -> bool {
         match &self.qualified {
             Some(qualified) => qualified == wanted,
-            None => {
-                let path = type_path(wanted);
-                let package = wanted[..wanted.len() - path.len()].trim_end_matches('.');
-                self.name == path
-                    && (self.packages.is_empty() || self.packages.iter().any(|p| p == package))
-            }
+            // The name can come from any of `packages`: the wanted type is
+            // one of them followed by the name (an empty package is the
+            // global namespace). Namespaces and types are both capitalised
+            // in .NET, so nothing here may tell them apart by their case.
+            None if !self.packages.is_empty() => self.packages.iter().any(|package| {
+                if package.is_empty() {
+                    wanted == self.name
+                } else {
+                    wanted
+                        .strip_prefix(package.as_str())
+                        .and_then(|rest| rest.strip_prefix('.'))
+                        == Some(self.name.as_str())
+                }
+            }),
+            // Package unknown: only the type path (by the JVM convention) has
+            // to agree.
+            None => self.name == type_path(wanted),
         }
     }
 
