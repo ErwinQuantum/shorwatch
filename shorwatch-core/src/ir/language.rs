@@ -31,6 +31,21 @@ pub enum Language {
 }
 
 impl Language {
+    /// How reports name the language.
+    pub fn label(self) -> &'static str {
+        match self {
+            Language::Java => "Java",
+            Language::Kotlin => "Kotlin",
+            Language::CSharp => "C#",
+            Language::Properties => ".properties",
+            Language::Yaml => "YAML",
+            Language::KeyMaterial => "key material",
+            Language::Maven => "Maven",
+            Language::Gradle => "Gradle",
+            Language::VersionCatalog => "version catalog",
+        }
+    }
+
     pub fn platform(self) -> Platform {
         match self {
             Language::Java | Language::Kotlin => Platform::Jvm,

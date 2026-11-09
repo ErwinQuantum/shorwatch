@@ -638,3 +638,39 @@ fn field_pattern_skips_reads_passed_to_excluded_calls() {
     let set = RuleSet::compile([rule]).unwrap();
     assert_eq!(analyze(&unit, &set).len(), 1);
 }
+
+#[test]
+fn a_rule_never_fires_on_a_unit_of_another_platform() {
+    // The same call, lowered from a Java file and from a C# file: only the
+    // rule of that file's platform may see it.
+    let call = |language| {
+        let mut unit = SourceUnit::new("A.src", language);
+        let class = unit.add_scope(ScopeKind::Type, Some("A".into()), SourceUnit::ROOT);
+        let method = unit.add_scope(ScopeKind::Method, Some("run".into()), class);
+        get_instance(
+            &mut unit,
+            method,
+            "java.security.KeyPairGenerator",
+            "RSA",
+            3,
+        );
+        unit
+    };
+    let jvm_rule = Rule {
+        patterns: vec![Pattern::Call {
+            receiver: "java.security.KeyPairGenerator".into(),
+            method: "getInstance".into(),
+            arg: None,
+            with_arg: None,
+            origin: None,
+            unless_chain: None,
+        }],
+        ..rsa_rule()
+    };
+    assert_eq!(jvm_rule.platform, crate::ir::Platform::Jvm);
+    let rules = RuleSet::compile([jvm_rule]).unwrap();
+    assert_eq!(analyze(&call(Language::Java), &rules).len(), 1);
+    assert_eq!(analyze(&call(Language::Kotlin), &rules).len(), 1);
+    assert!(analyze(&call(Language::CSharp), &rules).is_empty());
+    assert!(analyze(&call(Language::Yaml), &rules).is_empty());
+}
