@@ -1,9 +1,11 @@
-//! What the JVM frontends share. Java and Kotlin call the same library APIs,
-//! so once a traversal has recorded a file's names, both resolve them alike.
+//! What the frontends of managed languages (JVM and .NET) share. Java and
+//! Kotlin call the same library APIs, and C# is shaped alike (types, `using`s,
+//! calls and constructions), so once a traversal has recorded a file's names,
+//! all of them resolve them the same way.
 //!
-//! A frontend's traversal (phase one) fills a [`JvmFile`]: scopes, imports,
+//! A frontend's traversal (phase one) fills a [`ManagedFile`]: scopes, imports,
 //! declared symbols and *pending* facts whose names are still unresolved.
-//! [`JvmFile::resolve`] (phase two, in [`resolve`]) then turns pending facts
+//! [`ManagedFile::resolve`] (phase two, in [`resolve`]) then turns pending facts
 //! into the unit's facts, once declarations made after their use are known.
 //!
 //! - [`model`]: what phase one records;
@@ -26,9 +28,9 @@ mod resolve;
 /// longer builder chains carry no algorithm worth the depth.
 pub(crate) const MAX_CHAIN: usize = 8;
 
-/// One JVM source file between the two phases of its lowering.
+/// One source file between the two phases of its lowering.
 #[derive(Debug)]
-pub(crate) struct JvmFile {
+pub(crate) struct ManagedFile {
     pub(crate) unit: SourceUnit,
     /// Simple name (or alias) -> fully qualified name, from type imports.
     pub(crate) imports: HashMap<String, String>,
@@ -74,7 +76,7 @@ pub(crate) struct JvmFile {
     pending: Vec<(Pending, ScopeId, Location)>,
 }
 
-impl JvmFile {
+impl ManagedFile {
     pub(crate) fn new(path: &str, language: Language) -> Self {
         Self {
             unit: SourceUnit::new(path, language),

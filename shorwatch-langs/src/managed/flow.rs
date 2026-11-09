@@ -19,7 +19,7 @@ use shorwatch_core::ir::{
     TypeRef,
 };
 
-use super::{ArgSource, Assignment, JvmFile, PendingArg, Receiver};
+use super::{ArgSource, Assignment, ManagedFile, PendingArg, Receiver};
 
 /// How many assignments, calls and returns a path may go through.
 const MAX_DEPTH: usize = 6;
@@ -42,7 +42,7 @@ struct Entered<'a> {
     scope: ScopeId,
 }
 
-impl JvmFile {
+impl ManagedFile {
     /// The values `arg` may hold, as an [`ArgValue::OneOf`], or `None` when
     /// none is known.
     pub(super) fn flow_value(&self, arg: &PendingArg, scope: ScopeId) -> Option<ArgValue> {

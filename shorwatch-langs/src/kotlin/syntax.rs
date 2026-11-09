@@ -2,7 +2,7 @@
 
 use tree_sitter::Node;
 
-use crate::jvm::starts_uppercase;
+use crate::managed::starts_uppercase;
 
 /// `Cipher`, `ECGenParameterSpec`: a name that reads as a class. Kotlin has
 /// no `new`, so `Name(...)` is a constructor call when `Name` looks like a

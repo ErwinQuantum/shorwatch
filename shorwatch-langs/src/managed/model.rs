@@ -114,6 +114,7 @@ pub(crate) enum Pending {
     Field {
         owner: String,
         name: String,
+        calls: Vec<String>,
     },
     /// A bare name that a static import may refer to, unless shadowed.
     StaticMember(String),

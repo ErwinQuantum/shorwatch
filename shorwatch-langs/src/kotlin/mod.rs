@@ -3,7 +3,7 @@
 //! Kotlin calls the same JVM libraries as Java, so it lowers into the same
 //! facts and the `jvm` rules apply unchanged. The traversal (phase one) is
 //! Kotlin's own; resolving names (phase two) is shared with Java in
-//! [`crate::jvm`]. Where Kotlin differs:
+//! [`crate::managed`]. Where Kotlin differs:
 //!
 //! - no `new`: `ECGenParameterSpec(spec)` is a constructor call because the
 //!   callee looks like a type name;
@@ -29,8 +29,8 @@ use shorwatch_core::Language;
 use shorwatch_core::ir::{ArgValue, FactKind, Location, ScopeId, ScopeKind, SourceUnit};
 use tree_sitter::{Node, Parser};
 
-use crate::jvm::{
-    ArgSource, Assignment, JvmFile, MAX_CHAIN, Pending, PendingArg, Receiver, Symbol,
+use crate::managed::{
+    ArgSource, Assignment, MAX_CHAIN, ManagedFile, Pending, PendingArg, Receiver, Symbol,
     starts_uppercase,
 };
 use crate::{Frontend, LangError, span};
@@ -96,7 +96,7 @@ enum LambdaContext {
 
 struct Lowering<'s> {
     src: &'s str,
-    file: JvmFile,
+    file: ManagedFile,
     /// Scope-function lambdas met before their scope exists, by node id.
     lambdas: HashMap<usize, LambdaContext>,
     /// Implicit receivers of lambda scopes.
@@ -107,7 +107,7 @@ impl<'s> Lowering<'s> {
     fn new(path: &str, src: &'s str) -> Self {
         Self {
             src,
-            file: JvmFile::new(path, Language::Kotlin),
+            file: ManagedFile::new(path, Language::Kotlin),
             lambdas: HashMap::new(),
             implicit: HashMap::new(),
         }
@@ -811,7 +811,8 @@ impl<'s> Lowering<'s> {
         }
         let owner = name_path(object, self.src);
         let name = self.text(member).to_owned();
-        self.defer(Pending::Field { owner, name }, scope, node);
+        let calls = enclosing_calls(node, self.src);
+        self.defer(Pending::Field { owner, name, calls }, scope, node);
         None
     }
 

@@ -165,7 +165,7 @@ fn fields(unit: &SourceUnit) -> Vec<(TypeRef, String)> {
     unit.facts()
         .iter()
         .filter_map(|f| match &f.kind {
-            FactKind::Field { owner, name } => Some((owner.clone(), name.clone())),
+            FactKind::Field { owner, name, .. } => Some((owner.clone(), name.clone())),
             _ => None,
         })
         .collect()
