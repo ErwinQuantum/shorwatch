@@ -5,8 +5,22 @@ use shorwatch_core::inventory::Support;
 use shorwatch_core::{CodeRole, Finding};
 use std::fmt::Write as _;
 
-use crate::Scan;
-use crate::summary::{severity_label, status_label};
+use crate::summary::{language_counts, severity_label, status_label};
+use crate::{Scan, Summary};
+
+/// What was analyzed and what was skipped for want of a frontend.
+fn coverage(summary: &Summary, out: &mut String) {
+    if !summary.languages.is_empty() {
+        let _ = writeln!(out, "Analyzed: {}.\n", language_counts(&summary.languages));
+    }
+    if !summary.unanalyzed.is_empty() {
+        let _ = writeln!(
+            out,
+            "> **Not analyzed:** {}. Shorwatch has no frontend for these languages yet, so this report says nothing about them.\n",
+            language_counts(&summary.unanalyzed)
+        );
+    }
+}
 
 pub fn render(scan: &Scan) -> String {
     let summary = scan.summary();
@@ -19,6 +33,10 @@ pub fn render(scan: &Scan) -> String {
             summary.files_scanned,
             suppressed_note(&summary)
         );
+        if !summary.languages.is_empty() || !summary.unanalyzed.is_empty() {
+            out.push('\n');
+            coverage(&summary, &mut out);
+        }
         libraries(scan, &mut out);
         return out;
     }
@@ -54,6 +72,7 @@ pub fn render(scan: &Scan) -> String {
         "| Files with findings / scanned | {} / {} |\n",
         summary.files_with_findings, summary.files_scanned
     );
+    coverage(&summary, &mut out);
 
     let _ = writeln!(
         out,
@@ -246,5 +265,24 @@ mod tests {
             ..Default::default()
         };
         assert!(render(&clean).contains("no quantum-vulnerable cryptography found"));
+    }
+
+    #[test]
+    fn skipped_languages_are_called_out() {
+        let scan = Scan {
+            findings: Vec::new(),
+            languages: vec![crate::LanguageFiles {
+                language: "Java".into(),
+                files: 3,
+            }],
+            unanalyzed: vec![crate::LanguageFiles {
+                language: "Python".into(),
+                files: 40,
+            }],
+            ..crate::fixtures::scan()
+        };
+        let report = render(&scan);
+        assert!(report.contains("Analyzed: 3 Java."), "{report}");
+        assert!(report.contains("**Not analyzed:** 40 Python"), "{report}");
     }
 }

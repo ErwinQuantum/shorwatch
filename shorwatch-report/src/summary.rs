@@ -6,11 +6,17 @@ use serde::Serialize;
 use shorwatch_core::inventory::Support;
 use shorwatch_core::{CodeRole, Severity, Status};
 
-use crate::{Scan, Suppression};
+use crate::{LanguageFiles, Scan, Suppression};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Summary {
     pub files_scanned: usize,
+    /// The scanned files by language.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub languages: Vec<LanguageFiles>,
+    /// Source files skipped for want of a frontend.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub unanalyzed: Vec<LanguageFiles>,
     /// Files with at least one finding.
     pub files_with_findings: usize,
     pub findings: usize,
@@ -36,6 +42,15 @@ pub struct Summary {
     pub libraries_too_old: usize,
 }
 
+/// `120 Java · 40 Kotlin`.
+pub fn language_counts(languages: &[LanguageFiles]) -> String {
+    languages
+        .iter()
+        .map(|l| format!("{} {}", l.files, l.language))
+        .collect::<Vec<_>>()
+        .join(" · ")
+}
+
 fn is_zero(n: &usize) -> bool {
     *n == 0
 }
@@ -50,6 +65,8 @@ impl Summary {
         }
         Self {
             files_scanned: scan.files_scanned,
+            languages: scan.languages.clone(),
+            unanalyzed: scan.unanalyzed.clone(),
             files_with_findings: findings
                 .iter()
                 .map(|f| f.path.as_str())
