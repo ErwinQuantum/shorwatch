@@ -26,6 +26,12 @@ a repository holds (certificates, keys, keystores) and the cryptographic
 | `shorwatch-report` | Pure renderers over a `Scan` (findings, sources, `projects`, `links`: editor `vscode://` root only for the temporary report, repository host URL templates in CI): terminal (banner; summary + HTML report link by default, `--overview`, `--details`, `--compact`, the failing verdict), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only, CSP forbids the network; an editorial cover + hash-routed chapters `#/findings?sev=&project=&alg=&cat=&f=`, grouped by file, tests folded) | core |
 | `shorwatch-cli` | `shorwatch [scan]` (no command = scan) / `report` (scan + open) / `ci` (SARIF + HTML in `shorwatch-report/`, CI artifact links) / `open` (last HTML report, in the browser) / `rules`; `--watch` polls mtimes: clap args, `ignore` walker, `layout` (test vs production code by path), `projects` (top-most build roots of a scanned folder), rayon pipeline (one `link` per project), output (`--html`, temporary HTML on terminals, `--report-url`), exit codes (`--fail-on`, `--fail-severity`) | all |
 
+A file's frontend is chosen by its extension or exact name (`for_path`); a rule
+applies only to units of its own platform (`analyze`). Source files of languages
+with no frontend (Python, Go, TypeScript...) are counted by `discover` and
+reported as *not analyzed* (`Scan::unanalyzed`, with `Scan::languages` for what
+was): a report must never read as clean for code it did not read.
+
 Pipeline (what the CLI does): lower every file with its frontend → group
 units by project → `link` each project's units → `analyze` each unit →
 make text from scanned files printable (`printable.rs`) → set suppressed
@@ -46,7 +52,7 @@ langs/src/ managed/{mod: ManagedFile, model, resolve, flow}  java/{mod: traversa
            kotlin/{mod: traversal, syntax, literals}  csharp/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
-           build/{mod, maven, gradle, catalog}  depth.rs (nesting bound)
+           build/{mod, maven, gradle, catalog}  depth.rs (nesting bound)  unsupported.rs (languages seen, not read)
 cli/src/   args, pipeline, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file)
            printable (control characters out), suppress/{mod: apply, inline: `shorwatch:ignore`,
            baseline: shorwatch-baseline.json}, gate (--fail-on/--fail-severity), output,

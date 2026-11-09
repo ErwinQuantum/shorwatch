@@ -9,6 +9,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Every report says which languages it analyzed (`analyzed: 120 Java · 12 C#`)
+  and which source files it skipped for want of a frontend (`NOT analyzed: 340
+  Python · 80 Go`). Zero findings in a project of a language Shorwatch does not
+  read no longer looks like a clean bill of health. Terminal, Markdown, HTML and
+  JSON (`summary.languages`, `summary.unanalyzed`).
+- A test that a rule never fires on a file of another platform.
 - **C# frontend** (tree-sitter-c-sharp) on the resolver Java and Kotlin share, now
   named `managed`: `using`s and aliases, namespaces, types, `var` and target-typed
   `new()`, `const` / `readonly` constants, property assignments as setter calls

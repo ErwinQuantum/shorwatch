@@ -3,6 +3,28 @@
   "version": "0.2.0",
   "summary": {
     "files_scanned": 10,
+    "languages": [
+      {
+        "language": "Java",
+        "files": 5
+      },
+      {
+        "language": "YAML",
+        "files": 2
+      },
+      {
+        "language": "Kotlin",
+        "files": 1
+      },
+      {
+        "language": "Maven",
+        "files": 1
+      },
+      {
+        "language": "key material",
+        "files": 1
+      }
+    ],
     "files_with_findings": 9,
     "findings": 17,
     "vulnerable": 16,
