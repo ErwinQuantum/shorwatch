@@ -102,14 +102,14 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   constructor parameter, the field it sets and the getter that returns it
   resolve through the existing machinery to every constant's value. `name()` /
   `toString()` (Kotlin `.name`) are synthetic `MethodSummary`s listing the
-  constants (`jvm/flow.rs::enum_name_summaries`); a Kotlin primary-constructor
+  constants (`managed/flow.rs::enum_name_summaries`); a Kotlin primary-constructor
   `val` is published as an accessor, and `k.prop` on a typed variable is a
   `Returns` candidate. A *specific* constant (`Kind.LEGACY.getJceName()`) is
   not resolved: the union of all constants would be wrong for it.
 - **`@ConfigurationProperties`**: a type annotated with a prefix binds its
   fields (and a record's or Kotlin primary constructor's properties) to
   `<prefix>.<field>`, as `ArgValue::Injected` with the field's literal
-  initializer as default (`jvm/resolve.rs::bind_configuration_properties`).
+  initializer as default (`managed/resolve.rs::bind_configuration_properties`).
   Getters, record accessors and Kotlin property reads then resolve through the
   same cross-file flow as `@Value`; relaxed binding is `link::config`'s.
   Nested objects and collections are not bound.

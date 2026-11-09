@@ -31,7 +31,8 @@ Rules live in [`shorwatch-rules/rules/`](shorwatch-rules/rules/):
 ```
 algorithms/<profile>.yaml        what an algorithm is and why it matters (written once)
 markers/<name>.yaml              signs of post-quantum code (hybrid detection)
-jvm/<library>/<profile>.yaml     the patterns one library exposes
+jvm/<library>/<profile>.yaml     the patterns one JVM library exposes (Java, Kotlin)
+dotnet/<library>/<profile>.yaml  the same for .NET (C#); `bcl` is the base class library
 config/<framework>/<profile>.yaml
 keys/material/<profile>.yaml     keys and certificates a repository holds
 libraries/<id>.yaml              a cryptographic library a build file may declare
@@ -101,7 +102,8 @@ Types are fully qualified; Shorwatch resolves imports, `var`, fields and
 parameters, so code using simple names still matches. A name without an
 import only matches types of the file's own package, its `import a.b.*`
 packages and `java.lang` (a same-package `KeyType` is not Azure's), unless the
-file uses a Java 25 `import module`. Arguments match whatever value
+file uses a Java 25 `import module`; in C# a `using` names a namespace, so the
+type may come from any imported one. Arguments match whatever value
 Shorwatch can follow to them: literals, constants (of any class),
 `@Value("${...}")` properties, and the data flow within and across files
 (variables, parameters, returned values).
@@ -135,7 +137,8 @@ Add a folder under
 
 JVM rules cover Java and Kotlin alike. Next to a `.java` fixture, add its
 Kotlin twin (`Vulnerable.kt`, written the Kotlin way): a test requires both to
-produce the same findings.
+produce the same findings. A .NET rule gets `.cs` fixtures (`Vulnerable.cs`,
+`Hybrid.cs`, `Clean.cs`), which have no twin.
 
 Each folder is analyzed as a small project with *all* rules, then
 snapshotted. Run the tests and review the new `.snap` files: they are the
@@ -150,7 +153,7 @@ on the other crates.
 |---|---|
 | `shorwatch-core` | Intermediate model, rule model and validation, engine, cross-file linking |
 | `shorwatch-rules` | Embedded YAML rules and the loader that assembles profiles and rules |
-| `shorwatch-langs` | Frontends: Java and Kotlin (tree-sitter, one shared JVM resolver), YAML (tree-sitter), `.properties`, key material, class files |
+| `shorwatch-langs` | Frontends: Java, Kotlin and C# (tree-sitter, one shared `managed` resolver), YAML (tree-sitter), `.properties`, build files, key material, class files |
 | `shorwatch-report` | Pure renderers: terminal, SARIF, CBOM, JSON, Markdown, HTML |
 | `shorwatch-cli` | The `shorwatch` binary: commands, file discovery, the scan pipeline, baselines and suppressions |
 
@@ -166,7 +169,7 @@ Conventions:
 
 ## Reporting a false positive or a missed detection
 
-Open an issue with the smallest Java, Kotlin or config snippet that
+Open an issue with the smallest Java, Kotlin, C# or config snippet that
 reproduces it. It will very likely become a fixture. Security issues go
 through [SECURITY.md](SECURITY.md), not an issue.
 

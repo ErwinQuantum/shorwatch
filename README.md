@@ -9,7 +9,9 @@ of cryptography that a quantum computer would break or weaken, together with
 the post-quantum replacement and the NIST standard behind it.
 
 **Status: v0.2.** Java, Kotlin and Spring projects, their configuration, the
-libraries their build files declare, and the keys and certificates they hold. See [Coverage](#coverage) for exactly what is and
+libraries their build files declare, and the keys and certificates they hold;
+C# is on the main branch and reaches the next release (its base class library
+only for now). See [Coverage](#coverage) for exactly what is and
 isn't detected.
 
 ## Quick start
@@ -155,9 +157,11 @@ shorwatch rules                              # list the rules in effect
 Without a command, `shorwatch` is `shorwatch scan` (which scripts may keep
 using; a folder named like a command, say `report/`, is scanned with
 `shorwatch scan report/`). A scan walks the given paths respecting
-`.gitignore`, analyzes `.java`, `.kt`, `.kts`, `.yml`, `.yaml` and
+`.gitignore` (and skipping `target`, `build`, `node_modules`, `.gradle`, `bin` and
+`obj`, plus generated C# such as `*.Designer.cs`, `*.g.cs` and EF `*ModelSnapshot.cs`), analyzes `.java`, `.kt`, `.kts`, `.cs`, `.yml`, `.yaml` and
 `.properties` files in parallel, and resolves `@Value("${...}")` injections
-against the project's configuration files. Key material is read from `.pem`,
+against the project's configuration files. Source in a language Shorwatch has no frontend for
+(Python, Go, TypeScript...) is not analyzed, and the summary says so. Key material is read from `.pem`,
 `.crt`, `.cer`, `.der`, `.key`, `.pub`, `.csr`, `.jks`, `.jceks`, `.keystore`,
 `.truststore`, `.p12` and `.pfx` files, told apart by content.
 
@@ -173,13 +177,14 @@ against the project's configuration files. Key material is read from `.pem`,
 | `--report-url URL` | The link shown for the HTML report, e.g. where CI publishes it (also `SHORWATCH_REPORT_URL`) |
 | `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`; `never` only reports) |
 | `--fail-severity info\|low\|medium\|high\|critical` | Only findings at or above this severity fail the scan; the rest are still reported |
-| `--exclude-tests` | Skip test code (Maven/Gradle test source sets such as `src/test` or `src/jvmTest`, test directories, `*Test`/`*IT` classes). Without it, findings in test code are reported and labelled as such |
+| `--exclude-tests` | Skip test code (Maven/Gradle test source sets such as `src/test` or `src/jvmTest`, .NET test projects such as `Acme.Tests/`, test directories, `*Test`/`*IT` classes). Without it, findings in test code are reported and labelled as such |
 | `--overview` | List the files with findings and explain the three most urgent |
 | `--details` | Explain every finding |
 | `--compact` | One line per finding |
+| `--no-banner` | Do not print the banner |
 | `--baseline FILE` / `--no-baseline` | Leave out the findings of this baseline (default: `shorwatch-baseline.json`, when present) / report them all |
 | `--rules DIR` | Extra rules directory (repeatable) |
-| `--classpath PATHS` | Compiled dependencies to read types from (see below) |
+| `--classpath PATHS` | Compiled dependencies to read types from, for Java and Kotlin (see below) |
 
 Exit codes: `0` nothing failing, `1` failing findings, `2` error. See
 [In CI pipelines](#in-ci-pipelines).
@@ -258,9 +263,11 @@ text in the editor: `shorwatch report` (or `--open`) opens the report in the
 default browser when the scan ends, `shorwatch open` afterwards.
 
 ```text
- Summary  17 findings in 9 files (9 scanned)
+ Summary  17 findings in 9 files (10 scanned)
           13 high · 3 medium · 1 low
           16 vulnerable · 1 in transition · 1 with a suggested fix
+          analyzed: 5 Java · 2 YAML · 1 Kotlin · 1 Maven · 1 key material
+          5 cryptographic libraries in the build files · 1 before post-quantum support (BouncyCastle 1.70)
 
  Report   file:///home/you/.cache/shorwatch/spring-service.html
 
@@ -387,9 +394,11 @@ it with `--report-url` (or `SHORWATCH_REPORT_URL`).
 When the scan fails, the last line of the log says why and links the report:
 
 ```text
- Summary  17 findings in 9 files (9 scanned)
+ Summary  17 findings in 9 files (10 scanned)
           13 high · 3 medium · 1 low
           16 vulnerable · 1 in transition · 1 with a suggested fix
+          analyzed: 5 Java · 2 YAML · 1 Kotlin · 1 Maven · 1 key material
+          5 cryptographic libraries in the build files · 1 before post-quantum support (BouncyCastle 1.70)
 
  Report   https://github.com/acme/payments/actions/runs/912345678
 
@@ -536,7 +545,8 @@ with the others:
   [**qsafe**](https://pypi.org/project/qsafe/) (Python) scan for
   quantum-vulnerable patterns in several languages.
 
-What Shorwatch brings is depth on the JVM, as one standalone binary with no
+What Shorwatch brings is depth on the JVM (and, since the main branch, the .NET base class
+library), as one standalone binary with no
 server: Kotlin next to Java, Spring configuration resolved across profiles and
 `@Value`, values followed across files to the crypto call, the keys and
 keystores a repository holds, hybrid (classical plus post-quantum) detection,
@@ -552,17 +562,17 @@ its own platform. Source in a language without a frontend (Python, Go,
 TypeScript...) is not analyzed, and every report says so (`NOT analyzed: 340
 Python`), so a scan with no findings is never mistaken for a clean one.
 
-Java and Kotlin source code and its configuration (`application.yml`,
+Java, Kotlin and C# source code and its configuration (`application.yml`,
 `.properties`). Rules are written per platform, not per language: one JVM rule
-covers both, and every Java test fixture has a Kotlin twin that must produce
-the same findings.
+covers Java and Kotlin, and every Java test fixture has a Kotlin twin that must
+produce the same findings; C# has its own `dotnet` rules.
 
 | Covered today | Not yet |
 |---|---|
 | JCA / JCE: `KeyPairGenerator`, `KeyFactory`, `Cipher`, `Signature`, `KeyAgreement`, `MessageDigest`, `KeyGenerator`, `SecretKeyFactory`, key and parameter specs | Groovy and Scala |
-| BouncyCastle lightweight API (engines, signers, generators) and PKIX certificate signing (`JcaContentSignerBuilder`) | `@ConfigurationProperties` binding |
+| BouncyCastle lightweight API (engines, signers, generators) and PKIX certificate signing (`JcaContentSignerBuilder`) | |
 | JWT/JOSE: jjwt (0.11 and 0.12), Nimbus JOSE + JWT, jose4j, fusionauth-jwt, Auth0 java-jwt | Algorithms chosen at runtime, e.g. from a remote JWKS |
-| Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Quarkus and Micronaut configuration keys |
+| Spring Security: OAuth2 JOSE constants, `NimbusJwtDecoder.withPublicKey`, `RsaKeyConverters`, spring-security-rsa | Micronaut configuration keys, Quarkus TLS settings |
 | Spring Boot config: `jws-algorithms`, `public-key-location`, `jwk-set-uri` (RS256 default), TLS cipher suites (`*.ssl.ciphers`); Quarkus MicroProfile JWT keys without an algorithm (RS256 default); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Crypto inside compiled `.jar` dependencies (their types are read with `--classpath`, their code is not analyzed) |
 | Values injected with `@Value("${key:default}")`, and the fields of `@ConfigurationProperties` classes (Java classes and records, Kotlin classes and data classes, relaxed binding `key-type` = `keyType`), resolved against every profile's config file; a field's initializer is the default when the key is absent | Nested objects (`prefix.nested.field`), collections and `@Bean @ConfigurationProperties` methods |
 | Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
@@ -590,7 +600,10 @@ shorwatch-rules/rules/
   markers/      signs of post-quantum code, for hybrid detection
   jvm/          one folder per library: jca, bouncycastle, nimbus, jjwt,
                 auth0, spring-security, ...
-  config/       one folder per framework: spring-boot, spring-cloud-config, app
+  dotnet/       .NET: bcl (System.Security.Cryptography)
+  config/       one folder per framework: spring-boot, spring-cloud-config, quarkus, app
+  keys/         the algorithm of keys and certificates a repository holds
+  libraries/    the cryptographic libraries a build file may declare (inventory)
 ```
 
 An algorithm profile carries the explanation, migration advice and NIST
@@ -680,8 +693,10 @@ reviewed. Security issues: see [SECURITY.md](SECURITY.md).
 - A post-quantum maturity score and the NIST IR 8547 deadlines per project
 - Beyond source code: infrastructure (nginx, Kubernetes, Terraform) and
   message brokers
-- More configuration formats (Quarkus, Micronaut, `@ConfigurationProperties`)
-- More languages
+- C# beyond the base class library: NuGet packages, `appsettings.json`, JWT
+  libraries
+- More configuration formats (Micronaut, Quarkus TLS)
+- More languages (Python, Go, TypeScript...)
 
 ## License
 

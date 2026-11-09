@@ -86,7 +86,8 @@ pub struct Analysis {
     pub min_severity: SeverityArg,
 
     /// Skip test code: Maven/Gradle test source sets (`src/test`,
-    /// `src/integrationTest`...), test directories and `*Test`/`*IT` classes.
+    /// `src/integrationTest`...), .NET test projects (`Acme.Tests/`), test
+    /// directories and `*Test`/`*IT` classes.
     /// Without it, findings in test code are reported and labelled.
     #[arg(long)]
     pub exclude_tests: bool,
