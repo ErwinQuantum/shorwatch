@@ -13,7 +13,19 @@ use crate::layout;
 
 /// Generated or vendored directories that are not worth scanning even when
 /// no `.gitignore` excludes them.
-const SKIPPED_DIRS: &[&str] = &["target", "build", "node_modules", ".gradle"];
+/// `bin` and `obj` are .NET's build output (generated sources, copied configuration).
+const SKIPPED_DIRS: &[&str] = &["target", "build", "node_modules", ".gradle", "bin", "obj"];
+
+/// Suffixes of the files .NET tooling generates (Entity Framework migrations,
+/// designer files, source generators): hundreds of kilobytes of fluent code
+/// that no one wrote and that makes no cryptographic choice.
+const GENERATED_SUFFIXES: &[&str] = &[
+    ".Designer.cs",
+    ".g.cs",
+    ".g.i.cs",
+    ".generated.cs",
+    "ModelSnapshot.cs",
+];
 
 /// Larger files are almost always generated; parsing them is slow and noisy.
 const MAX_FILE_BYTES: u64 = 4 * 1024 * 1024;
@@ -44,7 +56,7 @@ pub fn files(paths: &[PathBuf]) -> Result<Vec<(PathBuf, CodeRole)>> {
         let entry = entry.context("walking the scan paths")?;
         let path = entry.path();
         let is_file = entry.file_type().is_some_and(|t| t.is_file());
-        if is_file && is_supported(path) && !too_large(path) {
+        if is_file && is_supported(path) && !is_generated(path) && !too_large(path) {
             files.push((path.to_owned(), role(path, paths)));
         }
     }
@@ -68,6 +80,16 @@ fn is_supported(path: &Path) -> bool {
     shorwatch_langs::for_path(path).is_some()
 }
 
+fn is_generated(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|name| name.to_str())
+        .is_some_and(|name| {
+            GENERATED_SUFFIXES
+                .iter()
+                .any(|suffix| name.ends_with(suffix))
+        })
+}
+
 fn too_large(path: &Path) -> bool {
     path.metadata().is_ok_and(|m| m.len() > MAX_FILE_BYTES)
 }
@@ -85,6 +107,22 @@ pub fn display_path(path: &Path, cwd: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn generated_dotnet_files_are_skipped() {
+        for generated in [
+            "M/20260101_Init.Designer.cs",
+            "obj/App.g.cs",
+            "Views/Page.g.i.cs",
+            "Api.generated.cs",
+            "Data/DbContextModelSnapshot.cs",
+        ] {
+            assert!(is_generated(Path::new(generated)), "{generated}");
+        }
+        for written in ["Signer.cs", "Designer.cs", "Keys.java"] {
+            assert!(!is_generated(Path::new(written)), "{written}");
+        }
+    }
 
     #[test]
     fn paths_are_relative_to_the_working_directory_with_slashes() {
