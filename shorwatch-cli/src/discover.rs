@@ -3,6 +3,7 @@
 //! skips build output, and keeps files some frontend understands, each with
 //! its role (production or test code).
 
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail};
@@ -30,14 +31,26 @@ const GENERATED_SUFFIXES: &[&str] = &[
 /// Larger files are almost always generated; parsing them is slow and noisy.
 const MAX_FILE_BYTES: u64 = 4 * 1024 * 1024;
 
+/// What a walk found: the files to scan, and the source files it passed by
+/// because no frontend reads their language, counted per language.
+#[derive(Debug, Default)]
+pub struct Discovered {
+    pub files: Vec<(PathBuf, CodeRole)>,
+    pub unanalyzed: BTreeMap<&'static str, usize>,
+}
+
 pub fn files(paths: &[PathBuf]) -> Result<Vec<(PathBuf, CodeRole)>> {
+    Ok(discover(paths)?.files)
+}
+
+pub fn discover(paths: &[PathBuf]) -> Result<Discovered> {
     for path in paths {
         if !path.exists() {
             bail!("`{}` does not exist", path.display());
         }
     }
     let Some((first, rest)) = paths.split_first() else {
-        return Ok(Vec::new());
+        return Ok(Discovered::default());
     };
     let mut builder = WalkBuilder::new(first);
     for path in rest {
@@ -52,17 +65,25 @@ pub fn files(paths: &[PathBuf]) -> Result<Vec<(PathBuf, CodeRole)>> {
     });
 
     let mut files = Vec::new();
+    let mut unanalyzed = BTreeMap::new();
     for entry in builder.build() {
         let entry = entry.context("walking the scan paths")?;
         let path = entry.path();
         let is_file = entry.file_type().is_some_and(|t| t.is_file());
-        if is_file && is_supported(path) && !is_generated(path) && !too_large(path) {
-            files.push((path.to_owned(), role(path, paths)));
+        if !is_file {
+            continue;
+        }
+        if is_supported(path) {
+            if !is_generated(path) && !too_large(path) {
+                files.push((path.to_owned(), role(path, paths)));
+            }
+        } else if let Some(language) = shorwatch_langs::unsupported_language(path) {
+            *unanalyzed.entry(language).or_insert(0) += 1;
         }
     }
     files.sort_by(|a, b| a.0.cmp(&b.0));
     files.dedup_by(|a, b| a.0 == b.0);
-    Ok(files)
+    Ok(Discovered { files, unanalyzed })
 }
 
 /// The role of `path`, judged by its path inside the scan root it was found
