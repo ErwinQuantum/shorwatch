@@ -1,0 +1,21 @@
+id: dotnet.bcl.sha1
+profile: sha1
+platform: dotnet
+
+# Deliberately not matched: HMACSHA1 and PBKDF2 over SHA-1, whose security
+# does not depend on collision resistance. `HashAlgorithmName.SHA1` is
+# skipped when it is an argument of those calls (see `unless_call`).
+patterns:
+  - call: { type: System.Security.Cryptography.SHA1, method: Create }
+  - call: { type: System.Security.Cryptography.SHA1, method: HashData }
+  - construct: { type: System.Security.Cryptography.SHA1Managed }
+  - construct: { type: System.Security.Cryptography.SHA1CryptoServiceProvider }
+  - construct: { type: System.Security.Cryptography.SHA1Cng }
+  # Not when given to a key-derivation or HMAC call, which do not rely on collision
+  # resistance.
+  - field:
+      type: System.Security.Cryptography.HashAlgorithmName
+      matches: '^SHA1$'
+      unless_call: '^(Pbkdf2|Rfc2898DeriveBytes|HmacData|TryHmacData|HmacDataAsync|CreateHMAC|DeriveKey|DeriveBytes|Extract|Expand)$'
+  - call: { type: System.Security.Cryptography.HashAlgorithm, method: Create, arg: { index: 0, matches: '(?i)^(SHA-?1?|System\.Security\.Cryptography\.SHA1(Managed|CryptoServiceProvider|Cng)?)$' } }
+  - call: { type: System.Security.Cryptography.CryptoConfig, method: CreateFromName, arg: { index: 0, matches: '(?i)^(SHA-?1?|System\.Security\.Cryptography\.SHA1(Managed|CryptoServiceProvider|Cng)?)$' } }

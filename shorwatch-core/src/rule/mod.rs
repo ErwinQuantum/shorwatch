@@ -119,6 +119,10 @@ pub enum Pattern {
         owner: String,
         #[serde(default)]
         matches: Option<String>,
+        /// Skips the read when it is an argument of a method whose name
+        /// matches this regex (`HashAlgorithmName.SHA1` given to PBKDF2).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        unless_call: Option<String>,
     },
     /// A string literal anywhere in the code whose value matches `matches`.
     /// Only for names specific enough to stand alone (`TLS_ECDHE_RSA_...`):

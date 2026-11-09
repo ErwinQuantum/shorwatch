@@ -57,6 +57,9 @@ verify, then drop the old one.
 
 ## Where Shorwatch finds it
 
+- **.NET:** `SHA1.Create`, `SHA1.HashData`, `SHA1Managed`,
+  `SHA1CryptoServiceProvider`, `SHA1Cng`, `HashAlgorithmName.SHA1` and the name
+  "SHA1" given to `HashAlgorithm.Create`. `HMACSHA1` is not reported.
 - **JCA:** `MessageDigest.getInstance` with `SHA`, `SHA-1`, `SHA1` or the
   digest OID, and `Signature.getInstance` with any `SHA1with…` name, the older
   aliases (`DSAWithSHA1`, `SHAwithDSA`, `SHA1/DSA`) and the SHA-1 signature
@@ -77,6 +80,10 @@ verify, then drop the old one.
 
 ## False positives and limits
 
+- In .NET, `HashAlgorithmName.SHA1` is also what PBKDF2, HKDF and HMAC take.
+  It is skipped when it is an argument of `Rfc2898DeriveBytes` (the constructor or
+  `Pbkdf2`), `HmacData`, `CreateHMAC` or `HKDF`'s methods; `HMAC.HashData` shares its
+  name with plain hashing, so an HMAC computed that way is reported.
 - Shorwatch can't tell a SHA-1 used as a fingerprint or cache key from one
   protecting a signature. If nothing an attacker controls depends on it, the
   finding is lower priority.

@@ -1,0 +1,11 @@
+id: dotnet.bcl.3des
+profile: 3des
+platform: dotnet
+
+# Triple DES under its .NET names: `TripleDES.Create()` and the concrete classes.
+patterns:
+  - call: { type: System.Security.Cryptography.TripleDES, method: Create }
+  - construct: { type: System.Security.Cryptography.TripleDESCryptoServiceProvider }
+  - construct: { type: System.Security.Cryptography.TripleDESCng }
+  - call: { type: System.Security.Cryptography.SymmetricAlgorithm, method: Create, arg: { index: 0, matches: '(?i)^(3DES|Triple ?DES|System\.Security\.Cryptography\.TripleDES(CryptoServiceProvider|Cng)?)$' } }
+  - call: { type: System.Security.Cryptography.CryptoConfig, method: CreateFromName, arg: { index: 0, matches: '(?i)^(3DES|Triple ?DES|System\.Security\.Cryptography\.TripleDES(CryptoServiceProvider|Cng)?)$' } }

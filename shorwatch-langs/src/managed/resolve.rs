@@ -1,14 +1,14 @@
-//! Phase two of a JVM lowering: once the whole file has been traversed,
+//! Phase two of a managed-language lowering: once the whole file has been traversed,
 //! pending facts are resolved. Receivers get their declared types, names
 //! their constant or injected values, member imports their owners.
 
-use super::{ArgSource, JvmFile, LocalCall, Pending, PendingArg, Receiver, starts_uppercase};
+use super::{ArgSource, LocalCall, ManagedFile, Pending, PendingArg, Receiver, starts_uppercase};
 use shorwatch_core::Language;
 use shorwatch_core::ir::{
     Arg, ArgValue, CallOwner, CallRef, FactKind, ScopeId, ScopeKind, SourceUnit, TypeDecl, TypeRef,
 };
 
-impl JvmFile {
+impl ManagedFile {
     /// A `@ConfigurationProperties` type's fields hold what the configuration
     /// says under `<prefix>.<field>` (Spring binds them through setters or the
     /// constructor), like an `@Value` field. A literal initializer is the
@@ -88,8 +88,8 @@ impl JvmFile {
                     ty: self.type_ref(&ty),
                     args: self.resolve_args(args, scope),
                 },
-                Pending::Field { owner, name } => match self.field_owner(&owner, scope) {
-                    Some(owner) => FactKind::Field { owner, name },
+                Pending::Field { owner, name, calls } => match self.field_owner(&owner, scope) {
+                    Some(owner) => FactKind::Field { owner, name, calls },
                     None => continue,
                 },
                 Pending::StaticMember(name) => {
@@ -97,7 +97,11 @@ impl JvmFile {
                         continue;
                     }
                     let owner = TypeRef::qualified(self.static_imports[&name].clone());
-                    FactKind::Field { owner, name }
+                    FactKind::Field {
+                        owner,
+                        name,
+                        calls: Vec::new(),
+                    }
                 }
                 Pending::Ready(kind) => kind,
             };
@@ -237,6 +241,9 @@ impl JvmFile {
 
     /// Resolves a type name as written to the most precise [`TypeRef`] possible.
     pub(super) fn type_ref(&self, name: &str) -> TypeRef {
+        if self.unit.language() == Language::CSharp {
+            return self.dotnet_type_ref(name);
+        }
         match name.split_once('.') {
             // `java.security.KeyPairGenerator`: already fully qualified.
             Some((first, _)) if !starts_uppercase(first) => TypeRef::qualified(name),
@@ -251,6 +258,41 @@ impl JvmFile {
                 None => self.unimported(name),
             },
         }
+    }
+
+    /// C#: `using` imports namespaces, and namespaces are capitalised like
+    /// types, so a dotted name is never told apart by its case. An alias
+    /// expands (`using R = System.Security.Cryptography.RSA;`); a type of this
+    /// file is qualified; anything else can come from the global namespace
+    /// (the name is already qualified), an enclosing namespace or a `using`.
+    fn dotnet_type_ref(&self, name: &str) -> TypeRef {
+        let (first, rest) = match name.split_once('.') {
+            Some((first, rest)) => (first, Some(rest)),
+            None => (name, None),
+        };
+        if let Some(target) = self.imports.get(first) {
+            return TypeRef::qualified(match rest {
+                Some(rest) => format!("{target}.{rest}"),
+                None => target.clone(),
+            });
+        }
+        if rest.is_none()
+            && let Some(local) = self.local_type(name)
+        {
+            return TypeRef::qualified(local);
+        }
+        // `Acme.Auth` is searched as `Acme.Auth` and as `Acme`.
+        let mut namespaces = Vec::new();
+        let mut namespace = self.package.as_str();
+        while !namespace.is_empty() {
+            namespaces.push(namespace.to_owned());
+            namespace = namespace.rsplit_once('.').map_or("", |(outer, _)| outer);
+        }
+        let packages = std::iter::once(String::new())
+            .chain(namespaces)
+            .chain(self.on_demand_imports.iter().cloned())
+            .collect();
+        TypeRef::in_packages(name, packages)
     }
 
     /// The fully qualified name of the only type of this file named `name`.

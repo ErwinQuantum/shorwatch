@@ -56,6 +56,8 @@ writing with 3DES in the meantime.
 
 ## Where Shorwatch finds it
 
+- **.NET:** `TripleDES.Create`, `TripleDESCryptoServiceProvider` and
+  `TripleDESCng`.
 - **JCA:** `DESede`, `TripleDES` and `3DES` as `Cipher`, `KeyGenerator` and
   `SecretKeyFactory` names (`DESede/CBC/PKCS5Padding`), the key-wrapping
   `DESedeWrap`, the password-based `PBEWithMD5AndTripleDES` and

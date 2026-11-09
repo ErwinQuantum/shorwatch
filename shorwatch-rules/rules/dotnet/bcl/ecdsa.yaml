@@ -1,0 +1,13 @@
+id: dotnet.bcl.ecdsa
+profile: ecdsa
+platform: dotnet
+
+# `ECDsa.Create()` and the concrete classes of System.Security.Cryptography.
+patterns:
+  - call: { type: System.Security.Cryptography.ECDsa, method: Create }
+  - construct: { type: System.Security.Cryptography.ECDsaCng }
+  - construct: { type: System.Security.Cryptography.ECDsaOpenSsl }
+  - call: { type: System.Security.Cryptography.X509Certificates.X509Certificate2, method: GetECDsaPublicKey }
+  - call: { type: System.Security.Cryptography.X509Certificates.X509Certificate2, method: GetECDsaPrivateKey }
+  - call: { type: System.Security.Cryptography.CryptoConfig, method: CreateFromName, arg: { index: 0, matches: '(?i)^(ECDsa|ECDSA_P(256|384|521)|System\.Security\.Cryptography\.ECDsa(Cng)?)$' } }
+  - call: { type: System.Security.Cryptography.AsymmetricAlgorithm, method: Create, arg: { index: 0, matches: '(?i)^(ECDsa|ECDSA_P(256|384|521)|System\.Security\.Cryptography\.ECDsa(Cng)?)$' } }

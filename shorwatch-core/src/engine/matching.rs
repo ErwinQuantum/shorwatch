@@ -61,13 +61,21 @@ pub(super) fn match_pattern<'a>(
             (args, arg)
         }
         (
-            CompiledPattern::Field { owner, name },
+            CompiledPattern::Field {
+                owner,
+                name,
+                unless_call,
+            },
             FactKind::Field {
                 owner: actual,
                 name: field,
+                calls,
             },
         ) => {
-            return (actual.is(owner) && optional(name, field)).then_some(Match::NONE);
+            let excluded = unless_call
+                .as_ref()
+                .is_some_and(|re| calls.iter().any(|call| re.is_match(call)));
+            return (actual.is(owner) && optional(name, field) && !excluded).then_some(Match::NONE);
         }
         (
             CompiledPattern::Literal {

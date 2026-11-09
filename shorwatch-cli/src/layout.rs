@@ -1,7 +1,7 @@
 //! Telling test code from production code by project layout: the Maven and
 //! Gradle conventions (`src/test`, `src/integrationTest`, Kotlin
-//! Multiplatform's `src/jvmTest`, Android's `src/androidTest`), test
-//! directories, and test class names.
+//! Multiplatform's `src/jvmTest`, Android's `src/androidTest`), .NET test
+//! projects (`Acme.Tests/`), test directories, and test class names.
 
 use std::path::Path;
 
@@ -35,6 +35,9 @@ pub fn role(path: &Path) -> CodeRole {
         TEST_DIRS.contains(&dir.as_str())
             // Gradle source sets: `src/integrationTest`, `src/jvmTest`.
             || (i > 0 && dirs[i - 1] == "src" && (dir.ends_with("Test") || dir.ends_with("Tests")))
+            // .NET test projects: `Acme.Tests`, `Acme.UnitTests`, `Acme.Test`.
+            || dir.ends_with("Tests")
+            || dir.ends_with(".Test")
     });
     let stem = Path::new(file)
         .file_stem()
@@ -68,6 +71,9 @@ mod tests {
             "app/src/androidTest/java/Keys.java",
             "src/testFixtures/java/Keys.java",
             "testsuite/integration/src/main/java/Helper.java",
+            "src/Acme.Payments.Tests/SignerTests.cs",
+            "tests/Acme.UnitTests/Keys.cs",
+            "Acme.Test/Keys.cs",
         ] {
             assert_eq!(role_of(path), CodeRole::Test, "{path}");
         }
@@ -89,6 +95,7 @@ mod tests {
             "src/main/java/com/acme/Attestation.java",
             "src/main/resources/application.yml",
             "Keys.kt",
+            "src/Acme.Payments/Signer.cs",
         ] {
             assert_eq!(role_of(path), CodeRole::Production, "{path}");
         }

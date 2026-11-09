@@ -1,0 +1,11 @@
+id: dotnet.bcl.ecdh
+profile: ecdh
+platform: dotnet
+
+# `ECDiffieHellman.Create()` and the concrete classes of System.Security.Cryptography.
+patterns:
+  - call: { type: System.Security.Cryptography.ECDiffieHellman, method: Create }
+  - construct: { type: System.Security.Cryptography.ECDiffieHellmanCng }
+  - construct: { type: System.Security.Cryptography.ECDiffieHellmanOpenSsl }
+  - call: { type: System.Security.Cryptography.CryptoConfig, method: CreateFromName, arg: { index: 0, matches: '(?i)^(ECDiffieHellman|ECDH_P(256|384|521)|System\.Security\.Cryptography\.ECDiffieHellman(Cng)?)$' } }
+  - call: { type: System.Security.Cryptography.AsymmetricAlgorithm, method: Create, arg: { index: 0, matches: '(?i)^(ECDiffieHellman|ECDH_P(256|384|521)|System\.Security\.Cryptography\.ECDiffieHellman(Cng)?)$' } }

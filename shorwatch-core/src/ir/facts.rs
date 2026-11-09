@@ -213,7 +213,15 @@ pub enum FactKind {
     Construct { ty: TypeRef, args: Vec<Arg> },
     /// A read of a static field or enum constant, e.g. `JWSAlgorithm.RS256`.
     /// Crypto libraries often name algorithms this way instead of by string.
-    Field { owner: TypeRef, name: String },
+    Field {
+        owner: TypeRef,
+        name: String,
+        /// The methods of the calls the read is an argument of, innermost
+        /// first (see [`FactKind::Literal`]): `Pbkdf2` for
+        /// `Pbkdf2(pw, salt, n, HashAlgorithmName.SHA1, 32)`.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        calls: Vec<String>,
+    },
     /// An import (or equivalent). Imports apply to the whole file.
     Import { path: String },
     /// A string literal anywhere in the code.

@@ -11,7 +11,7 @@
 //! reported as unknown. That is the job of the future taint-analysis layer.
 //!
 //! - this module: the traversal (phase one) and node helpers;
-//! - [`crate::jvm`]: phase two, shared with Kotlin;
+//! - [`crate::managed`]: phase two, shared with Kotlin;
 //! - [`literals`]: decoding Java string and integer literals.
 
 use std::collections::HashSet;
@@ -20,8 +20,8 @@ use shorwatch_core::Language;
 use shorwatch_core::ir::{ArgValue, FactKind, Location, ScopeId, ScopeKind, SourceUnit};
 use tree_sitter::{Node, Parser};
 
-use crate::jvm::{
-    ArgSource, Assignment, JvmFile, MAX_CHAIN, Pending, PendingArg, Receiver, Symbol,
+use crate::managed::{
+    ArgSource, Assignment, MAX_CHAIN, ManagedFile, Pending, PendingArg, Receiver, Symbol,
     starts_uppercase,
 };
 use crate::{Frontend, LangError, span};
@@ -62,7 +62,7 @@ impl Frontend for JavaFrontend {
 
 struct Lowering<'s> {
     src: &'s str,
-    file: JvmFile,
+    file: ManagedFile,
     /// Interfaces and annotation types, whose fields are implicitly constant.
     interfaces: HashSet<ScopeId>,
 }
@@ -71,7 +71,7 @@ impl<'s> Lowering<'s> {
     fn new(path: &str, src: &'s str) -> Self {
         Self {
             src,
-            file: JvmFile::new(path, Language::Java),
+            file: ManagedFile::new(path, Language::Java),
             interfaces: HashSet::new(),
         }
     }
@@ -538,7 +538,8 @@ impl<'s> Lowering<'s> {
         }
         let owner: String = self.text(object).split_whitespace().collect();
         let name = name.to_owned();
-        self.defer(Pending::Field { owner, name }, scope, node);
+        let calls = enclosing_calls(node, self.src);
+        self.defer(Pending::Field { owner, name, calls }, scope, node);
         None
     }
 

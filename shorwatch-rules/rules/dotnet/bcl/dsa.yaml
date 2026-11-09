@@ -1,0 +1,14 @@
+id: dotnet.bcl.dsa
+profile: dsa
+platform: dotnet
+
+# `DSA.Create()` and the concrete classes of System.Security.Cryptography.
+patterns:
+  - call: { type: System.Security.Cryptography.DSA, method: Create }
+  - construct: { type: System.Security.Cryptography.DSACryptoServiceProvider }
+  - construct: { type: System.Security.Cryptography.DSACng }
+  - construct: { type: System.Security.Cryptography.DSAOpenSsl }
+  - call: { type: System.Security.Cryptography.X509Certificates.X509Certificate2, method: GetDSAPublicKey }
+  - call: { type: System.Security.Cryptography.X509Certificates.X509Certificate2, method: GetDSAPrivateKey }
+  - call: { type: System.Security.Cryptography.CryptoConfig, method: CreateFromName, arg: { index: 0, matches: '(?i)^(DSA|System\.Security\.Cryptography\.DSA(CryptoServiceProvider)?)$' } }
+  - call: { type: System.Security.Cryptography.AsymmetricAlgorithm, method: Create, arg: { index: 0, matches: '(?i)^(DSA|System\.Security\.Cryptography\.DSA(CryptoServiceProvider)?)$' } }

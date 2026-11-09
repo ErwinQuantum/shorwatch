@@ -61,6 +61,8 @@ concatenation is not a key.
   classes, `X25519Agreement` / `X448Agreement` and their key pair generators.
 - **Tink:** the ECIES and HPKE templates with a classical DH-KEM.
 - **OpenPGP:** the ECDH, X25519 and X448 public key tags.
+- **.NET:** `ECDiffieHellman.Create`, `ECDiffieHellmanCng` and
+  `ECDiffieHellmanOpenSsl`.
 - **JSch and Apache SSHD:** the `ecdh-sha2-nistp*` and `curve25519`/`curve448`
   key exchanges.
 - **OpenSAML:** the ECDH key agreement constants.
