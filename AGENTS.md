@@ -10,7 +10,7 @@ untracked notes can go in a git-ignored `AGENTS.local.md` (or
 Shorwatch is a SAST tool in Rust that finds quantum-vulnerable cryptography in
 source code and configuration, and suggests migrating to the NIST post-quantum
 standards (FIPS 203 ML-KEM, FIPS 204 ML-DSA). It analyzes statically through
-tree-sitter (no compiling, no binaries): **Java** and **Kotlin** sources plus
+tree-sitter (no compiling, no binaries): **Java**, **Kotlin** and **C#** sources plus
 **YAML / `.properties`** configuration (Spring Boot), the **key material**
 a repository holds (certificates, keys, keystores) and the cryptographic
 **libraries its build files declare** (`pom.xml`, Gradle, version catalogs). Everything in the repo
@@ -22,7 +22,7 @@ a repository holds (certificates, keys, keystores) and the cryptographic
 |---|---|---|
 | `shorwatch-core` | Pure domain: IR (`SourceUnit`, `Fact`, `Scope`), rule model + validation, engine (`analyze`), cross-file `link`, `Finding`, and the dependency `inventory` (`LibraryCatalog`, `Dependency`). **No I/O.** | serde, regex, thiserror only |
 | `shorwatch-rules` | Built-in YAML rules and known libraries (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` / `load_dir_libraries` for external ones | core |
-| `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng), both on the shared `jvm` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written); `MavenFrontend` (`pom.xml`, quick-xml events), `GradleFrontend` (a tokenizer), `VersionCatalogFrontend` (line-based TOML), which a file's exact *name* selects (`for_path`). Nothing tree-sitter leaks out | core |
+| `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng) and `CSharpFrontend` (tree-sitter-c-sharp), all on the shared `managed` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written); `MavenFrontend` (`pom.xml`, quick-xml events), `GradleFrontend` (a tokenizer), `VersionCatalogFrontend` (line-based TOML), which a file's exact *name* selects (`for_path`). Nothing tree-sitter leaks out | core |
 | `shorwatch-report` | Pure renderers over a `Scan` (findings, sources, `projects`, `links`: editor `vscode://` root only for the temporary report, repository host URL templates in CI): terminal (banner; summary + HTML report link by default, `--overview`, `--details`, `--compact`, the failing verdict), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only, CSP forbids the network; an editorial cover + hash-routed chapters `#/findings?sev=&project=&alg=&cat=&f=`, grouped by file, tests folded) | core |
 | `shorwatch-cli` | `shorwatch [scan]` (no command = scan) / `report` (scan + open) / `ci` (SARIF + HTML in `shorwatch-report/`, CI artifact links) / `open` (last HTML report, in the browser) / `rules`; `--watch` polls mtimes: clap args, `ignore` walker, `layout` (test vs production code by path), `projects` (top-most build roots of a scanned folder), rayon pipeline (one `link` per project), output (`--html`, temporary HTML on terminals, `--report-url`), exit codes (`--fail-on`, `--fail-severity`) | all |
 
@@ -42,8 +42,8 @@ core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: mode
            engine/{mod: analyze + findings, matching, hybrid, fix}
            link/{mod, library, hierarchy, receivers, flow, config}  finding.rs
 rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules, libraries)  error.rs  build.rs
-langs/src/ jvm/{mod: JvmFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
-           kotlin/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
+langs/src/ managed/{mod: ManagedFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
+           kotlin/{mod: traversal, syntax, literals}  csharp/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
            build/{mod, maven, gradle, catalog}  depth.rs (nesting bound)
@@ -59,8 +59,9 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
 
 - `shorwatch-core` never imports cli/report/langs, never touches the file system.
 - Rules are data. A new detection must not require touching the engine.
-- Rules target a **platform** (`jvm`, `config`), not a language: JVM rules
-  describe library APIs that Java and Kotlin call identically.
+- Rules target a **platform** (`jvm`, `dotnet`, `config`), not a language: JVM
+  rules describe library APIs that Java and Kotlin call identically, .NET
+  rules the ones C# calls.
 - **Scanned repositories are untrusted.** Text from them reaches reports
   only through `printable` (no control characters) and, in HTML, only as
   `textContent`; links in the page are limited to `#`, `http(s)://` and
@@ -83,7 +84,7 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
 - Every Shor rule must reference FIPS 203 or FIPS 204 (enforced by a test).
 - Values resolve, in order: a literal, a same-file `final` constant, a static
   constant/import, an `@Value` field/parameter used directly; otherwise
-  **in-file data flow** (`langs/src/jvm/flow.rs`): assignments (initializers
+  **in-file data flow** (`langs/src/managed/flow.rs`): assignments (initializers
   included), parameters fed by calls in the same file, returns of the file's
   methods, concatenations, `?:`/`switch`/`if`/`when` branches. It yields
   `ArgValue::OneOf` candidates, each with its `FlowStep` path, which becomes
@@ -163,9 +164,9 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
 
 ### Frontends
 
-- **JVM resolver** (`langs/src/jvm/`): phase one (a frontend's traversal)
-  fills a `JvmFile` (scopes, imports, member imports, symbols, pending
-  facts); `JvmFile::resolve` (phase two) is shared by Java and Kotlin.
+- **Managed resolver** (`langs/src/managed/`, JVM and .NET): phase one (a frontend's traversal)
+  fills a `ManagedFile` (scopes, imports, member imports, symbols, pending
+  facts); `ManagedFile::resolve` (phase two) is shared by Java, Kotlin and C#.
   `Receiver::Type` carries a type known from syntax (Kotlin implicit receivers).
 - **Java** (`langs/src/java/`: `mod.rs` traversal, `literals.rs`,
   `syntax.rs`, `tests.rs`): two-phase lowering (collect
@@ -176,6 +177,14 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   instance fields dropped. Single static imports resolve bare constants and
   unqualified calls unless shadowed. `@Value("${key:default}")` on fields and
   parameters → `ArgValue::Injected` (SpEL `#{}` ignored).
+- **C#** (`langs/src/csharp/`): `using` imports a *namespace*, so a type name
+  can come from any imported one (`TypeRef::packages`; `TypeRef::is` compares
+  `package.name`, never by case, since namespaces are capitalised too); aliases
+  expand (`using R = System.Security.Cryptography.RSA;`). A property
+  assignment is the call `x.set_Prop(value)` (`aes.KeySize = 128`), `const` and
+  `readonly` are `final`, `new()` takes the declared type, `a?.B()` is a call on
+  `a`. One namespace per file is assumed. Not yet: object initializers
+  (`new X { Prop = v }`), `using static`, `global using` from other files.
 - **Kotlin** (`langs/src/kotlin/`): `Name(...)` is a constructor when `Name`
   looks like a type (upper-case start *and* a lower-case letter, so `RSA256(...)`
   stays a call); member imports (`...JWSAlgorithm.RS256`) = Java static
@@ -212,10 +221,12 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
 - `TypeRef::packages`: a name no import qualifies can only be a type of the
   file's package, an `import a.b.*` package or an implicit one (`java.lang`,
   Kotlin defaults); a Java 25 `import module` lifts the restriction.
-- `FactKind::Literal::calls`: the methods the literal is an argument of,
-  innermost first, up to the enclosing block or lambda. `literal` patterns
-  use it for `unless_call` (`setExcludeCipherSuites`) and `in_call` (only
-  inside `setNamedGroups`). A `call` pattern may constrain a second argument
+- `FactKind::Literal::calls` and `FactKind::Field::calls`: the methods the
+  literal or static read is an argument of, innermost first, up to the enclosing
+  block or lambda (a C# constructor counts as a call). `literal` patterns use
+  it for `unless_call` (`setExcludeCipherSuites`) and `in_call` (only inside
+  `setNamedGroups`); `field` patterns for `unless_call` (`HashAlgorithmName.SHA1`
+  given to `Pbkdf2`). A `call` pattern may constrain a second argument
   with `with_arg` (`System.setProperty("jdk.tls.namedGroups", value)`).
 - `SourceUnit::role` (`CodeRole::Production | Test`) is set by whoever knows
   the project layout (the CLI's `layout.rs`, from the path relative to the
@@ -249,7 +260,7 @@ Profiles (17): `rsa dh ecdh ecdsa ec eddsa dsa elgamal` (shor, high),
 medium, no fix), `jose-rsa jose-ecdsa jose-eddsa jose-ecdh` (shor, JWT advice),
 `jose-aes-128` (grover), `tls-key-exchange` (shor, TLS suites).
 
-Libraries (142 rules): `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
+Libraries (149 rules): `dotnet/` bcl (System.Security.Cryptography) · `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
 jsch, apache-sshd, tls (suite-name literals, `jdk.tls.namedGroups`), okhttp,
 aws-kms, azure-keyvault, gcp-kms, tink, opensaml,
 xml-security (JSR 105 + Santuario), android-keystore, spring-security, jjwt,

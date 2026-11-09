@@ -560,6 +560,7 @@ the same findings.
 | Spring Boot config: `jws-algorithms`, `public-key-location`, `jwk-set-uri` (RS256 default), TLS cipher suites (`*.ssl.ciphers`); Quarkus MicroProfile JWT keys without an algorithm (RS256 default); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Crypto inside compiled `.jar` dependencies (their types are read with `--classpath`, their code is not analyzed) |
 | Values injected with `@Value("${key:default}")`, and the fields of `@ConfigurationProperties` classes (Java classes and records, Kotlin classes and data classes, relaxed binding `key-type` = `keyType`), resolved against every profile's config file; a field's initializer is the default when the key is absent | Nested objects (`prefix.nested.field`), collections and `@Bean @ConfigurationProperties` methods |
 | Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
+| **C# (new, unreleased):** the base class library's RSA, ECDsa, ECDiffieHellman, DSA, SHA-1, Triple DES and `KeySize = 128` on AES, with `using` aliases, constants and cross-file data flow | NuGet packages, JSON configuration, JWT libraries, BouncyCastle for .NET |
 | OpenPGP (BouncyCastle `bcpg`): key, hash and symmetric algorithm tags | The algorithm of keys read from existing key rings |
 | SSH: JSch key types and `setConfig` algorithm lists, Apache MINA SSHD signature and key-exchange factories, host key algorithms | Library defaults when nothing is configured |
 | XML Signature and Encryption (SAML, WS-Security): JSR 105 `SignatureMethod`/`DigestMethod`, Apache Santuario, OpenSAML `SignatureConstants`/`EncryptionConstants` | Algorithm URIs written as strings |
@@ -636,7 +637,7 @@ shorwatch-core     Pure domain: intermediate code model, rule model and
                    validation, evaluation engine, cross-file linking. No I/O.
 shorwatch-rules    Built-in YAML rules, loader and schema validation.
 shorwatch-langs    Frontends that lower files into the core's intermediate
-                   model: Java and Kotlin (tree-sitter, sharing one JVM
+                   model: Java, Kotlin and C# (tree-sitter, sharing one
                    name resolver), YAML (tree-sitter), .properties, key
                    material (hand-written DER, PEM, keystore and SSH
                    readers), and class files for --classpath.

@@ -54,6 +54,8 @@ long-lived with the new scheme.
   `DSAWithSHA1`, `RawDSA` and the signature OID), `KeyPairGenerator`,
   `KeyFactory` and `AlgorithmParameterGenerator` with `DSA`, and
   `DSAParameterSpec` / `DSAPublicKeySpec` / `DSAPrivateKeySpec`.
+- **.NET:** `DSA.Create`, `DSACryptoServiceProvider`, `DSACng`, `DSAOpenSsl` and
+  `GetDSAPublicKey` / `GetDSAPrivateKey` on a certificate.
 - **BouncyCastle:** `DSASigner`, `DSAKeyPairGenerator` and
   `DSAParametersGenerator`; with bcpkix, the certificate signer builders
   (`SHA256withDSA`, `BcDSAContentSignerBuilder`).

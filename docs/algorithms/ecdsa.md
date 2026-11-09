@@ -62,6 +62,8 @@ together so existing verifiers keep working.
 - **BouncyCastle:** `ECDSASigner`; with bcpkix, the certificate signer builders
   (`SHA256withECDSA`, `BcECContentSignerBuilder`).
 - **OpenPGP:** the ECDSA public key tag.
+- **.NET:** `ECDsa.Create`, `ECDsaCng`, `ECDsaOpenSsl` and `GetECDsaPublicKey` /
+  `GetECDsaPrivateKey` on a certificate.
 - **JSch and Apache SSHD:** `ecdsa-sha2-nistp*` in an algorithm list, the
   `HostKey.ECDSA*` and `KeyPairProvider.ECDSA_SHA2_NISTP*` key type constants,
   `KeyPair.ECDSA` and `BuiltinSignatures.nistp*`.

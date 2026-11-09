@@ -9,6 +9,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- **C# frontend** (tree-sitter-c-sharp) on the resolver Java and Kotlin share, now
+  named `managed`: `using`s and aliases, namespaces, types, `var` and target-typed
+  `new()`, `const` / `readonly` constants, property assignments as setter calls
+  (`aes.KeySize = 128`), `a?.B()`, call chains, and the same in-file and
+  cross-file data flow.
+- A `dotnet` platform and 7 rules for the base class library
+  (`System.Security.Cryptography`): RSA, ECDsa, ECDiffieHellman, DSA, SHA-1,
+  Triple DES and AES with a 128-bit key. Names checked against Microsoft's
+  documentation.
 - JOSE rules for **jose4j** (`AlgorithmIdentifiers`,
   `KeyManagementAlgorithmIdentifiers`, `ContentEncryptionAlgorithmIdentifiers`,
   the names passed to `setAlgorithmHeaderValue`, its RSA and EC JWK generators)
@@ -22,6 +31,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Classical groups passed to `SSLParameters.setNamedGroups`.
 - Two rule conditions: `with_arg` (a `call` constrains a second argument) and
   `in_call` (a `literal` counts only inside a named method).
+
+- Field reads know the call they are an argument of (`unless_call` on `field`
+  patterns): SHA-1 given to PBKDF2, HKDF or HMAC is not reported.
+- The scan skips `bin` and `obj` (.NET build output) and generated C#
+  (`*.Designer.cs`, `*.g.cs`, `*.generated.cs`, EF `*ModelSnapshot.cs`), and
+  recognises .NET test projects (`Acme.Tests/`) as test code.
 
 ### Fixed
 

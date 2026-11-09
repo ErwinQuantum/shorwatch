@@ -57,6 +57,10 @@ why Shorwatch does not offer a fix.
 
 ## Where Shorwatch finds it
 
+- **.NET:** `RSA.Create`, `RSACryptoServiceProvider`, `RSACng`, `RSAOpenSsl`,
+  the `RSAEncryptionPadding` and `RSASignaturePadding` values, `GetRSAPublicKey` /
+  `GetRSAPrivateKey` on a certificate, and the name "RSA" given to
+  `CryptoConfig.CreateFromName`.
 - **JCA:** `KeyPairGenerator`, `KeyFactory`, `Cipher` and `Signature` with an
   RSA name (`RSA`, `RSASSA-PSS`, `RSA/ECB/OAEP...`, `SHA256withRSA`...), and
   `RSAKeyGenParameterSpec`.
