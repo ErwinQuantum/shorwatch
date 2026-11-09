@@ -13,15 +13,17 @@ use thiserror::Error;
 pub mod build;
 pub mod bytecode;
 pub mod config;
+pub mod csharp;
 mod depth;
 pub mod java;
-mod jvm;
 pub mod keys;
 pub mod kotlin;
+mod managed;
 mod span;
 
 pub use build::{GradleFrontend, MavenFrontend, VersionCatalogFrontend};
 pub use config::{PropertiesFrontend, YamlFrontend};
+pub use csharp::CSharpFrontend;
 pub use java::JavaFrontend;
 pub use keys::KeyMaterialFrontend;
 pub use kotlin::KotlinFrontend;
@@ -80,6 +82,7 @@ pub fn frontends() -> Vec<Box<dyn Frontend>> {
     vec![
         Box::new(JavaFrontend),
         Box::new(KotlinFrontend),
+        Box::new(CSharpFrontend),
         Box::new(KeyMaterialFrontend),
         Box::new(PropertiesFrontend),
         Box::new(YamlFrontend),
