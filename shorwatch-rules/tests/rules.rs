@@ -62,8 +62,7 @@ impl From<Finding> for Compact {
 }
 
 fn lower(path: &Path) -> Option<SourceUnit> {
-    let extension = path.extension()?.to_str()?;
-    let frontend = shorwatch_langs::for_extension(extension)?;
+    let frontend = shorwatch_langs::for_path(path)?;
     let name = path.file_name().unwrap().to_string_lossy();
     Some(
         frontend
@@ -100,7 +99,7 @@ fn findings(path: &Path) -> Vec<Compact> {
 #[test]
 fn fixtures() {
     insta::glob!(
-        "fixtures/**/*.{java,kt,cs,yml,yaml,properties,pem,crt,der,key,pub,jks,p12}",
+        "fixtures/**/*.{java,kt,cs,json,yml,yaml,properties,pem,crt,der,key,pub,jks,p12}",
         |path| {
             let findings = findings(path);
             if path.file_stem().is_some_and(|s| s == "Clean") {
