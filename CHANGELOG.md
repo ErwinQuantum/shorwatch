@@ -9,6 +9,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- C# configuration: `appsettings.json`, its environment variants and
+  `local.settings.json` are read (comments and trailing commas allowed), and
+  `config["Jwt:Algorithm"]`, `GetValue<T>("Jwt:Algorithm", "RS256")`,
+  `GetSection("Jwt")["Algorithm"]` and `GetSection("Jwt:Algorithm").Value` are
+  injected values, resolved against every environment file like Spring
+  profiles. The existing `app` config rules apply to the JSON keys too.
+- Rules for BouncyCastle for .NET (RSA, DH, DSA, EC, ECDH, ECDSA, EdDSA,
+  ElGamal, SHA-1, 3DES: the lightweight classes and the `SignerUtilities`,
+  `GeneratorUtilities`, `CipherUtilities`, `DigestUtilities` and
+  `AgreementUtilities` factories) and for JWT with Microsoft.IdentityModel
+  (`SecurityAlgorithms`, `SigningCredentials`, `EncryptingCredentials`,
+  `RsaSecurityKey`, `ECDsaSecurityKey`, JWK key types).
 - NuGet inventory: the cryptographic packages a .NET project declares in
   `*.csproj`, `Directory.Packages.props` (central versions, scope `managed`) and
   `packages.config`, with `$(Property)` versions resolved. Seven .NET libraries

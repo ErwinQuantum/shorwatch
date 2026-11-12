@@ -160,8 +160,9 @@ Without a command, `shorwatch` is `shorwatch scan` (which scripts may keep
 using; a folder named like a command, say `report/`, is scanned with
 `shorwatch scan report/`). A scan walks the given paths respecting
 `.gitignore` (and skipping `target`, `build`, `node_modules`, `.gradle`, `bin` and
-`obj`, plus generated C# such as `*.Designer.cs`, `*.g.cs` and EF `*ModelSnapshot.cs`), analyzes `.java`, `.kt`, `.kts`, `.cs`, `.yml`, `.yaml` and
-`.properties` files in parallel, and resolves `@Value("${...}")` injections
+`obj`, plus generated C# such as `*.Designer.cs`, `*.g.cs` and EF `*ModelSnapshot.cs`), analyzes `.java`, `.kt`, `.kts`, `.cs`, `.yml`, `.yaml`,
+`.properties` and `appsettings*.json` files in parallel, and resolves `@Value("${...}")` injections (and, in C#,
+`IConfiguration` reads such as `config["Jwt:Algorithm"]`)
 against the project's configuration files. Source in a language Shorwatch has no frontend for
 (Python, Go, TypeScript...) is not analyzed, and the summary says so. Key material is read from `.pem`,
 `.crt`, `.cer`, `.der`, `.key`, `.pub`, `.csr`, `.jks`, `.jceks`, `.keystore`,
@@ -565,7 +566,7 @@ TypeScript...) is not analyzed, and every report says so (`NOT analyzed: 340
 Python`), so a scan with no findings is never mistaken for a clean one.
 
 Java, Kotlin and C# source code and its configuration (`application.yml`,
-`.properties`). Rules are written per platform, not per language: one JVM rule
+`.properties`, `appsettings.json`). Rules are written per platform, not per language: one JVM rule
 covers Java and Kotlin, and every Java test fixture has a Kotlin twin that must
 produce the same findings; C# has its own `dotnet` rules.
 
@@ -578,7 +579,7 @@ produce the same findings; C# has its own `dotnet` rules.
 | Spring Boot config: `jws-algorithms`, `public-key-location`, `jwk-set-uri` (RS256 default), TLS cipher suites (`*.ssl.ciphers`); Quarkus MicroProfile JWT keys without an algorithm (RS256 default); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Crypto inside compiled `.jar` dependencies (their types are read with `--classpath`, their code is not analyzed) |
 | Values injected with `@Value("${key:default}")`, and the fields of `@ConfigurationProperties` classes (Java classes and records, Kotlin classes and data classes, relaxed binding `key-type` = `keyType`), resolved against every profile's config file; a field's initializer is the default when the key is absent | Nested objects (`prefix.nested.field`), collections and `@Bean @ConfigurationProperties` methods |
 | Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
-| **C# (new, unreleased):** the base class library's RSA, ECDsa, ECDiffieHellman, DSA, SHA-1, Triple DES and `KeySize = 128` on AES, with `using` aliases, constants, properties, primary constructors, object initializers and cross-file data flow | JSON configuration (`appsettings.json`), JWT and BouncyCastle for .NET calls |
+| **C# (new, unreleased):** the base class library's RSA, ECDsa, ECDiffieHellman, DSA, SHA-1, Triple DES and `KeySize = 128` on AES; BouncyCastle for .NET (engines, key generators, signers and the `*Utilities` name factories); JWT through Microsoft.IdentityModel (`SecurityAlgorithms.RsaSha256`, `SigningCredentials`, `RsaSecurityKey`); with `using` aliases, constants, properties, primary constructors, object initializers, cross-file data flow, and `IConfiguration` reads resolved against `appsettings*.json` | The options pattern (`Configure<JwtOptions>`, `Bind`), environment-variable overrides, other JWT libraries' call sites |
 | OpenPGP (BouncyCastle `bcpg`): key, hash and symmetric algorithm tags | The algorithm of keys read from existing key rings |
 | SSH: JSch key types and `setConfig` algorithm lists, Apache MINA SSHD signature and key-exchange factories, host key algorithms | Library defaults when nothing is configured |
 | XML Signature and Encryption (SAML, WS-Security): JSR 105 `SignatureMethod`/`DigestMethod`, Apache Santuario, OpenSAML `SignatureConstants`/`EncryptionConstants` | Algorithm URIs written as strings |
@@ -659,7 +660,7 @@ shorwatch-core     Pure domain: intermediate code model, rule model and
 shorwatch-rules    Built-in YAML rules, loader and schema validation.
 shorwatch-langs    Frontends that lower files into the core's intermediate
                    model: Java, Kotlin and C# (tree-sitter, sharing one
-                   name resolver), YAML (tree-sitter), .properties, key
+                   name resolver), YAML (tree-sitter), .properties, JSON, key
                    material (hand-written DER, PEM, keystore and SSH
                    readers), and class files for --classpath.
 shorwatch-report   Output adapters: terminal, SARIF 2.1.0, CycloneDX CBOM,
@@ -695,8 +696,7 @@ reviewed. Security issues: see [SECURITY.md](SECURITY.md).
 - A post-quantum maturity score and the NIST IR 8547 deadlines per project
 - Beyond source code: infrastructure (nginx, Kubernetes, Terraform) and
   message brokers
-- C# beyond the base class library: NuGet packages, `appsettings.json`, JWT
-  libraries
+- C#: the options pattern, more JWT libraries
 - More configuration formats (Micronaut, Quarkus TLS)
 - More languages (Python, Go, TypeScript...)
 
