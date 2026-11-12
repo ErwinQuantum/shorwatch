@@ -1,0 +1,7 @@
+id: dotnet.identitymodel.jose-ecdh
+profile: jose-ecdh
+platform: dotnet
+
+patterns:
+  - field: { type: Microsoft.IdentityModel.Tokens.SecurityAlgorithms, matches: '^EcdhEs(A(128|192|256)kw)?$' }
+  - construct: { type: Microsoft.IdentityModel.Tokens.EncryptingCredentials, arg: { index: 1, matches: '^ECDH-ES(\+A(128|192|256)KW)?$' } }

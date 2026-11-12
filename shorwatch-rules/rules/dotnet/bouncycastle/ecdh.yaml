@@ -1,0 +1,23 @@
+id: dotnet.bouncycastle.ecdh
+profile: ecdh
+platform: dotnet
+
+# BouncyCastle for .NET (`BouncyCastle.Cryptography`, namespace Org.BouncyCastle): the
+# lightweight classes the caller builds, and the `*Utilities` factories that take an
+# algorithm name (the same names as the JCA ones in jvm/jca).
+patterns:
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.ECDHBasicAgreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.ECDHCBasicAgreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.ECDHWithKdfBasicAgreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.ECDHCWithKdfBasicAgreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.ECDHRawAgreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.ECMqvBasicAgreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.ECMqvWithKdfBasicAgreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.ECMqvRawAgreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.X25519Agreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Agreement.X448Agreement }
+  - construct: { type: Org.BouncyCastle.Crypto.Generators.X25519KeyPairGenerator }
+  - construct: { type: Org.BouncyCastle.Crypto.Generators.X448KeyPairGenerator }
+  - call: { type: Org.BouncyCastle.Security.AgreementUtilities, method: GetBasicAgreement, arg: { index: 0, matches: '(?i)^((ECDHC?|ECCDHU?|ECMQV)(with.+)?|(XDH|X25519|X448)U?(with.+)?|(OID\.)?1\.3\.101\.11[01])$' } }
+  - call: { type: Org.BouncyCastle.Security.GeneratorUtilities, method: GetKeyPairGenerator, arg: { index: 0, matches: '(?i)^((ECDHC?|ECMQV)(with.+)?|ECIES|XDH|X25519|X448|(OID\.)?(1\.3\.101\.11[01]|1\.3\.132\.1\.15\.[0-3]|1\.3\.133\.16\.840\.63\.0\.16))$' } }
+  - call: { type: Org.BouncyCastle.Security.CipherUtilities, method: GetCipher, arg: { index: 0, matches: '(?i)^ECIES(with[^/]+)?(/|$)' } }

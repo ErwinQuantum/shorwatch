@@ -1,0 +1,7 @@
+id: dotnet.identitymodel.ec
+profile: ec
+platform: dotnet
+
+# A JWK of key type "EC" can be an ECDSA or an ECDH key.
+patterns:
+  - field: { type: Microsoft.IdentityModel.Tokens.JsonWebAlgorithmsKeyTypes, matches: '^EllipticCurve$' }

@@ -1,0 +1,11 @@
+id: dotnet.bouncycastle.ecdsa
+profile: ecdsa
+platform: dotnet
+
+# BouncyCastle for .NET (`BouncyCastle.Cryptography`, namespace Org.BouncyCastle): the
+# lightweight classes the caller builds, and the `*Utilities` factories that take an
+# algorithm name (the same names as the JCA ones in jvm/jca).
+patterns:
+  - construct: { type: Org.BouncyCastle.Crypto.Signers.ECDsaSigner }
+  - call: { type: Org.BouncyCastle.Security.SignerUtilities, method: GetSigner, arg: { index: 0, matches: '(?i)^(ECD?DSA|DETECDSA|ECNR|ECDSAwith.+|(OID\.)?(1\.2\.840\.10045\.4\.(1|3\.[1-4])|2\.16\.840\.1\.101\.3\.4\.3\.(9|1[0-2])|1\.3\.36\.3\.3\.2\.[12]|1\.3\.6\.1\.5\.5\.7\.6\.3[23]|0\.4\.0\.127\.0\.7\.(1\.1\.4\.1|2\.2\.2\.2)\.\d+)|[\w-]+/(PLAIN-|CVC-)?ECDSA|.+with(PLAIN-|CVC-|DET)?(ECD?DSA|ECNR)(inP1363Format)?)$' } }
+  - call: { type: Org.BouncyCastle.Security.GeneratorUtilities, method: GetKeyPairGenerator, arg: { index: 0, matches: '(?i)^ECDSA$' } }
