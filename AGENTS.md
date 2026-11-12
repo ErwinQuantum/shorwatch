@@ -33,7 +33,8 @@ reported as *not analyzed* (`Scan::unanalyzed`, with `Scan::languages` for what
 was): a report must never read as clean for code it did not read.
 
 Pipeline (what the CLI does): lower every file with its frontend → group
-units by project → `link` each project's units → `analyze` each unit →
+units by project → `link` each project's units (code of one platform at a time:
+a Java call never feeds a C# method) → `analyze` each unit →
 make text from scanned files printable (`printable.rs`) → set suppressed
 findings aside (`suppress/`) → report. A scanned folder with no build file whose subfolders (2 levels) hold
 several build roots (`pom.xml`, Gradle, `.git`...) is several projects;
@@ -189,8 +190,12 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   expand (`using R = System.Security.Cryptography.RSA;`). A property
   assignment is the call `x.set_Prop(value)` (`aes.KeySize = 128`), `const` and
   `readonly` are `final`, `new()` takes the declared type, `a?.B()` is a call on
-  `a`. One namespace per file is assumed. Not yet: object initializers
-  (`new X { Prop = v }`), `using static`, `global using` from other files.
+  `a`. A property of a type is read like an accessor (`options.Algorithm`), a
+  record's components and a class's primary-constructor parameters (C# 12) take
+  the arguments of `new` like constructor parameters, and `new X { Prop = v }`
+  is the setter call `set_Prop(v)` on `X`. One namespace per file is assumed.
+  Not yet: `using static`, `global using` from other files, `IConfiguration`
+  lookups (they need the JSON frontend), enum constants.
 - **Kotlin** (`langs/src/kotlin/`): `Name(...)` is a constructor when `Name`
   looks like a type (upper-case start *and* a lower-case letter, so `RSA256(...)`
   stays a call); member imports (`...JWSAlgorithm.RS256`) = Java static

@@ -1,0 +1,11 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/dotnet-flow/Options.cs
+---
+- rule: dotnet.bcl.sha1
+  at: "24:31"
+  status: vulnerable
+  flow:
+    - "Vulnerable.cs:24: \"SHA1\" is written here"
+    - "Vulnerable.cs:24: passed as name to Hasher(...)"

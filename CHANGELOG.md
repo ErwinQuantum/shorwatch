@@ -9,6 +9,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- C# data flow across files: properties are read like accessors
+  (`options.Algorithm`), record components and primary-constructor parameters
+  take the arguments of `new`, and object initializers (`new Aes { KeySize = 128 }`)
+  are setter calls.
 - Every report says which languages it analyzed (`analyzed: 120 Java · 12 C#`)
   and which source files it skipped for want of a frontend (`NOT analyzed: 340
   Python · 80 Go`). Zero findings in a project of a language Shorwatch does not
@@ -43,6 +47,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - The scan skips `bin` and `obj` (.NET build output) and generated C#
   (`*.Designer.cs`, `*.g.cs`, `*.generated.cs`, EF `*ModelSnapshot.cs`), and
   recognises .NET test projects (`Acme.Tests/`) as test code.
+
+### Changed
+
+- `link` works on one platform at a time: a Java method never receives the
+  arguments of a C# call that shares its name and arity.
 
 ### Fixed
 

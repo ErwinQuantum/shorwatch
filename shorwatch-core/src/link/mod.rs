@@ -8,7 +8,7 @@
 //! define them ([`config`]). Compiled dependencies ([`Library`]) add the
 //! types and return types the sources do not declare.
 
-use crate::ir::{Arg, FactKind, Library, SourceUnit};
+use crate::ir::{Arg, FactKind, Library, Platform, SourceUnit};
 
 mod config;
 mod flow;
@@ -20,11 +20,35 @@ mod receivers;
 /// first, so data flow sees calls through them; data flow comes before
 /// config, since a value it brings from another file may be injected.
 /// `library` may be empty: without it, only the sources' own types are known.
+///
+/// Code is linked one platform at a time: a Java method never receives the
+/// arguments of a C# call that happens to share its name and arity. Config
+/// reaches every platform.
 pub fn link(units: &mut [SourceUnit], library: &Library) {
-    let relevant = library::relevant(library, units);
-    let hierarchy = hierarchy::Hierarchy::of(units, &relevant.types);
-    receivers::resolve(units, &relevant.methods, &hierarchy);
-    flow::resolve(units, &hierarchy);
+    for platform in [Platform::Jvm, Platform::Dotnet] {
+        let of_platform: Vec<usize> = (0..units.len())
+            .filter(|&i| units[i].language().platform() == platform)
+            .collect();
+        if of_platform.is_empty() {
+            continue;
+        }
+        // Moved out and back (a placeholder in between), so the phases see a
+        // contiguous slice of one platform's units.
+        let mut group: Vec<SourceUnit> = of_platform
+            .iter()
+            .map(|&i| {
+                let placeholder = SourceUnit::new("", units[i].language());
+                std::mem::replace(&mut units[i], placeholder)
+            })
+            .collect();
+        let relevant = library::relevant(library, &group);
+        let hierarchy = hierarchy::Hierarchy::of(&group, &relevant.types);
+        receivers::resolve(&mut group, &relevant.methods, &hierarchy);
+        flow::resolve(&mut group, &hierarchy);
+        for (&i, unit) in of_platform.iter().zip(group) {
+            units[i] = unit;
+        }
+    }
     config::inject(units);
 }
 

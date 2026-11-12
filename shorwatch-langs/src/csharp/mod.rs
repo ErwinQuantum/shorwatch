@@ -291,6 +291,7 @@ impl<'s> Lowering<'s> {
                 && ty != "var"
             {
                 let args = self.args(value);
+                self.initializer_setters(value, ty, scope);
                 self.defer(
                     Pending::Construct {
                         ty: ty.to_owned(),
@@ -331,6 +332,15 @@ impl<'s> Lowering<'s> {
         ) else {
             return;
         };
+        // Read like an accessor from other code (`options.Algorithm`).
+        if self.file.unit.scope(scope).kind == ScopeKind::Type {
+            let location = self.location(node);
+            self.file
+                .properties
+                .entry(scope)
+                .or_default()
+                .push((name.to_owned(), location));
+        }
         let value = node.child_by_field_name("value");
         let value = value
             .filter(|v| v.kind() == "arrow_expression_clause")
@@ -381,11 +391,15 @@ impl<'s> Lowering<'s> {
             )
         });
         // A record's components are its constructor's parameters and are
-        // read through the properties they declare.
+        // read through the properties they declare. A class's or struct's
+        // primary constructor (C# 12) takes parameters the same way, but
+        // declares no property.
         let of_record = owner.is_some_and(|d| {
             matches!(d.kind(), "record_declaration" | "record_struct_declaration")
         });
-        if of_method || of_record {
+        let of_primary =
+            owner.is_some_and(|d| matches!(d.kind(), "class_declaration" | "struct_declaration"));
+        if of_method || of_record || of_primary {
             self.file
                 .params
                 .entry(scope)
@@ -525,7 +539,54 @@ impl<'s> Lowering<'s> {
             return;
         };
         let args = self.args(node);
+        self.initializer_setters(node, &ty, scope);
         self.defer(Pending::Construct { ty, args }, scope, node);
+    }
+
+    /// `new Aes { KeySize = 128 }`: each assignment of the initializer sets a
+    /// property of the new object, the call `set_KeySize(128)` on its type.
+    fn initializer_setters(&mut self, creation: Node<'_>, ty: &str, scope: ScopeId) {
+        // A target-typed `new() { ... }` has no field name for it.
+        let initializer = creation.child_by_field_name("initializer").or_else(|| {
+            let mut cursor = creation.walk();
+            creation
+                .named_children(&mut cursor)
+                .find(|c| c.kind() == "initializer_expression")
+        });
+        let Some(initializer) = initializer else {
+            return;
+        };
+        let mut cursor = initializer.walk();
+        let assignments: Vec<_> = initializer
+            .named_children(&mut cursor)
+            .filter(|a| a.kind() == "assignment_expression")
+            .collect();
+        for assignment in assignments {
+            let (Some(left), Some(right)) = (
+                assignment.child_by_field_name("left"),
+                assignment.child_by_field_name("right"),
+            ) else {
+                continue;
+            };
+            if left.kind() != "identifier" {
+                continue;
+            }
+            let method = format!("set_{}", self.text(left));
+            let args = vec![self.pending(right)];
+            self.defer(
+                Pending::Call {
+                    receiver: Some(Receiver::Type {
+                        ty: ty.to_owned(),
+                        origin: None,
+                    }),
+                    method,
+                    args,
+                    chain: Vec::new(),
+                },
+                scope,
+                assignment,
+            );
+        }
     }
 
     /// `Owner.NAME`. The method of an invocation (`Owner.Create()`) is not a
@@ -572,7 +633,12 @@ impl<'s> Lowering<'s> {
         ) else {
             return;
         };
-        if !is_plain {
+        // `new X { Prop = v }` sets a property of the new object: see
+        // `initializer_setters`.
+        let in_initializer = node
+            .parent()
+            .is_some_and(|parent| parent.kind() == "initializer_expression");
+        if !is_plain || in_initializer {
             return;
         }
         match left.kind() {
