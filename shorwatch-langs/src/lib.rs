@@ -23,7 +23,7 @@ mod span;
 mod unsupported;
 
 pub use build::{GradleFrontend, MavenFrontend, NuGetFrontend, VersionCatalogFrontend};
-pub use config::{PropertiesFrontend, YamlFrontend};
+pub use config::{JsonFrontend, PropertiesFrontend, YamlFrontend};
 pub use csharp::CSharpFrontend;
 pub use java::JavaFrontend;
 pub use keys::KeyMaterialFrontend;
@@ -53,6 +53,13 @@ pub trait Frontend: Send + Sync {
     /// files too common in kind to claim by extension.
     fn file_names(&self) -> &'static [&'static str] {
         &[]
+    }
+
+    /// Whether this frontend handles a file of this exact name. By default,
+    /// the names in [`Frontend::file_names`]; a family of names
+    /// (`appsettings.*.json`) overrides it.
+    fn accepts(&self, name: &str) -> bool {
+        self.file_names().contains(&name)
     }
 
     /// `path` is only used as the unit's identifier; nothing is read from disk.
@@ -88,6 +95,7 @@ pub fn frontends() -> Vec<Box<dyn Frontend>> {
         Box::new(KeyMaterialFrontend),
         Box::new(PropertiesFrontend),
         Box::new(YamlFrontend),
+        Box::new(JsonFrontend),
         Box::new(MavenFrontend),
         Box::new(GradleFrontend),
         Box::new(VersionCatalogFrontend),
@@ -101,7 +109,7 @@ pub fn for_path(path: &Path) -> Option<Box<dyn Frontend>> {
     let name = path.file_name()?.to_str()?;
     frontends()
         .into_iter()
-        .find(|f| f.file_names().contains(&name))
+        .find(|f| f.accepts(name))
         .or_else(|| for_extension(path.extension()?.to_str()?))
 }
 

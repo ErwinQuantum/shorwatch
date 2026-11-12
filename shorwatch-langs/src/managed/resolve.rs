@@ -351,6 +351,7 @@ impl ManagedFile {
                     ArgSource::Concat(_)
                     | ArgSource::Choice(_)
                     | ArgSource::Call { .. }
+                    | ArgSource::Config { .. }
                     | ArgSource::MemberCall { .. } => (None, None),
                 };
                 if let Some(ArgValue::Injected { key, .. }) = &value {
