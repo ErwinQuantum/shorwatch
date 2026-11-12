@@ -303,3 +303,82 @@ fn a_field_read_knows_the_calls_it_is_passed_to() {
         ]
     );
 }
+
+#[test]
+fn an_object_initializer_sets_properties_of_the_new_object() {
+    let unit = lower(
+        r#"
+        using System.Security.Cryptography;
+        class A {
+            void Run() {
+                var aes = new AesManaged { KeySize = 128, Padding = PaddingMode.PKCS7 };
+                ECDsa e = new() { KeySize = 256 };
+            }
+        }
+        "#,
+    );
+    let setters: Vec<_> = calls(&unit)
+        .into_iter()
+        .filter(|c| c.1.starts_with("set_"))
+        .collect();
+    assert_eq!(setters.len(), 3, "{setters:?}");
+    assert!(
+        setters[0]
+            .0
+            .as_ref()
+            .unwrap()
+            .is("System.Security.Cryptography.AesManaged")
+    );
+    assert_eq!(setters[0].1, "set_KeySize");
+    assert_eq!(setters[0].2, [ArgValue::Int(128)]);
+    assert!(
+        setters[2]
+            .0
+            .as_ref()
+            .unwrap()
+            .is("System.Security.Cryptography.ECDsa")
+    );
+}
+
+#[test]
+fn an_initializer_assignment_is_not_an_assignment_to_a_local() {
+    // `KeySize` below is a property of the new object; it must not feed the
+    // variable of the same name.
+    let unit = lower(
+        r#"
+        using System.Security.Cryptography;
+        class A {
+            void Run() {
+                var KeySize = 256;
+                var aes = new AesManaged { KeySize = 128 };
+                Foo.Use(KeySize);
+            }
+        }
+        "#,
+    );
+    let used = calls(&unit).into_iter().find(|c| c.1 == "Use").unwrap();
+    assert_eq!(used.2[0].texts(), ["256"]);
+}
+
+#[test]
+fn properties_and_primary_constructors_are_published_for_other_files() {
+    let unit = lower(
+        r#"
+        namespace Acme;
+        public class Options {
+            public string Algorithm { get; set; } = "SHA1";
+        }
+        public class Hasher(string name) { }
+        public record Policy(string Digest);
+        "#,
+    );
+    let summaries: Vec<_> = unit
+        .methods()
+        .iter()
+        .map(|m| (m.owner.clone(), m.name.clone()))
+        .collect();
+    assert!(
+        summaries.contains(&("Acme.Options".to_owned(), "Algorithm".to_owned())),
+        "{summaries:?}"
+    );
+}
