@@ -2,7 +2,7 @@
 //! out. Like rules, it lives in YAML files (`shorwatch-rules`), so knowing a
 //! new library never touches the code.
 
-use regex::Regex;
+use regex::{Regex, RegexBuilder};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -37,7 +37,11 @@ pub struct LibrarySpec {
     pub role: Role,
     /// Maven coordinates that identify it: a dependency matches when its
     /// group and its artifact match one entry's regexes.
+    #[serde(default)]
     pub matches: Vec<Coordinates>,
+    /// NuGet package ids that identify it (regexes; ids ignore case).
+    #[serde(default)]
+    pub nuget: Vec<String>,
     /// From which version the library offers post-quantum algorithms, when it
     /// does. Absent: nothing is claimed either way.
     #[serde(default)]
@@ -91,6 +95,7 @@ pub struct LibraryCatalog {
 struct Compiled {
     spec: LibrarySpec,
     matches: Vec<(Regex, Regex)>,
+    nuget: Vec<Regex>,
 }
 
 impl LibraryCatalog {
@@ -112,7 +117,7 @@ impl LibraryCatalog {
             if spec.summary.trim().is_empty() {
                 return Err(empty("summary"));
             }
-            if spec.matches.is_empty() {
+            if spec.matches.is_empty() && spec.nuget.is_empty() {
                 return Err(empty("matches"));
             }
             if let Some(pq) = &spec.post_quantum {
@@ -144,7 +149,26 @@ impl LibraryCatalog {
                 .iter()
                 .map(|c| Ok((regex(&c.group)?, regex(&c.artifact)?)))
                 .collect::<Result<_, LibraryError>>()?;
-            libraries.push(Compiled { spec, matches });
+            // NuGet ids are case-insensitive: `newtonsoft.json` is `Newtonsoft.Json`.
+            let nuget = spec
+                .nuget
+                .iter()
+                .map(|pattern| {
+                    RegexBuilder::new(pattern)
+                        .case_insensitive(true)
+                        .build()
+                        .map_err(|e| LibraryError::InvalidRegex {
+                            id: id.clone(),
+                            pattern: pattern.clone(),
+                            reason: e.to_string(),
+                        })
+                })
+                .collect::<Result<_, LibraryError>>()?;
+            libraries.push(Compiled {
+                spec,
+                matches,
+                nuget,
+            });
         }
         Ok(Self { libraries })
     }
@@ -158,6 +182,14 @@ impl LibraryCatalog {
                     .iter()
                     .any(|(g, a)| g.is_match(group) && a.is_match(artifact))
             })
+            .map(|l| &l.spec)
+    }
+
+    /// The library the NuGet package `id` is, if known.
+    pub fn find_package(&self, id: &str) -> Option<&LibrarySpec> {
+        self.libraries
+            .iter()
+            .find(|l| l.nuget.iter().any(|p| p.is_match(id)))
             .map(|l| &l.spec)
     }
 

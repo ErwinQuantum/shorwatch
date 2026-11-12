@@ -255,7 +255,8 @@ pub enum FactKind {
         /// (alias "server"), valid until 2027-03-01`.
         label: String,
     },
-    /// A library a build file declares, as Maven coordinates.
+    /// A library a build file declares: Maven coordinates, or a NuGet package
+    /// (its id is the `artifact`; the `group` is empty).
     Dependency {
         group: String,
         artifact: String,
@@ -265,7 +266,8 @@ pub enum FactKind {
         #[serde(skip_serializing_if = "Option::is_none")]
         version: Option<String>,
         /// Maven `<scope>` or the Gradle configuration (`implementation`,
-        /// `testImplementation`...).
+        /// `testImplementation`...); `managed` for a version a central file
+        /// (`dependencyManagement`, `Directory.Packages.props`) sets.
         #[serde(skip_serializing_if = "Option::is_none")]
         scope: Option<String>,
     },

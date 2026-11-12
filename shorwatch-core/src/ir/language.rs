@@ -28,6 +28,10 @@ pub enum Language {
     /// A Gradle version catalog (`libs.versions.toml`).
     #[serde(rename = "version-catalog")]
     VersionCatalog,
+    /// A NuGet package list: an SDK-style project (`*.csproj`), `packages.config`
+    /// or `Directory.Packages.props`.
+    #[serde(rename = "nuget")]
+    NuGet,
 }
 
 impl Language {
@@ -43,6 +47,7 @@ impl Language {
             Language::Maven => "Maven",
             Language::Gradle => "Gradle",
             Language::VersionCatalog => "version catalog",
+            Language::NuGet => "NuGet",
         }
     }
 
@@ -52,7 +57,9 @@ impl Language {
             Language::CSharp => Platform::Dotnet,
             Language::Properties | Language::Yaml => Platform::Config,
             Language::KeyMaterial => Platform::Keys,
-            Language::Maven | Language::Gradle | Language::VersionCatalog => Platform::Build,
+            Language::Maven | Language::Gradle | Language::VersionCatalog | Language::NuGet => {
+                Platform::Build
+            }
         }
     }
 }
