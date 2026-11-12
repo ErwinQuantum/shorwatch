@@ -1,0 +1,10 @@
+id: dotnet.bouncycastle.ec
+profile: ec
+platform: dotnet
+
+# BouncyCastle for .NET (`BouncyCastle.Cryptography`, namespace Org.BouncyCastle): the
+# lightweight classes the caller builds, and the `*Utilities` factories that take an
+# algorithm name (the same names as the JCA ones in jvm/jca).
+patterns:
+  - construct: { type: Org.BouncyCastle.Crypto.Generators.ECKeyPairGenerator }
+  - call: { type: Org.BouncyCastle.Security.GeneratorUtilities, method: GetKeyPairGenerator, arg: { index: 0, matches: '(?i)^(EC|EllipticCurve|(OID\.)?(1\.2\.840\.10045\.2\.1|1\.3\.132\.1\.1[14]\.[0-3]|1\.3\.133\.16\.840\.63\.0\.[23]))$' } }

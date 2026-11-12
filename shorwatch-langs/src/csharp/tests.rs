@@ -382,3 +382,69 @@ fn properties_and_primary_constructors_are_published_for_other_files() {
         "{summaries:?}"
     );
 }
+
+/// The configuration keys the arguments of `Use` come from, `None` for an
+/// argument that does not read configuration.
+fn injected(source: &str) -> Vec<Option<(String, Option<String>)>> {
+    fn key(value: &ArgValue) -> Option<(String, Option<String>)> {
+        match value {
+            ArgValue::Injected { key, default, .. } => Some((key.clone(), default.clone())),
+            ArgValue::OneOf(candidates) => candidates.iter().find_map(|c| key(&c.value)),
+            _ => None,
+        }
+    }
+    calls(&lower(source))
+        .into_iter()
+        .filter(|c| c.1 == "Use")
+        .flat_map(|c| c.2)
+        .map(|v| key(&v))
+        .collect()
+}
+
+#[test]
+fn configuration_reads_are_injected_values_with_their_section_path() {
+    let found = injected(
+        r#"
+        using Microsoft.Extensions.Configuration;
+        class A {
+            IConfiguration _config;
+            void Run(IConfigurationSection section) {
+                Foo.Use(_config["Jwt:Algorithm"]);
+                Foo.Use(_config.GetValue<string>("Jwt:Alg", "RS256"));
+                Foo.Use(_config.GetSection("Jwt")["Algorithm"]);
+                Foo.Use(_config.GetSection("Jwt").GetSection("Inner").GetValue<string>("Name"));
+                Foo.Use(_config.GetSection("Jwt:Algorithm").Value);
+                Foo.Use(section["Direct"]);
+            }
+        }
+        "#,
+    );
+    let key = |k: &str, d: Option<&str>| Some((k.to_owned(), d.map(str::to_owned)));
+    assert_eq!(
+        found,
+        [
+            key("Jwt:Algorithm", None),
+            key("Jwt:Alg", Some("RS256")),
+            key("Jwt:Algorithm", None),
+            key("Jwt:Inner:Name", None),
+            key("Jwt:Algorithm", None),
+            key("Direct", None),
+        ]
+    );
+}
+
+#[test]
+fn an_indexer_of_something_else_is_not_configuration() {
+    let found = injected(
+        r#"
+        using System.Collections.Generic;
+        class A {
+            void Run(Dictionary<string, string> map, string[] list) {
+                Foo.Use(map["Jwt:Algorithm"]);
+                Foo.Use(list[0]);
+            }
+        }
+        "#,
+    );
+    assert_eq!(found, [None, None]);
+}

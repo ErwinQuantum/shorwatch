@@ -1,0 +1,59 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/dotnet-bouncycastle/Vulnerable.cs
+---
+- rule: dotnet.bouncycastle.rsa
+  at: "15:19"
+  status: vulnerable
+- rule: dotnet.bouncycastle.rsa
+  at: "16:22"
+  status: vulnerable
+- rule: dotnet.bouncycastle.ec
+  at: "17:18"
+  status: vulnerable
+- rule: dotnet.bouncycastle.ecdsa
+  at: "18:21"
+  status: vulnerable
+- rule: dotnet.bouncycastle.ecdh
+  at: "19:20"
+  status: vulnerable
+- rule: dotnet.bouncycastle.ecdh
+  at: "20:22"
+  status: vulnerable
+- rule: dotnet.bouncycastle.eddsa
+  at: "21:18"
+  status: vulnerable
+- rule: dotnet.bouncycastle.dsa
+  at: "22:19"
+  status: vulnerable
+- rule: dotnet.bouncycastle.dh
+  at: "23:18"
+  status: vulnerable
+- rule: dotnet.bouncycastle.3des
+  at: "24:22"
+  status: vulnerable
+- rule: dotnet.bouncycastle.sha1
+  at: "25:20"
+  status: vulnerable
+- rule: dotnet.bouncycastle.rsa
+  at: "30:25"
+  status: vulnerable
+- rule: dotnet.bouncycastle.rsa
+  at: "31:22"
+  status: vulnerable
+- rule: dotnet.bouncycastle.ecdsa
+  at: "32:22"
+  status: vulnerable
+- rule: dotnet.bouncycastle.sha1
+  at: "32:22"
+  status: vulnerable
+- rule: dotnet.bouncycastle.3des
+  at: "33:22"
+  status: vulnerable
+- rule: dotnet.bouncycastle.sha1
+  at: "34:22"
+  status: vulnerable
+- rule: dotnet.bouncycastle.ecdh
+  at: "35:25"
+  status: vulnerable

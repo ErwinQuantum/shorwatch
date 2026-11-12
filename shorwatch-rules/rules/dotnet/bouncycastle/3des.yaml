@@ -1,0 +1,13 @@
+id: dotnet.bouncycastle.3des
+profile: 3des
+platform: dotnet
+
+# BouncyCastle for .NET (`BouncyCastle.Cryptography`, namespace Org.BouncyCastle): the
+# lightweight classes the caller builds, and the `*Utilities` factories that take an
+# algorithm name (the same names as the JCA ones in jvm/jca).
+patterns:
+  - construct: { type: Org.BouncyCastle.Crypto.Engines.DesEdeEngine }
+  - construct: { type: Org.BouncyCastle.Crypto.Engines.DesEdeWrapEngine }
+  - construct: { type: Org.BouncyCastle.Crypto.Generators.DesEdeKeyGenerator }
+  - call: { type: Org.BouncyCastle.Security.CipherUtilities, method: GetCipher, arg: { index: 0, matches: '(?i)^((DESede|TripleDES|3DES|TDEA)(Wrap|RFC32(11|17)Wrap)?(/|$)|(D?H?IES|ECIES)with(SHA\d+and)?DESede(-CBC)?$|(PBEWith\w+And(\d-?Key)?(TripleDES|DESede)(-CBC)?|(OID\.)?1\.2\.840\.113549\.1\.12\.1\.[34])$)' } }
+  - call: { type: Org.BouncyCastle.Security.GeneratorUtilities, method: GetKeyGenerator, arg: { index: 0, matches: '(?i)^(DESede|TripleDES|3DES|TDEA)(Wrap)?$' } }

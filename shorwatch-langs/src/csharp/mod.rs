@@ -16,6 +16,7 @@
 //!   the declaration, and `a?.B()` is a call on `a`.
 //!
 //! - this module: the traversal (phase one);
+//! - [`configuration`]: reads of `IConfiguration` (`config["A:B"]`, `GetValue`);
 //! - [`literals`]: decoding string and integer literals;
 //! - [`syntax`]: small helpers over the tree.
 
@@ -33,6 +34,7 @@ use syntax::{
     argument_value, enclosing_calls, has_modifier, invoked, is_name_path, simple_name, type_name,
 };
 
+mod configuration;
 mod literals;
 mod syntax;
 #[cfg(test)]
@@ -719,6 +721,9 @@ impl<'s> Lowering<'s> {
     fn source(&self, node: Node<'_>) -> ArgSource {
         if let Some(value) = self.literal(node) {
             return ArgSource::Value(value);
+        }
+        if let Some(read) = self.configuration(node) {
+            return read;
         }
         let unknown = ArgSource::Value(ArgValue::Unknown);
         let mut cursor = node.walk();

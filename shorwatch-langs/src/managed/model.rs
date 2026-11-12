@@ -62,6 +62,14 @@ pub(crate) enum ArgSource {
         method: String,
         args: Vec<PendingArg>,
     },
+    /// `config["A:B"]`, `config.GetValue<T>("A:B", default)`: a value read from
+    /// the configuration `receiver` holds (.NET); which receivers are
+    /// configurations is decided in phase two, where their type is known.
+    Config {
+        receiver: Receiver,
+        key: String,
+        default: Option<String>,
+    },
     /// `x.m(...)` or `Type.m(...)`: what another type's method returns.
     MemberCall {
         receiver: Receiver,

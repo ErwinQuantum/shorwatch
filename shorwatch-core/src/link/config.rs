@@ -79,10 +79,12 @@ fn lookup(properties: &Properties, key: &str) -> Vec<String> {
 }
 
 /// Spring-style relaxed binding: `jwt.jws-algorithms`, `jwt.jwsAlgorithms`
-/// and `jwt.jws_algorithms` name the same property.
+/// and `jwt.jws_algorithms` name the same property. .NET separates the
+/// levels of a key with `:` (`Jwt:Algorithm`), which names `Jwt.Algorithm`.
 fn canonical(key: &str) -> String {
     key.chars()
         .filter(|c| !matches!(c, '-' | '_'))
+        .map(|c| if c == ':' { '.' } else { c })
         .flat_map(char::to_lowercase)
         .collect()
 }

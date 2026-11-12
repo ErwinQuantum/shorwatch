@@ -219,6 +219,22 @@ impl ManagedFile {
                 .flat_map(|option| self.candidates(option, scope, cx))
                 .collect(),
             ArgSource::Call { method, args } => self.call(method, args, scope, cx),
+            ArgSource::Config {
+                receiver,
+                key,
+                default,
+            } if self.is_configuration(receiver, scope) => vec![Candidate {
+                value: ArgValue::Injected {
+                    key: key.clone(),
+                    default: default.clone(),
+                    resolved: Vec::new(),
+                },
+                flow: vec![step(
+                    arg.location,
+                    format!("{} reads the configuration key {key}", arg.raw),
+                )],
+            }],
+            ArgSource::Config { .. } => Vec::new(),
             // Another type's method: `link` looks up what it returns.
             ArgSource::MemberCall {
                 receiver,
@@ -246,6 +262,33 @@ impl ManagedFile {
             return Vec::new();
         }
         unique
+    }
+
+    /// Whether `receiver` holds .NET configuration (`IConfiguration` and its
+    /// relatives). A receiver whose type is not known (`builder.Configuration`)
+    /// counts when it is named after one: a key that no config file defines
+    /// resolves to nothing, so a wrong guess reports nothing.
+    fn is_configuration(&self, receiver: &Receiver, scope: ScopeId) -> bool {
+        const TYPES: [&str; 5] = [
+            "IConfiguration",
+            "IConfigurationRoot",
+            "IConfigurationSection",
+            "ConfigurationManager",
+            "ConfigurationSection",
+        ];
+        if let Some(ty) = self.resolve_receiver(receiver, scope)
+            && TYPES.contains(&ty.name.as_str())
+        {
+            return true;
+        }
+        let text = match receiver {
+            Receiver::Name(name) => name.as_str(),
+            Receiver::Path(path) => path.as_str(),
+            _ => return false,
+        };
+        text.rsplit('.')
+            .next()
+            .is_some_and(|last| last.to_ascii_lowercase().contains("config"))
     }
 
     /// `Owner.NAME` where `Owner` is a type of another file: a constant for

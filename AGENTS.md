@@ -11,7 +11,7 @@ Shorwatch is a SAST tool in Rust that finds quantum-vulnerable cryptography in
 source code and configuration, and suggests migrating to the NIST post-quantum
 standards (FIPS 203 ML-KEM, FIPS 204 ML-DSA). It analyzes statically through
 tree-sitter (no compiling, no binaries): **Java**, **Kotlin** and **C#** sources plus
-**YAML / `.properties`** configuration (Spring Boot), the **key material**
+**YAML / `.properties` / JSON** configuration (Spring Boot, `appsettings.json`), the **key material**
 a repository holds (certificates, keys, keystores) and the cryptographic
 **libraries its build files declare** (`pom.xml`, Gradle, version catalogs, NuGet project files). Everything in the repo
 (code, comments, rules, docs, commits) is in English.
@@ -22,7 +22,7 @@ a repository holds (certificates, keys, keystores) and the cryptographic
 |---|---|---|
 | `shorwatch-core` | Pure domain: IR (`SourceUnit`, `Fact`, `Scope`), rule model + validation, engine (`analyze`), cross-file `link`, `Finding`, and the dependency `inventory` (`LibraryCatalog`, `Dependency`). **No I/O.** | serde, regex, thiserror only |
 | `shorwatch-rules` | Built-in YAML rules and known libraries (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` / `load_dir_libraries` for external ones | core |
-| `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng) and `CSharpFrontend` (tree-sitter-c-sharp), all on the shared `managed` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written); `MavenFrontend` (`pom.xml`, quick-xml events), `GradleFrontend` (a tokenizer), `VersionCatalogFrontend` (line-based TOML), `NuGetFrontend` (`*.csproj`, `packages.config`, `Directory.Packages.props`, quick-xml events), which a file's exact *name* (or the project extension) selects (`for_path`). Nothing tree-sitter leaks out | core |
+| `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng) and `CSharpFrontend` (tree-sitter-c-sharp), all on the shared `managed` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` and `JsonFrontend` (hand-written; JSON takes comments and trailing commas, `appsettings*.json` by name through `Frontend::accepts`); `MavenFrontend` (`pom.xml`, quick-xml events), `GradleFrontend` (a tokenizer), `VersionCatalogFrontend` (line-based TOML), `NuGetFrontend` (`*.csproj`, `packages.config`, `Directory.Packages.props`, quick-xml events), which a file's exact *name* (or the project extension) selects (`for_path`). Nothing tree-sitter leaks out | core |
 | `shorwatch-report` | Pure renderers over a `Scan` (findings, sources, `projects`, `links`: editor `vscode://` root only for the temporary report, repository host URL templates in CI): terminal (banner; summary + HTML report link by default, `--overview`, `--details`, `--compact`, the failing verdict), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only, CSP forbids the network; an editorial cover + hash-routed chapters `#/findings?sev=&project=&alg=&cat=&f=`, grouped by file, tests folded) | core |
 | `shorwatch-cli` | `shorwatch [scan]` (no command = scan) / `report` (scan + open) / `ci` (SARIF + HTML in `shorwatch-report/`, CI artifact links) / `open` (last HTML report, in the browser) / `rules`; `--watch` polls mtimes: clap args, `ignore` walker, `layout` (test vs production code by path), `projects` (top-most build roots of a scanned folder), rayon pipeline (one `link` per project), output (`--html`, temporary HTML on terminals, `--report-url`), exit codes (`--fail-on`, `--fail-severity`) | all |
 
@@ -50,7 +50,7 @@ core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: mode
            link/{mod, library, hierarchy, receivers, flow, config}  finding.rs
 rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules, libraries)  error.rs  build.rs
 langs/src/ managed/{mod: ManagedFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
-           kotlin/{mod: traversal, syntax, literals}  csharp/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
+           kotlin/{mod: traversal, syntax, literals}  csharp/{mod: traversal, syntax, literals}  config/{properties, yaml, json}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
            build/{mod, maven, gradle, catalog, nuget}  depth.rs (nesting bound)  unsupported.rs (languages seen, not read)
@@ -201,8 +201,14 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   record's components and a class's primary-constructor parameters (C# 12) take
   the arguments of `new` like constructor parameters, and `new X { Prop = v }`
   is the setter call `set_Prop(v)` on `X`. One namespace per file is assumed.
-  Not yet: `using static`, `global using` from other files, `IConfiguration`
-  lookups (they need the JSON frontend), enum constants.
+  Configuration reads (`csharp/configuration.rs`: `config["A:B"]`,
+  `GetValue<T>("A:B", default)`, `GetSection("A")["B"]`, `.GetSection("A").Value`)
+  are `ArgSource::Config`; phase two makes them `ArgValue::Injected` when the
+  receiver is an `IConfiguration` (by type, or by a name containing `config`
+  when the type is unknown, as in `builder.Configuration`), and `link::config`
+  resolves the key (`:` = `.`) against `appsettings*.json`.
+  Not yet: `using static`, `global using` from other files, the options
+  pattern (`Configure<T>(section)`, `Get<T>()`, `Bind`), enum constants.
 - **Kotlin** (`langs/src/kotlin/`): `Name(...)` is a constructor when `Name`
   looks like a type (upper-case start *and* a lower-case letter, so `RSA256(...)`
   stays a call); member imports (`...JWSAlgorithm.RS256`) = Java static
@@ -228,9 +234,12 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   skipped silently. Fixtures are generated with OpenSSL 3.5 (ML-DSA,
   ML-KEM), keytool and ssh-keygen; private key fixtures start with a
   "throwaway" comment line.
-- **YAML / properties**: flatten keys like Spring (`a.b[0].c`), one
+- **YAML / properties / JSON**: flatten keys like Spring (`a.b[0].c`), one
   `FactKind::Property` per scalar, located at the value. Multi-document YAML,
   flow/block collections, `\` continuations, CRLF. Comments produce nothing.
+  JSON (`appsettings.json`, `appsettings.<Environment>.json`,
+  `local.settings.json`) flattens the same way (`Jwt.Algorithm`); every
+  environment file's value is a candidate, as with Spring profiles.
 - `core::link`: fills `Injected.resolved` from config units (production code
   sees production config only; test code sees both) with relaxed
   binding (`signingAlgorithm` = `signing-algorithm`); list keys collect their
@@ -278,7 +287,7 @@ Profiles (17): `rsa dh ecdh ecdsa ec eddsa dsa elgamal` (shor, high),
 medium, no fix), `jose-rsa jose-ecdsa jose-eddsa jose-ecdh` (shor, JWT advice),
 `jose-aes-128` (grover), `tls-key-exchange` (shor, TLS suites).
 
-Libraries (149 rules): `dotnet/` bcl (System.Security.Cryptography) · `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
+Libraries (163 rules): `dotnet/` bcl (System.Security.Cryptography), bouncycastle (BouncyCastle for .NET: lightweight classes and the `*Utilities` name factories, generated from the JCA rules' names), identitymodel (`SecurityAlgorithms` and the signing/encrypting credentials of Microsoft.IdentityModel.Tokens) · `jvm/` jca, bouncycastle, bouncycastle-pkix, openpgp,
 jsch, apache-sshd, tls (suite-name literals, `jdk.tls.namedGroups`), okhttp,
 aws-kms, azure-keyvault, gcp-kms, tink, opensaml,
 xml-security (JSR 105 + Santuario), android-keystore, spring-security, jjwt,

@@ -1,0 +1,8 @@
+id: dotnet.identitymodel.jose-ecdsa
+profile: jose-ecdsa
+platform: dotnet
+
+patterns:
+  - field: { type: Microsoft.IdentityModel.Tokens.SecurityAlgorithms, matches: '^Ecdsa(Sha(256|384|512))(Signature)?$' }
+  - construct: { type: Microsoft.IdentityModel.Tokens.ECDsaSecurityKey }
+  - construct: { type: Microsoft.IdentityModel.Tokens.SigningCredentials, arg: { index: 1, matches: '^ES(256|384|512)$' } }

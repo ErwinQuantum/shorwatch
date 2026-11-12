@@ -1,0 +1,14 @@
+id: dotnet.identitymodel.jose-rsa
+profile: jose-rsa
+platform: dotnet
+
+# Microsoft.IdentityModel.Tokens (what System.IdentityModel.Tokens.Jwt and ASP.NET Core
+# JWT bearer authentication use). `SecurityAlgorithms` holds the JOSE names ("RS256")
+# and the XML Signature URIs of the same algorithms.
+patterns:
+  - field: { type: Microsoft.IdentityModel.Tokens.SecurityAlgorithms, matches: '^Rsa(Sha|SsaPssSha)(256|384|512)(Signature)?$' }
+  - field: { type: Microsoft.IdentityModel.Tokens.SecurityAlgorithms, matches: '^(RsaPKCS1|RsaOAEP|RsaV15KeyWrap|RsaOaepKeyWrap)$' }
+  - field: { type: Microsoft.IdentityModel.Tokens.JsonWebAlgorithmsKeyTypes, matches: '^RSA$' }
+  - construct: { type: Microsoft.IdentityModel.Tokens.RsaSecurityKey }
+  - construct: { type: Microsoft.IdentityModel.Tokens.SigningCredentials, arg: { index: 1, matches: '^(RS|PS)(256|384|512)$' } }
+  - construct: { type: Microsoft.IdentityModel.Tokens.EncryptingCredentials, arg: { index: 1, matches: '^RSA(1_5|-OAEP)$' } }

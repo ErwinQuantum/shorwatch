@@ -1,0 +1,14 @@
+id: dotnet.bouncycastle.elgamal
+profile: elgamal
+platform: dotnet
+
+# BouncyCastle for .NET (`BouncyCastle.Cryptography`, namespace Org.BouncyCastle): the
+# lightweight classes the caller builds, and the `*Utilities` factories that take an
+# algorithm name (the same names as the JCA ones in jvm/jca).
+patterns:
+  - construct: { type: Org.BouncyCastle.Crypto.Engines.ElGamalEngine }
+  - construct: { type: Org.BouncyCastle.Crypto.Generators.ElGamalKeyPairGenerator }
+  - construct: { type: Org.BouncyCastle.Crypto.Generators.ElGamalParametersGenerator }
+  - construct: { type: Org.BouncyCastle.Crypto.Parameters.ElGamalParameters }
+  - call: { type: Org.BouncyCastle.Security.CipherUtilities, method: GetCipher, arg: { index: 0, matches: '(?i)^ElGamal(/|$)' } }
+  - call: { type: Org.BouncyCastle.Security.GeneratorUtilities, method: GetKeyPairGenerator, arg: { index: 0, matches: '(?i)^(ElGamal|(OID\.)?1\.3\.14\.7\.2\.1\.1)$' } }
