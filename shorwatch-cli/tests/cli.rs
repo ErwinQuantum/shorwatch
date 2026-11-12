@@ -506,6 +506,72 @@ fn build_files_are_inventoried_not_reported_as_findings() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// A .NET solution: the packages its project files declare are inventoried
+/// with NuGet package URLs, and the central versions file gives a version to
+/// a reference that has none.
+#[test]
+fn nuget_packages_are_inventoried_too() {
+    let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join("nuget-packages");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("src/Api")).unwrap();
+    std::fs::write(dir.join("App.sln"), "").unwrap();
+    std::fs::write(
+        dir.join("Directory.Packages.props"),
+        "<Project><ItemGroup>
+         <PackageVersion Include=\"BouncyCastle.Cryptography\" Version=\"2.4.0\" />
+         </ItemGroup></Project>",
+    )
+    .unwrap();
+    std::fs::write(
+        dir.join("src/Api/Api.csproj"),
+        "<Project Sdk=\"Microsoft.NET.Sdk.Web\"><ItemGroup>
+         <PackageReference Include=\"BouncyCastle.Cryptography\" />
+         <PackageReference Include=\"Microsoft.AspNetCore.Authentication.JwtBearer\" Version=\"8.0.0\" />
+         <PackageReference Include=\"Newtonsoft.Json\" Version=\"13.0.3\" />
+         </ItemGroup></Project>",
+    )
+    .unwrap();
+
+    let output = shorwatch(&["scan", &dir.display().to_string(), "--format", "json"]);
+    assert_eq!(output.status.code(), Some(0), "packages are not findings");
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report["summary"]["findings"], 0);
+    assert_eq!(report["summary"]["libraries"], 3);
+    let libraries: Vec<_> = report["dependencies"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|d| {
+            (
+                d["library_id"].as_str().unwrap(),
+                d["ecosystem"].as_str().unwrap(),
+            )
+        })
+        .collect();
+    assert!(libraries.iter().all(|(_, ecosystem)| *ecosystem == "nuget"));
+    assert!(libraries.contains(&("bouncycastle-net", "nuget")));
+    assert!(libraries.contains(&("microsoft-identitymodel", "nuget")));
+
+    let cbom: serde_json::Value = serde_json::from_str(&stdout(&shorwatch(&[
+        "scan",
+        &dir.display().to_string(),
+        "--format",
+        "cbom",
+    ])))
+    .unwrap();
+    let purls: Vec<_> = cbom["components"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|c| c["purl"].as_str())
+        .collect();
+    assert!(
+        purls.contains(&"pkg:nuget/BouncyCastle.Cryptography@2.4.0"),
+        "{purls:?}"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 /// A folder of Python and Go next to one Java file: the report must not read
 /// as clean for the languages it never looked at.
 #[test]

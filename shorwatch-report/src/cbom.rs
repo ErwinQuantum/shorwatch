@@ -14,7 +14,7 @@
 use std::fmt::Write as _;
 
 use serde::Serialize;
-use shorwatch_core::inventory::{Role, Support};
+use shorwatch_core::inventory::{Ecosystem, Role, Support};
 use shorwatch_core::{Category, CodeRole, CryptoProperties, Dependency, Finding, Severity, Status};
 
 use crate::Scan;
@@ -117,14 +117,17 @@ fn role_label(role: Role) -> &'static str {
     }
 }
 
-/// `pkg:maven/group/artifact@version`, percent-encoded: these come from the
-/// scanned build files.
+/// `pkg:maven/group/artifact@version` or `pkg:nuget/Id@version`,
+/// percent-encoded: these come from the scanned build files.
 fn purl(dependency: &Dependency) -> String {
-    let mut purl = format!(
-        "pkg:maven/{}/{}",
-        percent_encode(&dependency.group),
-        percent_encode(&dependency.artifact)
-    );
+    let mut purl = match dependency.ecosystem {
+        Ecosystem::Maven => format!(
+            "pkg:maven/{}/{}",
+            percent_encode(&dependency.group),
+            percent_encode(&dependency.artifact)
+        ),
+        Ecosystem::NuGet => format!("pkg:nuget/{}", percent_encode(&dependency.artifact)),
+    };
     if let Some(version) = &dependency.version {
         purl.push('@');
         purl.push_str(&percent_encode(version));
@@ -332,6 +335,7 @@ struct LibraryComponent<'a> {
     kind: &'static str,
     #[serde(rename = "bom-ref")]
     bom_ref: String,
+    #[serde(skip_serializing_if = "str::is_empty")]
     group: &'a str,
     name: &'a str,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -381,6 +385,26 @@ mod tests {
             rsa[0]["evidence"]["occurrences"].as_array().unwrap().len(),
             3
         );
+    }
+
+    #[test]
+    fn a_nuget_package_has_a_nuget_package_url_and_no_group() {
+        let mut scan = scan();
+        let mut package = crate::fixtures::dependencies().remove(0);
+        package.ecosystem = Ecosystem::NuGet;
+        package.group = String::new();
+        package.artifact = "BouncyCastle.Cryptography".into();
+        package.version = Some("2.4.0".into());
+        scan.dependencies = vec![package];
+        let bom: serde_json::Value = serde_json::from_str(&render(&scan)).unwrap();
+        let library = bom["components"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["type"] == "library")
+            .unwrap();
+        assert_eq!(library["purl"], "pkg:nuget/BouncyCastle.Cryptography@2.4.0");
+        assert!(library.get("group").is_none());
     }
 
     #[test]
