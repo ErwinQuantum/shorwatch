@@ -334,3 +334,32 @@ fn only_the_library_types_a_project_reaches_are_kept() {
     assert_eq!(types, ["com.jcraft.jsch.JSch"]);
     assert_eq!(relevant.methods.len(), 1);
 }
+
+#[test]
+fn a_call_of_another_platform_passes_no_values() {
+    // The same `Util.sign("SHA1withRSA")` call, written in C#: the Java
+    // helper is not its callee.
+    let mut units = helper_and_caller(CodeRole::Production);
+    units[1] = {
+        let java = std::mem::replace(&mut units[1], SourceUnit::new("", Language::Java));
+        let mut csharp = SourceUnit::new("Caller.cs", Language::CSharp);
+        for fact in java.facts() {
+            csharp.push(fact.kind.clone(), SourceUnit::ROOT, fact.location);
+        }
+        csharp
+    };
+    link(&mut units, &Library::default());
+    assert_eq!(helper_arg(&units).value, ArgValue::Unknown);
+}
+
+#[test]
+fn linking_by_platform_keeps_the_units_in_place() {
+    let mut units = helper_and_caller(CodeRole::Production);
+    units.insert(1, config("application.yml", &[("a.b", "c")]));
+    units.push(SourceUnit::new("Other.cs", Language::CSharp));
+    let paths: Vec<_> = units.iter().map(|u| u.path().to_owned()).collect();
+    link(&mut units, &Library::default());
+    let after: Vec<_> = units.iter().map(|u| u.path().to_owned()).collect();
+    assert_eq!(paths, after);
+    assert_eq!(helper_arg(&units).match_texts(), ["SHA1withRSA"]);
+}
