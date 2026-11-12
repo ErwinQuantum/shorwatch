@@ -16,6 +16,8 @@ pub enum Language {
     Properties,
     /// YAML configuration files.
     Yaml,
+    /// JSON configuration files (`appsettings.json`).
+    Json,
     /// Keys and certificates: PEM and DER files, Java keystores, PKCS#12
     /// and SSH keys.
     #[serde(rename = "key-material")]
@@ -43,6 +45,7 @@ impl Language {
             Language::CSharp => "C#",
             Language::Properties => ".properties",
             Language::Yaml => "YAML",
+            Language::Json => "JSON",
             Language::KeyMaterial => "key material",
             Language::Maven => "Maven",
             Language::Gradle => "Gradle",
@@ -55,7 +58,7 @@ impl Language {
         match self {
             Language::Java | Language::Kotlin => Platform::Jvm,
             Language::CSharp => Platform::Dotnet,
-            Language::Properties | Language::Yaml => Platform::Config,
+            Language::Properties | Language::Yaml | Language::Json => Platform::Config,
             Language::KeyMaterial => Platform::Keys,
             Language::Maven | Language::Gradle | Language::VersionCatalog | Language::NuGet => {
                 Platform::Build
