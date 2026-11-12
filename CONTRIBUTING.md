@@ -64,7 +64,9 @@ migration advice and NIST references come from `algorithms/rsa.yaml`.
 ### Teaching Shorwatch a library (the dependency inventory)
 
 A library the build files declare is listed in the reports, with its version,
-when `shorwatch-rules/rules/libraries/<id>.yaml` knows its Maven coordinates.
+when `shorwatch-rules/rules/libraries/<id>.yaml` knows its Maven coordinates
+or its NuGet package id (`nuget:`, a list of anchored regexes; a library with
+different coordinates per ecosystem is one file for each).
 It is not a rule and reports no finding:
 
 ```yaml
@@ -72,7 +74,7 @@ id: acme-crypto                  # must match the file name
 name: Acme Crypto
 role: provider                   # provider | jwt | ssh | xml-signature | kms | post-quantum
 summary: One line on what it does for a project.
-matches:                         # anchored regexes: ^group$, artifact ^...
+matches:                         # Maven: anchored regexes ^group$, artifact ^...
   - group: '^com\.acme$'
     artifact: '^acme-crypto(-core)?$'
 # Only when you have checked the release notes for the first version that

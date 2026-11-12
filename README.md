@@ -86,9 +86,11 @@ its subject, key size or curve, signature and expiry, e.g. `certificate
 2031-03-01`.
 
 And the **cryptographic libraries** a project declares in its build files
-(`pom.xml`, `build.gradle`, `build.gradle.kts`, `libs.versions.toml`), with
+(`pom.xml`, `build.gradle`, `build.gradle.kts`, `libs.versions.toml`, and for
+.NET `*.csproj`, `Directory.Packages.props`, `packages.config`), with
 their version: BouncyCastle, Nimbus, jjwt, JSch, Tink, the cloud KMS clients
-and others. They are an inventory beside the findings, never findings: using
+and others, and for .NET BouncyCastle (first with ML-KEM, ML-DSA and SLH-DSA in
+2.5.0), the IdentityModel JWT packages and SSH.NET. They are an inventory beside the findings, never findings: using
 a library is neither vulnerable nor safe by itself. What it adds is what the
 code cannot say, such as `BouncyCastle 1.70`, a version that predates
 BouncyCastle's ML-KEM, ML-DSA and SLH-DSA (first in 1.79). The summary
@@ -576,7 +578,7 @@ produce the same findings; C# has its own `dotnet` rules.
 | Spring Boot config: `jws-algorithms`, `public-key-location`, `jwk-set-uri` (RS256 default), TLS cipher suites (`*.ssl.ciphers`); Quarkus MicroProfile JWT keys without an algorithm (RS256 default); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Crypto inside compiled `.jar` dependencies (their types are read with `--classpath`, their code is not analyzed) |
 | Values injected with `@Value("${key:default}")`, and the fields of `@ConfigurationProperties` classes (Java classes and records, Kotlin classes and data classes, relaxed binding `key-type` = `keyType`), resolved against every profile's config file; a field's initializer is the default when the key is absent | Nested objects (`prefix.nested.field`), collections and `@Bean @ConfigurationProperties` methods |
 | Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
-| **C# (new, unreleased):** the base class library's RSA, ECDsa, ECDiffieHellman, DSA, SHA-1, Triple DES and `KeySize = 128` on AES, with `using` aliases, constants, properties, primary constructors, object initializers and cross-file data flow | NuGet packages, JSON configuration, JWT libraries, BouncyCastle for .NET |
+| **C# (new, unreleased):** the base class library's RSA, ECDsa, ECDiffieHellman, DSA, SHA-1, Triple DES and `KeySize = 128` on AES, with `using` aliases, constants, properties, primary constructors, object initializers and cross-file data flow | JSON configuration (`appsettings.json`), JWT and BouncyCastle for .NET calls |
 | OpenPGP (BouncyCastle `bcpg`): key, hash and symmetric algorithm tags | The algorithm of keys read from existing key rings |
 | SSH: JSch key types and `setConfig` algorithm lists, Apache MINA SSHD signature and key-exchange factories, host key algorithms | Library defaults when nothing is configured |
 | XML Signature and Encryption (SAML, WS-Security): JSR 105 `SignatureMethod`/`DigestMethod`, Apache Santuario, OpenSAML `SignatureConstants`/`EncryptionConstants` | Algorithm URIs written as strings |
@@ -588,7 +590,7 @@ produce the same findings; C# has its own `dotnet` rules.
 | Keys and certificates: X.509 certificates and requests, SPKI public keys, PKCS#8, PKCS#1 and SEC 1 private keys (PEM or DER), JKS/JCEKS keystores, unencrypted PKCS#12 content, SSH public keys and OpenSSH private keys. Certificates a keystore only trusts are grouped by algorithm; the SHA-1 signature of a self-signed certificate is not reported (nothing verifies it) | Encrypted content: password-protected private keys and the certificates PKCS#12 encrypts with the store's password (Java's default) |
 | Data flow within and across files: variables, fields set in constructors, parameters of methods and constructors fed by calls anywhere in the project, returned values (`switch`/`when` mappings), constants of other classes, enums that carry the algorithm (`kind.getJceName()` and Kotlin `kind.jce` read the constructor arguments of every constant; `algorithm.name()` is the constant's name), concatenations and templates, `?:`/`if` branches. Calls through interfaces reach every implementation (the type hierarchy comes from the sources), and chained calls such as `Crypto.provider().keyPairGenerator("RSA")` are typed from the declared return type, also along longer chains and for variables without a written type (`var`, Kotlin `val`). With `--classpath`, library types too (`jsch.getSession(...)` returns a `Session`). Findings show the path from the literal to the use, file by file | Overloads; a specific enum constant (`Kind.LEGACY.getJceName()` is not read: widening it to every constant would report the others); values that depend on the order of execution |
 | Kotlin idioms: constructor calls without `new`, `val` / `const val` / `companion object` constants, member imports, `@Value` on constructor parameters, scope functions (`apply`, `run`, `with`, `also`, `let`) | Kotlin extension functions that wrap crypto (needs data flow) |
-| Build files, as an inventory of known cryptographic libraries (20, in [`rules/libraries/`](shorwatch-rules/rules/libraries/)): Maven `pom.xml` (`${properties}` and the project version resolved), Gradle in Groovy and Kotlin (string and named notation, same-file variables, platforms), version catalogs (`version.ref`) | Versions managed by a parent POM or a BOM, and values a Gradle script computes (shown as "version not set"); catalog aliases used from a script (the catalog itself is read); libraries the catalog does not know |
+| Build files, as an inventory of known cryptographic libraries (27, in [`rules/libraries/`](shorwatch-rules/rules/libraries/)): Maven `pom.xml` (`${properties}` and the project version resolved), Gradle in Groovy and Kotlin (string and named notation, same-file variables, platforms), version catalogs (`version.ref`), NuGet `*.csproj` / `Directory.Packages.props` / `packages.config` (`$(Properties)` resolved) | Versions managed by a parent POM or a BOM, and values a Gradle script computes (shown as "version not set"); catalog aliases used from a script (the catalog itself is read); libraries the catalog does not know |
 
 ## Rules
 

@@ -1,0 +1,6 @@
+id: jose-jwt
+name: jose-jwt
+role: jwt
+summary: JSON Web Signature and Encryption (JOSE) for .NET.
+nuget:
+  - '^jose-jwt$'

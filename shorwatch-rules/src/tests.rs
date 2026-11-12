@@ -276,6 +276,13 @@ fn builtin_libraries_follow_their_conventions() {
                 coordinates.artifact
             );
         }
+        for package in &library.nuget {
+            assert!(
+                package.starts_with('^') && package.ends_with('$'),
+                "{}: package `{package}` must be anchored",
+                library.id
+            );
+        }
     }
 }
 

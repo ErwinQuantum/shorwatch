@@ -20,7 +20,9 @@ mod link;
 
 pub use engine::analyze;
 pub use finding::{Finding, HybridEvidence, Status, SuggestedFix};
-pub use inventory::{Dependency, LibraryCatalog, LibraryError, LibrarySpec, dependencies};
+pub use inventory::{
+    Dependency, Ecosystem, LibraryCatalog, LibraryError, LibrarySpec, dependencies,
+};
 pub use ir::{CodeRole, Language, Library, Platform, SourceUnit};
 pub use link::link;
 pub use rule::{

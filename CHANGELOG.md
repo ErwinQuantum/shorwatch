@@ -9,6 +9,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- NuGet inventory: the cryptographic packages a .NET project declares in
+  `*.csproj`, `Directory.Packages.props` (central versions, scope `managed`) and
+  `packages.config`, with `$(Property)` versions resolved. Seven .NET libraries
+  are known (BouncyCastle for .NET, whose first post-quantum release is 2.5.0,
+  the IdentityModel and jose-jwt packages, SSH.NET...) and the Azure, AWS and
+  Google KMS entries gain their NuGet ids. The CBOM lists them with
+  `pkg:nuget/` package URLs; the JSON `dependencies` carry an `ecosystem`.
+- A folder with a `.sln` or `Directory.Build.props` is a project root.
 - C# data flow across files: properties are read like accessors
   (`options.Algorithm`), record components and primary-constructor parameters
   take the arguments of `new`, and object initializers (`new Aes { KeySize = 128 }`)

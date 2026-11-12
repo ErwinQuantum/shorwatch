@@ -6,6 +6,7 @@ fn spec(id: &str, since: Option<&str>) -> LibrarySpec {
         id: id.to_owned(),
         name: id.to_owned(),
         role: Role::Provider,
+        nuget: Vec::new(),
         matches: vec![Coordinates {
             group: r"^org\.bouncycastle$".to_owned(),
             artifact: r"^bcprov-jdk(15on|18on)$".to_owned(),
@@ -49,6 +50,63 @@ fn a_known_library_is_inventoried_with_where_it_is_declared() {
     assert_eq!(found[0].library_id, "bouncycastle");
     assert_eq!(found[0].path, "pom.xml");
     assert_eq!(found[0].location.start.line, 7);
+}
+
+fn nuget_spec() -> LibrarySpec {
+    LibrarySpec {
+        matches: Vec::new(),
+        nuget: vec![r"^BouncyCastle\.Cryptography$".to_owned()],
+        ..spec("bouncycastle-net", Some("2.5.0"))
+    }
+}
+
+fn nuget_unit(id: &str, version: Option<&str>) -> SourceUnit {
+    let mut unit = SourceUnit::new("App.csproj", Language::NuGet);
+    unit.push(
+        FactKind::Dependency {
+            group: String::new(),
+            artifact: id.to_owned(),
+            version: version.map(str::to_owned),
+            scope: None,
+        },
+        SourceUnit::ROOT,
+        Location::line(9, 1, 1),
+    );
+    unit
+}
+
+#[test]
+fn a_nuget_package_is_found_by_its_id_whatever_its_case() {
+    let catalog = LibraryCatalog::compile(vec![spec("bouncycastle", None), nuget_spec()]).unwrap();
+    let found = dependencies(
+        &nuget_unit("bouncycastle.cryptography", Some("2.4.0")),
+        &catalog,
+    );
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].library_id, "bouncycastle-net");
+    assert_eq!(found[0].ecosystem, Ecosystem::NuGet);
+    assert_eq!(
+        found[0].post_quantum.as_ref().unwrap().support,
+        Support::TooOld
+    );
+    let later = dependencies(
+        &nuget_unit("BouncyCastle.Cryptography", Some("2.5.0")),
+        &catalog,
+    );
+    assert_eq!(
+        later[0].post_quantum.as_ref().unwrap().support,
+        Support::Ready
+    );
+}
+
+#[test]
+fn maven_coordinates_and_nuget_ids_do_not_cross() {
+    let catalog = LibraryCatalog::compile(vec![spec("bouncycastle", None), nuget_spec()]).unwrap();
+    // A package id in a POM, and Maven coordinates in a project file.
+    let mut pom = unit_with("", "BouncyCastle.Cryptography", Some("2.5.0"));
+    assert!(dependencies(&pom, &catalog).is_empty());
+    pom = nuget_unit("bcprov-jdk18on", Some("1.70"));
+    assert!(dependencies(&pom, &catalog).is_empty());
 }
 
 #[test]

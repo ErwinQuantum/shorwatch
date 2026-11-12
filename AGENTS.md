@@ -13,7 +13,7 @@ standards (FIPS 203 ML-KEM, FIPS 204 ML-DSA). It analyzes statically through
 tree-sitter (no compiling, no binaries): **Java**, **Kotlin** and **C#** sources plus
 **YAML / `.properties`** configuration (Spring Boot), the **key material**
 a repository holds (certificates, keys, keystores) and the cryptographic
-**libraries its build files declare** (`pom.xml`, Gradle, version catalogs). Everything in the repo
+**libraries its build files declare** (`pom.xml`, Gradle, version catalogs, NuGet project files). Everything in the repo
 (code, comments, rules, docs, commits) is in English.
 
 ## Architecture (hexagonal workspace)
@@ -22,7 +22,7 @@ a repository holds (certificates, keys, keystores) and the cryptographic
 |---|---|---|
 | `shorwatch-core` | Pure domain: IR (`SourceUnit`, `Fact`, `Scope`), rule model + validation, engine (`analyze`), cross-file `link`, `Finding`, and the dependency `inventory` (`LibraryCatalog`, `Dependency`). **No I/O.** | serde, regex, thiserror only |
 | `shorwatch-rules` | Built-in YAML rules and known libraries (embedded by `build.rs`), `Catalog` assembling profiles + rules, `load_dir` / `load_dir_libraries` for external ones | core |
-| `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng) and `CSharpFrontend` (tree-sitter-c-sharp), all on the shared `managed` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written); `MavenFrontend` (`pom.xml`, quick-xml events), `GradleFrontend` (a tokenizer), `VersionCatalogFrontend` (line-based TOML), which a file's exact *name* selects (`for_path`). Nothing tree-sitter leaks out | core |
+| `shorwatch-langs` | `Frontend` trait; `JavaFrontend` (tree-sitter-java), `KotlinFrontend` (tree-sitter-kotlin-ng) and `CSharpFrontend` (tree-sitter-c-sharp), all on the shared `managed` resolver; `YamlFrontend` (tree-sitter-yaml), `PropertiesFrontend` (hand-written); `MavenFrontend` (`pom.xml`, quick-xml events), `GradleFrontend` (a tokenizer), `VersionCatalogFrontend` (line-based TOML), `NuGetFrontend` (`*.csproj`, `packages.config`, `Directory.Packages.props`, quick-xml events), which a file's exact *name* (or the project extension) selects (`for_path`). Nothing tree-sitter leaks out | core |
 | `shorwatch-report` | Pure renderers over a `Scan` (findings, sources, `projects`, `links`: editor `vscode://` root only for the temporary report, repository host URL templates in CI): terminal (banner; summary + HTML report link by default, `--overview`, `--details`, `--compact`, the failing verdict), SARIF 2.1.0, CycloneDX CBOM, JSON, Markdown, HTML (`html/`: one offline page, data embedded as JSON and rendered with `textContent` only, CSP forbids the network; an editorial cover + hash-routed chapters `#/findings?sev=&project=&alg=&cat=&f=`, grouped by file, tests folded) | core |
 | `shorwatch-cli` | `shorwatch [scan]` (no command = scan) / `report` (scan + open) / `ci` (SARIF + HTML in `shorwatch-report/`, CI artifact links) / `open` (last HTML report, in the browser) / `rules`; `--watch` polls mtimes: clap args, `ignore` walker, `layout` (test vs production code by path), `projects` (top-most build roots of a scanned folder), rayon pipeline (one `link` per project), output (`--html`, temporary HTML on terminals, `--report-url`), exit codes (`--fail-on`, `--fail-severity`) | all |
 
@@ -53,7 +53,7 @@ langs/src/ managed/{mod: ManagedFile, model, resolve, flow}  java/{mod: traversa
            kotlin/{mod: traversal, syntax, literals}  csharp/{mod: traversal, syntax, literals}  config/{properties, yaml}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
-           build/{mod, maven, gradle, catalog}  depth.rs (nesting bound)  unsupported.rs (languages seen, not read)
+           build/{mod, maven, gradle, catalog, nuget}  depth.rs (nesting bound)  unsupported.rs (languages seen, not read)
 cli/src/   args, pipeline, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file)
            printable (control characters out), suppress/{mod: apply, inline: `shorwatch:ignore`,
            baseline: shorwatch-baseline.json}, gate (--fail-on/--fail-severity), output,
@@ -151,8 +151,15 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   components. A library claims post-quantum support only when the catalog
   names the first version (`post_quantum.since`, verified against its release
   notes); a version that is not a plain number (range, `${x}`, unset) is
-  `Unknown`, never guessed. Build files are found by file *name*, not by
-  extension, and are untrusted: bounded nesting and coordinates, no
+  `Unknown`, never guessed. NuGet packages are the same fact with an empty
+  `group` and the package id as `artifact` (`Dependency::ecosystem` tells
+  them from Maven; `LibrarySpec::nuget` holds anchored id regexes, matched
+  ignoring case; a library of another ecosystem is its own catalog entry,
+  since its first post-quantum version differs: `bouncycastle-net` 2.5.0 vs
+  `bouncycastle` 1.79). A `PackageReference` with no version (central package
+  management) is listed as is, beside the `managed` version of
+  `Directory.Packages.props`. Build files are found by file *name*, not by
+  extension (NuGet: project extensions too), and are untrusted: bounded nesting and coordinates, no
   external entities.
 - **Defaults are patterns with conditions**: `call` takes `unless_chain` (a
   regex on the methods called later on its result: `FactKind::Call::chain`,

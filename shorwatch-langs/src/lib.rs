@@ -22,7 +22,7 @@ mod managed;
 mod span;
 mod unsupported;
 
-pub use build::{GradleFrontend, MavenFrontend, VersionCatalogFrontend};
+pub use build::{GradleFrontend, MavenFrontend, NuGetFrontend, VersionCatalogFrontend};
 pub use config::{PropertiesFrontend, YamlFrontend};
 pub use csharp::CSharpFrontend;
 pub use java::JavaFrontend;
@@ -91,6 +91,7 @@ pub fn frontends() -> Vec<Box<dyn Frontend>> {
         Box::new(MavenFrontend),
         Box::new(GradleFrontend),
         Box::new(VersionCatalogFrontend),
+        Box::new(NuGetFrontend),
     ]
 }
 

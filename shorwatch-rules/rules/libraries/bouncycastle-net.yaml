@@ -1,0 +1,14 @@
+id: bouncycastle-net
+name: BouncyCastle for .NET
+role: provider
+summary: A cryptography library for .NET (ciphers, signatures, certificates, CMS, OpenPGP, TLS).
+nuget:
+  - '^(BouncyCastle\.Cryptography|Portable\.BouncyCastle)$'
+# ML-KEM, ML-DSA and SLH-DSA joined in 2.5.0 (1 December 2024). Portable.BouncyCastle
+# is the package the project replaced, so its versions are older.
+post_quantum:
+  since: '2.5.0'
+  algorithms: [ML-KEM, ML-DSA, SLH-DSA]
+references:
+  - title: "Bouncy Castle for .NET release notes (2.5.0)"
+    url: https://github.com/bcgit/bc-csharp/blob/master/crypto/Readme.html

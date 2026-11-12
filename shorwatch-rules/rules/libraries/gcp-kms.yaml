@@ -5,3 +5,5 @@ summary: The Google Cloud Key Management Service client.
 matches:
   - group: '^com\.google\.cloud$'
     artifact: '^google-cloud-kms$'
+nuget:
+  - '^Google\.Cloud\.Kms\.V1$'

@@ -67,7 +67,7 @@ fn a_properties_file_of_many_lines_is_lowered_with_the_right_positions() {
 
 use std::time::{Duration, Instant};
 
-use shorwatch_langs::{GradleFrontend, MavenFrontend, VersionCatalogFrontend};
+use shorwatch_langs::{GradleFrontend, MavenFrontend, NuGetFrontend, VersionCatalogFrontend};
 
 /// Runs `lower` and says how long it took: a pass that is quadratic in the
 /// file would take minutes on these inputs.
@@ -109,6 +109,28 @@ fn a_property_that_refers_to_itself_does_not_blow_up_a_pom() {
     );
     let (unit, took) = timed(|| MavenFrontend.lower("pom.xml", &source).unwrap());
     assert_eq!(unit.facts().len(), 5_000);
+    assert!(took < Duration::from_secs(10), "{took:?}");
+}
+
+#[test]
+fn a_property_that_refers_to_itself_does_not_blow_up_a_project_file() {
+    let packages = r#"<PackageReference Include="b" Version="$(bomb)" />"#.repeat(5_000);
+    let source = format!(
+        "<Project><PropertyGroup><bomb>$(bomb)$(bomb)</bomb></PropertyGroup><ItemGroup>{packages}</ItemGroup></Project>"
+    );
+    let (unit, took) = timed(|| NuGetFrontend.lower("a.csproj", &source).unwrap());
+    assert_eq!(unit.facts().len(), 5_000);
+    assert!(took < Duration::from_secs(10), "{took:?}");
+}
+
+#[test]
+fn a_project_file_of_many_packages_is_read_in_linear_time() {
+    let packages = "<PackageReference Include=\"b\" Version=\"1\" />
+"
+    .repeat(30_000);
+    let source = format!("<Project><ItemGroup>{packages}</ItemGroup></Project>");
+    let (unit, took) = timed(|| NuGetFrontend.lower("a.csproj", &source).unwrap());
+    assert_eq!(unit.facts().len(), 30_000);
     assert!(took < Duration::from_secs(10), "{took:?}");
 }
 

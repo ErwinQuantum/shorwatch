@@ -350,6 +350,145 @@ kotlin = { id = "org.jetbrains.kotlin.jvm", version = "1.9.0" }
     }
 }
 
+mod nuget {
+    use super::*;
+
+    fn project(source: &str) -> SourceUnit {
+        NuGetFrontend.lower("App.csproj", source).unwrap()
+    }
+
+    #[test]
+    fn reads_package_references_with_a_version_attribute_or_element() {
+        let unit = project(
+            r#"<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens">
+      <Version>8.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" VersionOverride="13.0.3" />
+  </ItemGroup>
+</Project>"#,
+        );
+        assert_eq!(
+            found(&unit),
+            vec![
+                dep(":BouncyCastle.Cryptography", Some("2.4.0"), None),
+                dep(":Microsoft.IdentityModel.Tokens", Some("8.0.1"), None),
+                dep(":Newtonsoft.Json", Some("13.0.3"), None),
+            ]
+        );
+        assert_eq!(unit.facts()[0].location.start.line, 3);
+        assert_eq!(unit.facts()[1].location.start.line, 4);
+    }
+
+    #[test]
+    fn a_reference_without_a_version_is_still_a_reference() {
+        // Central package management: the version lives in another file.
+        let unit = project(
+            r#"<Project><ItemGroup><PackageReference Include="A.B" /></ItemGroup></Project>"#,
+        );
+        assert_eq!(found(&unit), vec![dep(":A.B", None, None)]);
+    }
+
+    #[test]
+    fn central_versions_are_managed() {
+        let unit = NuGetFrontend
+            .lower(
+                "Directory.Packages.props",
+                r#"<Project>
+  <PropertyGroup><ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally></PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="BouncyCastle.Cryptography" Version="2.5.0" />
+    <GlobalPackageReference Include="Analyzer.X" Version="1.0.0" />
+  </ItemGroup>
+</Project>"#,
+            )
+            .unwrap();
+        assert_eq!(
+            found(&unit),
+            vec![
+                dep(":BouncyCastle.Cryptography", Some("2.5.0"), Some("managed")),
+                dep(":Analyzer.X", Some("1.0.0"), Some("global")),
+            ]
+        );
+    }
+
+    #[test]
+    fn a_property_version_is_resolved_and_an_unknown_one_is_left_out() {
+        let unit = project(
+            r#"<Project>
+  <PropertyGroup><BcVersion>2.4.0</BcVersion></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="A" Version="$(BcVersion)" />
+    <PackageReference Include="B" Version="$(FromTheBuild)" />
+  </ItemGroup>
+</Project>"#,
+        );
+        assert_eq!(
+            found(&unit),
+            vec![dep(":A", Some("2.4.0"), None), dep(":B", None, None)]
+        );
+    }
+
+    #[test]
+    fn an_exact_version_in_brackets_is_that_version_and_a_range_is_not_guessed() {
+        let unit = project(
+            r#"<Project><ItemGroup>
+  <PackageReference Include="A" Version="[10.0.8]" />
+  <PackageReference Include="B" Version="[1.0,2.0)" />
+  <PackageReference Include="C" Version="1.*" />
+</ItemGroup></Project>"#,
+        );
+        assert_eq!(
+            found(&unit),
+            vec![
+                dep(":A", Some("10.0.8"), None),
+                dep(":B", Some("[1.0,2.0)"), None),
+                dep(":C", Some("1.*"), None),
+            ]
+        );
+    }
+
+    #[test]
+    fn packages_config_lists_the_older_format() {
+        let unit = NuGetFrontend
+            .lower(
+                "packages.config",
+                r#"<?xml version="1.0" encoding="utf-8"?>
+<packages>
+  <package id="Portable.BouncyCastle" version="1.9.0" targetFramework="net48" />
+</packages>"#,
+            )
+            .unwrap();
+        assert_eq!(
+            found(&unit),
+            vec![dep(":Portable.BouncyCastle", Some("1.9.0"), None)]
+        );
+    }
+
+    #[test]
+    fn items_that_are_not_packages_are_ignored() {
+        let unit = project(
+            r#"<Project><ItemGroup>
+  <ProjectReference Include="..\Core\Core.csproj" />
+  <Reference Include="System.Core" />
+  <PackageReference Update="Existing" Version="1.0" />
+</ItemGroup></Project>"#,
+        );
+        assert!(found(&unit).is_empty());
+    }
+
+    #[test]
+    fn a_broken_file_is_an_error_not_a_panic() {
+        assert!(
+            NuGetFrontend
+                .lower("A.csproj", "<Project><ItemGroup></Project>")
+                .is_err()
+        );
+    }
+}
+
 #[test]
 fn files_are_found_by_name_not_by_extension() {
     use std::path::Path;
@@ -361,6 +500,9 @@ fn files_are_found_by_name_not_by_extension() {
             "gradle/libs.versions.toml",
             shorwatch_core::Language::VersionCatalog,
         ),
+        ("src/App/App.csproj", shorwatch_core::Language::NuGet),
+        ("src/packages.config", shorwatch_core::Language::NuGet),
+        ("Directory.Packages.props", shorwatch_core::Language::NuGet),
     ] {
         let frontend = crate::for_path(Path::new(path)).unwrap();
         assert_eq!(frontend.language(), language, "{path}");

@@ -201,13 +201,14 @@ pub(crate) fn scan() -> Scan {
 /// support (declared twice), Nimbus with nothing claimed, and one whose
 /// version the file leaves to a parent.
 pub(crate) fn dependencies() -> Vec<shorwatch_core::Dependency> {
-    use shorwatch_core::inventory::{PostQuantum, Role, Support};
+    use shorwatch_core::inventory::{Ecosystem, PostQuantum, Role, Support};
 
     let bouncycastle = |path: &str, line: u32, support: Support, version: Option<&str>| {
         shorwatch_core::Dependency {
             library: "BouncyCastle".into(),
             library_id: "bouncycastle".into(),
             role: Role::Provider,
+            ecosystem: Ecosystem::Maven,
             group: "org.bouncycastle".into(),
             artifact: "bcprov-jdk18on".into(),
             version: version.map(str::to_owned),
@@ -227,6 +228,7 @@ pub(crate) fn dependencies() -> Vec<shorwatch_core::Dependency> {
             library: "Nimbus JOSE + JWT".into(),
             library_id: "nimbus-jose-jwt".into(),
             role: Role::Jwt,
+            ecosystem: Ecosystem::Maven,
             group: "com.nimbusds".into(),
             artifact: "nimbus-jose-jwt".into(),
             version: Some("9.37.3".into()),

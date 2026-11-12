@@ -22,7 +22,15 @@ const MARKERS: &[&str] = &[
     "Cargo.toml",
     "pyproject.toml",
     ".git",
+    "Directory.Build.props",
+    "Directory.Packages.props",
+    "global.json",
 ];
+
+/// Extensions of files that make a directory a project root: a .NET solution
+/// is named after the project. A `.csproj` is not one: a solution holds many,
+/// and `link` must see them together.
+const MARKER_EXTENSIONS: &[&str] = &["sln", "slnx"];
 
 /// How deep below a scanned folder to look for project roots: services sit
 /// at `services/billing`, repositories at `org/repo`.
@@ -89,6 +97,15 @@ pub fn detect(paths: &[PathBuf], files: &[PathBuf], cwd: &Path) -> Vec<Project> 
 
 fn is_project(dir: &Path) -> bool {
     MARKERS.iter().any(|marker| dir.join(marker).exists())
+        || fs::read_dir(dir).is_ok_and(|entries| {
+            entries.filter_map(Result::ok).any(|entry| {
+                entry
+                    .path()
+                    .extension()
+                    .and_then(|e| e.to_str())
+                    .is_some_and(|e| MARKER_EXTENSIONS.iter().any(|m| e.eq_ignore_ascii_case(m)))
+            })
+        })
 }
 
 /// The top-most project roots below `dir`.
@@ -204,6 +221,23 @@ mod tests {
             ]
         );
         assert_eq!(projects[2].root, "tools/legacy");
+        fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn a_dotnet_solution_is_a_project_but_its_csproj_files_are_not() {
+        let root = tree(&[
+            "billing/Billing.sln",
+            "billing/src/Api/Api.csproj",
+            "billing/src/Core/Core.csproj",
+            "gateway/Directory.Build.props",
+            "gateway/Gateway.csproj",
+            "gateway/G.cs",
+        ]);
+        let files = vec![root.join("billing/src/Api/A.cs"), root.join("gateway/G.cs")];
+        let projects = detect(std::slice::from_ref(&root), &files, &root);
+        let names: Vec<_> = projects.iter().map(|p| p.name.as_str()).collect();
+        assert_eq!(names, ["billing", "gateway"]);
         fs::remove_dir_all(root).unwrap();
     }
 

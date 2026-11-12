@@ -11,7 +11,7 @@
 
 use serde::Serialize;
 
-use crate::ir::{FactKind, Location, SourceUnit};
+use crate::ir::{FactKind, Language, Location, SourceUnit};
 
 mod spec;
 #[cfg(test)]
@@ -27,7 +27,11 @@ pub struct Dependency {
     pub library: String,
     pub library_id: String,
     pub role: Role,
+    pub ecosystem: Ecosystem,
+    /// Maven group; empty for NuGet, whose packages have only an id.
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub group: String,
+    /// Maven artifact, or the NuGet package id.
     pub artifact: String,
     /// As the file declares it; see [`FactKind::Dependency`].
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -41,6 +45,14 @@ pub struct Dependency {
     /// libraries the catalog knows a first version for.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub post_quantum: Option<PostQuantum>,
+}
+
+/// Where a dependency's coordinates come from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Ecosystem {
+    Maven,
+    NuGet,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -77,7 +89,15 @@ pub fn dependencies(unit: &SourceUnit, catalog: &LibraryCatalog) -> Vec<Dependen
             else {
                 return None;
             };
-            let library = catalog.find(group, artifact)?;
+            let ecosystem = if unit.language() == Language::NuGet {
+                Ecosystem::NuGet
+            } else {
+                Ecosystem::Maven
+            };
+            let library = match ecosystem {
+                Ecosystem::NuGet => catalog.find_package(artifact),
+                Ecosystem::Maven => catalog.find(group, artifact),
+            }?;
             let post_quantum = library.post_quantum.as_ref().map(|pq| PostQuantum {
                 support: match version
                     .as_deref()
@@ -94,6 +114,7 @@ pub fn dependencies(unit: &SourceUnit, catalog: &LibraryCatalog) -> Vec<Dependen
                 library: library.name.clone(),
                 library_id: library.id.clone(),
                 role: library.role,
+                ecosystem,
                 group: group.clone(),
                 artifact: artifact.clone(),
                 version: version.clone(),

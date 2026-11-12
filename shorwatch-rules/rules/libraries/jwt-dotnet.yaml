@@ -1,0 +1,6 @@
+id: jwt-dotnet
+name: JWT.Net
+role: jwt
+summary: A JSON Web Token library for .NET (the `JWT` package).
+nuget:
+  - '^JWT$'
