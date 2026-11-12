@@ -1,0 +1,8 @@
+id: microsoft-identitymodel
+name: Microsoft IdentityModel
+role: jwt
+summary: JSON Web Tokens for .NET, which ASP.NET Core JWT bearer authentication builds on.
+nuget:
+  - '^Microsoft\.IdentityModel\.(Tokens|JsonWebTokens|Protocols|Protocols\.OpenIdConnect)$'
+  - '^System\.IdentityModel\.Tokens\.Jwt$'
+  - '^Microsoft\.AspNetCore\.Authentication\.JwtBearer$'

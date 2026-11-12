@@ -1,0 +1,6 @@
+id: libsodium-net
+name: libsodium for .NET
+role: provider
+summary: Bindings to libsodium (Ed25519, X25519, ChaCha20-Poly1305) for .NET.
+nuget:
+  - '^(NSec\.Cryptography|Sodium\.Core)$'

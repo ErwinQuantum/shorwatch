@@ -7,3 +7,5 @@ matches:
     artifact: '^azure-security-keyvault-(keys|jca)$'
   - group: '^com\.microsoft\.azure$'
     artifact: '^azure-keyvault'
+nuget:
+  - '^Azure\.Security\.KeyVault\.(Keys|Secrets|Certificates)$'

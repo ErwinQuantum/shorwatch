@@ -1,0 +1,6 @@
+id: dotnet-cryptography
+name: .NET cryptography packages
+role: provider
+summary: The System.Security.Cryptography packages for PKCS, CNG, OpenSSL, XML signatures and protected data.
+nuget:
+  - '^System\.Security\.Cryptography\.(Pkcs|Cng|OpenSsl|ProtectedData|Algorithms|Primitives|X509Certificates|Csp|Encoding|Xml)$'

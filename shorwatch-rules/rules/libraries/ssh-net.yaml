@@ -1,0 +1,6 @@
+id: ssh-net
+name: SSH.NET
+role: ssh
+summary: An SSH client library for .NET.
+nuget:
+  - '^(SSH\.NET|Renci\.SshNet)$'

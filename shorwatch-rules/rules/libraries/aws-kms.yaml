@@ -7,3 +7,5 @@ matches:
     artifact: '^kms$'
   - group: '^com\.amazonaws$'
     artifact: '^aws-java-sdk-kms$'
+nuget:
+  - '^AWSSDK\.KeyManagementService$'
