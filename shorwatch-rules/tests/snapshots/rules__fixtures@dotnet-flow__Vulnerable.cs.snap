@@ -1,0 +1,54 @@
+---
+source: shorwatch-rules/tests/rules.rs
+expression: findings
+input_file: shorwatch-rules/tests/fixtures/dotnet-flow/Vulnerable.cs
+---
+- rule: dotnet.bcl.sha1
+  at: "13:9"
+  status: vulnerable
+  flow:
+    - "Options.cs:8: \"SHA1\" is written here"
+    - "Options.cs:8: assigned to Algorithm"
+- rule: dotnet.bcl.sha1
+  at: "15:9"
+  status: vulnerable
+  flow:
+    - "15: HashOptions.LegacyName is a constant"
+- rule: dotnet.bcl.sha1
+  at: "16:9"
+  status: vulnerable
+  flow:
+    - "Options.cs:14: \"SHA1\" is written here"
+    - "Options.cs:14: returned by Default(...)"
+- rule: dotnet.bcl.sha1
+  at: "18:9"
+  status: vulnerable
+  flow:
+    - "Options.cs:8: \"SHA1\" is written here"
+    - "Options.cs:8: assigned to Algorithm"
+- rule: dotnet.bcl.sha1
+  at: "26:9"
+  status: vulnerable
+  flow:
+    - "25: \"SHA1\" is written here"
+    - "25: passed as Digest to Policy(...)"
+- rule: dotnet.bcl.aes-128
+  at: "32:36"
+  status: vulnerable
+- rule: dotnet.bcl.aes-128
+  at: "33:50"
+  status: vulnerable
+- rule: dotnet.bcl.rsa
+  at: "34:19"
+  status: vulnerable
+- rule: dotnet.bcl.sha1
+  at: "40:9"
+  status: vulnerable
+  flow:
+    - "39: \"SHA1\" is written here"
+    - "39: assigned to name"
+- rule: dotnet.bcl.sha1
+  at: "41:9"
+  status: vulnerable
+  flow:
+    - "41: \"SHA1\" is written here"
