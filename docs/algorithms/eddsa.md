@@ -51,6 +51,8 @@ during the transition.
 - **BouncyCastle:** the `Ed25519` and `Ed448` signers (including the `ctx` and
   `ph` variants) and key pair generators; with bcpkix,
   `JcaContentSignerBuilder("Ed25519")`.
+- **BouncyCastle for .NET:** the `Ed25519` and `Ed448` signers (including the
+  `ctx` and `ph` variants) and key pair generators.
 - **OpenPGP:** the EdDSA public key tags (`EDDSA_LEGACY`, `Ed25519`, `Ed448`).
 - **JSch and Apache SSHD:** `ssh-ed25519` and `ssh-ed448` in an algorithm
   list, `HostKey.ED25519`, `KeyPairProvider.SSH_ED25519`, `KeyPair.ED25519`,

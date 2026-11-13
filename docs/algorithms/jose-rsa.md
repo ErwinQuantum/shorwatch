@@ -92,8 +92,14 @@ key-distribution problems.
 - **Spring Security:** the `RS*` and `PS*` constants,
   `NimbusJwtDecoder.withPublicKey` (plain and reactive), and the decoders that
   name no algorithm and so verify RS256 (see below).
+- **Microsoft.IdentityModel (.NET):** `SecurityAlgorithms.RsaSha256`, `RsaSha384`,
+  `RsaSha512`, the `RsaSsaPss*` constants, the `RsaPKCS1` and `RsaOAEP` key-wrap
+  constants (and the XML Signature URI forms), `RsaSecurityKey`, the
+  `RSA` JWK key type, and `SigningCredentials` / `EncryptingCredentials` given
+  an `RS*`, `PS*` or `RSA-OAEP` name.
 - **Tink:** the `JWT_RS*` and `JWT_PS*` key templates.
-- **Configuration:** `alg`, `algorithm(s)`, `signing-algorithm(s)` and
+- **Configuration:** (in Spring `application.yml` / `.properties` and in .NET
+  `appsettings.json`) `alg`, `algorithm(s)`, `signing-algorithm(s)` and
   `signature-algorithm(s)` keys set to an exact `RS*` / `PS*` name, and in
   Spring Boot `jws-algorithms` and `public-key-location` (Spring Boot only
   supports RSA keys there), and `jwk-set-uri` when no `jws-algorithms` is set.

@@ -58,6 +58,9 @@ supports them before you plan around it.
   `ECDSA512`.
 - **Spring Security:** the `ES*` constants in `SignatureAlgorithm` and
   `JwsAlgorithms`.
+- **Microsoft.IdentityModel (.NET):** `SecurityAlgorithms.EcdsaSha256`,
+  `EcdsaSha384` and `EcdsaSha512` (and the XML Signature URI forms),
+  `ECDsaSecurityKey`, and `SigningCredentials` given an `ES*` name.
 - **Tink:** the `JWT_ES*` key templates.
 - **Configuration:** keys such as `alg`, `algorithm(s)`, `signing-algorithm(s)`
   and `signature-algorithm(s)` set to an `ES*` value, and

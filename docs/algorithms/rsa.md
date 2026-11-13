@@ -67,6 +67,10 @@ why Shorwatch does not offer a fix.
 - **BouncyCastle:** the RSA engines, `RSAKeyPairGenerator` and
   `RSADigestSigner`; with bcpkix, the certificate signer builders
   (`JcaContentSignerBuilder("SHA256withRSA")`).
+- **BouncyCastle for .NET:** `RsaEngine`, `RsaKeyPairGenerator` and
+  `RsaDigestSigner`, and an RSA name (`RSA`, `SHA256withRSA`...) given to
+  `GeneratorUtilities.GetKeyPairGenerator`, `SignerUtilities.GetSigner` or
+  `CipherUtilities.GetCipher`.
 - **OpenPGP, JSch, Apache SSHD:** RSA key types, the `ssh-rsa` and
   `rsa-sha2-*` algorithm names, and the `HostKey.SSHRSA` and
   `KeyPairProvider.SSH_RSA` constants.

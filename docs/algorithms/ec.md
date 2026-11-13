@@ -52,9 +52,13 @@ way it is a protocol migration, so Shorwatch offers no automatic fix.
   `"EC"`, and the curve specs `ECGenParameterSpec`, `ECParameterSpec`,
   `ECPublicKeySpec` and `ECPrivateKeySpec`.
 - **BouncyCastle:** `ECKeyPairGenerator`.
+- **BouncyCastle for .NET:** `ECKeyPairGenerator`, and `"EC"` given to
+  `GeneratorUtilities.GetKeyPairGenerator`.
 - **JWT libraries:** Nimbus `ECKeyGenerator` and `ECKey.Builder`, and jjwt's
   `Jwks.CRV.P256`, `P384` and `P521`. An EC JWK can sign (ES256) or agree on
   keys (ECDH-ES), hence the generic finding.
+- **Microsoft.IdentityModel (.NET):** the `EC` JWK key type
+  (`JsonWebAlgorithmsKeyTypes.EllipticCurve`).
 - **Cloud KMS:** AWS `KeySpec.ECC_*` (and `SM2`), Azure Key Vault `KeyType.EC*`,
   `KeyCurveName.P_*` and `CreateEcKeyOptions`.
 - **Android Keystore:** `KeyProperties.KEY_ALGORITHM_EC`.

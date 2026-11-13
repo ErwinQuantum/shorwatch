@@ -63,6 +63,8 @@ writing with 3DES in the meantime.
   `DESedeWrap`, the password-based `PBEWithMD5AndTripleDES` and
   `PBEWithSHA1AndDESede`, `DESedeKeySpec`, and a `SecretKeySpec` for `DESede`.
 - **BouncyCastle:** `DESedeEngine` and `DESedeWrapEngine`.
+- **BouncyCastle for .NET:** `DesEdeEngine`, `DesEdeWrapEngine` and
+  `DesEdeKeyGenerator`, and a `DESede` name given to `CipherUtilities.GetCipher`.
 - **OpenPGP, XML Encryption (Santuario) and OpenSAML:** their Triple DES tags
   and constants.
 - **TLS:** cipher suites containing `3DES_EDE_CBC` or, in OpenSSL form,
