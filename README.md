@@ -10,8 +10,8 @@ the post-quantum replacement and the NIST standard behind it.
 
 **Status: v0.2.** Java, Kotlin and Spring projects, their configuration, the
 libraries their build files declare, and the keys and certificates they hold;
-C# is on the main branch and reaches the next release (its base class library
-only for now). See [Coverage](#coverage) for exactly what is and
+C# is on the main branch and reaches the next release (its base class library,
+BouncyCastle, JWT through IdentityModel, NuGet packages and `appsettings.json`). See [Coverage](#coverage) for exactly what is and
 isn't detected.
 
 ## Quick start
@@ -548,8 +548,8 @@ with the others:
   [**qsafe**](https://pypi.org/project/qsafe/) (Python) scan for
   quantum-vulnerable patterns in several languages.
 
-What Shorwatch brings is depth on the JVM (and, since the main branch, the .NET base class
-library), as one standalone binary with no
+What Shorwatch brings is depth on the JVM (and, since the main branch, .NET: the base class
+library, BouncyCastle and JWT), as one standalone binary with no
 server: Kotlin next to Java, Spring configuration resolved across profiles and
 `@Value`, values followed across files to the crypto call, the keys and
 keystores a repository holds, hybrid (classical plus post-quantum) detection,
@@ -603,7 +603,7 @@ shorwatch-rules/rules/
   markers/      signs of post-quantum code, for hybrid detection
   jvm/          one folder per library: jca, bouncycastle, nimbus, jjwt,
                 auth0, spring-security, ...
-  dotnet/       .NET: bcl (System.Security.Cryptography)
+  dotnet/       .NET: bcl (System.Security.Cryptography), bouncycastle, identitymodel
   config/       one folder per framework: spring-boot, spring-cloud-config, quarkus, app
   keys/         the algorithm of keys and certificates a repository holds
   libraries/    the cryptographic libraries a build file may declare (inventory)
