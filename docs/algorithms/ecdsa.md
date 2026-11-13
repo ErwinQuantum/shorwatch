@@ -61,6 +61,8 @@ together so existing verifiers keep working.
   `ECDSA` (BouncyCastle registers that name).
 - **BouncyCastle:** `ECDSASigner`; with bcpkix, the certificate signer builders
   (`SHA256withECDSA`, `BcECContentSignerBuilder`).
+- **BouncyCastle for .NET:** `ECDsaSigner`, and an ECDSA name
+  (`SHA256withECDSA`...) given to `SignerUtilities.GetSigner`.
 - **OpenPGP:** the ECDSA public key tag.
 - **.NET:** `ECDsa.Create`, `ECDsaCng`, `ECDsaOpenSsl` and `GetECDsaPublicKey` /
   `GetECDsaPrivateKey` on a certificate.

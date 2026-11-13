@@ -59,6 +59,10 @@ concatenation is not a key.
   `ECIES`; and `XECPublicKeySpec` / `XECPrivateKeySpec`.
 - **BouncyCastle:** the `ECDH`, `ECDHC`, `ECMQV` and unified-model agreement
   classes, `X25519Agreement` / `X448Agreement` and their key pair generators.
+- **BouncyCastle for .NET:** the `ECDH`, `ECDHC` and `ECMqv` agreement classes
+  (with and without a key derivation function), `X25519Agreement` /
+  `X448Agreement` and their key pair generators, and an ECDH name given to
+  `AgreementUtilities.GetBasicAgreement`.
 - **Tink:** the ECIES and HPKE templates with a classical DH-KEM.
 - **OpenPGP:** the ECDH, X25519 and X448 public key tags.
 - **.NET:** `ECDiffieHellman.Create`, `ECDiffieHellmanCng` and

@@ -61,7 +61,6 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Classical groups passed to `SSLParameters.setNamedGroups`.
 - Two rule conditions: `with_arg` (a `call` constrains a second argument) and
   `in_call` (a `literal` counts only inside a named method).
-
 - Field reads know the call they are an argument of (`unless_call` on `field`
   patterns): SHA-1 given to PBKDF2, HKDF or HMAC is not reported.
 - The scan skips `bin` and `obj` (.NET build output) and generated C#

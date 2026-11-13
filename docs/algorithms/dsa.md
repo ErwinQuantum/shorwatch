@@ -59,6 +59,9 @@ long-lived with the new scheme.
 - **BouncyCastle:** `DSASigner`, `DSAKeyPairGenerator` and
   `DSAParametersGenerator`; with bcpkix, the certificate signer builders
   (`SHA256withDSA`, `BcDSAContentSignerBuilder`).
+- **BouncyCastle for .NET:** `DsaSigner`, `DsaDigestSigner`,
+  `DsaKeyPairGenerator` and `DsaParametersGenerator`, and a DSA name given to
+  `SignerUtilities.GetSigner` or `GeneratorUtilities.GetKeyPairGenerator`.
 - **OpenPGP:** the DSA public key tag.
 - **JSch and Apache SSHD:** `ssh-dss` in an algorithm list, `KeyPair.DSA`,
   `HostKey.SSHDSS`, `KeyPairProvider.SSH_DSS`, `BuiltinSignatures.dsa*` and

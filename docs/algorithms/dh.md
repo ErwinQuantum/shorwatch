@@ -58,6 +58,9 @@ It rests on a different problem, but Shor's algorithm solves that one too.
   `DHParameterSpec` / `DHGenParameterSpec`.
 - **BouncyCastle:** the DH agreement classes, key pair generators and
   `DHParametersGenerator`.
+- **BouncyCastle for .NET:** the DH agreement classes, key pair generators and
+  `DHParametersGenerator`, and a DH name given to `GeneratorUtilities` or
+  `AgreementUtilities`.
 - **OpenPGP:** the Diffie-Hellman public key tag.
 - **JSch and Apache SSHD:** the `diffie-hellman-group*` key exchanges and
   `BuiltinDHFactories`. The hybrid `mlkem768x25519` and `sntrup761x25519`

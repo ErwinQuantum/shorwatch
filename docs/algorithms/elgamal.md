@@ -51,6 +51,8 @@ exposed.
 - **BouncyCastle:** `ElGamalEngine`, `ElGamalKeyPairGenerator`,
   `ElGamalParametersGenerator` and `ElGamalParameters` in the lightweight API,
   and `ElGamalParameterSpec` / `ElGamalGenParameterSpec` in the provider API.
+- **BouncyCastle for .NET:** `ElGamalEngine`, `ElGamalKeyPairGenerator`,
+  `ElGamalParametersGenerator` and `ElGamalParameters`.
 - **OpenPGP:** the `ELGAMAL_ENCRYPT` and `ELGAMAL_GENERAL` algorithm
   constants.
 

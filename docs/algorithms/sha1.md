@@ -66,6 +66,8 @@ verify, then drop the old one.
   OIDs.
 - **BouncyCastle:** `SHA1Digest`, and `JcaContentSignerBuilder` with a
   `SHA1with…` name for certificates.
+- **BouncyCastle for .NET:** `Sha1Digest`, and a SHA-1 name given to
+  `DigestUtilities.GetDigest` or `SignerUtilities.GetSigner`.
 - **OpenPGP:** the `SHA1` hash algorithm tag.
 - **Commons Codec and Guava:** `DigestUtils.sha1`, `sha1Hex`, `getSha1Digest`,
   their deprecated names (`sha`, `shaHex`, `getShaDigest`),

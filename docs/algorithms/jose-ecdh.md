@@ -64,6 +64,9 @@ libraries don't offer it yet. Until they do:
   (`OctetKeyPairGenerator(Curve.X25519)`) show up too.
 - **jjwt 0.12 and later:** the `ECDH_ES*` key-management constants and the
   `X25519` / `X448` curve constants.
+- **Microsoft.IdentityModel (.NET):** `SecurityAlgorithms.EcdhEs` and the
+  `EcdhEsA128kw`, `EcdhEsA192kw` and `EcdhEsA256kw` constants, and
+  `EncryptingCredentials` given an `ECDH-ES*` name.
 - **Configuration:** `alg` and `algorithm(s)` keys set to an exact `ECDH-ES`,
   `ECDH-1PU` or key-wrapping variant (`ECDH-ES+A256KW`...), for settings you
   define yourself.
