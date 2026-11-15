@@ -8,10 +8,10 @@ into a syntax tree, matches it against declarative rules, and reports every use
 of cryptography that a quantum computer would break or weaken, together with
 the post-quantum replacement and the NIST standard behind it.
 
-**Status: v0.2.** Java, Kotlin and Spring projects, their configuration, the
-libraries their build files declare, and the keys and certificates they hold;
-C# is on the main branch and reaches the next release (its base class library,
-BouncyCastle, JWT through IdentityModel, NuGet packages and `appsettings.json`). See [Coverage](#coverage) for exactly what is and
+**Status: v0.3.** Java, Kotlin, Spring and C# projects (the .NET base class
+library, BouncyCastle, JWT through IdentityModel), their configuration
+(`application.yml`, `appsettings.json`), the libraries their build files
+declare (Maven, Gradle, NuGet), and the keys and certificates they hold. See [Coverage](#coverage) for exactly what is and
 isn't detected.
 
 ## Quick start
@@ -446,7 +446,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Shorwatch
         run: |
-          v=v0.2.0
+          v=v0.3.0
           n=shorwatch-$v-x86_64-unknown-linux-gnu
           url=https://github.com/ErwinQuantum/shorwatch/releases/download/$v
           curl -sSLO "$url/$n.tar.gz" -O "$url/$n.tar.gz.sha256"
@@ -548,7 +548,7 @@ with the others:
   [**qsafe**](https://pypi.org/project/qsafe/) (Python) scan for
   quantum-vulnerable patterns in several languages.
 
-What Shorwatch brings is depth on the JVM (and, since the main branch, .NET: the base class
+What Shorwatch brings is depth on the JVM and .NET (the base class
 library, BouncyCastle and JWT), as one standalone binary with no
 server: Kotlin next to Java, Spring configuration resolved across profiles and
 `@Value`, values followed across files to the crypto call, the keys and
@@ -579,7 +579,7 @@ produce the same findings; C# has its own `dotnet` rules.
 | Spring Boot config: `jws-algorithms`, `public-key-location`, `jwk-set-uri` (RS256 default), TLS cipher suites (`*.ssl.ciphers`); Quarkus MicroProfile JWT keys without an algorithm (RS256 default); Spring Cloud Config encryption keys; app keys like `jwt.algorithm: RS256` | Crypto inside compiled `.jar` dependencies (their types are read with `--classpath`, their code is not analyzed) |
 | Values injected with `@Value("${key:default}")`, and the fields of `@ConfigurationProperties` classes (Java classes and records, Kotlin classes and data classes, relaxed binding `key-type` = `keyType`), resolved against every profile's config file; a field's initializer is the default when the key is absent | Nested objects (`prefix.nested.field`), collections and `@Bean @ConfigurationProperties` methods |
 | Apache Commons Codec and Guava (SHA-1), `net.i2p` (EdDSA) | |
-| **C# (new, unreleased):** the base class library's RSA, ECDsa, ECDiffieHellman, DSA, SHA-1, Triple DES and `KeySize = 128` on AES; BouncyCastle for .NET (engines, key generators, signers and the `*Utilities` name factories); JWT through Microsoft.IdentityModel (`SecurityAlgorithms.RsaSha256`, `SigningCredentials`, `RsaSecurityKey`); with `using` aliases, constants, properties, primary constructors, object initializers, cross-file data flow, and `IConfiguration` reads resolved against `appsettings*.json` | The options pattern (`Configure<JwtOptions>`, `Bind`), environment-variable overrides, other JWT libraries' call sites |
+| **C# (new in 0.3):** the base class library's RSA, ECDsa, ECDiffieHellman, DSA, SHA-1, Triple DES and `KeySize = 128` on AES; BouncyCastle for .NET (engines, key generators, signers and the `*Utilities` name factories); JWT through Microsoft.IdentityModel (`SecurityAlgorithms.RsaSha256`, `SigningCredentials`, `RsaSecurityKey`); with `using` aliases, constants, properties, primary constructors, object initializers, cross-file data flow, and `IConfiguration` reads resolved against `appsettings*.json` | The options pattern (`Configure<JwtOptions>`, `Bind`), environment-variable overrides, other JWT libraries' call sites |
 | OpenPGP (BouncyCastle `bcpg`): key, hash and symmetric algorithm tags | The algorithm of keys read from existing key rings |
 | SSH: JSch key types and `setConfig` algorithm lists, Apache MINA SSHD signature and key-exchange factories, host key algorithms | Library defaults when nothing is configured |
 | XML Signature and Encryption (SAML, WS-Security): JSR 105 `SignatureMethod`/`DigestMethod`, Apache Santuario, OpenSAML `SignatureConstants`/`EncryptionConstants` | Algorithm URIs written as strings |
