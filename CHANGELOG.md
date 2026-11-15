@@ -7,6 +7,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-14
+
+Shorwatch now reads **C#**: .NET projects get the same depth as Java and Kotlin
+ones (names resolved across files, values followed to the crypto call,
+configuration read, packages listed), and every report says which languages it
+analyzed and which it skipped. On the same Java code a scan reports what 0.2.0
+did and more: on the 8 open-source projects, 870 findings became 962 and none
+was lost.
+
 ### Added
 
 - C# configuration: `appsettings.json`, its environment variants and
