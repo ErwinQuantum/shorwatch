@@ -1,6 +1,6 @@
 {
   "tool": "shorwatch",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "summary": {
     "files_scanned": 10,
     "languages": [
