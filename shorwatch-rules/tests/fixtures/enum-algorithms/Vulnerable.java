@@ -18,6 +18,11 @@ public class Vulnerable {
         KeyPairGenerator.getInstance(kind.getJceName());
     }
 
+    // A specific constant is its own value: LEGACY is RSA, and only RSA.
+    void viaConstant() throws Exception {
+        KeyPairGenerator.getInstance(KeyKind.LEGACY.getJceName());
+    }
+
     // The constant names are the algorithm names.
     void viaName(Algorithm algorithm) throws Exception {
         KeyPairGenerator.getInstance(algorithm.name());

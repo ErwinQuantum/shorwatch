@@ -107,7 +107,7 @@ impl Lowering<'_> {
 }
 
 /// The text of an argument that is a string literal.
-fn text_of(arg: &PendingArg) -> Option<String> {
+pub(super) fn text_of(arg: &PendingArg) -> Option<String> {
     match &arg.source {
         ArgSource::Value(ArgValue::Str(text)) => Some(text.clone()),
         _ => None,

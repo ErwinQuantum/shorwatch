@@ -7,6 +7,23 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- C#: the **options pattern**. A class bound to a section of the
+  configuration (`services.Configure<JwtOptions>(config.GetSection("Jwt"))`,
+  `GetSection("Jwt").Get<JwtOptions>()`, `.Bind(instance)`,
+  `AddOptions<JwtOptions>().BindConfiguration("Jwt")`) takes its settable
+  properties from `appsettings*.json`, so `new SigningCredentials(key,
+  options.Value.Algorithm)` is reported with the algorithm the file sets, and
+  the path says which key it came from. The section may be a constant of the
+  options class (`JwtOptions.SectionName`), and a type nothing binds keeps its
+  default. `IOptions<T>`, `IOptionsSnapshot<T>` and `IOptionsMonitor<T>`
+  variables read through `.Value`.
+- Java and Kotlin: a **specific enum constant** is read on its own.
+  `KeyKind.LEGACY.getJceName()` (Kotlin `KeyKind.LEGACY.jceName`) is the
+  algorithm of `LEGACY` and only that one, so the other constants of the enum
+  are no longer reported (or missed) at that call.
+
 ## [0.3.1] - 2026-11-17
 
 ### Fixed

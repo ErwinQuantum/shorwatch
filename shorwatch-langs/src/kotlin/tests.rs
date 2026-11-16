@@ -577,3 +577,16 @@ fn a_constructor_property_is_read_like_an_accessor() {
     assert!(names.contains(&"alg"));
     assert!(!names.contains(&"other"));
 }
+
+#[test]
+fn a_specific_entry_has_its_own_properties() {
+    let unit = lower(
+        r#"
+        enum class Kind(val jce: String) {
+            LEGACY("RSA"), SIGNING("EC"),
+        }
+        "#,
+    );
+    assert_eq!(enum_names(&unit, "Kind.LEGACY", "jce"), ["RSA"]);
+    assert_eq!(enum_names(&unit, "Kind.SIGNING", "jce"), ["EC"]);
+}

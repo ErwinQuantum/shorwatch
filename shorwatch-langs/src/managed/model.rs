@@ -126,5 +126,13 @@ pub(crate) enum Pending {
     },
     /// A bare name that a static import may refer to, unless shadowed.
     StaticMember(String),
+    /// `services.Configure<T>(config.GetSection("A"))` and its relatives: the
+    /// type `ty` is bound to the section `prefix` of the configuration
+    /// `receiver` holds (any, when `None`: `BindConfiguration("A")`).
+    Bind {
+        ty: String,
+        receiver: Option<Receiver>,
+        prefix: PendingArg,
+    },
     Ready(FactKind),
 }

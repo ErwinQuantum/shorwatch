@@ -448,3 +448,160 @@ fn an_indexer_of_something_else_is_not_configuration() {
     );
     assert_eq!(found, [None, None]);
 }
+
+/// What the file binds: each type and the section it is bound to (`None`
+/// when the section is not a literal).
+fn bindings(source: &str) -> Vec<(String, Option<String>)> {
+    lower(source)
+        .facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Bind { ty, section } => Some((
+                ty.name.clone(),
+                match &section.value {
+                    ArgValue::Str(text) => Some(text.clone()),
+                    _ => None,
+                },
+            )),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn the_options_pattern_binds_a_type_to_a_section() {
+    let found = bindings(
+        r#"
+        using Microsoft.Extensions.Configuration;
+        class A {
+            void Run(IConfiguration config, IServiceCollection services) {
+                services.Configure<JwtOptions>(config.GetSection("Jwt"));
+                services.Configure<NamedOptions>("name", config.GetSection("A").GetSection("B"));
+                var got = config.GetSection("Got").Get<GotOptions>();
+                var bound = new BoundOptions();
+                config.GetSection("Bound").Bind(bound);
+                services.AddOptions<ChainOptions>().Bind(config.GetSection("Chain")).ValidateOnStart();
+                services.AddOptions<PathOptions>().BindConfiguration("Path");
+            }
+        }
+        "#,
+    );
+    let named = |ty: &str, section: &str| (ty.to_owned(), Some(section.to_owned()));
+    assert_eq!(
+        found,
+        [
+            named("JwtOptions", "Jwt"),
+            named("NamedOptions", "A:B"),
+            named("GotOptions", "Got"),
+            named("BoundOptions", "Bound"),
+            named("ChainOptions", "Chain"),
+            named("PathOptions", "Path"),
+        ]
+    );
+}
+
+#[test]
+fn a_section_named_by_a_constant_stays_an_argument() {
+    let unit = lower(
+        r#"
+        class A { void Run(IConfiguration config, IServiceCollection services) {
+            services.Configure<JwtOptions>(config.GetSection(JwtOptions.SectionName));
+        } }
+        "#,
+    );
+    let sections: Vec<_> = unit
+        .facts()
+        .iter()
+        .filter_map(|f| match &f.kind {
+            FactKind::Bind { section, .. } => Some(section.raw.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(sections, ["JwtOptions.SectionName"]);
+}
+
+#[test]
+fn what_is_not_the_configuration_binds_nothing() {
+    let found = bindings(
+        r#"
+        class A {
+            void Run(Cache cache, IServiceCollection services, Thing thing) {
+                cache.GetSection("x").Get<Entry>();
+                var plain = cache.Get<Entry>();
+                services.Configure<JwtOptions>(o => o.Algorithm = "RS256");
+                thing.Bind(plain);
+            }
+        }
+        "#,
+    );
+    assert!(found.is_empty(), "{found:?}");
+}
+
+#[test]
+fn an_options_wrapper_reads_through_value_to_its_type() {
+    let unit = lower(
+        r#"
+        class Service {
+            private readonly IOptions<JwtOptions> _options;
+            Service(IOptionsMonitor<JwtOptions> monitor) { }
+            void Run() {
+                Foo.Use(_options.Value.Algorithm);
+            }
+        }
+        "#,
+    );
+    let owners: Vec<_> = calls(&unit)
+        .into_iter()
+        .filter(|c| c.1 == "Use")
+        .flat_map(|c| c.2)
+        .flat_map(|v| match v {
+            ArgValue::OneOf(candidates) => candidates.into_iter().map(|c| c.value).collect(),
+            other => vec![other],
+        })
+        .filter_map(|v| match v {
+            ArgValue::Returns { owner, method, .. } => Some((owner.name, method)),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(owners, [("JwtOptions".to_owned(), "Algorithm".to_owned())]);
+}
+
+#[test]
+fn a_settable_property_is_bound_and_keeps_its_initializer_as_default() {
+    let unit = lower(
+        r#"
+        namespace Acme;
+        public class JwtOptions {
+            public string Algorithm { get; set; } = "HS256";
+            public string Issuer { get; set; }
+            public string Fixed { get; } = "RS256";
+        }
+        "#,
+    );
+    let bound: Vec<_> = unit
+        .methods()
+        .iter()
+        .filter_map(|m| {
+            let candidate = m.returns.iter().find_map(|c| match &c.value {
+                ArgValue::Bound {
+                    property, default, ..
+                } => Some((property.clone(), default.clone())),
+                _ => None,
+            })?;
+            Some((m.name.clone(), candidate))
+        })
+        .collect();
+    assert!(
+        bound.contains(&(
+            "Algorithm".into(),
+            ("Algorithm".into(), Some("HS256".into()))
+        )),
+        "{bound:?}"
+    );
+    assert!(
+        bound.contains(&("Issuer".into(), ("Issuer".into(), None))),
+        "{bound:?}"
+    );
+    // Nothing can set `Fixed`: it is its literal, not a bound value.
+    assert!(!bound.iter().any(|b| b.0 == "Fixed"), "{bound:?}");
+}

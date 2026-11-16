@@ -45,6 +45,7 @@ impl ManagedFile {
     pub(crate) fn resolve(mut self) -> SourceUnit {
         self.index_scopes();
         self.bind_configuration_properties();
+        self.gather_constant_args();
         self.local_calls = self
             .pending
             .iter()
@@ -92,6 +93,26 @@ impl ManagedFile {
                     Some(owner) => FactKind::Field { owner, name, calls },
                     None => continue,
                 },
+                Pending::Bind {
+                    ty,
+                    receiver,
+                    prefix,
+                } => {
+                    // A configuration's own sections, not any object that
+                    // happens to have a `Get<T>()`.
+                    if let Some(receiver) = &receiver
+                        && !self.is_configuration(receiver, scope)
+                    {
+                        continue;
+                    }
+                    let Some(section) = self.resolve_args(vec![prefix], scope).pop() else {
+                        continue;
+                    };
+                    FactKind::Bind {
+                        ty: self.type_ref(&ty),
+                        section,
+                    }
+                }
                 Pending::StaticMember(name) => {
                     if self.lookup(scope, &name).is_some() {
                         continue;
@@ -109,6 +130,9 @@ impl ManagedFile {
         }
         for summary in self.summaries() {
             self.unit.add_method(summary);
+        }
+        for ty in self.constant_types() {
+            self.unit.add_type(ty);
         }
         for constant in self.constants() {
             self.unit.add_constant(constant);

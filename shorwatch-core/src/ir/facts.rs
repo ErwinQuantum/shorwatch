@@ -21,6 +21,17 @@ pub enum ArgValue {
     /// The values a variable, parameter or method result may hold, each with
     /// the path it takes to the argument (data flow).
     OneOf(Vec<Candidate>),
+    /// Among [`ArgValue::OneOf`] candidates: the property `property` of the
+    /// settable options type `owner` (`JwtOptions.Algorithm`), which the
+    /// configuration fills when the project binds the type to a section
+    /// ([`FactKind::Bind`]). `default` is the property's initializer.
+    /// [`crate::link`] resolves it; a type nothing binds keeps its default.
+    Bound {
+        owner: String,
+        property: String,
+        default: Option<String>,
+        resolved: Vec<String>,
+    },
     /// Among [`ArgValue::OneOf`] candidates: parameter `index` (named
     /// `param`) of method `method` of type `owner`, declared in this file.
     /// Its values come from calls in other files, which [`crate::link`]
@@ -61,6 +72,10 @@ impl ArgValue {
                 default, resolved, ..
             } if resolved.is_empty() => default.iter().cloned().collect(),
             ArgValue::Injected { resolved, .. } => resolved.clone(),
+            ArgValue::Bound {
+                default, resolved, ..
+            } if resolved.is_empty() => default.iter().cloned().collect(),
+            ArgValue::Bound { resolved, .. } => resolved.clone(),
             ArgValue::OneOf(candidates) => {
                 candidates.iter().flat_map(|c| c.value.texts()).collect()
             }
@@ -222,6 +237,12 @@ pub enum FactKind {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         calls: Vec<String>,
     },
+    /// Configuration bound to a type (.NET options): `Configure<T>(config
+    /// .GetSection("Jwt"))`, `GetSection("Jwt").Get<T>()`. The type's settable
+    /// properties then read `Jwt.<property>` ([`ArgValue::Bound`]). `section`
+    /// is the section path as an argument, so a constant of another file
+    /// (`JwtOptions.SectionName`) resolves like any other.
+    Bind { ty: TypeRef, section: Arg },
     /// An import (or equivalent). Imports apply to the whole file.
     Import { path: String },
     /// A string literal anywhere in the code.

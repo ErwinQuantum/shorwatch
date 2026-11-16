@@ -516,3 +516,25 @@ fn an_enum_that_declares_to_string_keeps_its_own() {
             .all(|n| n == "x")
     );
 }
+
+#[test]
+fn a_specific_constant_has_its_own_accessors() {
+    let unit = lower(
+        r#"
+            enum Kind {
+                LEGACY("RSA"), SIGNING("EC"), PLAIN;
+                private final String jce;
+                Kind(String jce) { this.jce = jce; }
+                String getJce() { return jce; }
+            }
+        "#,
+    );
+    // Each constant with arguments returns its own value, not the union.
+    assert_eq!(enum_names(&unit, "Kind.LEGACY", "getJce"), ["RSA"]);
+    assert_eq!(enum_names(&unit, "Kind.SIGNING", "getJce"), ["EC"]);
+    // A constant without arguments builds nothing to read.
+    assert!(enum_names(&unit, "Kind.PLAIN", "getJce").is_empty());
+    // The enum's own accessor still reaches every constant, through the
+    // constructor.
+    assert!(enum_names(&unit, "Kind", "getJce").is_empty());
+}

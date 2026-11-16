@@ -12,6 +12,11 @@ class Vulnerable(private val kind: KeyKind) {
         KeyPairGenerator.getInstance(kind.jceName)
     }
 
+    // A specific constant is its own value: LEGACY is RSA, and only RSA.
+    fun viaConstant() {
+        KeyPairGenerator.getInstance(KeyKind.LEGACY.jceName)
+    }
+
     // The constant names are the algorithm names.
     fun viaName(algorithm: Algorithm) {
         KeyPairGenerator.getInstance(algorithm.name)

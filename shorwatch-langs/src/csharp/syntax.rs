@@ -118,3 +118,39 @@ pub(super) fn enclosing_calls(literal: Node<'_>, src: &str) -> Vec<String> {
     }
     calls
 }
+
+/// `T` of `IOptions<T>`, `IOptionsSnapshot<T>` and `IOptionsMonitor<T>`: the
+/// options type a variable declared with one of them reads through `.Value`.
+pub(super) fn options_inner(written: &str) -> Option<String> {
+    let (head, rest) = written.trim().split_once('<')?;
+    let name = head.trim().rsplit('.').next()?;
+    if !matches!(name, "IOptions" | "IOptionsSnapshot" | "IOptionsMonitor") {
+        return None;
+    }
+    let inner = rest.trim_end_matches('?').strip_suffix('>')?;
+    (!inner.contains(['<', ','])).then(|| type_name(inner))
+}
+
+/// The type arguments of the method a call names: `Configure<JwtOptions>(..)`
+/// (`function` is the call's `function` field).
+pub(super) fn generic_args<'s>(function: Node<'_>, src: &'s str) -> Vec<&'s str> {
+    let name = if function.kind() == "member_access_expression" {
+        function.child_by_field_name("name")
+    } else {
+        Some(function)
+    };
+    let Some(name) = name.filter(|n| n.kind() == "generic_name") else {
+        return Vec::new();
+    };
+    let mut cursor = name.walk();
+    let Some(list) = name
+        .named_children(&mut cursor)
+        .find(|c| c.kind() == "type_argument_list")
+    else {
+        return Vec::new();
+    };
+    let mut cursor = list.walk();
+    list.named_children(&mut cursor)
+        .map(|ty| &src[ty.byte_range()])
+        .collect()
+}

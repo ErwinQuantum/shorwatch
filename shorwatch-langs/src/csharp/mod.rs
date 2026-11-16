@@ -17,6 +17,7 @@
 //!
 //! - this module: the traversal (phase one);
 //! - [`configuration`]: reads of `IConfiguration` (`config["A:B"]`, `GetValue`);
+//! - [`options`]: the options pattern (`Configure<T>(section)`, `IOptions<T>`);
 //! - [`literals`]: decoding string and integer literals;
 //! - [`syntax`]: small helpers over the tree.
 
@@ -31,11 +32,13 @@ use crate::managed::{
 use crate::{Frontend, LangError, span};
 use literals::{int_value, string_value};
 use syntax::{
-    argument_value, enclosing_calls, has_modifier, invoked, is_name_path, simple_name, type_name,
+    argument_value, enclosing_calls, generic_args, has_modifier, invoked, is_name_path,
+    options_inner, simple_name, type_name,
 };
 
 mod configuration;
 mod literals;
+mod options;
 mod syntax;
 #[cfg(test)]
 mod tests;
@@ -255,9 +258,9 @@ impl<'s> Lowering<'s> {
             has_modifier(statement, self.src, "const")
                 || has_modifier(statement, self.src, "readonly")
         });
-        let declared = node
-            .child_by_field_name("type")
-            .map(|t| type_name(self.text(t)));
+        let written = node.child_by_field_name("type").map(|t| self.text(t));
+        let wrapped = written.and_then(options_inner);
+        let declared = wrapped.clone().or_else(|| written.map(type_name));
         let mut cursor = node.walk();
         let declarators: Vec<_> = node
             .named_children(&mut cursor)
@@ -311,6 +314,9 @@ impl<'s> Lowering<'s> {
                     value: self.pending(value),
                     location: self.location(declarator),
                 });
+            }
+            if wrapped.is_some() {
+                self.file.unwrapped.insert((scope, name.to_owned()));
             }
             self.file.symbols.insert(
                 (scope, name.to_owned()),
@@ -368,10 +374,14 @@ impl<'s> Lowering<'s> {
                 location: self.location(node),
             });
         }
+        if settable && self.file.unit.scope(scope).kind == ScopeKind::Type {
+            self.file.settable.insert((scope, name.to_owned()));
+        }
+        let ty = self.declared_type(scope, name, ty);
         self.file.symbols.insert(
             (scope, name.to_owned()),
             Symbol {
-                ty: Some(type_name(self.text(ty))),
+                ty: Some(ty),
                 constant,
                 ..Symbol::default()
             },
@@ -416,13 +426,27 @@ impl<'s> Lowering<'s> {
                 .or_default()
                 .push((name.to_owned(), location));
         }
+        let ty = self.declared_type(scope, name, ty);
         self.file.symbols.insert(
             (scope, name.to_owned()),
             Symbol {
-                ty: Some(type_name(self.text(ty))),
+                ty: Some(ty),
                 ..Symbol::default()
             },
         );
+    }
+
+    /// The type a name is declared with. `IOptions<T>` (and its relatives) is
+    /// `T`: the variable's `.Value` is what the options pattern binds.
+    fn declared_type(&mut self, scope: ScopeId, name: &str, ty: Node<'_>) -> String {
+        let written = self.text(ty);
+        match options_inner(written) {
+            Some(inner) => {
+                self.file.unwrapped.insert((scope, name.to_owned()));
+                inner
+            }
+            None => type_name(written),
+        }
     }
 
     /// Type of a `var` initializer, when it is obvious from the syntax.
@@ -439,6 +463,13 @@ impl<'s> Lowering<'s> {
                 .map(|t| type_name(self.text(t))),
             // `RSA.Create()`: the BCL's factories return their own type.
             "invocation_expression" => {
+                // `section.Get<JwtOptions>()` is a `JwtOptions`.
+                let function = value.child_by_field_name("function")?;
+                if invoked(value, self.src).is_some_and(|(_, method)| method == "Get")
+                    && let Some(ty) = generic_args(function, self.src).first()
+                {
+                    return Some(type_name(ty));
+                }
                 let (object, _) = invoked(value, self.src)?;
                 let object = object?;
                 let text = self.text(object);
@@ -492,6 +523,7 @@ impl<'s> Lowering<'s> {
     }
 
     fn call(&mut self, node: Node<'_>, scope: ScopeId) {
+        self.options_binding(node, scope);
         let Some((object, method)) = invoked(node, self.src) else {
             return;
         };
