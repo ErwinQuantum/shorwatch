@@ -9,6 +9,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- `docs/roadmap/`: what is planned and not implemented (the quantum resource
+  estimator, the migration advisor, a maturity score, infrastructure
+  configuration, Razor views, more languages, signed artifacts), with how each
+  would work.
 - C#: the **options pattern**. A class bound to a section of the
   configuration (`services.Configure<JwtOptions>(config.GetSection("Jwt"))`,
   `GetSection("Jwt").Get<JwtOptions>()`, `.Bind(instance)`,

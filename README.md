@@ -689,6 +689,10 @@ reviewed. Security issues: see [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
+What is planned, and how each piece would be built, is in
+[docs/roadmap](docs/roadmap/README.md). Nothing there is implemented yet.
+The short list:
+
 - Editor integration through LSP: findings underlined as you type
 - Pull-request mode: report and comment only what a change introduces
 - A GitHub Action on the Marketplace, and `shorwatch fix` to apply the
