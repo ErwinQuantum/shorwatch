@@ -30,16 +30,16 @@ const MAX_CANDIDATES: usize = 16;
 /// and depth, and the calls it entered, so that a parameter takes the value
 /// of *that* call rather than of every call to the method.
 #[derive(Default)]
-struct Context<'a> {
-    trail: Vec<(ScopeId, String)>,
-    calls: Vec<Entered<'a>>,
+pub(super) struct Context<'a> {
+    pub(super) trail: Vec<(ScopeId, String)>,
+    pub(super) calls: Vec<Entered<'a>>,
 }
 
 /// A call whose callee's `return`s are being resolved.
-struct Entered<'a> {
-    method: ScopeId,
-    args: &'a [PendingArg],
-    scope: ScopeId,
+pub(super) struct Entered<'a> {
+    pub(super) method: ScopeId,
+    pub(super) args: &'a [PendingArg],
+    pub(super) scope: ScopeId,
 }
 
 impl ManagedFile {
@@ -87,6 +87,7 @@ impl ManagedFile {
         }
         summaries.extend(self.enum_name_summaries());
         summaries.extend(self.property_summaries());
+        summaries.extend(self.constant_summaries());
         summaries
     }
 
@@ -99,8 +100,11 @@ impl ManagedFile {
                 continue;
             };
             for (name, location) in properties {
-                let returns =
+                let mut returns =
                     self.variable(*scope, name, false, *location, &mut Context::default());
+                if self.settable.contains(&(*scope, name.clone())) {
+                    returns = self.bound(&owner, name, *location, returns);
+                }
                 if !returns.is_empty() {
                     summaries.push(MethodSummary {
                         owner: owner.clone(),
@@ -116,9 +120,56 @@ impl ManagedFile {
         summaries
     }
 
+    /// A settable property may be filled by configuration (options types are
+    /// bound to a section somewhere else): its initializer becomes the default
+    /// of a [`ArgValue::Bound`], which keeps the initializer's path.
+    fn bound(
+        &self,
+        owner: &str,
+        property: &str,
+        at: Location,
+        returns: Vec<Candidate>,
+    ) -> Vec<Candidate> {
+        let default = returns.iter().find_map(|c| match &c.value {
+            ArgValue::Str(text) => Some(text.clone()),
+            _ => None,
+        });
+        let flow = returns
+            .iter()
+            .find(|c| matches!(c.value, ArgValue::Str(_)))
+            .map_or_else(
+                || vec![step(at, format!("{property} is a settable property"))],
+                |c| c.flow.clone(),
+            );
+        let bound = Candidate {
+            value: ArgValue::Bound {
+                owner: owner.to_owned(),
+                property: property.to_owned(),
+                default: default.clone(),
+                resolved: Vec::new(),
+            },
+            flow,
+        };
+        // The default is part of the bound value: not a second candidate.
+        let others = returns
+            .into_iter()
+            .filter(|c| !matches!((&c.value, &default), (ArgValue::Str(a), Some(b)) if a == b));
+        std::iter::once(bound).chain(others).collect()
+    }
+
     /// `k.jce` where `k` is a variable of a declared type: what that type's
-    /// accessor `jce` returns, for `link` to look up.
+    /// accessor `jce` returns, for `link` to look up. `o.Value.jce` reads
+    /// through an `IOptions<T>` variable `o`.
     fn property_read(&self, scope: ScopeId, owner: &str, name: &str) -> Vec<Candidate> {
+        let owner = [".Value", ".CurrentValue"]
+            .iter()
+            .find_map(|suffix| owner.strip_suffix(suffix))
+            .filter(|base| {
+                self.lookup_scope(scope, base).is_some_and(|declared| {
+                    self.unwrapped.contains(&(declared, (*base).to_owned()))
+                })
+            })
+            .unwrap_or(owner);
         if owner.contains('.') {
             return Vec::new();
         }
@@ -137,6 +188,26 @@ impl ManagedFile {
             }],
             _ => Vec::new(),
         }
+    }
+
+    /// `KeyKind.LEGACY.jceName` (Kotlin): a property of a specific enum
+    /// constant, which [`super::constants`] publishes as an accessor of the
+    /// type `KeyKind.LEGACY`. Written like any other `Owner.NAME`, so the
+    /// constant candidate stays; whichever finds nothing is dropped.
+    fn constant_property(&self, scope: ScopeId, owner: &str, name: &str) -> Option<Candidate> {
+        let (_, constant) = owner.rsplit_once('.')?;
+        let first = owner.split('.').next()?;
+        if !super::starts_uppercase(constant) || self.lookup_scope(scope, first).is_some() {
+            return None;
+        }
+        Some(Candidate {
+            value: ArgValue::Returns {
+                owner: self.type_ref(owner),
+                method: name.to_owned(),
+                args: Vec::new(),
+            },
+            flow: Vec::new(),
+        })
     }
 
     /// `name()` and `toString()` of an enum value are the name of one of its
@@ -206,10 +277,12 @@ impl ManagedFile {
                     .member_constant(scope, owner, name)
                     .or_else(|| self.foreign_constant(scope, owner, name));
                 match value {
-                    Some(value) => vec![Candidate {
+                    Some(value) => std::iter::once(Candidate {
                         value,
                         flow: vec![step(arg.location, note)],
-                    }],
+                    })
+                    .chain(self.constant_property(scope, owner, name))
+                    .collect(),
                     None => self.property_read(scope, owner, name),
                 }
             }
@@ -268,7 +341,7 @@ impl ManagedFile {
     /// relatives). A receiver whose type is not known (`builder.Configuration`)
     /// counts when it is named after one: a key that no config file defines
     /// resolves to nothing, so a wrong guess reports nothing.
-    fn is_configuration(&self, receiver: &Receiver, scope: ScopeId) -> bool {
+    pub(super) fn is_configuration(&self, receiver: &Receiver, scope: ScopeId) -> bool {
         const TYPES: [&str; 5] = [
             "IConfiguration",
             "IConfigurationRoot",
@@ -360,7 +433,7 @@ impl ManagedFile {
 
     /// A local variable, parameter or field (`this.name` when `field`),
     /// referred to at `at`.
-    fn variable<'a>(
+    pub(super) fn variable<'a>(
         &'a self,
         scope: ScopeId,
         name: &str,
@@ -492,7 +565,11 @@ impl ManagedFile {
     }
 
     /// The values `method`'s `return`s may hold.
-    fn returns_of<'a>(&'a self, method: ScopeId, cx: &mut Context<'a>) -> Vec<Candidate> {
+    pub(super) fn returns_of<'a>(
+        &'a self,
+        method: ScopeId,
+        cx: &mut Context<'a>,
+    ) -> Vec<Candidate> {
         let key = (method, "<return>".to_owned());
         if cx.trail.contains(&key) {
             return Vec::new();
@@ -595,7 +672,7 @@ impl ManagedFile {
     }
 
     /// Whether `method` is its type's only method with its name and arity.
-    fn is_unique(&self, method: ScopeId) -> bool {
+    pub(super) fn is_unique(&self, method: ScopeId) -> bool {
         let name = self.unit.scope(method).name.as_deref().unwrap_or_default();
         let owner = self.enclosing_type(method);
         self.methods_of(owner, name, self.arity(method)) == [method]
@@ -603,7 +680,12 @@ impl ManagedFile {
 
     /// The methods named `name` with `arity` parameters declared directly in
     /// `owner` (top-level functions when `None`).
-    fn methods_of(&self, owner: Option<ScopeId>, name: &str, arity: usize) -> Vec<ScopeId> {
+    pub(super) fn methods_of(
+        &self,
+        owner: Option<ScopeId>,
+        name: &str,
+        arity: usize,
+    ) -> Vec<ScopeId> {
         self.method_scopes
             .get(&(owner, name.to_owned(), arity))
             .cloned()
@@ -633,7 +715,7 @@ impl ManagedFile {
         }
     }
 
-    fn arity(&self, method: ScopeId) -> usize {
+    pub(super) fn arity(&self, method: ScopeId) -> usize {
         self.params.get(&method).map_or(0, Vec::len)
     }
 

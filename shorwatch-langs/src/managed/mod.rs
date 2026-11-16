@@ -10,6 +10,7 @@
 //!
 //! - [`model`]: what phase one records;
 //! - [`resolve`]: phase two, names to types, constant and injected values;
+//! - [`constants`]: phase two, what each constant of an enum holds;
 //! - [`flow`]: phase two, values that reach an argument through variables,
 //!   parameters and returns of this file.
 
@@ -20,6 +21,7 @@ use shorwatch_core::ir::{Location, ScopeId, SourceUnit};
 
 pub(crate) use model::{ArgSource, Assignment, LocalCall, Pending, PendingArg, Receiver, Symbol};
 
+mod constants;
 mod flow;
 mod model;
 mod resolve;
@@ -67,8 +69,17 @@ pub(crate) struct ManagedFile {
     /// Types annotated `@ConfigurationProperties(prefix = "...")`: their
     /// fields are bound to `<prefix>.<field>` keys of the configuration.
     pub(crate) config_prefixes: HashMap<ScopeId, String>,
+    /// Properties a configuration may fill (C# `{ get; set; }`), by type
+    /// scope and name: when the project binds the type to a section, reading
+    /// one is reading the configuration ([`shorwatch_core::ir::ArgValue::Bound`]).
+    pub(crate) settable: HashSet<(ScopeId, String)>,
+    /// Variables declared as `IOptions<T>` (and its relatives): their symbol
+    /// is typed `T`, and `.Value` reads through to it.
+    pub(crate) unwrapped: HashSet<(ScopeId, String)>,
     /// Calls that may target a method of this file, gathered in phase two.
     local_calls: Vec<LocalCall>,
+    /// The enum constants built with arguments, gathered in phase two.
+    constant_args: Vec<constants::ConstantArgs>,
     /// Type scopes by name and method scopes by declaring type, name and
     /// arity, indexed once in phase two: big generated files have thousands.
     type_scopes: HashMap<String, Vec<ScopeId>>,
@@ -95,7 +106,10 @@ impl ManagedFile {
             enum_constants: HashMap::new(),
             properties: HashMap::new(),
             config_prefixes: HashMap::new(),
+            settable: HashSet::new(),
+            unwrapped: HashSet::new(),
             local_calls: Vec::new(),
+            constant_args: Vec::new(),
             type_scopes: HashMap::new(),
             method_scopes: HashMap::new(),
             pending: Vec::new(),

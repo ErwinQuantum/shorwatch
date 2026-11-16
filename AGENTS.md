@@ -49,8 +49,8 @@ core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: mode
            engine/{mod: analyze + findings, matching, hybrid, fix}
            link/{mod, library, hierarchy, receivers, flow, config}  finding.rs
 rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules, libraries)  error.rs  build.rs
-langs/src/ managed/{mod: ManagedFile, model, resolve, flow}  java/{mod: traversal, syntax, literals}
-           kotlin/{mod: traversal, syntax, literals}  csharp/{mod: traversal, syntax, literals}  config/{properties, yaml, json}  span.rs
+langs/src/ managed/{mod: ManagedFile, model, resolve, flow, constants}  java/{mod: traversal, syntax, literals}
+           kotlin/{mod: traversal, syntax, literals}  csharp/{mod: traversal, configuration, options, syntax, literals}  config/{properties, yaml, json}  span.rs
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
            build/{mod, maven, gradle, catalog, nuget}  depth.rs (nesting bound)  unsupported.rs (languages seen, not read)
@@ -105,8 +105,14 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `toString()` (Kotlin `.name`) are synthetic `MethodSummary`s listing the
   constants (`managed/flow.rs::enum_name_summaries`); a Kotlin primary-constructor
   `val` is published as an accessor, and `k.prop` on a typed variable is a
-  `Returns` candidate. A *specific* constant (`Kind.LEGACY.getJceName()`) is
-  not resolved: the union of all constants would be wrong for it.
+  `Returns` candidate. A *specific* constant (`Kind.LEGACY.getJceName()`,
+  Kotlin `Kind.LEGACY.jceName`) is its own value, not the union: for each
+  constant built with arguments, `managed/constants.rs` evaluates the enum's
+  accessors (methods without parameters, a Kotlin property) with the
+  constructor bound to *that* constant's arguments, and publishes them as the
+  methods of a type `Kind.LEGACY` (`MethodSummary` + `TypeDecl`), which is what
+  the receiver `Kind.LEGACY` types as. Constants without arguments, and
+  accessors that take parameters, are not followed.
 - **`@ConfigurationProperties`**: a type annotated with a prefix binds its
   fields (and a record's or Kotlin primary constructor's properties) to
   `<prefix>.<field>`, as `ArgValue::Injected` with the field's literal
@@ -207,8 +213,20 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   receiver is an `IConfiguration` (by type, or by a name containing `config`
   when the type is unknown, as in `builder.Configuration`), and `link::config`
   resolves the key (`:` = `.`) against `appsettings*.json`.
-  Not yet: `using static`, `global using` from other files, the options
-  pattern (`Configure<T>(section)`, `Get<T>()`, `Bind`), enum constants.
+  **The options pattern** (`csharp/options.rs`): `Configure<T>(config.GetSection("A"))`,
+  `GetSection("A").Get<T>()`, `GetSection("A").Bind(instance)`,
+  `AddOptions<T>().Bind(section)` / `.BindConfiguration("A")` are
+  `FactKind::Bind { ty, section }` (the section stays an `Arg`, so
+  `JwtOptions.SectionName` of another file resolves through `link::flow`;
+  the receiver must be a configuration). A settable property
+  (`{ get; set; }`/`init`) publishes an `ArgValue::Bound` candidate, its
+  initializer being the default; `link::config` fills it from
+  `<section>.<Property>` of every `Bind` of that type (a type nothing binds
+  keeps its default). A variable declared `IOptions<T>` /
+  `IOptionsSnapshot<T>` / `IOptionsMonitor<T>` is typed `T` and `.Value` /
+  `.CurrentValue` reads through; `var o = section.Get<T>()` is a `T`. Not
+  followed: lambdas (`Configure<T>(o => ...)`), nested option objects.
+  Not yet: `using static`, `global using` from other files, enum constants.
 - **Kotlin** (`langs/src/kotlin/`): `Name(...)` is a constructor when `Name`
   looks like a type (upper-case start *and* a lower-case letter, so `RSA256(...)`
   stays a call); member imports (`...JWSAlgorithm.RS256`) = Java static

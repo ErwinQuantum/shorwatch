@@ -4,8 +4,9 @@
 //! sense across files: the type hierarchy ([`hierarchy`]), receivers that
 //! are calls to other files' methods ([`receivers`]), values passed to, or
 //! returned by, methods of other files ([`flow`]), and values injected from
-//! configuration (`@Value("${jwt.algorithm}")`) with the config entries that
-//! define them ([`config`]). Compiled dependencies ([`Library`]) add the
+//! configuration (`@Value("${jwt.algorithm}")`, or the properties of a .NET
+//! options type bound to a section) with the config entries that define them
+//! ([`config`]). Compiled dependencies ([`Library`]) add the
 //! types and return types the sources do not declare.
 
 use crate::ir::{Arg, FactKind, Library, Platform, SourceUnit};
@@ -65,6 +66,7 @@ fn args(kind: &FactKind) -> Vec<&Arg> {
             .chain(receiver_origin.iter().flatten())
             .collect(),
         FactKind::Construct { args, .. } => args.iter().collect(),
+        FactKind::Bind { section, .. } => vec![section],
         _ => Vec::new(),
     }
 }
@@ -81,6 +83,7 @@ fn args_mut(kind: &mut FactKind) -> Vec<&mut Arg> {
             .chain(receiver_origin.iter_mut().flatten())
             .collect(),
         FactKind::Construct { args, .. } => args.iter_mut().collect(),
+        FactKind::Bind { section, .. } => vec![section],
         _ => Vec::new(),
     }
 }

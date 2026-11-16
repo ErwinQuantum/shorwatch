@@ -28,7 +28,7 @@ fn samples() -> Vec<(&'static str, String)> {
         (
             "A.cs",
             format!(
-                "using System.Security.Cryptography; class A {{ string s = \"{a}\"; void M(IConfiguration c) {{ RSA.Create(2048); c[\"K{a}\"]; }} }}"
+                "using System.Security.Cryptography; class A {{ string s = \"{a}\"; void M(IConfiguration c, IOptions<O> o) {{ RSA.Create(2048); c[\"K{a}\"]; services.Configure<O{a}>(c.GetSection(\"S{a}\")); c.GetSection(\"G\").Get<O>(); var x = o.Value.P{a}; }} }}"
             ),
         ),
         (

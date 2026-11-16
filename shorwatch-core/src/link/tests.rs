@@ -1,7 +1,7 @@
 use super::*;
 use crate::ir::{
-    Arg, ArgValue, CallOwner, CallRef, CodeRole, FactKind, Language, Location, MethodSummary,
-    TypeDecl, TypeRef,
+    Arg, ArgValue, CallOwner, CallRef, Candidate, CodeRole, FactKind, Language, Location,
+    MethodSummary, TypeDecl, TypeRef,
 };
 
 fn config(path: &str, entries: &[(&str, &str)]) -> SourceUnit {
@@ -362,4 +362,92 @@ fn linking_by_platform_keeps_the_units_in_place() {
     let after: Vec<_> = units.iter().map(|u| u.path().to_owned()).collect();
     assert_eq!(paths, after);
     assert_eq!(helper_arg(&units).match_texts(), ["SHA1withRSA"]);
+}
+
+/// A C# file whose call reads `owner.Algorithm`, a property bound to the
+/// section of `Bind` facts (and with `"HS256"` as its default).
+fn dotnet_reading_bound(owner: &str, binds: &[(&str, &str)]) -> SourceUnit {
+    let mut unit = SourceUnit::new("A.cs", Language::CSharp);
+    for (ty, section) in binds {
+        unit.push(
+            FactKind::Bind {
+                ty: TypeRef::in_packages(*ty, vec!["Acme".to_owned()]),
+                section: Arg::str(*section, Location::line(1, 1, 2)),
+            },
+            SourceUnit::ROOT,
+            Location::line(1, 1, 10),
+        );
+    }
+    unit.push(
+        FactKind::Call {
+            receiver: None,
+            method: "Use".into(),
+            args: vec![Arg {
+                value: ArgValue::OneOf(vec![Candidate {
+                    value: ArgValue::Bound {
+                        owner: owner.into(),
+                        property: "Algorithm".into(),
+                        default: Some("HS256".into()),
+                        resolved: vec![],
+                    },
+                    flow: vec![],
+                }]),
+                raw: "o.Algorithm".into(),
+                resolved_via: None,
+                location: Location::line(3, 1, 4),
+            }],
+            receiver_origin: None,
+            receiver_call: None,
+            chain: Vec::new(),
+        },
+        SourceUnit::ROOT,
+        Location::line(3, 1, 10),
+    );
+    unit
+}
+
+fn last_texts(unit: &SourceUnit) -> Vec<String> {
+    match &unit.facts().last().unwrap().kind {
+        FactKind::Call { args, .. } => args[0].match_texts(),
+        _ => unreachable!(),
+    }
+}
+
+#[test]
+fn a_bound_type_takes_its_properties_from_its_section() {
+    let mut units = vec![
+        dotnet_reading_bound("Acme.JwtOptions", &[("JwtOptions", "Jwt")]),
+        config("appsettings.json", &[("Jwt.Algorithm", "RS256")]),
+    ];
+    link(&mut units, &Library::default());
+    assert_eq!(last_texts(&units[0]), ["RS256"]);
+}
+
+#[test]
+fn a_type_nothing_binds_keeps_its_default() {
+    let mut units = vec![
+        dotnet_reading_bound("Acme.JwtOptions", &[("OtherOptions", "Jwt")]),
+        config("appsettings.json", &[("Jwt.Algorithm", "RS256")]),
+    ];
+    link(&mut units, &Library::default());
+    assert_eq!(last_texts(&units[0]), ["HS256"]);
+}
+
+#[test]
+fn a_type_bound_to_two_sections_has_both_values() {
+    let mut units = vec![
+        dotnet_reading_bound(
+            "Acme.JwtOptions",
+            &[("JwtOptions", "Jwt"), ("JwtOptions", "Jwt:Legacy")],
+        ),
+        config(
+            "appsettings.json",
+            &[
+                ("Jwt.Algorithm", "RS256"),
+                ("Jwt.Legacy.Algorithm", "ES256"),
+            ],
+        ),
+    ];
+    link(&mut units, &Library::default());
+    assert_eq!(last_texts(&units[0]), ["RS256", "ES256"]);
 }
