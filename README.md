@@ -446,7 +446,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Shorwatch
         run: |
-          v=v0.3.0
+          v=v0.3.1
           n=shorwatch-$v-x86_64-unknown-linux-gnu
           url=https://github.com/ErwinQuantum/shorwatch/releases/download/$v
           curl -sSLO "$url/$n.tar.gz" -O "$url/$n.tar.gz.sha256"

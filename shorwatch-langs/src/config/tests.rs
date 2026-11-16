@@ -207,3 +207,31 @@ fn appsettings_files_are_found_by_name() {
         assert!(crate::for_path(Path::new(path)).is_none(), "{path}");
     }
 }
+
+#[test]
+fn non_ascii_whitespace_and_text_never_cut_a_character() {
+    // A no-break space where a space was meant, a BOM in the middle, and
+    // multi-byte characters as bare values and keys.
+    let unit = json(
+        "{\"Jwt\":\u{a0}{\"Alg\":\u{a0}\"RS256\"},\u{feff}\"b\":\u{3000}\"x\", \"k\u{e9}\": \u{1F600}ok}",
+    );
+    let found: Vec<_> = entries(&unit).into_iter().map(|e| (e.0, e.1)).collect();
+    assert_eq!(
+        found,
+        [
+            ("Jwt.Alg".to_owned(), "RS256".to_owned()),
+            ("b".to_owned(), "x".to_owned()),
+            ("k\u{e9}".to_owned(), "\u{1F600}ok".to_owned()),
+        ]
+    );
+}
+
+#[test]
+fn json_survives_every_cut_of_awkward_text() {
+    let text = "{\"a\": [1, \"\u{e9}\\u00e9\", {\"b\": \u{a0}null}], \u{1F600}: /* c */ \"z\"}";
+    let cuts = text.char_indices().map(|(i, _)| i).chain([text.len()]);
+    for cut in cuts {
+        let _ = JsonFrontend.lower("a.json", &text[..cut]);
+        let _ = JsonFrontend.lower("a.json", &text[cut..]);
+    }
+}

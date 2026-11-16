@@ -185,7 +185,23 @@ fn lower(path: &Path, cwd: &Path) -> Option<(SourceUnit, Option<String>)> {
             return None;
         }
     };
-    match frontend.lower_bytes(&display_path(path, cwd), bytes) {
+    // A frontend that panics on a file is a bug, and a scanned file is
+    // untrusted: it must cost that file, never the scan.
+    let name = display_path(path, cwd);
+    let lowered = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        frontend.lower_bytes(&name, bytes)
+    }));
+    let Ok(lowered) = lowered else {
+        eprintln!(
+            "{}",
+            printable::text(&format!(
+                "warning: skipping `{}`: the frontend failed on it (a bug: please report it)",
+                path.display()
+            ))
+        );
+        return None;
+    };
+    match lowered {
         Ok(lowered) => Some(lowered),
         Err(error) => {
             eprintln!(

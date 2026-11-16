@@ -193,6 +193,13 @@ impl Reader<'_> {
                         .find("*/")
                         .map_or(bytes.len(), |i| self.at + 2 + i + 2);
                 }
+                // Non-ASCII whitespace (a no-break space from a copy and paste,
+                // a stray BOM) is whitespace too: stepping over one byte of it
+                // would leave a token that cuts a character in half.
+                0x80.. => match self.src[self.at..].chars().next() {
+                    Some(c) if c.is_whitespace() || c == '\u{feff}' => self.at += c.len_utf8(),
+                    _ => break,
+                },
                 _ => break,
             }
         }
@@ -227,9 +234,11 @@ impl Reader<'_> {
                 })
             }
             _ => {
+                // Always at least the first character, whole.
+                let first = self.src[start..].chars().next().map_or(1, char::len_utf8);
                 let end = self.src[start..]
                     .find(|c: char| c.is_whitespace() || ",:]}/\"[{".contains(c))
-                    .map_or(bytes.len(), |i| start + i.max(1));
+                    .map_or(bytes.len(), |i| start + i.max(first));
                 Some(Token {
                     kind: Kind::Literal,
                     start,
