@@ -7,6 +7,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-17
+
+### Fixed
+
+- A JSON configuration file (`appsettings.json`) with a non-ASCII space in it
+  (a no-break space from a copy and paste, a stray BOM) made the JSON reader
+  panic and abort the whole scan. Such a space is now whitespace, as in any
+  JSON reader.
+- A frontend that panics on a file, for whatever reason, now costs only that
+  file: the scan skips it with a warning and goes on.
+- A test lowers every prefix and suffix of awkward multi-byte text with every
+  frontend, so a character cut in half is caught before a release.
+
 ## [0.3.0] - 2026-11-14
 
 Shorwatch now reads **C#**: .NET projects get the same depth as Java and Kotlin
