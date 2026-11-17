@@ -6,16 +6,16 @@
 
 C# support covers `.cs` files and `appsettings*.json`. An ASP.NET project also
 has Razor views (`.cshtml`), Razor components (`.razor`) and, in the older
-framework, `web.config`. Shorwatch does not read these, and **today it does not
-even count them** as skipped: the "not analyzed" table in a report lists other
-languages but not these files. So a view with an RSA call in a code block
-would go unseen without the report saying so.
+framework, `web.config`. Shorwatch does not read any of these. Views are
+counted as *Razor* in the "not analyzed" table of a report, so a view with an
+RSA call in a code block is never passed over in silence. `web.config` is not
+counted yet: it is found by its name, not its extension, which the table does
+not handle.
 
 ## What it would do
 
-1. **First, say it.** List `.cshtml`, `.razor` and `web.config` as not
-   analyzed, like every other file type without a reader. Small, and it keeps
-   reports honest.
+1. **Say it.** Views are already listed as not analyzed; `web.config` is
+   still to be added to that table, which needs to match a file by name.
 2. **Then read the C# inside views.** A Razor file is HTML with C# in code
    blocks (`@{ ... }`, `@code { ... }`, `@functions`) and expressions
    (`@Model.Algorithm`). A frontend would extract that C# and hand it to the

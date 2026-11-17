@@ -9,6 +9,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Razor views (`.cshtml`) and components (`.razor`) are counted in the
+  *NOT analyzed* table of every report, since they hold C# that no frontend
+  reads yet.
 - `docs/roadmap/`: what is planned and not implemented (the quantum resource
   estimator, the migration advisor, a maturity score, infrastructure
   configuration, Razor views, more languages, signed artifacts), with how each
@@ -27,6 +30,12 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `KeyKind.LEGACY.getJceName()` (Kotlin `KeyKind.LEGACY.jceName`) is the
   algorithm of `LEGACY` and only that one, so the other constants of the enum
   are no longer reported (or missed) at that call.
+
+### Fixed
+
+- The HTML report on a phone: the code of the most urgent findings on the
+  cover made the page wider than the screen, so it scrolled sideways. It now
+  scrolls inside its own box.
 
 ## [0.3.1] - 2026-11-17
 
