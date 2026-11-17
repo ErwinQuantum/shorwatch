@@ -256,8 +256,8 @@ a.rank-name:hover { color: var(--accent-ink); }
   .stat:nth-child(3) { border-left: 0; padding-left: 0; }
   .rank-row { grid-template-columns: 28px minmax(0, 1fr) 56px; }
   .rank-row .track, .rank-row .sev-links { grid-column: 2 / -1; }
-  .urgent { grid-template-columns: 1fr; gap: 8px; }
-  .two-col, .algorithms, .footer { grid-template-columns: 1fr; gap: 16px; }
+  .urgent { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .two-col, .algorithms, .footer { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .contents { max-width: none; padding-top: 24px; }
   .file-row { grid-template-columns: 18px minmax(0, 1fr) 44px; }
   .file-algorithms { grid-column: 2 / -1; }

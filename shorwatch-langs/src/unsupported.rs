@@ -21,6 +21,7 @@ const UNSUPPORTED: &[(&str, &[&str])] = &[
     ("Scala", &["scala"]),
     ("Groovy", &["groovy"]),
     ("Dart", &["dart"]),
+    ("Razor", &["cshtml", "razor"]),
     ("F#", &["fs"]),
     ("Visual Basic", &["vb"]),
 ];
@@ -53,6 +54,14 @@ mod tests {
             Some("TypeScript")
         );
         assert_eq!(unsupported_language(Path::new("src/lib.rs")), Some("Rust"));
+        // The views of an ASP.NET project hold C# that no frontend reads.
+        for view in ["Views/Home/Index.cshtml", "Pages/Counter.razor"] {
+            assert_eq!(
+                unsupported_language(Path::new(view)),
+                Some("Razor"),
+                "{view}"
+            );
+        }
     }
 
     #[test]
