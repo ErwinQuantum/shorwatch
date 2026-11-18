@@ -8,4 +8,4 @@ message: >-
   the public one.
 
 patterns:
-  - key: { algorithm: '^RSA$' }
+  - key: { usage: unknown, algorithm: '^RSA$' }

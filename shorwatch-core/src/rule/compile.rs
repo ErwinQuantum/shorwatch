@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use regex::Regex;
 
-use super::{ArgPattern, Category, HybridSpec, Marker, Pattern, Rule, RuleError};
+use super::{ArgPattern, Category, HybridSpec, Marker, Pattern, Rule, RuleError, Usage};
 use crate::ir::ScopeKind;
 
 #[derive(Debug)]
@@ -67,6 +67,9 @@ pub(crate) struct CompiledFix {
 pub(crate) struct CompiledRule {
     pub rule: Rule,
     pub patterns: Vec<CompiledPattern>,
+    /// The usage each pattern reports: its own, or the rule's. Parallel to
+    /// `patterns`.
+    pub usages: Vec<Option<Usage>>,
     pub hybrid_scope: ScopeKind,
     pub markers: Vec<CompiledMarker>,
     pub fix: Option<CompiledFix>,
@@ -152,6 +155,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     with_arg,
                     origin,
                     unless_chain,
+                    ..
                 } => CompiledPattern::Call {
                     receiver: receiver.clone(),
                     method: method.clone(),
@@ -160,7 +164,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     origin: arg(origin)?,
                     unless_chain: unless_chain.as_deref().map(regex).transpose()?,
                 },
-                Pattern::Construct { ty, arg: a } => CompiledPattern::Construct {
+                Pattern::Construct { ty, arg: a, .. } => CompiledPattern::Construct {
                     ty: ty.clone(),
                     arg: arg(a)?,
                 },
@@ -168,6 +172,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     owner,
                     matches,
                     unless_call,
+                    ..
                 } => CompiledPattern::Field {
                     owner: owner.clone(),
                     name: matches.as_deref().map(regex).transpose()?,
@@ -177,6 +182,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     matches,
                     unless_call,
                     in_call,
+                    ..
                 } => CompiledPattern::Literal {
                     value: regex(matches)?,
                     unless_call: unless_call.as_deref().map(regex).transpose()?,
@@ -186,6 +192,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                     key,
                     matches,
                     unless_property,
+                    ..
                 } => CompiledPattern::Property {
                     key: regex(key)?,
                     value: matches.as_deref().map(regex).transpose()?,
@@ -194,6 +201,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                 Pattern::Key {
                     algorithm,
                     signature,
+                    ..
                 } => CompiledPattern::Key {
                     algorithm: algorithm.as_deref().map(regex).transpose()?,
                     signature: signature.as_deref().map(regex).transpose()?,
@@ -201,6 +209,20 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
             })
         })
         .collect::<Result<Vec<_>, RuleError>>()?;
+
+    // A Shor-category finding has a usage: the pattern's, the rule's, or
+    // `unknown`, which claims nothing. (The built-in rules state theirs: a
+    // test in `shorwatch-rules` enforces it. A rule of someone else's that
+    // says nothing still loads.)
+    let usages: Vec<Option<Usage>> = rule
+        .patterns
+        .iter()
+        .map(|p| {
+            p.usage()
+                .or(rule.usage)
+                .or((rule.category == Category::Shor).then_some(Usage::Unknown))
+        })
+        .collect();
 
     let (hybrid_scope, markers) = match &rule.hybrid {
         Some(spec) => {
@@ -251,6 +273,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
     Ok(CompiledRule {
         rule,
         patterns,
+        usages,
         hybrid_scope,
         markers,
         fix,

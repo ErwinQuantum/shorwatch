@@ -470,6 +470,7 @@
           class: `tag ${f.status === "in_transition" ? "transition" : ""}`,
           text: f.status === "in_transition" ? "in transition" : "vulnerable",
         }),
+        f.usage ? el("span", { class: "tag", title: "How the algorithm is used here", text: f.usage === "unknown" ? "usage unknown" : f.usage.replace("-", " ") }) : null,
         isTest(f) ? el("span", { class: "tag", text: "test code" }) : null,
         el("span", { class: "mono tag", text: f.rule_id }),
       ]),

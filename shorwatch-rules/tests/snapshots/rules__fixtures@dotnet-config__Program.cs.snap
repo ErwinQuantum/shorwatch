@@ -6,12 +6,14 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-config/Program.cs
 - rule: dotnet.identitymodel.jose-ecdsa
   at: "5:19"
   status: vulnerable
+  usage: signature
   flow:
     - "4: builder.Configuration[\"Jwt:Algorithm\"] reads the configuration key Jwt:Algorithm"
     - "4: assigned to algorithm"
 - rule: dotnet.identitymodel.jose-rsa
   at: "5:19"
   status: vulnerable
+  usage: signature
   flow:
     - "4: builder.Configuration[\"Jwt:Algorithm\"] reads the configuration key Jwt:Algorithm"
     - "4: assigned to algorithm"

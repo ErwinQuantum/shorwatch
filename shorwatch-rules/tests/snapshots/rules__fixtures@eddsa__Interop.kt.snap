@@ -6,12 +6,16 @@ input_file: shorwatch-rules/tests/fixtures/eddsa/Interop.kt
 - rule: jvm.jsch.eddsa
   at: "11:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jsch.eddsa
   at: "12:34"
   status: vulnerable
+  usage: signature
 - rule: jvm.openpgp.eddsa
   at: "15:26"
   status: vulnerable
+  usage: signature
 - rule: jvm.xml-security.eddsa
   at: "17:25"
   status: vulnerable
+  usage: signature

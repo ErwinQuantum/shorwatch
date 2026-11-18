@@ -6,22 +6,26 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-config/Vulnerable.cs
 - rule: dotnet.identitymodel.jose-ecdsa
   at: "18:16"
   status: vulnerable
+  usage: signature
   flow:
     - "18: _config[\"Jwt:Algorithm\"] reads the configuration key Jwt:Algorithm"
 - rule: dotnet.identitymodel.jose-rsa
   at: "18:16"
   status: vulnerable
+  usage: signature
   flow:
     - "18: _config[\"Jwt:Algorithm\"] reads the configuration key Jwt:Algorithm"
 - rule: dotnet.identitymodel.jose-rsa
   at: "24:16"
   status: vulnerable
+  usage: signature
   flow:
     - "23: _config.GetSection(\"Jwt\").GetSection(\"Section\").GetValue<string>(\"Name\") reads the configuration key Jwt:Section:Name"
     - "23: assigned to algorithm"
 - rule: dotnet.identitymodel.jose-rsa
   at: "30:16"
   status: vulnerable
+  usage: signature
   flow:
     - "29: _config.GetValue<string>(\"Jwt:Missing\", \"PS256\") reads the configuration key Jwt:Missing"
     - "29: assigned to algorithm"

@@ -4,5 +4,6 @@ platform: jvm
 
 patterns:
   - field:
+      usage: key-generation
       type: android.security.keystore.KeyProperties
       matches: '^KEY_ALGORITHM_EC$'

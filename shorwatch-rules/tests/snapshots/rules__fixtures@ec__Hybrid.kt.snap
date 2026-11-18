@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/ec/Hybrid.kt
 - rule: jvm.jca.ec
   at: "7:23"
   status: in_transition
+  usage: key-generation
   hybrid_evidence: org.openquantumsafe.KeyEncapsulation @ 4

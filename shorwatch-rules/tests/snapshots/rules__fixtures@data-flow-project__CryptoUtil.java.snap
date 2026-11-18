@@ -6,6 +6,7 @@ input_file: shorwatch-rules/tests/fixtures/data-flow-project/CryptoUtil.java
 - rule: jvm.jca.rsa
   at: "9:28"
   status: vulnerable
+  usage: signature
   flow:
     - "Invoices.java:11: \"SHA1withRSA\" is written here"
     - "Invoices.java:11: passed as algorithm to sign(...)"
@@ -18,6 +19,7 @@ input_file: shorwatch-rules/tests/fixtures/data-flow-project/CryptoUtil.java
 - rule: jvm.jca.rsa
   at: "15:16"
   status: vulnerable
+  usage: key-transport
   flow:
     - "Invoices.java:15: \"RSA/ECB/OAEPPadding\" is written here"
     - "Invoices.java:15: passed as transformation to cipher(...)"

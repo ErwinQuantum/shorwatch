@@ -6,6 +6,8 @@ input_file: shorwatch-rules/tests/fixtures/spring-app/TokenService.kt
 - rule: jvm.jjwt.jose-ecdsa
   at: "16:31"
   status: vulnerable
+  usage: signature
 - rule: jvm.jjwt.jose-ecdsa
   at: "27:44"
   status: vulnerable
+  usage: signature

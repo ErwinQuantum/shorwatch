@@ -6,30 +6,37 @@ input_file: shorwatch-rules/tests/fixtures/dsa/Vulnerable.kt
 - rule: jvm.jca.dsa
   at: "9:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.dsa
   at: "11:31"
   status: vulnerable
+  usage: signature
 - rule: jvm.bouncycastle.dsa
   at: "13:31"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.dsa
   at: "17:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.sha1
   at: "17:9"
   status: vulnerable
 - rule: jvm.jca.dsa
   at: "18:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.sha1
   at: "18:9"
   status: vulnerable
 - rule: jvm.jca.dsa
   at: "19:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.dsa
   at: "20:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.sha1
   at: "20:9"
   status: vulnerable

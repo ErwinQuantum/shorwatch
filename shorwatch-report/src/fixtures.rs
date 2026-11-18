@@ -4,7 +4,7 @@
 
 use shorwatch_core::ir::{FlowStep, Location, Position};
 use shorwatch_core::rule::{
-    Category, CryptoFunction, CryptoProperties, Primitive, Reference, Severity,
+    Category, CryptoFunction, CryptoProperties, Primitive, Reference, Severity, Usage,
 };
 use shorwatch_core::{CodeRole, Finding, HybridEvidence, Status, SuggestedFix};
 
@@ -79,6 +79,7 @@ fn shor(rule_id: &str, algorithm: &str, path: &str, at: Location) -> Finding {
         algorithm: algorithm.into(),
         category: Category::Shor,
         severity: Severity::High,
+        usage: Some(Usage::KeyTransport),
         status: Status::Vulnerable,
         title: format!("{algorithm} is broken by Shor's algorithm"),
         message: format!("{algorithm} usage detected."),
@@ -129,6 +130,7 @@ pub(crate) fn scan() -> Scan {
         algorithm: "AES-128".into(),
         category: Category::Grover,
         severity: Severity::Low,
+        usage: None,
         title: "AES-128 keeps only about 64 bits of security against Grover's algorithm".into(),
         message: "A 128-bit AES key detected.".into(),
         suggestion: "Use 256-bit keys (AES-256).".into(),
@@ -145,6 +147,7 @@ pub(crate) fn scan() -> Scan {
         ..shor("jvm.jca.aes-128", "AES-128", config, location(11, 2, 21))
     };
     let ecdsa = Finding {
+        usage: Some(Usage::Signature),
         status: Status::InTransition,
         hybrid_evidence: Some(HybridEvidence {
             text: "ML-DSA-65".into(),
@@ -152,12 +155,15 @@ pub(crate) fn scan() -> Scan {
         }),
         ..shor("jvm.jca.ecdsa", "ECDSA", signer, location(3, 34, 75))
     };
-    let jose = shor(
-        "config.spring-boot.jose-rsa",
-        "RSA (JOSE/JWT)",
-        yaml,
-        location(4, 24, 29),
-    );
+    let jose = Finding {
+        usage: Some(Usage::Signature),
+        ..shor(
+            "config.spring-boot.jose-rsa",
+            "RSA (JOSE/JWT)",
+            yaml,
+            location(4, 24, 29),
+        )
+    };
     let test = Finding {
         role: CodeRole::Test,
         flow: vec![

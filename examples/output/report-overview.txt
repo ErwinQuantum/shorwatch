@@ -11,7 +11,7 @@
 
  Most urgent  3 of 17
 
- HIGH  RSA (JOSE/JWT) · jvm.nimbus.jose-rsa · vulnerable
+ HIGH  RSA (JOSE/JWT) · usage unknown · jvm.nimbus.jose-rsa · vulnerable
   ──▶ examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java:23:25
    │
 23 │         RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
@@ -31,7 +31,7 @@
            vulnerable to padding-oracle attacks.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/jose-rsa.md
 
- HIGH  RSA · jvm.jca.rsa · vulnerable
+ HIGH  RSA · key-generation · jvm.jca.rsa · vulnerable
   ──▶ examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java:32:42
    │
 32 │             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
@@ -47,7 +47,7 @@
            post-quantum protection.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/rsa.md
 
- HIGH  ECDSA (JOSE/JWT) · jvm.nimbus.jose-ecdsa · vulnerable
+ HIGH  ECDSA (JOSE/JWT) · signature · jvm.nimbus.jose-ecdsa · vulnerable
   ──▶ examples/spring-service/src/main/java/com/example/payments/auth/TokenSigner.java:14:16
    │
 14 │         return JWSAlgorithm.parse(algorithm);

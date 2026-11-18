@@ -5,12 +5,15 @@ platform: jvm
 # ECIES and HPKE with classical DH-KEMs.
 patterns:
   - field:
+      usage: key-transport
       type: com.google.crypto.tink.hybrid.PredefinedHybridParameters
       matches: '^ECIES_'
   - field:
+      usage: key-transport
       type: com.google.crypto.tink.hybrid.HybridKeyTemplates
       matches: '^ECIES_'
   - call:
+      usage: key-transport
       type: com.google.crypto.tink.KeyTemplates
       method: get
       arg: { index: 0, matches: '^(ECIES_|DHKEM_(X25519|P256|P384|P521)_)' }

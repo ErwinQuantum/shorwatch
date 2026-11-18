@@ -6,18 +6,24 @@ input_file: shorwatch-rules/tests/fixtures/spring-security/Vulnerable.kt
 - rule: jvm.spring-security.jose-rsa
   at: "17:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.spring-security.jose-rsa
   at: "18:33"
   status: vulnerable
+  usage: signature
 - rule: jvm.spring-security.jose-ecdsa
   at: "22:39"
   status: vulnerable
+  usage: signature
 - rule: jvm.spring-security.rsa
   at: "25:43"
   status: vulnerable
+  usage: unknown
 - rule: jvm.spring-security.rsa
   at: "29:20"
   status: vulnerable
+  usage: unknown
 - rule: jvm.spring-security.rsa
   at: "30:16"
   status: vulnerable
+  usage: key-transport

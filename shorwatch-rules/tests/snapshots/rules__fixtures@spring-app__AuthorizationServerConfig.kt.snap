@@ -6,6 +6,8 @@ input_file: shorwatch-rules/tests/fixtures/spring-app/AuthorizationServerConfig.
 - rule: jvm.nimbus.jose-rsa
   at: "28:22"
   status: vulnerable
+  usage: unknown
 - rule: jvm.jca.rsa
   at: "41:13"
   status: vulnerable
+  usage: key-generation

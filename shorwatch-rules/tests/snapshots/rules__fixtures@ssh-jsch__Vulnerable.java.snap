@@ -6,24 +6,32 @@ input_file: shorwatch-rules/tests/fixtures/ssh-jsch/Vulnerable.java
 - rule: jvm.jsch.rsa
   at: "11:41"
   status: vulnerable
+  usage: key-generation
 - rule: jvm.jsch.dh
   at: "16:9"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.jsch.ecdh
   at: "16:9"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.jsch.ecdsa
   at: "18:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jsch.rsa
   at: "24:32"
   status: vulnerable
+  usage: signature
 - rule: jvm.jsch.dsa
   at: "24:66"
   status: vulnerable
+  usage: signature
 - rule: jvm.jsch.ecdsa
   at: "25:36"
   status: vulnerable
+  usage: signature
 - rule: jvm.jsch.eddsa
   at: "25:72"
   status: vulnerable
+  usage: signature

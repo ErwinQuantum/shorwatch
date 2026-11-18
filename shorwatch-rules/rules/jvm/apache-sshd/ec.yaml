@@ -7,6 +7,7 @@ patterns:
       type: org.apache.sshd.common.config.keys.KeyUtils
       matches: '^EC_ALGORITHM$'
   - call:
+      usage: key-generation
       type: org.apache.sshd.server.keyprovider.SimpleGeneratorHostKeyProvider
       method: setAlgorithm
       arg: { index: 0, matches: '(?i)^EC$' }

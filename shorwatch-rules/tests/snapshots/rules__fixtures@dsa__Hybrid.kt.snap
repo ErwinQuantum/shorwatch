@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/dsa/Hybrid.kt
 - rule: jvm.jca.dsa
   at: "8:9"
   status: in_transition
+  usage: signature
   hybrid_evidence: Dilithium3 @ 9

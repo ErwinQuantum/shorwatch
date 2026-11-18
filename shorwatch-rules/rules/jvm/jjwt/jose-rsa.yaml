@@ -8,6 +8,7 @@ patterns:
       type: io.jsonwebtoken.Jwts.SIG
       matches: '^(RS|PS)(256|384|512)$'
   - field:
+      usage: key-transport
       type: io.jsonwebtoken.Jwts.KEY
       matches: '^RSA(1_5|_OAEP(_256)?)$'
   - field:

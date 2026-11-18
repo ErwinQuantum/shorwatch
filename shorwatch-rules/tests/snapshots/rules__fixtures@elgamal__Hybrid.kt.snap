@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/elgamal/Hybrid.kt
 - rule: jvm.jca.elgamal
   at: "8:9"
   status: in_transition
+  usage: key-transport
   hybrid_evidence: org.bouncycastle.pqc.jcajce.spec.KyberParameterSpec @ 4

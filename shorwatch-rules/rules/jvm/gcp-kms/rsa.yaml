@@ -3,7 +3,18 @@ profile: rsa
 platform: jvm
 
 # Google Cloud KMS key version algorithms (`CryptoKeyVersionAlgorithm`).
+# The name says what the key does (`RSA_SIGN_PSS_2048_SHA256`,
+# `RSA_DECRYPT_OAEP_2048_SHA256`); the last pattern keeps any other RSA name.
 patterns:
   - field:
+      usage: signature
+      type: com.google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionAlgorithm
+      matches: '^RSA_SIGN_'
+  - field:
+      usage: key-transport
+      type: com.google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionAlgorithm
+      matches: '^RSA_DECRYPT_'
+  - field:
+      usage: unknown
       type: com.google.cloud.kms.v1.CryptoKeyVersion.CryptoKeyVersionAlgorithm
       matches: '^RSA_'

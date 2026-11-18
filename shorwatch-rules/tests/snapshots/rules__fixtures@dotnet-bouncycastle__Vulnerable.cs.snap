@@ -6,30 +6,39 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-bouncycastle/Vulnerable.cs
 - rule: dotnet.bouncycastle.rsa
   at: "15:19"
   status: vulnerable
+  usage: key-generation
 - rule: dotnet.bouncycastle.rsa
   at: "16:22"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.bouncycastle.ec
   at: "17:18"
   status: vulnerable
+  usage: key-generation
 - rule: dotnet.bouncycastle.ecdsa
   at: "18:21"
   status: vulnerable
+  usage: signature
 - rule: dotnet.bouncycastle.ecdh
   at: "19:20"
   status: vulnerable
+  usage: key-agreement
 - rule: dotnet.bouncycastle.ecdh
   at: "20:22"
   status: vulnerable
+  usage: key-agreement
 - rule: dotnet.bouncycastle.eddsa
   at: "21:18"
   status: vulnerable
+  usage: signature
 - rule: dotnet.bouncycastle.dsa
   at: "22:19"
   status: vulnerable
+  usage: signature
 - rule: dotnet.bouncycastle.dh
   at: "23:18"
   status: vulnerable
+  usage: key-agreement
 - rule: dotnet.bouncycastle.3des
   at: "24:22"
   status: vulnerable
@@ -39,12 +48,15 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-bouncycastle/Vulnerable.cs
 - rule: dotnet.bouncycastle.rsa
   at: "30:25"
   status: vulnerable
+  usage: key-generation
 - rule: dotnet.bouncycastle.rsa
   at: "31:22"
   status: vulnerable
+  usage: signature
 - rule: dotnet.bouncycastle.ecdsa
   at: "32:22"
   status: vulnerable
+  usage: signature
 - rule: dotnet.bouncycastle.sha1
   at: "32:22"
   status: vulnerable
@@ -57,3 +69,4 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-bouncycastle/Vulnerable.cs
 - rule: dotnet.bouncycastle.ecdh
   at: "35:25"
   status: vulnerable
+  usage: key-agreement

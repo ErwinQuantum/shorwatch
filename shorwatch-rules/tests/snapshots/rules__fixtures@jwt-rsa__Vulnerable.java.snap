@@ -6,27 +6,36 @@ input_file: shorwatch-rules/tests/fixtures/jwt-rsa/Vulnerable.java
 - rule: jvm.nimbus.jose-rsa
   at: "20:42"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-rsa
   at: "21:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-rsa
   at: "22:16"
   status: vulnerable
+  usage: key-generation
 - rule: jvm.nimbus.jose-rsa
   at: "27:16"
   status: vulnerable
+  usage: unknown
 - rule: jvm.nimbus.jose-rsa
   at: "32:16"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.nimbus.jose-rsa
   at: "37:16"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.jjwt.jose-rsa
   at: "42:24"
   status: vulnerable
+  usage: signature
 - rule: jvm.jjwt.jose-rsa
   at: "48:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.auth0.jose-rsa
   at: "53:16"
   status: vulnerable
+  usage: signature

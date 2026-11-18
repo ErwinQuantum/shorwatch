@@ -6,6 +6,7 @@ input_file: shorwatch-rules/tests/fixtures/config-properties/Vulnerable.java
 - rule: jvm.jca.rsa
   at: "20:9"
   status: vulnerable
+  usage: signature
   flow:
     - "JwtProperties.java:12: algorithm is injected from ${app.jwt.algorithm}"
     - "JwtProperties.java:12: returned by getAlgorithm(...)"
@@ -18,6 +19,7 @@ input_file: shorwatch-rules/tests/fixtures/config-properties/Vulnerable.java
 - rule: jvm.jca.rsa
   at: "22:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "JwtProperties.java:20: keyType is injected from ${app.jwt.keyType}"
     - "JwtProperties.java:20: returned by getKeyType(...)"
@@ -30,5 +32,6 @@ input_file: shorwatch-rules/tests/fixtures/config-properties/Vulnerable.java
 - rule: jvm.jca.rsa
   at: "26:9"
   status: vulnerable
+  usage: signature
   flow:
     - "TokenProperties.java:6: signature is injected from ${app.token.signature}"

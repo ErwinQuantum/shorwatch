@@ -9,9 +9,11 @@ input_file: shorwatch-rules/tests/fixtures/okhttp/Vulnerable.java
 - rule: jvm.okhttp.tls-key-exchange
   at: "13:25"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.okhttp.3des
   at: "14:25"
   status: vulnerable
 - rule: jvm.okhttp.tls-key-exchange
   at: "14:25"
   status: vulnerable
+  usage: key-transport

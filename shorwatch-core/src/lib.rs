@@ -27,4 +27,5 @@ pub use ir::{CodeRole, Language, Library, Platform, SourceUnit};
 pub use link::link;
 pub use rule::{
     Category, CryptoFunction, CryptoProperties, Primitive, Rule, RuleError, RuleSet, Severity,
+    Usage,
 };

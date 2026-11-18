@@ -6,3 +6,4 @@ input_file: shorwatch-rules/tests/fixtures/spring-boot-defaults/application-lega
 - rule: config.spring-boot.jose-rsa
   at: "1:55"
   status: vulnerable
+  usage: signature

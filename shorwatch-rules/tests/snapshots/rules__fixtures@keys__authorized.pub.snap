@@ -6,8 +6,10 @@ input_file: shorwatch-rules/tests/fixtures/keys/authorized.pub
 - rule: keys.material.ecdsa
   at: "1:1"
   status: vulnerable
+  usage: signature
   detail: "SSH public key \"ci@example\": ECDSA secp256r1"
 - rule: keys.material.eddsa
   at: "2:1"
   status: vulnerable
+  usage: signature
   detail: "SSH public key \"ops@example\": Ed25519"

@@ -9,6 +9,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Findings say **how the algorithm is used**: `signature`, `key-transport`
+  (encrypting to a public key, data or a key), `key-agreement`,
+  `key-generation`, or `unknown` when the code does not say. The usage of each
+  place is in the JSON report (`usage`), in the Markdown table, in the HTML
+  finding and next to the algorithm in `--details`. A project that signs with
+  RSA in one class and wraps a key with OAEP in another gets two findings that
+  say so. Every Shor-category pattern of the built-in rules declares its usage
+  (the profile does it once when the algorithm has a single use), a test
+  enforces it, and a rule of your own that says nothing is `unknown`. Rule ids and fingerprints do not change, so baselines
+  and open alerts keep working. The advice per usage, the CBOM and SARIF come
+  next (#35, #36).
+
 - Razor views (`.cshtml`) and components (`.razor`) are counted in the
   *NOT analyzed* table of every report, since they hold C# that no frontend
   reads yet.

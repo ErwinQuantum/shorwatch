@@ -6,6 +6,7 @@ platform: jvm
 # X.509 certificates: `new JcaContentSignerBuilder("SHA256withRSA")`.
 patterns:
   - construct:
+      usage: signature
       type: org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
       arg: { index: 0, matches: '(?i)^(RSASSA-PSS|.+withRSA(andMGF1|/PSS)?)$' }
-  - construct: { type: org.bouncycastle.operator.bc.BcRSAContentSignerBuilder }
+  - construct: { usage: signature, type: org.bouncycastle.operator.bc.BcRSAContentSignerBuilder }

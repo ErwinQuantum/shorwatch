@@ -6,6 +6,8 @@ patterns:
   # Config Server encrypts `{cipher}` property values with the RSA key pair
   # from this keystore (spring-security-rsa).
   - property:
+      usage: key-transport
       key: '(?i)^encrypt\.key-?store\.location$'
   - property:
+      usage: key-transport
       key: '(?i)^encrypt\.rsa\.'

@@ -6,12 +6,15 @@ input_file: shorwatch-rules/tests/fixtures/openpgp/Vulnerable.kt
 - rule: jvm.openpgp.rsa
   at: "17:63"
   status: vulnerable
+  usage: unknown
 - rule: jvm.openpgp.ecdh
   at: "19:65"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.openpgp.ecdsa
   at: "22:47"
   status: vulnerable
+  usage: signature
 - rule: jvm.openpgp.sha1
   at: "22:77"
   status: vulnerable

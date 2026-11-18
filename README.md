@@ -618,6 +618,9 @@ algorithm: ECDSA
 category: shor          # rules for Shor-broken algorithms can never declare a `fix`
 severity: high
 title: ECDSA signatures are forgeable with Shor's algorithm
+usage: signature        # what the algorithm is used for: signature, key-transport,
+                        # key-agreement, key-generation or unknown (RSA, which does
+                        # several, says it in each pattern instead)
 suggestion: >-
   Migrate signatures to ML-DSA (FIPS 204) ...
 references:

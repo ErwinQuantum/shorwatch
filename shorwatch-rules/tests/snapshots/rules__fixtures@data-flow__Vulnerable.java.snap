@@ -6,6 +6,7 @@ input_file: shorwatch-rules/tests/fixtures/data-flow/Vulnerable.java
 - rule: jvm.jca.rsa
   at: "16:31"
   status: vulnerable
+  usage: signature
   flow:
     - "23: \"SHA1withRSA\" is written here"
     - "23: passed as algorithm to sign(...)"
@@ -18,24 +19,28 @@ input_file: shorwatch-rules/tests/fixtures/data-flow/Vulnerable.java
 - rule: jvm.jca.ec
   at: "36:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "29: \"EC\" is written here"
     - "27: returned by keyAlgorithm(...)"
 - rule: jvm.jca.rsa
   at: "36:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "28: \"RSA\" is written here"
     - "27: returned by keyAlgorithm(...)"
 - rule: jvm.jca.rsa
   at: "38:9"
   status: vulnerable
+  usage: key-transport
   flow:
     - "37: \"ECB\" is written here"
     - "37: assigned to mode"
 - rule: jvm.jca.rsa
   at: "39:9"
   status: vulnerable
+  usage: key-transport
   flow:
     - "12: \"RSA/ECB/PKCS1Padding\" is written here"
     - "12: assigned to transformation"

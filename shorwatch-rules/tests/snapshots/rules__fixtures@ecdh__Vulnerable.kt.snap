@@ -6,18 +6,24 @@ input_file: shorwatch-rules/tests/fixtures/ecdh/Vulnerable.kt
 - rule: jvm.jca.ecdh
   at: "13:14"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.jca.ecdh
   at: "19:29"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.jca.ecdh
   at: "22:25"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.jca.ecdh
   at: "28:27"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.bouncycastle.ecdh
   at: "30:30"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.bouncycastle.ecdh
   at: "32:26"
   status: vulnerable
+  usage: key-agreement

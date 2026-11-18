@@ -13,11 +13,17 @@ platform: jvm
 # are listed by name, closed by a separator so `AES256-SHAKE` stays out.
 patterns:
   - literal:
-      matches: '(^|[,:\s])((TLS|SSL)_(RSA|DHE?|ECDHE?)_\w*WITH_\w+|(ECDHE?|DHE?|EDH)-(RSA|ECDSA|DSS)-|(AES(128|256)(-GCM)?-SHA(256|384)?|CAMELLIA(128|256)-SHA(256)?|DES-CBC3-SHA|RC4-(MD5|SHA)|SEED-SHA)($|[,:\s]))'
+      usage: key-transport
+      matches: '(^|[,:\s])((TLS|SSL)_RSA_\w*WITH_\w+|(AES(128|256)(-GCM)?-SHA(256|384)?|CAMELLIA(128|256)-SHA(256)?|DES-CBC3-SHA|RC4-(MD5|SHA)|SEED-SHA)($|[,:\s]))'
+      unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'
+  - literal:
+      usage: key-agreement
+      matches: '(^|[,:\s])((TLS|SSL)_(DHE?|ECDHE?)_\w*WITH_\w+|(ECDHE?|DHE?|EDH)-(RSA|ECDSA|DSS)-)'
       unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'
   # `System.setProperty("jdk.tls.namedGroups", "x25519,secp256r1")` with a
   # classical group in the list.
   - call:
+      usage: key-agreement
       type: java.lang.System
       method: setProperty
       with_arg: { index: 0, matches: '^jdk\.tls\.([a-z]+\.)?namedGroups$' }
@@ -25,5 +31,6 @@ patterns:
   # `SSLParameters.setNamedGroups(new String[] {"secp256r1"})`: group names are
   # too common as words to match anywhere, so they count only inside that call.
   - literal:
+      usage: key-agreement
       matches: '(?i)^\s*(x25519|x448|secp(256|384|521)r1|ffdhe\d+)\s*$'
       in_call: '^setNamedGroups$'

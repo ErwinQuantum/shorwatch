@@ -6,33 +6,43 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-bcl/Vulnerable.cs
 - rule: dotnet.bcl.rsa
   at: "11:31"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.bcl.rsa
   at: "15:25"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.bcl.rsa
   at: "16:61"
   status: vulnerable
+  usage: signature
 - rule: dotnet.bcl.rsa
   at: "21:34"
   status: vulnerable
+  usage: key-transport
 - rule: dotnet.bcl.ecdsa
   at: "26:27"
   status: vulnerable
+  usage: signature
 - rule: dotnet.bcl.ecdh
   at: "27:26"
   status: vulnerable
+  usage: key-agreement
 - rule: dotnet.bcl.rsa
   at: "28:23"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.bcl.rsa
   at: "29:24"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.bcl.dsa
   at: "35:19"
   status: vulnerable
+  usage: signature
 - rule: dotnet.bcl.rsa
   at: "36:19"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.bcl.3des
   at: "37:22"
   status: vulnerable
@@ -51,6 +61,7 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-bcl/Vulnerable.cs
 - rule: dotnet.bcl.rsa
   at: "42:21"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.bcl.aes-128
   at: "48:9"
   status: vulnerable

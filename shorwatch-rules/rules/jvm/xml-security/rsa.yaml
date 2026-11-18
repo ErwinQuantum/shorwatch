@@ -6,11 +6,14 @@ platform: jvm
 # (`javax.xml.crypto.dsig`) and Apache Santuario.
 patterns:
   - field:
+      usage: signature
       type: javax.xml.crypto.dsig.SignatureMethod
       matches: '^(RSA_.+|SHA\d+_RSA_MGF1)$'
   - field:
+      usage: signature
       type: org.apache.xml.security.signature.XMLSignature
       matches: '^ALGO_ID_SIGNATURE_(NOT_RECOMMENDED_)?RSA'
   - field:
+      usage: key-transport
       type: org.apache.xml.security.encryption.XMLCipher
       matches: '^RSA_'

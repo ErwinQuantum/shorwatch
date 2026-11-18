@@ -12,6 +12,7 @@ input_file: shorwatch-rules/tests/fixtures/sha1/Vulnerable.kt
 - rule: jvm.jca.rsa
   at: "19:40"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.sha1
   at: "19:40"
   status: vulnerable
@@ -30,12 +31,14 @@ input_file: shorwatch-rules/tests/fixtures/sha1/Vulnerable.kt
 - rule: jvm.jca.dsa
   at: "30:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.sha1
   at: "30:9"
   status: vulnerable
 - rule: jvm.jca.rsa
   at: "31:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.sha1
   at: "31:9"
   status: vulnerable

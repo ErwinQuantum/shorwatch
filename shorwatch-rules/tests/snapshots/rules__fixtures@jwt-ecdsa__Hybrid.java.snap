@@ -1,9 +1,10 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/jwt-ecdsa/Hybrid.java
+input_file: shorwatch-rules/tests/fixtures/jwt-ecdsa/Hybrid.java
 ---
 - rule: jvm.jjwt.jose-ecdsa
   at: "9:16"
   status: in_transition
+  usage: signature
   hybrid_evidence: org.bouncycastle.pqc.crypto.mldsa.MLDSASigner @ 4

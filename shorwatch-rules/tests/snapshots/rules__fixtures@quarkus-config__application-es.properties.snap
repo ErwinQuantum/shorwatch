@@ -6,3 +6,4 @@ input_file: shorwatch-rules/tests/fixtures/quarkus-config/application-es.propert
 - rule: config.app.jose-ecdsa
   at: "3:35"
   status: vulnerable
+  usage: signature

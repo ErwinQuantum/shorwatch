@@ -6,15 +6,19 @@ input_file: shorwatch-rules/tests/fixtures/kms-aws/Vulnerable.java
 - rule: jvm.aws-kms.rsa
   at: "21:34"
   status: vulnerable
+  usage: key-generation
 - rule: jvm.aws-kms.ecdsa
   at: "32:43"
   status: vulnerable
+  usage: signature
 - rule: jvm.aws-kms.ec
   at: "38:16"
   status: vulnerable
+  usage: key-generation
 - rule: jvm.aws-kms.aes-128
   at: "43:70"
   status: vulnerable
 - rule: jvm.aws-kms.ecdh
   at: "50:40"
   status: vulnerable
+  usage: key-agreement

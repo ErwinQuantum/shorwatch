@@ -23,6 +23,7 @@ references:
   - title: "RFC 8037: CFRG Elliptic Curve Diffie-Hellman (ECDH) and Signatures in JOSE"
     url: https://www.rfc-editor.org/rfc/rfc8037
 hybrid: pqc
+usage: signature
 crypto:
   primitive: signature
   functions: [sign, verify]

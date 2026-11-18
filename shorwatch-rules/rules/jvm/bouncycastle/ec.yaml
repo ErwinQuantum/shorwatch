@@ -4,4 +4,5 @@ platform: jvm
 
 patterns:
   - construct:
+      usage: key-generation
       type: org.bouncycastle.crypto.generators.ECKeyPairGenerator

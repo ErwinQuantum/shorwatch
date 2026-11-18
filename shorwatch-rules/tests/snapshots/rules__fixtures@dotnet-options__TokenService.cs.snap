@@ -6,18 +6,21 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-options/TokenService.cs
 - rule: dotnet.identitymodel.jose-rsa
   at: "19:16"
   status: vulnerable
+  usage: signature
   flow:
     - "JwtOptions.cs:8: Algorithm is a settable property of Acme.Auth.JwtOptions"
     - "JwtOptions.cs:8: Algorithm is bound to the configuration key Jwt.Algorithm"
 - rule: dotnet.identitymodel.jose-ecdsa
   at: "29:16"
   status: vulnerable
+  usage: signature
   flow:
     - "JwtOptions.cs:15: Algorithm is a settable property of Acme.Auth.SigningOptions"
     - "JwtOptions.cs:15: Algorithm is bound to the configuration key Signing.Algorithm"
 - rule: dotnet.identitymodel.jose-rsa
   at: "37:16"
   status: vulnerable
+  usage: signature
   flow:
     - "JwtOptions.cs:20: Algorithm is a settable property of Acme.Auth.LegacyOptions"
     - "JwtOptions.cs:20: Algorithm is bound to the configuration key Legacy.Algorithm"

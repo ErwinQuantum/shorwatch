@@ -41,6 +41,7 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-flow/Vulnerable.cs
 - rule: dotnet.bcl.rsa
   at: "34:19"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.bcl.sha1
   at: "40:9"
   status: vulnerable

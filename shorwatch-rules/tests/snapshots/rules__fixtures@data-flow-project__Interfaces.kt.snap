@@ -6,6 +6,7 @@ input_file: shorwatch-rules/tests/fixtures/data-flow-project/Interfaces.kt
 - rule: jvm.jca.rsa
   at: "13:26"
   status: vulnerable
+  usage: signature
   flow:
     - "19: \"SHA1withRSA\" is written here"
     - "19: passed as algorithm to sign(...)"

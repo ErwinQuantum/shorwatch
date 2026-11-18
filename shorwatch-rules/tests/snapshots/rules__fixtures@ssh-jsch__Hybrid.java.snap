@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/ssh-jsch/Hybrid.java
 - rule: jvm.jsch.ecdh
   at: "8:9"
   status: in_transition
+  usage: key-agreement
   hybrid_evidence: "mlkem768x25519-sha256,curve25519-sha256 @ 8"

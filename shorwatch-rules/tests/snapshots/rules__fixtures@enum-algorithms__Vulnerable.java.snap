@@ -6,6 +6,7 @@ input_file: shorwatch-rules/tests/fixtures/enum-algorithms/Vulnerable.java
 - rule: jvm.jca.ec
   at: "14:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:6: \"EC\" is written here"
     - "KeyKind.java:6: passed as jceName to KeyKind(...)"
@@ -14,6 +15,7 @@ input_file: shorwatch-rules/tests/fixtures/enum-algorithms/Vulnerable.java
 - rule: jvm.jca.rsa
   at: "14:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:5: \"RSA\" is written here"
     - "KeyKind.java:5: passed as jceName to KeyKind(...)"
@@ -22,6 +24,7 @@ input_file: shorwatch-rules/tests/fixtures/enum-algorithms/Vulnerable.java
 - rule: jvm.jca.ec
   at: "18:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:6: \"EC\" is written here"
     - "KeyKind.java:6: passed as jceName to KeyKind(...)"
@@ -30,6 +33,7 @@ input_file: shorwatch-rules/tests/fixtures/enum-algorithms/Vulnerable.java
 - rule: jvm.jca.rsa
   at: "18:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:5: \"RSA\" is written here"
     - "KeyKind.java:5: passed as jceName to KeyKind(...)"
@@ -38,6 +42,7 @@ input_file: shorwatch-rules/tests/fixtures/enum-algorithms/Vulnerable.java
 - rule: jvm.jca.rsa
   at: "23:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:5: \"RSA\" is written here"
     - "KeyKind.java:5: passed as jceName to KeyKind(...)"
@@ -46,20 +51,24 @@ input_file: shorwatch-rules/tests/fixtures/enum-algorithms/Vulnerable.java
 - rule: jvm.jca.ec
   at: "28:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Algorithm.java:5: EC is a constant of the enum"
 - rule: jvm.jca.rsa
   at: "28:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Algorithm.java:4: RSA is a constant of the enum"
 - rule: jvm.jca.ec
   at: "32:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Algorithm.java:5: EC is a constant of the enum"
 - rule: jvm.jca.rsa
   at: "32:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Algorithm.java:4: RSA is a constant of the enum"

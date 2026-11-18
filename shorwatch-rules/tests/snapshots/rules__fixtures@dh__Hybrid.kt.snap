@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/dh/Hybrid.kt
 - rule: jvm.jca.dh
   at: "8:40"
   status: in_transition
+  usage: key-agreement
   hybrid_evidence: org.bouncycastle.pqc.crypto.mlkem.MLKEMGenerator @ 4

@@ -25,6 +25,7 @@ references:
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
     url: https://csrc.nist.gov/pubs/ir/8547/final
 hybrid: pqc
+usage: unknown
 crypto:
   # The same EC key may serve key agreement or signatures.
   primitive: other

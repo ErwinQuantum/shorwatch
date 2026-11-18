@@ -6,18 +6,24 @@ input_file: shorwatch-rules/tests/fixtures/rsa/Vulnerable.java
 - rule: jvm.jca.rsa
   at: "16:38"
   status: vulnerable
+  usage: key-generation
 - rule: jvm.jca.rsa
   at: "22:25"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.jca.rsa
   at: "28:31"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.rsa
   at: "35:16"
   status: vulnerable
+  usage: unknown
 - rule: jvm.bouncycastle.rsa
   at: "39:16"
   status: vulnerable
+  usage: unknown
 - rule: jvm.bouncycastle.rsa
   at: "43:16"
   status: vulnerable
+  usage: signature

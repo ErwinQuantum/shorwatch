@@ -6,24 +6,28 @@ input_file: shorwatch-rules/tests/fixtures/data-flow-project/DefaultKeyProvider.
 - rule: jvm.jca.dh
   at: "9:16"
   status: vulnerable
+  usage: key-agreement
   flow:
     - "Providers.java:26: \"DH\" is written here"
     - "Providers.java:26: passed as algorithm to generator(...)"
 - rule: jvm.jca.dsa
   at: "9:16"
   status: vulnerable
+  usage: signature
   flow:
     - "Providers.java:20: \"DSA\" is written here"
     - "Providers.java:20: passed as algorithm to generator(...)"
 - rule: jvm.jca.ec
   at: "9:16"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Providers.java:15: KeyTypes.EC is a constant"
     - "Providers.java:15: passed as algorithm to generator(...)"
 - rule: jvm.jca.rsa
   at: "9:16"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Providers.java:9: \"RSA\" is written here"
     - "Providers.java:9: passed as algorithm to generator(...)"

@@ -44,7 +44,7 @@ resolves across them.
 Module map (one responsibility per file, tests in sibling `tests.rs`):
 
 ```
-core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: model, error, compile}
+core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: model, error, compile, crypto, usage}
            inventory/{mod: Dependency + dependencies(), spec: LibrarySpec + LibraryCatalog, version}
            engine/{mod: analyze + findings, matching, hybrid, fix}
            link/{mod, library, hierarchy, receivers, flow, config}  finding.rs
@@ -82,6 +82,17 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   which costs the node's depth).
 - **Shor-category rules can never carry a `fix`** (`RuleError::FixNotAllowed`).
   Their `suggestion` is educational text only.
+- **Every Shor-category pattern has a `Usage`** (`rule/usage.rs`: `signature`,
+  `key-transport`, `key-agreement`, `key-generation`, `unknown`): its own
+  `usage:` or its rule's, which a profile fills in when its algorithm has a
+  single use. `unknown` is written on purpose; a rule that says nothing is
+  `unknown` too (a rule of someone else's keeps loading), and a test in
+  `shorwatch-rules` makes the built-in ones state theirs. The engine copies the usage of
+  the pattern that matched to `Finding::usage` (`None` for Grover findings: the
+  usage is about public-key cryptography). **The usage is added data, never a
+  split of rule ids**: `report::fingerprint` is the rule id plus the code on the
+  line, and baselines and `shorwatch:ignore` rely on it. A regex that mixed two
+  usages (static RSA and ECDHE TLS suites) is two patterns.
 - A fix is never offered when the matched value was resolved indirectly
   (`Arg::resolved_via`: a constant or a `${property}`).
 - Hybrid detection: markers (`import` / `literal` / `type` regexes) are
