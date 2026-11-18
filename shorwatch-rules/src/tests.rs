@@ -379,3 +379,16 @@ fn every_builtin_shor_pattern_states_its_usage() {
         }
     }
 }
+
+#[test]
+fn rsa_advice_depends_on_the_usage() {
+    let rules = builtin_rules().unwrap();
+    let rsa = rules.iter().find(|r| r.id == "jvm.jca.rsa").unwrap();
+    let advice = |usage| rsa.suggestions.get(&usage).unwrap();
+    assert!(advice(shorwatch_core::Usage::Signature).contains("ML-DSA"));
+    assert!(advice(shorwatch_core::Usage::KeyTransport).contains("ML-KEM"));
+    assert_ne!(
+        advice(shorwatch_core::Usage::Signature),
+        advice(shorwatch_core::Usage::KeyTransport)
+    );
+}

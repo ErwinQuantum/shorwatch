@@ -16,7 +16,7 @@
   "components": [
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/rsa-jose-jwt",
+      "bom-ref": "crypto/algorithm/rsa-jose-jwt/unknown",
       "name": "RSA (JOSE/JWT)",
       "cryptoProperties": {
         "assetType": "algorithm",
@@ -37,11 +37,6 @@
             "location": "examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java",
             "line": 23,
             "additionalContext": "jvm.nimbus.jose-rsa (vulnerable)"
-          },
-          {
-            "location": "examples/spring-service/src/main/resources/application.yml",
-            "line": 8,
-            "additionalContext": "config.spring-boot.jose-rsa (vulnerable)"
           }
         ]
       },
@@ -57,23 +52,23 @@
         {
           "name": "shorwatch:status",
           "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "unknown"
         }
       ]
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/rsa",
+      "bom-ref": "crypto/algorithm/rsa/key-generation",
       "name": "RSA",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
           "primitive": "pke",
           "cryptoFunctions": [
-            "keygen",
-            "encrypt",
-            "decrypt",
-            "sign",
-            "verify"
+            "keygen"
           ],
           "nistQuantumSecurityLevel": 0
         }
@@ -84,16 +79,6 @@
             "location": "examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java",
             "line": 32,
             "additionalContext": "jvm.jca.rsa (vulnerable)"
-          },
-          {
-            "location": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
-            "line": 9,
-            "additionalContext": "jvm.jca.rsa (vulnerable)"
-          },
-          {
-            "location": "examples/spring-service/src/main/resources/certs/partner-signing.pem",
-            "line": 1,
-            "additionalContext": "keys.material.rsa (vulnerable)"
           }
         ]
       },
@@ -109,12 +94,16 @@
         {
           "name": "shorwatch:status",
           "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "key-generation"
         }
       ]
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/ecdsa-jose-jwt",
+      "bom-ref": "crypto/algorithm/ecdsa-jose-jwt/signature",
       "name": "ECDSA (JOSE/JWT)",
       "cryptoProperties": {
         "assetType": "algorithm",
@@ -158,6 +147,10 @@
         {
           "name": "shorwatch:status",
           "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "signature"
         }
       ]
     },
@@ -290,7 +283,7 @@
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/ecdsa",
+      "bom-ref": "crypto/algorithm/ecdsa/signature",
       "name": "ECDSA",
       "cryptoProperties": {
         "assetType": "algorithm",
@@ -325,12 +318,60 @@
         {
           "name": "shorwatch:status",
           "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "signature"
         }
       ]
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/ecdh",
+      "bom-ref": "crypto/algorithm/rsa/signature",
+      "name": "RSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "cryptoFunctions": [
+            "keygen",
+            "sign",
+            "verify"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java",
+            "line": 9,
+            "additionalContext": "jvm.jca.rsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "signature"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/ecdh/key-agreement",
       "name": "ECDH",
       "cryptoProperties": {
         "assetType": "algorithm",
@@ -364,12 +405,16 @@
         {
           "name": "shorwatch:status",
           "value": "in_transition"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "key-agreement"
         }
       ]
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/ecc",
+      "bom-ref": "crypto/algorithm/ecc/key-generation",
       "name": "ECC",
       "cryptoProperties": {
         "assetType": "algorithm",
@@ -407,12 +452,59 @@
         {
           "name": "shorwatch:status",
           "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "key-generation"
         }
       ]
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/tls-key-exchange",
+      "bom-ref": "crypto/algorithm/rsa-jose-jwt/signature",
+      "name": "RSA (JOSE/JWT)",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "cryptoFunctions": [
+            "sign",
+            "verify"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/resources/application.yml",
+            "line": 8,
+            "additionalContext": "config.spring-boot.jose-rsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "signature"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/tls-key-exchange/key-agreement",
       "name": "TLS key exchange",
       "cryptoProperties": {
         "assetType": "algorithm",
@@ -445,6 +537,56 @@
         {
           "name": "shorwatch:status",
           "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "key-agreement"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto/algorithm/rsa/unknown",
+      "name": "RSA",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "cryptoFunctions": [
+            "keygen",
+            "encrypt",
+            "decrypt",
+            "sign",
+            "verify"
+          ],
+          "nistQuantumSecurityLevel": 0
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "examples/spring-service/src/main/resources/certs/partner-signing.pem",
+            "line": 1,
+            "additionalContext": "keys.material.rsa (vulnerable)"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "shorwatch:category",
+          "value": "shor"
+        },
+        {
+          "name": "shorwatch:severity",
+          "value": "high"
+        },
+        {
+          "name": "shorwatch:status",
+          "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "unknown"
         }
       ]
     },

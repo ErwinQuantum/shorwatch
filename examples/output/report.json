@@ -117,7 +117,7 @@
       "status": "vulnerable",
       "title": "RSA is broken by Shor's algorithm",
       "message": "RSA key generation, encryption or signing detected. A cryptographically relevant quantum computer running Shor's algorithm recovers RSA private keys, and data encrypted today can be harvested now and decrypted later.",
-      "suggestion": "Plan a protocol migration, not a drop-in swap. For key establishment and encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS 204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding post-quantum protection.",
+      "suggestion": "An RSA key pair is generated here, and the call does not say what it is for. Find out: if the key signs, move to ML-DSA (FIPS 204) or SLH-DSA (FIPS 205); if it encrypts or wraps keys, move to ML-KEM (FIPS 203), which establishes a shared secret key for symmetric encryption rather than replacing RSA encryption one for one. A larger RSA key does not help: no key size resists Shor's algorithm.",
       "references": [
         {
           "title": "Shorwatch: why RSA is flagged",
@@ -485,7 +485,7 @@
       "status": "vulnerable",
       "title": "RSA is broken by Shor's algorithm",
       "message": "RSA key generation, encryption or signing detected. A cryptographically relevant quantum computer running Shor's algorithm recovers RSA private keys, and data encrypted today can be harvested now and decrypted later.",
-      "suggestion": "Plan a protocol migration, not a drop-in swap. For key establishment and encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS 204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding post-quantum protection.",
+      "suggestion": "RSA signs or verifies here. Move to a post-quantum signature: ML-DSA (FIPS 204) or SLH-DSA (FIPS 205), the stateless ones NIST has standardized. During the transition, dual signatures (RSA plus ML-DSA) keep classical security while adding post-quantum protection. Plan the migration around algorithm agility (several keys, accepted algorithms pinned per key), not a drop-in swap.",
       "references": [
         {
           "title": "Shorwatch: why RSA is flagged",
@@ -993,7 +993,7 @@
       "status": "vulnerable",
       "title": "TLS cipher suites with classical key exchange are exposed to harvest-now-decrypt-later",
       "message": "TLS 1.2 cipher suites configured with RSA, DHE or ECDHE key exchange. All three rest on problems Shor's algorithm solves, so TLS traffic recorded today can be decrypted once a large quantum computer exists. Suites with static RSA key exchange (TLS_RSA_WITH_*) also lack forward secrecy: a single leaked server key opens every past session, even without a quantum computer.",
-      "suggestion": "Prefer TLS 1.3 and enable a hybrid post-quantum key exchange group such as X25519MLKEM768 wherever your TLS stack and peers support it, keeping a classical group as fallback during the transition. Hybrid key exchange protects recorded traffic now, without waiting for post-quantum certificates. Remove static RSA suites today.",
+      "suggestion": "These suites agree a key with DHE or ECDHE: forward-secret today, but Shor's algorithm breaks the exchange, so recorded traffic can be decrypted once a large quantum computer exists. Prefer TLS 1.3 and enable a hybrid post-quantum key exchange group such as X25519MLKEM768 wherever your TLS stack and peers support it, keeping a classical group as fallback during the transition. Hybrid key exchange protects recorded traffic now, without waiting for post-quantum certificates.",
       "references": [
         {
           "title": "Shorwatch: why TLS key exchange is flagged",

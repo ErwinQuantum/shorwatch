@@ -15,6 +15,23 @@ suggestion: >-
   classical group as fallback during the transition. Hybrid key exchange
   protects recorded traffic now, without waiting for post-quantum
   certificates. Remove static RSA suites today.
+suggestions:
+  key-transport: >-
+    These suites use static RSA key exchange (TLS_RSA_WITH_*): the client
+    encrypts the secret to the server's RSA key. Remove them today. They have
+    no forward secrecy, so one leaked server key opens every recorded session
+    even without a quantum computer. Prefer TLS 1.3 and enable a hybrid
+    post-quantum key exchange group such as X25519MLKEM768 wherever your TLS
+    stack and peers support it, keeping a classical group as fallback during
+    the transition.
+  key-agreement: >-
+    These suites agree a key with DHE or ECDHE: forward-secret today, but
+    Shor's algorithm breaks the exchange, so recorded traffic can be decrypted
+    once a large quantum computer exists. Prefer TLS 1.3 and enable a hybrid
+    post-quantum key exchange group such as X25519MLKEM768 wherever your TLS
+    stack and peers support it, keeping a classical group as fallback during
+    the transition. Hybrid key exchange protects recorded traffic now,
+    without waiting for post-quantum certificates.
 references:
   - title: "Shorwatch: why TLS key exchange is flagged"
     url: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/tls-key-exchange.md

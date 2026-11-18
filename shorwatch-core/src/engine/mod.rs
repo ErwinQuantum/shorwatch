@@ -75,7 +75,10 @@ fn build_finding(
         },
         title: spec.title.clone(),
         message: spec.message.clone(),
-        suggestion: spec.suggestion.clone(),
+        suggestion: usage
+            .and_then(|usage| spec.suggestions.get(&usage))
+            .unwrap_or(&spec.suggestion)
+            .clone(),
         references: spec.references.clone(),
         path: unit.path().to_owned(),
         role: unit.role(),

@@ -6,6 +6,8 @@
 //! importantly that a rule for an algorithm broken by Shor can never carry an
 //! automatic fix.
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::ir::{Platform, ScopeKind};
@@ -84,6 +86,11 @@ pub struct Rule {
     /// once. A Shor-category pattern with neither is `unknown`.
     #[serde(default)]
     pub usage: Option<Usage>,
+    /// Advice for a finding with that usage, instead of `suggestion`: RSA
+    /// that signs and RSA that wraps a key have different successors. A
+    /// usage with no entry gets `suggestion`. Shor-category rules only.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub suggestions: BTreeMap<Usage, String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
