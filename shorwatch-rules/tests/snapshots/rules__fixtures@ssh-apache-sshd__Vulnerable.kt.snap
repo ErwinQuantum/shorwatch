@@ -6,30 +6,40 @@ input_file: shorwatch-rules/tests/fixtures/ssh-apache-sshd/Vulnerable.kt
 - rule: jvm.apache-sshd.rsa
   at: "14:9"
   status: vulnerable
+  usage: key-generation
 - rule: jvm.apache-sshd.rsa
   at: "19:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.apache-sshd.ecdsa
   at: "20:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.apache-sshd.eddsa
   at: "21:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.apache-sshd.ecdh
   at: "22:9"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.apache-sshd.dh
   at: "23:9"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.apache-sshd.rsa
   at: "27:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.apache-sshd.dsa
   at: "28:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.apache-sshd.eddsa
   at: "29:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.apache-sshd.ecdsa
   at: "30:9"
   status: vulnerable
+  usage: signature

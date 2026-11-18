@@ -23,6 +23,7 @@ references:
   - title: "NIST IR 8547: Transition to Post-Quantum Cryptography Standards"
     url: https://csrc.nist.gov/pubs/ir/8547/final
 hybrid: pqc
+usage: key-transport
 crypto:
   primitive: pke
   functions: [keygen, encrypt, decrypt]

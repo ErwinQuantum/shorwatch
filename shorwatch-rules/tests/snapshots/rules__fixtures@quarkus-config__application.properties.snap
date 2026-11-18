@@ -6,6 +6,8 @@ input_file: shorwatch-rules/tests/fixtures/quarkus-config/application.properties
 - rule: config.quarkus.jose-rsa
   at: "2:34"
   status: vulnerable
+  usage: signature
 - rule: config.quarkus.jose-rsa
   at: "3:29"
   status: vulnerable
+  usage: key-transport

@@ -4,10 +4,13 @@ platform: jvm
 
 patterns:
   - field:
+      usage: key-generation
       type: com.azure.security.keyvault.keys.models.KeyType
       matches: '^EC'
   - field:
+      usage: key-generation
       type: com.azure.security.keyvault.keys.models.KeyCurveName
       matches: '^P_'
   - construct:
+      usage: key-generation
       type: com.azure.security.keyvault.keys.models.CreateEcKeyOptions

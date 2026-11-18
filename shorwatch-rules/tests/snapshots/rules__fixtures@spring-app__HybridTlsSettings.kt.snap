@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/spring-app/HybridTlsSettings.kt
 - rule: jvm.jca.ecdh
   at: "8:45"
   status: in_transition
+  usage: key-agreement
   hybrid_evidence: X25519MLKEM768 @ 11

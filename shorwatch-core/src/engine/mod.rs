@@ -8,7 +8,7 @@ use std::collections::HashSet;
 
 use crate::finding::{Finding, Status};
 use crate::ir::{Fact, FactKind, SourceUnit};
-use crate::rule::{CompiledRule, RuleSet};
+use crate::rule::{CompiledRule, RuleSet, Usage};
 
 mod fix;
 mod hybrid;
@@ -33,12 +33,13 @@ pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
     let mut findings = Vec::new();
     for rule in rules.rules.iter().filter(|r| r.rule.platform == platform) {
         for fact in unit.facts() {
-            if let Some(matched) = rule
+            if let Some((matched, usage)) = rule
                 .patterns
                 .iter()
-                .find_map(|p| match_pattern(p, fact, unit))
+                .zip(&rule.usages)
+                .find_map(|(p, usage)| Some((match_pattern(p, fact, unit)?, *usage)))
             {
-                findings.push(build_finding(unit, rule, fact, matched));
+                findings.push(build_finding(unit, rule, fact, matched, usage));
             }
         }
     }
@@ -52,7 +53,13 @@ pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
     findings
 }
 
-fn build_finding(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact, matched: Match) -> Finding {
+fn build_finding(
+    unit: &SourceUnit,
+    rule: &CompiledRule,
+    fact: &Fact,
+    matched: Match,
+    usage: Option<Usage>,
+) -> Finding {
     let hybrid_evidence = hybrid_evidence(unit, rule, fact);
     let spec = &rule.rule;
     Finding {
@@ -60,6 +67,7 @@ fn build_finding(unit: &SourceUnit, rule: &CompiledRule, fact: &Fact, matched: M
         algorithm: spec.algorithm.clone(),
         category: spec.category,
         severity: spec.severity,
+        usage,
         status: if hybrid_evidence.is_some() {
             Status::InTransition
         } else {

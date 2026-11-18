@@ -7,6 +7,7 @@ patterns:
       type: com.nimbusds.jose.JWSAlgorithm
       matches: '^(RS|PS)(256|384|512)$'
   - field:
+      usage: key-transport
       type: com.nimbusds.jose.JWEAlgorithm
       matches: '^RSA(1_5|_OAEP(_(256|384|512))?)$'
   - call:
@@ -14,19 +15,20 @@ patterns:
       method: parse
       arg: { index: 0, matches: '^(RS|PS)(256|384|512)$' }
   - call:
+      usage: key-transport
       type: com.nimbusds.jose.JWEAlgorithm
       method: parse
       arg: { index: 0, matches: '^RSA(1_5|-OAEP(-(256|384|512))?)$' }
   - construct: { type: com.nimbusds.jose.crypto.RSASSASigner }
   - construct: { type: com.nimbusds.jose.crypto.RSASSAVerifier }
-  - construct: { type: com.nimbusds.jose.crypto.RSAEncrypter }
-  - construct: { type: com.nimbusds.jose.crypto.RSADecrypter }
-  - construct: { type: com.nimbusds.jose.jwk.gen.RSAKeyGenerator }
-  - construct: { type: com.nimbusds.jose.jwk.RSAKey.Builder }
+  - construct: { usage: key-transport, type: com.nimbusds.jose.crypto.RSAEncrypter }
+  - construct: { usage: key-transport, type: com.nimbusds.jose.crypto.RSADecrypter }
+  - construct: { usage: key-generation, type: com.nimbusds.jose.jwk.gen.RSAKeyGenerator }
+  - construct: { usage: unknown, type: com.nimbusds.jose.jwk.RSAKey.Builder }
   # Algorithm families, e.g. `JWSAlgorithm.Family.RSA.contains(alg)`: accepting
   # any of them means depending on RSA.
   - field: { type: com.nimbusds.jose.JWSAlgorithm.Family, matches: '^RSA$' }
-  - field: { type: com.nimbusds.jose.JWEAlgorithm.Family, matches: '^RSA$' }
+  - field: { usage: key-transport, type: com.nimbusds.jose.JWEAlgorithm.Family, matches: '^RSA$' }
   # Reading an RSA JWK, a certificate or a keystore entry.
-  - call: { type: com.nimbusds.jose.jwk.RSAKey, method: parse }
-  - call: { type: com.nimbusds.jose.jwk.RSAKey, method: load }
+  - call: { usage: unknown, type: com.nimbusds.jose.jwk.RSAKey, method: parse }
+  - call: { usage: unknown, type: com.nimbusds.jose.jwk.RSAKey, method: load }

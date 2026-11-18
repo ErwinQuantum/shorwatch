@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::ir::{CodeRole, FlowStep, Location};
-use crate::rule::{Category, CryptoProperties, Reference, Severity};
+use crate::rule::{Category, CryptoProperties, Reference, Severity, Usage};
 
 /// Whether the project still depends solely on the vulnerable algorithm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
@@ -35,6 +35,10 @@ pub struct Finding {
     pub algorithm: String,
     pub category: Category,
     pub severity: Severity,
+    /// How the algorithm is used at this place, for the Shor-category
+    /// findings: what the pattern that matched says. Absent for the rest.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub usage: Option<Usage>,
     pub status: Status,
     pub title: String,
     pub message: String,

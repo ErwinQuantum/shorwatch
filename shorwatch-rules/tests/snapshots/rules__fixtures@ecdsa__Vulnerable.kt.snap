@@ -6,21 +6,27 @@ input_file: shorwatch-rules/tests/fixtures/ecdsa/Vulnerable.kt
 - rule: jvm.jca.ecdsa
   at: "12:25"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.ecdsa
   at: "18:29"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.ecdsa
   at: "21:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.bouncycastle.ecdsa
   at: "22:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.ecdsa
   at: "27:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.ecdsa
   at: "28:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.sha1
   at: "28:9"
   status: vulnerable

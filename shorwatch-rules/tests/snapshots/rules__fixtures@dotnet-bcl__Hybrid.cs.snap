@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-bcl/Hybrid.cs
 - rule: dotnet.bcl.rsa
   at: "11:25"
   status: in_transition
+  usage: unknown
   hybrid_evidence: MLDsa @ 12

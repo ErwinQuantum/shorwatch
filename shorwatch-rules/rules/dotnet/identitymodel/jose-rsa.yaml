@@ -7,8 +7,8 @@ platform: dotnet
 # and the XML Signature URIs of the same algorithms.
 patterns:
   - field: { type: Microsoft.IdentityModel.Tokens.SecurityAlgorithms, matches: '^Rsa(Sha|SsaPssSha)(256|384|512)(Signature)?$' }
-  - field: { type: Microsoft.IdentityModel.Tokens.SecurityAlgorithms, matches: '^(RsaPKCS1|RsaOAEP|RsaV15KeyWrap|RsaOaepKeyWrap)$' }
-  - field: { type: Microsoft.IdentityModel.Tokens.JsonWebAlgorithmsKeyTypes, matches: '^RSA$' }
-  - construct: { type: Microsoft.IdentityModel.Tokens.RsaSecurityKey }
+  - field: { usage: key-transport, type: Microsoft.IdentityModel.Tokens.SecurityAlgorithms, matches: '^(RsaPKCS1|RsaOAEP|RsaV15KeyWrap|RsaOaepKeyWrap)$' }
+  - field: { usage: unknown, type: Microsoft.IdentityModel.Tokens.JsonWebAlgorithmsKeyTypes, matches: '^RSA$' }
+  - construct: { usage: unknown, type: Microsoft.IdentityModel.Tokens.RsaSecurityKey }
   - construct: { type: Microsoft.IdentityModel.Tokens.SigningCredentials, arg: { index: 1, matches: '^(RS|PS)(256|384|512)$' } }
-  - construct: { type: Microsoft.IdentityModel.Tokens.EncryptingCredentials, arg: { index: 1, matches: '^RSA(1_5|-OAEP)$' } }
+  - construct: { usage: key-transport, type: Microsoft.IdentityModel.Tokens.EncryptingCredentials, arg: { index: 1, matches: '^RSA(1_5|-OAEP)$' } }

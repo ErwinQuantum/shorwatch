@@ -6,12 +6,16 @@ input_file: shorwatch-rules/tests/fixtures/jwt-defaults/Vulnerable.java
 - rule: jvm.spring-security.jose-rsa
   at: "14:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.spring-security.jose-rsa
   at: "18:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.spring-security.jose-rsa
   at: "22:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.spring-security.jose-ecdsa
   at: "27:65"
   status: vulnerable
+  usage: signature

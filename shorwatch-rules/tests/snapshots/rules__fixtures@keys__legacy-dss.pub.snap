@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/keys/legacy-dss.pub
 - rule: keys.material.dsa
   at: "1:1"
   status: vulnerable
+  usage: signature
   detail: "SSH public key \"legacy@example\": DSA 1024-bit"

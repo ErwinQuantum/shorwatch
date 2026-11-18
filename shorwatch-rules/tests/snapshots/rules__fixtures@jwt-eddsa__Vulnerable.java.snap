@@ -1,20 +1,25 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/jwt-eddsa/Vulnerable.java
+input_file: shorwatch-rules/tests/fixtures/jwt-eddsa/Vulnerable.java
 ---
 - rule: jvm.nimbus.jose-eddsa
   at: "13:60"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-eddsa
   at: "14:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-eddsa
   at: "15:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.jjwt.jose-eddsa
   at: "19:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jjwt.jose-eddsa
   at: "20:16"
   status: vulnerable
+  usage: signature

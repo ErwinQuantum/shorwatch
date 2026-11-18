@@ -24,3 +24,4 @@ input_file: shorwatch-rules/tests/fixtures/jwt-aes-128/Vulnerable.kt
 - rule: jvm.nimbus.jose-ecdh
   at: "23:36"
   status: vulnerable
+  usage: key-agreement

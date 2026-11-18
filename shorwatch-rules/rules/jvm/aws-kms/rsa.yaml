@@ -6,26 +6,34 @@ platform: jvm
 # v1 `com.amazonaws.services.kms`): key specs and the algorithms used with them.
 patterns:
   - field:
+      usage: key-generation
       type: software.amazon.awssdk.services.kms.model.KeySpec
       matches: '^RSA_'
   - field:
+      usage: key-generation
       type: com.amazonaws.services.kms.model.KeySpec
       matches: '^RSA_'
   - field:
+      usage: key-generation
       type: software.amazon.awssdk.services.kms.model.CustomerMasterKeySpec
       matches: '^RSA_'
   - field:
+      usage: key-generation
       type: com.amazonaws.services.kms.model.CustomerMasterKeySpec
       matches: '^RSA_'
   - field:
+      usage: signature
       type: software.amazon.awssdk.services.kms.model.SigningAlgorithmSpec
       matches: '^RSASSA_'
   - field:
+      usage: signature
       type: com.amazonaws.services.kms.model.SigningAlgorithmSpec
       matches: '^RSASSA_'
   - field:
+      usage: key-transport
       type: software.amazon.awssdk.services.kms.model.EncryptionAlgorithmSpec
       matches: '^RSAES_'
   - field:
+      usage: key-transport
       type: com.amazonaws.services.kms.model.EncryptionAlgorithmSpec
       matches: '^RSAES_'

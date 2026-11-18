@@ -6,18 +6,24 @@ input_file: shorwatch-rules/tests/fixtures/eddsa/Vulnerable.java
 - rule: jvm.jca.eddsa
   at: "11:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.eddsa
   at: "15:31"
   status: vulnerable
+  usage: signature
 - rule: jvm.bouncycastle.eddsa
   at: "22:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.i2p-eddsa.eddsa
   at: "26:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.eddsa
   at: "31:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.eddsa
   at: "32:9"
   status: vulnerable
+  usage: signature

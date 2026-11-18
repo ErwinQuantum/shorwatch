@@ -6,3 +6,4 @@ input_file: shorwatch-rules/tests/fixtures/spring-boot-defaults/application-es.y
 - rule: config.spring-boot.jose-ecdsa
   at: "8:27"
   status: vulnerable
+  usage: signature

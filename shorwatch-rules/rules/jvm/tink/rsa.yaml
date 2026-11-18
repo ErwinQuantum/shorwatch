@@ -6,12 +6,15 @@ platform: jvm
 # (`KeyTemplates.get("ECDSA_P256")`).
 patterns:
   - field:
+      usage: signature
       type: com.google.crypto.tink.signature.PredefinedSignatureParameters
       matches: '^RSA_SSA_'
   - field:
+      usage: signature
       type: com.google.crypto.tink.signature.SignatureKeyTemplates
       matches: '^RSA_SSA_'
   - call:
+      usage: signature
       type: com.google.crypto.tink.KeyTemplates
       method: get
       arg: { index: 0, matches: '^RSA_SSA_' }

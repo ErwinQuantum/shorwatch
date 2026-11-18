@@ -51,15 +51,38 @@ patterns:
   - call:
       type: com.acme.crypto.KeyPairs
       method: rsa
+      usage: key-generation
   - construct:
       type: com.acme.crypto.RsaSigner
+      usage: signature
   - field:
       type: com.acme.crypto.Algorithms
       matches: '^RSA_\d+$'
+      usage: unknown
 ```
 
 That's it: every file under `rules/` is embedded automatically. The message,
 migration advice and NIST references come from `algorithms/rsa.yaml`.
+
+Each pattern says **how the algorithm is used** where it matches, because the
+successor depends on it:
+
+| `usage` | The pattern finds | Successor |
+|---|---|---|
+| `signature` | signing or verifying | a post-quantum signature (ML-DSA, SLH-DSA) |
+| `key-transport` | encrypting to a public key, data or a key alike (a `Cipher` cannot say which), or wrapping one | a KEM (ML-KEM) |
+| `key-agreement` | both parties contributing to the shared secret (Diffie-Hellman) | ML-KEM, usually in a hybrid |
+| `key-generation` | creating a key pair of an algorithm that can be used in more than one way (RSA, a generic EC key) | depends on what the key is for |
+| `unknown` | an API that does not say (a bare `RSA` object, a key file) | none until the use is known |
+
+An algorithm with a single use (ECDSA signs, ECDH agrees) declares it once, in
+its profile, and its patterns inherit it; RSA does several, so its patterns say
+it one by one. A pattern's `usage` wins over the profile's. Write `unknown` on
+purpose when the code cannot say. A rule of your own that says nothing is
+`unknown` too, so older rules keep working; the built-in ones must state it
+(a test enforces it). When one regex mixes two usages (static RSA and ECDHE TLS suites), split it in two
+patterns. The rule id never changes with the usage: baselines identify a
+finding by it.
 
 ### Teaching Shorwatch a library (the dependency inventory)
 
@@ -120,11 +143,14 @@ backslash is literal, which is what regexes want.
 
 Add `algorithms/<profile>.yaml` with `algorithm`, `category` (`shor` or
 `grover`), `severity`, `title`, `message`, `suggestion`, `references` and
-usually `hybrid: pqc`. Two rules the tests enforce:
+usually `hybrid: pqc`. Add `usage:` too when the algorithm has a single use
+(see the table above). Three rules the tests enforce:
 
 - **Shor-category algorithms never get an automatic `fix`.** Migrating away
   from RSA or ECC changes the protocol; the advice must stay a human decision.
 - **Shor-category profiles reference FIPS 203 or FIPS 204.**
+- **Every pattern of a built-in Shor-category rule states a `usage`**, its own
+  or the profile's.
 
 ### Tests for your rule
 

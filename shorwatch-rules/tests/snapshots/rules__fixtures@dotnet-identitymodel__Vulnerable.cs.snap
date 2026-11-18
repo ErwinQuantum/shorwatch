@@ -6,27 +6,36 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-identitymodel/Vulnerable.cs
 - rule: dotnet.identitymodel.jose-rsa
   at: "12:19"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.identitymodel.jose-rsa
   at: "13:44"
   status: vulnerable
+  usage: signature
 - rule: dotnet.identitymodel.jose-rsa
   at: "18:16"
   status: vulnerable
+  usage: signature
 - rule: dotnet.identitymodel.jose-ecdsa
   at: "23:19"
   status: vulnerable
+  usage: signature
 - rule: dotnet.identitymodel.jose-ecdsa
   at: "24:44"
   status: vulnerable
+  usage: signature
 - rule: dotnet.identitymodel.jose-rsa
   at: "29:47"
   status: vulnerable
+  usage: key-transport
 - rule: dotnet.identitymodel.jose-ecdh
   at: "34:16"
   status: vulnerable
+  usage: key-agreement
 - rule: dotnet.identitymodel.jose-rsa
   at: "37:56"
   status: vulnerable
+  usage: unknown
 - rule: dotnet.identitymodel.ec
   at: "39:55"
   status: vulnerable
+  usage: unknown

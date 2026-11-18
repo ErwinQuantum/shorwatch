@@ -6,12 +6,16 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-options/appsettings.json
 - rule: config.app.jose-rsa
   at: "2:25"
   status: vulnerable
+  usage: signature
 - rule: config.app.jose-ecdsa
   at: "3:29"
   status: vulnerable
+  usage: signature
 - rule: config.app.jose-rsa
   at: "4:28"
   status: vulnerable
+  usage: signature
 - rule: config.app.jose-rsa
   at: "7:29"
   status: vulnerable
+  usage: signature

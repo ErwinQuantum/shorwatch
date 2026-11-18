@@ -30,3 +30,4 @@ input_file: shorwatch-rules/tests/fixtures/3des/Vulnerable.java
 - rule: jvm.tls.tls-key-exchange
   at: "38:30"
   status: vulnerable
+  usage: key-transport

@@ -6,50 +6,59 @@ input_file: shorwatch-rules/tests/fixtures/enum-algorithms/Vulnerable.kt
 - rule: jvm.jca.ec
   at: "8:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:6: \"EC\" is written here"
     - "KeyKind.java:6: passed as jceName to KeyKind(...)"
 - rule: jvm.jca.rsa
   at: "8:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:5: \"RSA\" is written here"
     - "KeyKind.java:5: passed as jceName to KeyKind(...)"
 - rule: jvm.jca.ec
   at: "12:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:6: \"EC\" is written here"
     - "KeyKind.java:6: passed as jceName to KeyKind(...)"
 - rule: jvm.jca.rsa
   at: "12:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.java:5: \"RSA\" is written here"
     - "KeyKind.java:5: passed as jceName to KeyKind(...)"
 - rule: jvm.jca.rsa
   at: "17:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "KeyKind.kt:5: \"RSA\" is written here"
     - "KeyKind.kt:5: passed as jceName to KeyKind(...)"
 - rule: jvm.jca.ec
   at: "22:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Algorithm.java:5: EC is a constant of the enum"
 - rule: jvm.jca.rsa
   at: "22:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Algorithm.java:4: RSA is a constant of the enum"
 - rule: jvm.jca.ec
   at: "26:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Algorithm.java:5: EC is a constant of the enum"
 - rule: jvm.jca.rsa
   at: "26:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "Algorithm.java:4: RSA is a constant of the enum"

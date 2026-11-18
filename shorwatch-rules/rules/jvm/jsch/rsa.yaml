@@ -6,17 +6,21 @@ platform: jvm
 # algorithm lists set with `setConfig("kex" | "server_host_key" | ..., "...")`.
 patterns:
   - field:
+      usage: key-generation
       type: com.jcraft.jsch.KeyPair
       matches: '^RSA$'
   - call:
+      usage: signature
       type: com.jcraft.jsch.JSch
       method: setConfig
       arg: { index: 1, matches: '(^|,)(ssh-rsa|rsa-sha2-(256|512))(,|$)' }
   - call:
+      usage: signature
       type: com.jcraft.jsch.Session
       method: setConfig
       arg: { index: 1, matches: '(^|,)(ssh-rsa|rsa-sha2-(256|512))(,|$)' }
   # Host key type constants (`HostKey.SSHRSA`), used to ask for or compare a host key type.
   - field:
+      usage: signature
       type: com.jcraft.jsch.HostKey
       matches: '^SSHRSA$'

@@ -6,4 +6,5 @@ input_file: shorwatch-rules/tests/fixtures/jwt-rsa/Hybrid.kt
 - rule: jvm.nimbus.jose-rsa
   at: "7:37"
   status: in_transition
+  usage: signature
   hybrid_evidence: ML-DSA-65 @ 10

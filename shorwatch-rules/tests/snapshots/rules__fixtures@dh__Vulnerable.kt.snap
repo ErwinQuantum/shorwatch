@@ -6,12 +6,16 @@ input_file: shorwatch-rules/tests/fixtures/dh/Vulnerable.kt
 - rule: jvm.jca.dh
   at: "17:25"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.jca.dh
   at: "18:30"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.jca.dh
   at: "23:25"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.bouncycastle.dh
   at: "29:30"
   status: vulnerable
+  usage: key-agreement

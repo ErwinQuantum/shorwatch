@@ -4,12 +4,16 @@ platform: jvm
 
 patterns:
   - construct:
+      usage: unknown
       type: org.bouncycastle.crypto.engines.RSAEngine
   - construct:
+      usage: unknown
       type: org.bouncycastle.crypto.engines.RSABlindedEngine
   - construct:
+      usage: key-generation
       type: org.bouncycastle.crypto.generators.RSAKeyPairGenerator
   # PKCS#1 v1.5 signatures: the signer builds its own RSA engine, so the
   # engine constructors above never appear in the caller's code.
   - construct:
+      usage: signature
       type: org.bouncycastle.crypto.signers.RSADigestSigner

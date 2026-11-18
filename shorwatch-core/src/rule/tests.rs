@@ -29,10 +29,12 @@ pub(crate) fn rsa_rule() -> Rule {
                 with_arg: None,
                 origin: None,
                 unless_chain: None,
+                usage: Some(Usage::KeyGeneration),
             },
             Pattern::Construct {
                 ty: "org.bouncycastle.crypto.engines.RSAEngine".into(),
                 arg: None,
+                usage: None,
             },
         ],
         hybrid: Some(HybridSpec {
@@ -44,6 +46,7 @@ pub(crate) fn rsa_rule() -> Rule {
         }),
         fix: None,
         crypto: None,
+        usage: Some(crate::rule::Usage::Unknown),
     }
 }
 
@@ -59,6 +62,44 @@ fn fix() -> FixSpec {
 fn compiles_a_valid_rule() {
     let set = RuleSet::compile([rsa_rule()]).unwrap();
     assert_eq!(set.len(), 1);
+}
+
+#[test]
+fn a_shor_rule_that_says_nothing_about_its_usage_still_loads() {
+    // Rules written by others predate the field: they are `unknown`, which
+    // claims nothing, not an error.
+    let rule = Rule {
+        usage: None,
+        ..rsa_rule()
+    };
+    assert!(RuleSet::compile([rule]).is_ok());
+}
+
+#[test]
+fn a_pattern_may_state_its_own_usage_instead_of_the_rules() {
+    let mut rule = Rule {
+        usage: None,
+        ..rsa_rule()
+    };
+    if let Pattern::Construct { usage, .. } = &mut rule.patterns[1] {
+        *usage = Some(Usage::Unknown);
+    }
+    assert!(RuleSet::compile([rule]).is_ok());
+}
+
+#[test]
+fn grover_rules_need_no_usage() {
+    let rule = Rule {
+        category: Category::Grover,
+        usage: None,
+        patterns: vec![Pattern::Construct {
+            ty: "a.B".into(),
+            arg: None,
+            usage: None,
+        }],
+        ..rsa_rule()
+    };
+    assert!(RuleSet::compile([rule]).is_ok());
 }
 
 #[test]
@@ -101,6 +142,7 @@ fn fix_requires_an_argument_to_rewrite() {
         patterns: vec![Pattern::Construct {
             ty: "a.B".into(),
             arg: None,
+            usage: None,
         }],
         ..rsa_rule()
     };

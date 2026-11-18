@@ -12,5 +12,6 @@ patterns:
       unless_property: '^mp\.jwt\.verify\.publickey\.algorithm$'
   # The decryption key defaults to RSA-OAEP / RSA-OAEP-256 the same way.
   - property:
+      usage: key-transport
       key: '^mp\.jwt\.decrypt\.key(\.location)?$'
       unless_property: '^mp\.jwt\.decrypt\.key\.algorithm$'

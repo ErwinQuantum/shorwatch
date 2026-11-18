@@ -6,9 +6,12 @@ input_file: shorwatch-rules/tests/fixtures/kms-gcp/Vulnerable.kt
 - rule: jvm.gcp-kms.ecdsa
   at: "13:31"
   status: vulnerable
+  usage: signature
 - rule: jvm.gcp-kms.rsa
   at: "18:9"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.gcp-kms.eddsa
   at: "19:9"
   status: vulnerable
+  usage: signature

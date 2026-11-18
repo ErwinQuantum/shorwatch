@@ -9,27 +9,34 @@ input_file: shorwatch-rules/tests/fixtures/tls-in-code/Vulnerable.kt
 - rule: jvm.tls.tls-key-exchange
   at: "9:34"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.tls.tls-key-exchange
   at: "15:13"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.tls.aes-128
   at: "15:56"
   status: vulnerable
 - rule: jvm.tls.tls-key-exchange
   at: "17:32"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.tls.tls-key-exchange
   at: "22:29"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.tls.tls-key-exchange
   at: "26:40"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.tls.aes-128
   at: "31:32"
   status: vulnerable
 - rule: jvm.tls.tls-key-exchange
   at: "31:32"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.tls.tls-key-exchange
   at: "34:9"
   status: vulnerable
+  usage: key-agreement

@@ -1,11 +1,13 @@
 ---
 source: shorwatch-rules/tests/rules.rs
 expression: findings
-input_file: shorwatch-rules/tests/fixtures/java/spring-app/TokenService.java
+input_file: shorwatch-rules/tests/fixtures/spring-app/TokenService.java
 ---
 - rule: jvm.jjwt.jose-ecdsa
   at: "14:41"
   status: vulnerable
+  usage: signature
 - rule: jvm.jjwt.jose-ecdsa
   at: "29:53"
   status: vulnerable
+  usage: signature

@@ -6,3 +6,4 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-config/appsettings.Production.
 - rule: config.app.jose-ecdsa
   at: "2:25"
   status: vulnerable
+  usage: signature

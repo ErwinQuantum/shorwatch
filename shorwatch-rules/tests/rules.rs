@@ -17,13 +17,16 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 use serde::Serialize;
-use shorwatch_core::{Finding, Library, RuleSet, SourceUnit, Status, analyze, link};
+use shorwatch_core::{Finding, Library, RuleSet, SourceUnit, Status, Usage, analyze, link};
 
 #[derive(Serialize)]
 struct Compact {
     rule: String,
     at: String,
     status: Status,
+    /// How the algorithm is used there (the Shor-category findings).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    usage: Option<Usage>,
     #[serde(skip_serializing_if = "Option::is_none")]
     hybrid_evidence: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -42,6 +45,7 @@ impl From<Finding> for Compact {
             rule: f.rule_id,
             at: format!("{}:{}", f.location.start.line, f.location.start.column),
             status: f.status,
+            usage: f.usage,
             hybrid_evidence: f
                 .hybrid_evidence
                 .map(|e| format!("{} @ {}", e.text, e.location.start.line)),
@@ -116,13 +120,14 @@ fn fixtures() {
 }
 
 /// What a finding means, without where it is: twins differ in layout.
-fn meaning(findings: Vec<Compact>) -> Vec<(String, Status, bool, bool)> {
+fn meaning(findings: Vec<Compact>) -> Vec<(String, Status, Option<Usage>, bool, bool)> {
     let mut meaning: Vec<_> = findings
         .into_iter()
         .map(|f| {
             (
                 f.rule,
                 f.status,
+                f.usage,
                 f.hybrid_evidence.is_some(),
                 f.fix.is_some(),
             )

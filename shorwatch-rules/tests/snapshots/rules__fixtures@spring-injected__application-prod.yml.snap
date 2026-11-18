@@ -6,3 +6,4 @@ input_file: shorwatch-rules/tests/fixtures/spring-injected/application-prod.yml
 - rule: config.app.jose-rsa
   at: "3:22"
   status: vulnerable
+  usage: signature

@@ -24,6 +24,7 @@ references:
   - title: "RFC 7518: JSON Web Algorithms (JWA)"
     url: https://www.rfc-editor.org/rfc/rfc7518
 hybrid: pqc
+usage: signature
 crypto:
   primitive: signature
   functions: [sign, verify]

@@ -6,33 +6,43 @@ input_file: shorwatch-rules/tests/fixtures/tink/Vulnerable.kt
 - rule: jvm.tink.eddsa
   at: "10:60"
   status: vulnerable
+  usage: signature
 - rule: jvm.tink.jose-ecdsa
   at: "13:34"
   status: vulnerable
+  usage: signature
 - rule: jvm.tink.jose-rsa
   at: "14:34"
   status: vulnerable
+  usage: signature
 - rule: jvm.tink.jose-rsa
   at: "15:34"
   status: vulnerable
+  usage: signature
 - rule: jvm.tink.ecdh
   at: "16:34"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.tink.aes-128
   at: "17:41"
   status: vulnerable
 - rule: jvm.tink.ecdsa
   at: "21:34"
   status: vulnerable
+  usage: signature
 - rule: jvm.tink.ecdsa
   at: "22:34"
   status: vulnerable
+  usage: signature
 - rule: jvm.tink.ecdsa
   at: "23:41"
   status: vulnerable
+  usage: signature
 - rule: jvm.tink.rsa
   at: "27:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.tink.ecdh
   at: "28:9"
   status: vulnerable
+  usage: key-transport

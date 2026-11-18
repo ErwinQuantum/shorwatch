@@ -6,12 +6,14 @@ input_file: shorwatch-rules/tests/fixtures/data-flow-project/Invoices.kt
 - rule: jvm.jca.ecdsa
   at: "17:50"
   status: vulnerable
+  usage: signature
   flow:
     - "Algorithms.kt:5: \"SHA256withECDSA\" is written here"
     - "Algorithms.kt:5: returned by forPartner(...)"
 - rule: jvm.jca.rsa
   at: "17:50"
   status: vulnerable
+  usage: signature
   flow:
     - "Algorithms.kt:5: \"SHA1withRSA\" is written here"
     - "Algorithms.kt:5: returned by forPartner(...)"

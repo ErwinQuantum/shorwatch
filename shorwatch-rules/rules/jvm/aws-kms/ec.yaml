@@ -4,14 +4,18 @@ platform: jvm
 
 patterns:
   - field:
+      usage: key-generation
       type: software.amazon.awssdk.services.kms.model.KeySpec
       matches: '^(ECC_|SM2$)'
   - field:
+      usage: key-generation
       type: com.amazonaws.services.kms.model.KeySpec
       matches: '^(ECC_|SM2$)'
   - field:
+      usage: key-generation
       type: software.amazon.awssdk.services.kms.model.CustomerMasterKeySpec
       matches: '^(ECC_|SM2$)'
   - field:
+      usage: key-generation
       type: com.amazonaws.services.kms.model.CustomerMasterKeySpec
       matches: '^(ECC_|SM2$)'

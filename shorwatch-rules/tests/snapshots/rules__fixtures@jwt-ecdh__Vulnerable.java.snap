@@ -6,15 +6,20 @@ input_file: shorwatch-rules/tests/fixtures/jwt-ecdh/Vulnerable.java
 - rule: jvm.nimbus.jose-ecdh
   at: "14:35"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.nimbus.jose-ecdh
   at: "15:9"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.nimbus.jose-ecdh
   at: "16:30"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.jjwt.jose-ecdh
   at: "20:16"
   status: vulnerable
+  usage: key-agreement
 - rule: jvm.nimbus.jose-ecdh
   at: "25:16"
   status: vulnerable
+  usage: key-agreement

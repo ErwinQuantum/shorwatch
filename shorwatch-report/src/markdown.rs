@@ -76,14 +76,15 @@ pub fn render(scan: &Scan) -> String {
 
     let _ = writeln!(
         out,
-        "### Findings\n\n| Severity | Algorithm | Location | Status | Rule |\n|---|---|---|---|---|"
+        "### Findings\n\n| Severity | Algorithm | Usage | Location | Status | Rule |\n|---|---|---|---|---|---|"
     );
     for f in &scan.findings {
         let _ = writeln!(
             out,
-            "| {} | {} | {}{} | {} | `{}` |",
+            "| {} | {} | {} | {}{} | {} | `{}` |",
             severity_label(f.severity),
             cell(&f.algorithm),
+            f.usage.map_or("-", |usage| usage.label()),
             location(scan, f),
             match (&f.detail, f.flow.first()) {
                 (Some(detail), _) => format!(" ({})", cell(detail)),

@@ -3,7 +3,7 @@
 use crate::finding::Status;
 use crate::ir::{Arg, FactKind, Language, Location, ScopeKind, TypeRef};
 use crate::rule::tests::rsa_rule;
-use crate::rule::{ArgPattern, Category, FixSpec, Pattern, Rule, RuleSet};
+use crate::rule::{ArgPattern, Category, FixSpec, Pattern, Rule, RuleSet, Usage};
 
 use super::*;
 
@@ -204,6 +204,7 @@ fn aes_rule() -> Rule {
                 matches: "(?i)^AES".into(),
             }),
             unless_chain: None,
+            usage: None,
         }],
         hybrid: None,
         fix: Some(FixSpec {
@@ -211,6 +212,7 @@ fn aes_rule() -> Rule {
             replace: "^128$".into(),
             with: "256".into(),
         }),
+        usage: None,
         ..rsa_rule()
     }
 }
@@ -269,6 +271,7 @@ fn jws_rule(matches: Option<&str>) -> Rule {
             owner: "com.nimbusds.jose.JWSAlgorithm".into(),
             matches: matches.map(str::to_owned),
             unless_call: None,
+            usage: None,
         }],
         ..rsa_rule()
     }
@@ -342,6 +345,7 @@ fn literal_pattern_matches_string_literals_anywhere() {
             matches: "^TLS_(RSA|DHE?|ECDHE?)_".into(),
             unless_call: None,
             in_call: None,
+            usage: None,
         }],
         ..rsa_rule()
     };
@@ -371,6 +375,7 @@ fn literal_pattern_skips_literals_passed_to_excluded_calls() {
             matches: "^TLS_RSA_".into(),
             unless_call: Some("(?i)exclude".into()),
             in_call: None,
+            usage: None,
         }],
         ..rsa_rule()
     };
@@ -402,6 +407,7 @@ fn pqc_field_owner_is_hybrid_evidence() {
         with_arg: None,
         origin: None,
         unless_chain: None,
+        usage: None,
     });
     rule.hybrid.as_mut().unwrap().markers = vec![crate::rule::Marker::Type("(?i)ml-?dsa".into())];
     let set = RuleSet::compile([rule]).unwrap();
@@ -504,6 +510,7 @@ fn unless_chain_skips_a_call_followed_by_a_choice() {
         with_arg: None,
         origin: None,
         unless_chain: Some("^algorithm$".into()),
+        usage: None,
     }];
     let rules = RuleSet::compile([rule]).unwrap();
     assert_eq!(analyze(&call(&["build"]), &rules).len(), 1);
@@ -532,6 +539,7 @@ fn unless_property_skips_an_entry_another_one_overrides() {
         key: r"^jwt\.jwk-set-uri$".into(),
         matches: None,
         unless_property: Some(r"^jwt\.jws-algorithms".into()),
+        usage: None,
     }];
     let rules = RuleSet::compile([rule]).unwrap();
     assert_eq!(analyze(&config(&["jwt.jwk-set-uri"]), &rules).len(), 1);
@@ -563,6 +571,7 @@ fn literal_pattern_can_require_the_call_it_is_passed_to() {
             matches: "^secp256r1$".into(),
             unless_call: None,
             in_call: Some("^setNamedGroups$".into()),
+            usage: None,
         }],
         ..rsa_rule()
     };
@@ -605,6 +614,7 @@ fn call_pattern_can_constrain_two_arguments() {
             }),
             origin: None,
             unless_chain: None,
+            usage: None,
         }],
         ..rsa_rule()
     };
@@ -632,6 +642,7 @@ fn field_pattern_skips_reads_passed_to_excluded_calls() {
             owner: "System.Security.Cryptography.HashAlgorithmName".into(),
             matches: Some("^SHA1$".into()),
             unless_call: Some("^Pbkdf2$".into()),
+            usage: None,
         }],
         ..rsa_rule()
     };
@@ -664,6 +675,7 @@ fn a_rule_never_fires_on_a_unit_of_another_platform() {
             with_arg: None,
             origin: None,
             unless_chain: None,
+            usage: None,
         }],
         ..rsa_rule()
     };
@@ -673,4 +685,176 @@ fn a_rule_never_fires_on_a_unit_of_another_platform() {
     assert_eq!(analyze(&call(Language::Kotlin), &rules).len(), 1);
     assert!(analyze(&call(Language::CSharp), &rules).is_empty());
     assert!(analyze(&call(Language::Yaml), &rules).is_empty());
+}
+
+/// The same algorithm used three ways: one rule, three patterns, each saying
+/// what it is.
+fn rsa_by_usage() -> Rule {
+    let call = |ty: &str, matches: &str, usage| Pattern::Call {
+        receiver: ty.into(),
+        method: "getInstance".into(),
+        arg: Some(ArgPattern {
+            index: 0,
+            matches: matches.into(),
+        }),
+        with_arg: None,
+        origin: None,
+        unless_chain: None,
+        usage: Some(usage),
+    };
+    Rule {
+        usage: None,
+        patterns: vec![
+            call("java.security.Signature", "(?i)RSA", Usage::Signature),
+            call("javax.crypto.Cipher", "(?i)^RSA/", Usage::KeyTransport),
+            call(
+                "java.security.KeyPairGenerator",
+                "(?i)^RSA$",
+                Usage::KeyGeneration,
+            ),
+        ],
+        ..rsa_rule()
+    }
+}
+
+#[test]
+fn a_finding_carries_the_usage_of_the_pattern_that_matched() {
+    let (mut unit, _, method) = unit_with_method();
+    get_instance(
+        &mut unit,
+        method,
+        "java.security.Signature",
+        "SHA256withRSA",
+        3,
+    );
+    get_instance(
+        &mut unit,
+        method,
+        "javax.crypto.Cipher",
+        "RSA/ECB/OAEPPadding",
+        4,
+    );
+    get_instance(
+        &mut unit,
+        method,
+        "java.security.KeyPairGenerator",
+        "RSA",
+        5,
+    );
+
+    let set = RuleSet::compile([rsa_by_usage()]).unwrap();
+    let usages: Vec<_> = analyze(&unit, &set)
+        .iter()
+        .map(|f| (f.location.start.line, f.usage))
+        .collect();
+    assert_eq!(
+        usages,
+        [
+            (3, Some(Usage::Signature)),
+            (4, Some(Usage::KeyTransport)),
+            (5, Some(Usage::KeyGeneration)),
+        ]
+    );
+}
+
+#[test]
+fn the_same_rule_keeps_its_id_whatever_the_usage() {
+    // Baselines and open alerts identify a finding by its rule id: the usage
+    // is data added to it, not a way to split the rule.
+    let (mut unit, _, method) = unit_with_method();
+    get_instance(
+        &mut unit,
+        method,
+        "java.security.Signature",
+        "SHA256withRSA",
+        3,
+    );
+    get_instance(
+        &mut unit,
+        method,
+        "javax.crypto.Cipher",
+        "RSA/ECB/OAEPPadding",
+        4,
+    );
+
+    let set = RuleSet::compile([rsa_by_usage()]).unwrap();
+    let ids: Vec<_> = analyze(&unit, &set)
+        .into_iter()
+        .map(|f| f.rule_id)
+        .collect();
+    assert_eq!(ids, ["jvm.jca.rsa", "jvm.jca.rsa"]);
+}
+
+#[test]
+fn a_pattern_without_a_usage_takes_the_rules() {
+    let (mut unit, _, method) = unit_with_method();
+    get_instance(
+        &mut unit,
+        method,
+        "java.security.Signature",
+        "SHA256withRSA",
+        3,
+    );
+    let rule = Rule {
+        usage: Some(Usage::Signature),
+        patterns: vec![Pattern::Call {
+            receiver: "java.security.Signature".into(),
+            method: "getInstance".into(),
+            arg: None,
+            with_arg: None,
+            origin: None,
+            unless_chain: None,
+            usage: None,
+        }],
+        ..rsa_rule()
+    };
+    let findings = analyze(&unit, &RuleSet::compile([rule]).unwrap());
+    assert_eq!(findings[0].usage, Some(Usage::Signature));
+}
+
+#[test]
+fn symmetric_findings_have_no_usage() {
+    let (mut unit, _, method) = unit_with_method();
+    unit.push(
+        FactKind::Call {
+            receiver: Some(TypeRef::qualified("javax.crypto.KeyGenerator")),
+            method: "init".into(),
+            args: vec![Arg::int(128, loc(3))],
+            receiver_origin: Some(vec![Arg::str("AES", loc(2))]),
+            receiver_call: None,
+            chain: Vec::new(),
+        },
+        method,
+        loc(3),
+    );
+    let findings = analyze(&unit, &RuleSet::compile([aes_rule()]).unwrap());
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].usage, None);
+}
+
+#[test]
+fn a_shor_pattern_that_says_nothing_is_unknown() {
+    let (mut unit, _, method) = unit_with_method();
+    get_instance(
+        &mut unit,
+        method,
+        "java.security.Signature",
+        "SHA256withRSA",
+        3,
+    );
+    let rule = Rule {
+        usage: None,
+        patterns: vec![Pattern::Call {
+            receiver: "java.security.Signature".into(),
+            method: "getInstance".into(),
+            arg: None,
+            with_arg: None,
+            origin: None,
+            unless_chain: None,
+            usage: None,
+        }],
+        ..rsa_rule()
+    };
+    let findings = analyze(&unit, &RuleSet::compile([rule]).unwrap());
+    assert_eq!(findings[0].usage, Some(Usage::Unknown));
 }

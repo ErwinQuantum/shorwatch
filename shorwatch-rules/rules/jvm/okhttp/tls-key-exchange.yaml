@@ -5,5 +5,10 @@ platform: jvm
 # OkHttp names suites as constants: `ConnectionSpec.Builder.cipherSuites(CipherSuite.TLS_...)`.
 patterns:
   - field:
+      usage: key-transport
       type: okhttp3.CipherSuite
-      matches: '^(TLS|SSL)_(RSA|DHE?|ECDHE?)_'
+      matches: '^(TLS|SSL)_RSA_'
+  - field:
+      usage: key-agreement
+      type: okhttp3.CipherSuite
+      matches: '^(TLS|SSL)_(DHE?|ECDHE?)_'

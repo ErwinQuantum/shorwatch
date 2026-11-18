@@ -6,12 +6,14 @@ input_file: shorwatch-rules/tests/fixtures/data-flow-project/CryptoUtil.kt
 - rule: jvm.jca.rsa
   at: "8:50"
   status: vulnerable
+  usage: key-transport
   flow:
     - "Invoices.kt:13: \"RSA/ECB/OAEPPadding\" is written here"
     - "Invoices.kt:13: passed as transformation to cipher(...)"
 - rule: jvm.jca.rsa
   at: "12:26"
   status: vulnerable
+  usage: signature
   flow:
     - "Invoices.kt:10: \"SHA1withRSA\" is written here"
     - "Invoices.kt:10: passed as algorithm to sign(...)"

@@ -6,15 +6,20 @@ input_file: shorwatch-rules/tests/fixtures/jwt-ecdsa/Vulnerable.kt
 - rule: jvm.nimbus.jose-ecdsa
   at: "13:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-ecdsa
   at: "14:16"
   status: vulnerable
+  usage: signature
 - rule: jvm.jjwt.jose-ecdsa
   at: "17:23"
   status: vulnerable
+  usage: signature
 - rule: jvm.auth0.jose-ecdsa
   at: "19:60"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-ecdsa
   at: "21:25"
   status: vulnerable
+  usage: signature

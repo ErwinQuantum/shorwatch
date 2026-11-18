@@ -6,6 +6,8 @@ input_file: shorwatch-rules/tests/fixtures/spring-security/Encryptors63.java
 - rule: jvm.spring-security.rsa
   at: "10:20"
   status: vulnerable
+  usage: unknown
 - rule: jvm.spring-security.rsa
   at: "11:16"
   status: vulnerable
+  usage: key-transport

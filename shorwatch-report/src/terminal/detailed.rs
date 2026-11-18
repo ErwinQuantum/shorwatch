@@ -3,7 +3,7 @@
 
 use std::fmt::Write as _;
 
-use shorwatch_core::{CodeRole, Finding};
+use shorwatch_core::{CodeRole, Finding, Usage};
 
 use super::style::{accent, bold, dim, paint, severity_badge, status};
 use super::wrap::wrap;
@@ -23,9 +23,13 @@ pub(super) fn render(scan: &Scan, finding: &Finding) -> String {
     // Writing to a String cannot fail.
     let _ = writeln!(
         out,
-        "{} {} {} {} {} {}{}",
+        "{} {}{} {} {} {} {}{}",
         severity_badge(finding.severity, 0),
         paint(&finding.algorithm, bold()),
+        finding
+            .usage
+            .map(|usage| format!(" {} {}", paint("·", dim()), paint(usage_text(usage), dim())))
+            .unwrap_or_default(),
         paint("·", dim()),
         paint(&finding.rule_id, dim()),
         paint("·", dim()),
@@ -155,4 +159,13 @@ fn underline(line: &str, finding: &Finding) -> (String, String) {
         display(line).trim_end().to_owned(),
         format!("{}{}", " ".repeat(offset), "^".repeat(width)),
     )
+}
+
+/// How a usage reads in a report. `unknown` is said, not left out: silence
+/// is not a pass.
+fn usage_text(usage: Usage) -> &'static str {
+    match usage {
+        Usage::Unknown => "usage unknown",
+        other => other.label(),
+    }
 }

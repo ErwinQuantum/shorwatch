@@ -15,11 +15,13 @@ mod crypto;
 mod error;
 #[cfg(test)]
 pub(crate) mod tests;
+mod usage;
 
 pub use compile::RuleSet;
 pub(crate) use compile::{CompiledArg, CompiledMarker, CompiledPattern, CompiledRule};
 pub use crypto::{CryptoFunction, CryptoProperties, Primitive};
 pub use error::RuleError;
+pub use usage::Usage;
 
 /// Which quantum attack weakens the algorithm. This decides what kind of
 /// remediation is acceptable.
@@ -77,6 +79,11 @@ pub struct Rule {
     /// What kind of cryptography this is, for inventories (CBOM).
     #[serde(default)]
     pub crypto: Option<CryptoProperties>,
+    /// How the algorithm is used where the rule matches, unless a pattern
+    /// says otherwise: a profile whose algorithm has a single use declares it
+    /// once. A Shor-category pattern with neither is `unknown`.
+    #[serde(default)]
+    pub usage: Option<Usage>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -104,6 +111,9 @@ pub enum Pattern {
         /// in the chain chooses another (`.jwsAlgorithm(ES256)`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         unless_chain: Option<String>,
+        /// How this match uses the algorithm; the rule's `usage` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        usage: Option<Usage>,
     },
     /// `new Type(...)`.
     Construct {
@@ -111,6 +121,9 @@ pub enum Pattern {
         ty: String,
         #[serde(default)]
         arg: Option<ArgPattern>,
+        /// How this match uses the algorithm; the rule's `usage` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        usage: Option<Usage>,
     },
     /// `Type.FIELD`: a static field or enum constant of `type` whose name
     /// matches the `matches` regex (any field when absent).
@@ -123,6 +136,9 @@ pub enum Pattern {
         /// matches this regex (`HashAlgorithmName.SHA1` given to PBKDF2).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         unless_call: Option<String>,
+        /// How this match uses the algorithm; the rule's `usage` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        usage: Option<Usage>,
     },
     /// A string literal anywhere in the code whose value matches `matches`.
     /// Only for names specific enough to stand alone (`TLS_ECDHE_RSA_...`):
@@ -137,6 +153,9 @@ pub enum Pattern {
         /// name matches this regex (`setNamedGroups`).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         in_call: Option<String>,
+        /// How this match uses the algorithm; the rule's `usage` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        usage: Option<Usage>,
     },
     /// A configuration entry whose key matches the `key` regex and whose value
     /// matches `matches` (any value when absent).
@@ -149,6 +168,9 @@ pub enum Pattern {
         /// no `jws-algorithms` says otherwise.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         unless_property: Option<String>,
+        /// How this match uses the algorithm; the rule's `usage` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        usage: Option<Usage>,
     },
     /// A key or certificate whose public key `algorithm` and, for
     /// certificates, `signature` algorithm match (either absent: any).
@@ -157,10 +179,25 @@ pub enum Pattern {
         algorithm: Option<String>,
         #[serde(default)]
         signature: Option<String>,
+        /// How this match uses the algorithm; the rule's `usage` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        usage: Option<Usage>,
     },
 }
 
 impl Pattern {
+    /// The usage this pattern states, if it states one.
+    pub fn usage(&self) -> Option<Usage> {
+        match self {
+            Pattern::Call { usage, .. }
+            | Pattern::Construct { usage, .. }
+            | Pattern::Field { usage, .. }
+            | Pattern::Literal { usage, .. }
+            | Pattern::Property { usage, .. }
+            | Pattern::Key { usage, .. } => *usage,
+        }
+    }
+
     fn arg(&self) -> Option<&ArgPattern> {
         match self {
             Pattern::Call { arg, .. } | Pattern::Construct { arg, .. } => arg.as_ref(),

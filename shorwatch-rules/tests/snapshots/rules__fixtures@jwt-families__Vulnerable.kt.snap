@@ -6,15 +6,20 @@ input_file: shorwatch-rules/tests/fixtures/jwt-families/Vulnerable.kt
 - rule: jvm.nimbus.jose-rsa
   at: "9:9"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-ecdsa
   at: "10:13"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-eddsa
   at: "11:13"
   status: vulnerable
+  usage: signature
 - rule: jvm.nimbus.jose-rsa
   at: "14:16"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.nimbus.jose-ecdh
   at: "14:50"
   status: vulnerable
+  usage: key-agreement

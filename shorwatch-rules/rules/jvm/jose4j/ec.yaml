@@ -4,5 +4,5 @@ platform: jvm
 
 patterns:
   # EC JWKs: the same key may sign (ES256) or agree on keys (ECDH-ES).
-  - call: { type: org.jose4j.jwk.EcJwkGenerator, method: generateJwk }
+  - call: { usage: key-generation, type: org.jose4j.jwk.EcJwkGenerator, method: generateJwk }
   - construct: { type: org.jose4j.jwk.EllipticCurveJsonWebKey }

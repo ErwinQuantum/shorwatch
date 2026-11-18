@@ -6,21 +6,28 @@ input_file: shorwatch-rules/tests/fixtures/elgamal/Vulnerable.kt
 - rule: jvm.jca.elgamal
   at: "13:9"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.jca.elgamal
   at: "14:16"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.bouncycastle.elgamal
   at: "18:9"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.bouncycastle.elgamal
   at: "19:16"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.jca.elgamal
   at: "24:9"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.bouncycastle.elgamal
   at: "25:9"
   status: vulnerable
+  usage: key-transport
 - rule: jvm.bouncycastle.elgamal
   at: "26:16"
   status: vulnerable
+  usage: key-transport

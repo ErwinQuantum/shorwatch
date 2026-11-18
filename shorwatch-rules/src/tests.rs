@@ -3,6 +3,8 @@
 
 use std::collections::BTreeSet;
 
+use shorwatch_core::rule::{Pattern, Usage};
+
 use super::*;
 
 const MINIMAL: &str = r#"
@@ -11,6 +13,7 @@ platform: jvm
 algorithm: X
 category: shor
 severity: low
+usage: unknown
 title: t
 message: m
 suggestion: s
@@ -292,4 +295,87 @@ fn libraries_are_not_rules() {
     let catalog = catalog(&[("libraries/x.yaml", "id: x\n"), ("jvm/r.yaml", rule)]);
     assert_eq!(catalog.rules.len(), 1);
     assert_eq!(catalog.libraries.len(), 1);
+}
+
+#[test]
+fn a_profile_declares_the_usage_its_algorithm_has_and_a_pattern_may_differ() {
+    let rules = builtin_rules().unwrap();
+    let ecdh = rules.iter().find(|r| r.id == "jvm.jca.ecdh").unwrap();
+    assert_eq!(ecdh.usage, Some(Usage::KeyAgreement));
+    // ECIES encrypts to a public key: it says so.
+    let ecies = ecdh
+        .patterns
+        .iter()
+        .filter(|p| p.usage() == Some(Usage::KeyTransport))
+        .count();
+    assert_eq!(ecies, 2);
+}
+
+#[test]
+fn rsa_says_what_each_api_does() {
+    let rules = builtin_rules().unwrap();
+    let rsa = rules.iter().find(|r| r.id == "jvm.jca.rsa").unwrap();
+    // RSA signs, encrypts and more: no default, every pattern says it.
+    assert_eq!(rsa.usage, None);
+    let usage_of = |ty: &str| {
+        rsa.patterns
+            .iter()
+            .find(|p| matches!(p, Pattern::Call { receiver, .. } if receiver == ty))
+            .unwrap()
+            .usage()
+    };
+    assert_eq!(usage_of("java.security.Signature"), Some(Usage::Signature));
+    assert_eq!(usage_of("javax.crypto.Cipher"), Some(Usage::KeyTransport));
+    assert_eq!(
+        usage_of("java.security.KeyPairGenerator"),
+        Some(Usage::KeyGeneration)
+    );
+}
+
+#[test]
+fn a_tls_suite_is_key_transport_or_key_agreement_by_its_key_exchange() {
+    let rules = builtin_rules().unwrap();
+    let tls = rules
+        .iter()
+        .find(|r| r.id == "jvm.okhttp.tls-key-exchange")
+        .unwrap();
+    let usages: Vec<_> = tls.patterns.iter().map(Pattern::usage).collect();
+    assert_eq!(
+        usages,
+        [Some(Usage::KeyTransport), Some(Usage::KeyAgreement)]
+    );
+}
+
+#[test]
+fn symmetric_rules_declare_no_usage() {
+    for rule in builtin_rules().unwrap() {
+        if rule.category == shorwatch_core::Category::Grover {
+            assert_eq!(rule.usage, None, "{}", rule.id);
+            assert!(
+                rule.patterns.iter().all(|p| p.usage().is_none()),
+                "{}",
+                rule.id
+            );
+        }
+    }
+}
+
+#[test]
+fn every_builtin_shor_pattern_states_its_usage() {
+    // A rule of someone else's that says nothing is `unknown`; ours say what
+    // they find, or write `unknown` on purpose.
+    for rule in builtin_rules().unwrap() {
+        if rule.category != shorwatch_core::Category::Shor {
+            continue;
+        }
+        for (index, pattern) in rule.patterns.iter().enumerate() {
+            assert!(
+                pattern.usage().or(rule.usage).is_some(),
+                "{}: pattern {} has no `usage`, and neither does its profile; \
+                 state it (`unknown` when the code cannot say)",
+                rule.id,
+                index + 1
+            );
+        }
+    }
 }

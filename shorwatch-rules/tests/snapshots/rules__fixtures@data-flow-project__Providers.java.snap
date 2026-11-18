@@ -6,5 +6,6 @@ input_file: shorwatch-rules/tests/fixtures/data-flow-project/Providers.java
 - rule: jvm.jca.ec
   at: "14:9"
   status: vulnerable
+  usage: key-generation
   flow:
     - "14: KeyTypes.EC is a constant"

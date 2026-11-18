@@ -1,4 +1,4 @@
- HIGH  RSA (JOSE/JWT) · jvm.nimbus.jose-rsa · vulnerable
+ HIGH  RSA (JOSE/JWT) · usage unknown · jvm.nimbus.jose-rsa · vulnerable
   ──▶ examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java:23:25
    │
 23 │         RSAKey rsaKey = new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
@@ -18,7 +18,7 @@
            vulnerable to padding-oracle attacks.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/jose-rsa.md
 
- HIGH  RSA · jvm.jca.rsa · vulnerable
+ HIGH  RSA · key-generation · jvm.jca.rsa · vulnerable
   ──▶ examples/spring-service/src/main/java/com/example/payments/auth/AuthorizationServerConfig.java:32:42
    │
 32 │             KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
@@ -34,7 +34,7 @@
            post-quantum protection.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/rsa.md
 
- HIGH  ECDSA (JOSE/JWT) · jvm.nimbus.jose-ecdsa · vulnerable
+ HIGH  ECDSA (JOSE/JWT) · signature · jvm.nimbus.jose-ecdsa · vulnerable
   ──▶ examples/spring-service/src/main/java/com/example/payments/auth/TokenSigner.java:14:16
    │
 14 │         return JWSAlgorithm.parse(algorithm);
@@ -102,7 +102,7 @@
            re-distributed, so plan a key rotation alongside the code change.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/aes-128.md
 
- HIGH  ECDSA · jvm.jca.ecdsa · vulnerable
+ HIGH  ECDSA · signature · jvm.jca.ecdsa · vulnerable
   ──▶ examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java:9:28
    │
  9 │         Signature signer = Signature.getInstance(algorithmFor(partnerTier));
@@ -121,7 +121,7 @@
            ML-DSA keep classical verifiers working.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/ecdsa.md
 
- HIGH  RSA · jvm.jca.rsa · vulnerable
+ HIGH  RSA · signature · jvm.jca.rsa · vulnerable
   ──▶ examples/spring-service/src/main/java/com/example/payments/partners/StatementSigner.java:9:28
    │
  9 │         Signature signer = Signature.getInstance(algorithmFor(partnerTier));
@@ -158,7 +158,7 @@
            Migrate the data and its consumers together.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/sha1.md
 
- HIGH  ECDH · jvm.jca.ecdh · in transition
+ HIGH  ECDH · key-agreement · jvm.jca.ecdh · in transition
   ──▶ examples/spring-service/src/main/java/com/example/payments/tls/HybridKeyExchange.java:9:16
    │
  9 │         return KeyAgreement.getInstance("X25519");
@@ -177,7 +177,7 @@
            handshake, so it is a protocol migration, not a parameter swap.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/ecdh.md
 
- HIGH  ECDSA (JOSE/JWT) · jvm.nimbus.jose-ecdsa · vulnerable
+ HIGH  ECDSA (JOSE/JWT) · signature · jvm.nimbus.jose-ecdsa · vulnerable
   ──▶ examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:16:29
    │
 16 │     val acceptedAlgorithm = ES384
@@ -195,7 +195,7 @@
            without a flag day.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/jose-ecdsa.md
 
- HIGH  ECC · jvm.jca.ec · vulnerable
+ HIGH  ECC · key-generation · jvm.jca.ec · vulnerable
   ──▶ examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:19:9
    │
 19 │         KeyPairGenerator.getInstance("EC").apply {
@@ -214,7 +214,7 @@
            migration, not a parameter swap.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/ec.md
 
- HIGH  ECC · jvm.jca.ec · vulnerable
+ HIGH  ECC · key-generation · jvm.jca.ec · vulnerable
   ──▶ examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:20:24
    │
 20 │             initialize(ECGenParameterSpec("secp384r1"))
@@ -233,7 +233,7 @@
            migration, not a parameter swap.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/ec.md
 
- HIGH  ECDSA (JOSE/JWT) · config.app.jose-ecdsa · vulnerable
+ HIGH  ECDSA (JOSE/JWT) · signature · config.app.jose-ecdsa · vulnerable
   ──▶ examples/spring-service/src/main/resources/application-prod.yml:4:24
    │
  4 │     signing-algorithm: ES256
@@ -251,7 +251,7 @@
            without a flag day.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/jose-ecdsa.md
 
- HIGH  RSA (JOSE/JWT) · config.spring-boot.jose-rsa · vulnerable
+ HIGH  RSA (JOSE/JWT) · signature · config.spring-boot.jose-rsa · vulnerable
   ──▶ examples/spring-service/src/main/resources/application.yml:8:28
    │
  8 │           jws-algorithms: [RS256]
@@ -271,7 +271,7 @@
            vulnerable to padding-oracle attacks.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/jose-rsa.md
 
- HIGH  TLS key exchange · config.spring-boot.tls-key-exchange · vulnerable
+ HIGH  TLS key exchange · key-agreement · config.spring-boot.tls-key-exchange · vulnerable
   ──▶ examples/spring-service/src/main/resources/application.yml:14:14
    │
 14 │     ciphers: TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_AES_256_GCM_SHA384
@@ -289,7 +289,7 @@
            Remove static RSA suites today.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/tls-key-exchange.md
 
- HIGH  RSA · keys.material.rsa · vulnerable
+ HIGH  RSA · usage unknown · keys.material.rsa · vulnerable
   ──▶ examples/spring-service/src/main/resources/certs/partner-signing.pem:1:1
    │
  1 │ -----BEGIN CERTIFICATE-----

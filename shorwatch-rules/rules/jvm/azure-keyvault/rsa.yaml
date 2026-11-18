@@ -5,16 +5,21 @@ platform: jvm
 # Azure Key Vault keys (`com.azure.security.keyvault.keys`).
 patterns:
   - field:
+      usage: key-generation
       type: com.azure.security.keyvault.keys.models.KeyType
       matches: '^RSA'
   - construct:
+      usage: key-generation
       type: com.azure.security.keyvault.keys.models.CreateRsaKeyOptions
   - field:
+      usage: signature
       type: com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm
       matches: '^(RS|PS)\d+$'
   - field:
+      usage: key-transport
       type: com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm
       matches: '^RSA'
   - field:
+      usage: key-transport
       type: com.azure.security.keyvault.keys.cryptography.models.KeyWrapAlgorithm
       matches: '^RSA'

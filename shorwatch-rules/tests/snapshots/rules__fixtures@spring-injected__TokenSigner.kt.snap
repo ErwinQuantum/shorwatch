@@ -6,9 +6,11 @@ input_file: shorwatch-rules/tests/fixtures/spring-injected/TokenSigner.kt
 - rule: jvm.nimbus.jose-rsa
   at: "22:35"
   status: vulnerable
+  usage: signature
 - rule: jvm.jjwt.jose-ecdsa
   at: "24:40"
   status: vulnerable
+  usage: signature
 - rule: jvm.jca.aes-128
   at: "30:49"
   status: vulnerable
