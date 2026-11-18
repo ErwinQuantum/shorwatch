@@ -12,6 +12,31 @@ suggestion: >-
   (FIPS 204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or
   RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding
   post-quantum protection.
+suggestions:
+  signature: >-
+    RSA signs or verifies here. Move to a post-quantum signature: ML-DSA
+    (FIPS 204) or SLH-DSA (FIPS 205), the stateless ones NIST has
+    standardized. During the transition, dual signatures (RSA plus ML-DSA)
+    keep classical security while adding post-quantum protection. Plan the
+    migration around algorithm agility (several keys, accepted algorithms
+    pinned per key), not a drop-in swap.
+  key-transport: >-
+    RSA encrypts to a public key, or wraps a key, here. ML-KEM (FIPS 203) is
+    the NIST-approved post-quantum replacement, but it is a key-encapsulation
+    mechanism, not a drop-in for RSA encryption: it establishes a shared
+    secret key, which then keys symmetric encryption (NIST SP 800-227
+    describes how a KEM achieves key transport). Data that RSA encrypts
+    directly has to move to that two-step shape. Recorded ciphertext can be
+    decrypted later, so this use is exposed to harvest-now-decrypt-later; a
+    hybrid scheme (e.g. X25519+ML-KEM) keeps classical security while adding
+    post-quantum protection during the transition.
+  key-generation: >-
+    An RSA key pair is generated here, and the call does not say what it is
+    for. Find out: if the key signs, move to ML-DSA (FIPS 204) or SLH-DSA
+    (FIPS 205); if it encrypts or wraps keys, move to ML-KEM (FIPS 203),
+    which establishes a shared secret key for symmetric encryption rather
+    than replacing RSA encryption one for one. A larger RSA key does not
+    help: no key size resists Shor's algorithm.
 references:
   - title: "Shorwatch: why RSA is flagged"
     url: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/rsa.md

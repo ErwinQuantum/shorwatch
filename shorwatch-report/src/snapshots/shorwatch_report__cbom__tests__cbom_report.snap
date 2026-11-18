@@ -20,7 +20,7 @@ expression: render(&scan())
   "components": [
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/rsa",
+      "bom-ref": "crypto/algorithm/rsa/key-transport",
       "name": "RSA",
       "cryptoProperties": {
         "assetType": "algorithm",
@@ -59,6 +59,10 @@ expression: render(&scan())
         {
           "name": "shorwatch:status",
           "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "key-transport"
         }
       ]
     },
@@ -105,15 +109,14 @@ expression: render(&scan())
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/ecdsa",
+      "bom-ref": "crypto/algorithm/ecdsa/signature",
       "name": "ECDSA",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
           "primitive": "pke",
           "cryptoFunctions": [
-            "keygen",
-            "encrypt"
+            "keygen"
           ],
           "nistQuantumSecurityLevel": 0
         }
@@ -139,20 +142,23 @@ expression: render(&scan())
         {
           "name": "shorwatch:status",
           "value": "in_transition"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "signature"
         }
       ]
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "crypto/algorithm/rsa-jose-jwt",
+      "bom-ref": "crypto/algorithm/rsa-jose-jwt/signature",
       "name": "RSA (JOSE/JWT)",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
           "primitive": "pke",
           "cryptoFunctions": [
-            "keygen",
-            "encrypt"
+            "keygen"
           ],
           "nistQuantumSecurityLevel": 0
         }
@@ -178,6 +184,10 @@ expression: render(&scan())
         {
           "name": "shorwatch:status",
           "value": "vulnerable"
+        },
+        {
+          "name": "shorwatch:usage",
+          "value": "signature"
         }
       ]
     }

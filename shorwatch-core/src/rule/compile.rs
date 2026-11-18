@@ -123,6 +123,15 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
     require(!rule.algorithm.trim().is_empty(), "algorithm")?;
     require(!rule.suggestion.trim().is_empty(), "suggestion")?;
     require(!rule.references.is_empty(), "references")?;
+    require(
+        rule.suggestions
+            .values()
+            .all(|text| !text.trim().is_empty()),
+        "suggestions",
+    )?;
+    if rule.category != Category::Shor && !rule.suggestions.is_empty() {
+        return Err(RuleError::SuggestionsNotAllowed(rule.id.clone()));
+    }
     require(!rule.patterns.is_empty(), "patterns")?;
 
     let regex = |pattern: &str| {

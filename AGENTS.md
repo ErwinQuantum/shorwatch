@@ -89,7 +89,11 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `unknown` too (a rule of someone else's keeps loading), and a test in
   `shorwatch-rules` makes the built-in ones state theirs. The engine copies the usage of
   the pattern that matched to `Finding::usage` (`None` for Grover findings: the
-  usage is about public-key cryptography). **The usage is added data, never a
+  usage is about public-key cryptography). A rule or profile may give a
+  `suggestions:` map (usage -> text) that replaces `suggestion` for findings
+  of that usage; Shor-category only. Each text is checked against NIST sources
+  (SP 800-227 for what a KEM is and how it achieves key transport, IR 8547 for
+  the successors). **The usage is added data, never a
   split of rule ids**: `report::fingerprint` is the rule id plus the code on the
   line, and baselines and `shorwatch:ignore` rely on it. A regex that mixed two
   usages (static RSA and ECDHE TLS suites) is two patterns.
@@ -374,7 +378,9 @@ change line endings.
 ## CBOM output
 
 `report/src/cbom.rs` emits CycloneDX 1.6: one `cryptographic-asset` per
-algorithm, with `evidence.occurrences`. Each profile in `rules/algorithms/`
+algorithm (per algorithm *and usage* for Shor findings: `rsa/signature` and
+`rsa/key-transport` are two assets, each with the `shorwatch:usage` property
+and the profile's functions narrowed to that use), with `evidence.occurrences`. Each profile in `rules/algorithms/`
 has a `crypto:` block (primitive, functions, parameter set, NIST quantum
 security level; tests require it and Shor profiles must be level 0). CI
 validates the output against the official schema with

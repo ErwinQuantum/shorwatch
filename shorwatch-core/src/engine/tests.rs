@@ -858,3 +858,44 @@ fn a_shor_pattern_that_says_nothing_is_unknown() {
     let findings = analyze(&unit, &RuleSet::compile([rule]).unwrap());
     assert_eq!(findings[0].usage, Some(Usage::Unknown));
 }
+
+#[test]
+fn a_finding_gets_the_advice_of_its_usage() {
+    let (mut unit, _, method) = unit_with_method();
+    get_instance(
+        &mut unit,
+        method,
+        "java.security.Signature",
+        "SHA256withRSA",
+        3,
+    );
+    let pattern = |usage| Pattern::Call {
+        receiver: "java.security.Signature".into(),
+        method: "getInstance".into(),
+        arg: None,
+        with_arg: None,
+        origin: None,
+        unless_chain: None,
+        usage,
+    };
+    let rule = |usage| Rule {
+        usage: None,
+        patterns: vec![pattern(usage)],
+        suggestions: std::collections::BTreeMap::from([(
+            Usage::Signature,
+            "Sign with ML-DSA.".to_owned(),
+        )]),
+        ..rsa_rule()
+    };
+    let signing = analyze(
+        &unit,
+        &RuleSet::compile([rule(Some(Usage::Signature))]).unwrap(),
+    );
+    assert_eq!(signing[0].suggestion, "Sign with ML-DSA.");
+    // A usage with no advice of its own gets the rule's general advice.
+    let other = analyze(
+        &unit,
+        &RuleSet::compile([rule(Some(Usage::KeyTransport))]).unwrap(),
+    );
+    assert_eq!(other[0].suggestion, "Migrate to ML-KEM / ML-DSA.");
+}

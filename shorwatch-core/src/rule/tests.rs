@@ -47,6 +47,7 @@ pub(crate) fn rsa_rule() -> Rule {
         fix: None,
         crypto: None,
         usage: Some(crate::rule::Usage::Unknown),
+        suggestions: BTreeMap::new(),
     }
 }
 
@@ -185,4 +186,29 @@ fn rejects_rules_without_references() {
             ..
         })
     ));
+}
+
+#[test]
+fn advice_per_usage_is_for_shor_rules_and_never_empty() {
+    let grover = Rule {
+        category: Category::Grover,
+        suggestions: BTreeMap::from([(Usage::Signature, "x".to_owned())]),
+        usage: None,
+        ..rsa_rule()
+    };
+    assert_eq!(
+        RuleSet::compile([grover]).unwrap_err(),
+        RuleError::SuggestionsNotAllowed("jvm.jca.rsa".into())
+    );
+    let empty = Rule {
+        suggestions: BTreeMap::from([(Usage::Signature, " ".to_owned())]),
+        ..rsa_rule()
+    };
+    assert_eq!(
+        RuleSet::compile([empty]).unwrap_err(),
+        RuleError::Empty {
+            id: "jvm.jca.rsa".into(),
+            field: "suggestions"
+        }
+    );
 }

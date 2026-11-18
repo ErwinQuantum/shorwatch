@@ -348,7 +348,9 @@ print styles.
 CBOM, the inventory format used by the post-quantum ecosystem (PQCA tooling
 such as CBOMkit). Each algorithm becomes a `cryptographic-asset` with its
 primitive, parameters and **NIST quantum security level**, and every place it
-occurs is listed as evidence:
+occurs is listed as evidence. A public-key algorithm is one asset per use
+(`crypto/algorithm/rsa/signature`, `crypto/algorithm/rsa/key-transport`), with
+the `shorwatch:usage` property and only the functions of that use:
 
 ```json
 {

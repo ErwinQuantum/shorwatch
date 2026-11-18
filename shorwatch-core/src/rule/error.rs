@@ -21,6 +21,10 @@ pub enum RuleError {
     FixNotAllowed(String),
     #[error("rule `{0}`: a `fix` needs at least one pattern with an `arg` to rewrite")]
     FixWithoutArg(String),
+    #[error(
+        "rule `{0}`: `suggestions` apply to Shor-category rules only (they are keyed by usage)"
+    )]
+    SuggestionsNotAllowed(String),
     #[error("rule `{0}`: reference `{1}` must be an http(s) URL (reports link to it)")]
     ReferenceNotHttp(String, String),
 }

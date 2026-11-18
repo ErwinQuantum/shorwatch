@@ -18,8 +18,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   say so. Every Shor-category pattern of the built-in rules declares its usage
   (the profile does it once when the algorithm has a single use), a test
   enforces it, and a rule of your own that says nothing is `unknown`. Rule ids and fingerprints do not change, so baselines
-  and open alerts keep working. The advice per usage, the CBOM and SARIF come
-  next (#35, #36).
+  and open alerts keep working.
+- **The advice depends on the usage.** RSA that signs gets "move to ML-DSA or
+  SLH-DSA"; RSA that encrypts to a key or wraps one gets "move to ML-KEM", and
+  says it is a key-encapsulation mechanism, not a drop-in (checked against
+  NIST SP 800-227); an RSA key pair of unknown use says to find out first.
+  Static-RSA TLS suites and ECDHE/DHE suites get their own text. Rules and
+  profiles give it with `suggestions:` (usage -> text).
+- **The CBOM has one component per algorithm and usage** for quantum-vulnerable
+  public-key algorithms: RSA that signs and RSA that wraps a key are two
+  `cryptographic-asset`s (`crypto/algorithm/rsa/signature`,
+  `crypto/algorithm/rsa/key-transport`) with a `shorwatch:usage` property and
+  only the functions of that use. Their `bom-ref`s changed: anything keyed on
+  `crypto/algorithm/<name>` must read the new form. SARIF follows (#36).
 
 - Razor views (`.cshtml`) and components (`.razor`) are counted in the
   *NOT analyzed* table of every report, since they hold C# that no frontend

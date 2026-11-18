@@ -3,7 +3,9 @@
 //!
 //! Where SARIF lists *problems to fix*, a CBOM is an *inventory*: one
 //! component per algorithm, with its primitive and NIST quantum security level,
-//! and every place it occurs as evidence. Shorwatch only reports
+//! and every place it occurs as evidence. A public-key algorithm is one
+//! component per *use* (RSA that signs and RSA that wraps a key are two
+//! components), because the successor differs. Shorwatch only reports
 //! quantum-vulnerable algorithms, so the inventory covers those; quantum-safe
 //! crypto in the project is not listed (yet). The cryptographic libraries the
 //! build files declare follow, as `library` components with a package URL.
@@ -15,7 +17,10 @@ use std::fmt::Write as _;
 
 use serde::Serialize;
 use shorwatch_core::inventory::{Ecosystem, Role, Support};
-use shorwatch_core::{Category, CodeRole, CryptoProperties, Dependency, Finding, Severity, Status};
+use shorwatch_core::{
+    Category, CodeRole, CryptoFunction, CryptoProperties, Dependency, Finding, Severity, Status,
+    Usage,
+};
 
 use crate::Scan;
 use crate::summary::severity_label;
@@ -147,25 +152,47 @@ fn percent_encode(text: &str) -> String {
     out
 }
 
-/// One component per algorithm, in order of first appearance.
+/// One component per algorithm and usage, in order of first appearance.
 fn components<'a>(findings: impl Iterator<Item = &'a Finding>) -> Vec<Component<'a>> {
-    let mut groups: Vec<(&str, Vec<&Finding>)> = Vec::new();
+    type Group<'a> = ((&'a str, Option<Usage>), Vec<&'a Finding>);
+    let mut groups: Vec<Group> = Vec::new();
     for finding in findings {
-        match groups
-            .iter_mut()
-            .find(|(name, _)| *name == finding.algorithm)
-        {
+        let key = (finding.algorithm.as_str(), finding.usage);
+        match groups.iter_mut().find(|(k, _)| *k == key) {
             Some((_, group)) => group.push(finding),
-            None => groups.push((&finding.algorithm, vec![finding])),
+            None => groups.push((key, vec![finding])),
         }
     }
     groups
         .into_iter()
-        .map(|(name, group)| component(name, &group))
+        .map(|((name, usage), group)| component(name, usage, &group))
         .collect()
 }
 
-fn component<'a>(name: &'a str, findings: &[&'a Finding]) -> Component<'a> {
+/// The functions an algorithm performs *in this use*, from the profile's.
+/// Key generation belongs to every use; a profile that names none of the
+/// use's functions (TLS key exchange) keeps its own list, and an `unknown`
+/// use keeps all of them: nothing says which applies.
+fn functions_for(all: &[CryptoFunction], usage: Option<Usage>) -> Vec<CryptoFunction> {
+    use CryptoFunction::{
+        Decapsulate, Decrypt, Encapsulate, Encrypt, Keyderive, Keygen, Sign, Verify,
+    };
+    let own: &[CryptoFunction] = match usage {
+        Some(Usage::Signature) => &[Keygen, Sign, Verify],
+        Some(Usage::KeyTransport) => &[Keygen, Encrypt, Decrypt, Encapsulate, Decapsulate],
+        Some(Usage::KeyAgreement) => &[Keygen, Keyderive],
+        Some(Usage::KeyGeneration) => &[Keygen],
+        Some(Usage::Unknown) | None => return all.to_vec(),
+    };
+    let narrowed: Vec<_> = all.iter().copied().filter(|f| own.contains(f)).collect();
+    if narrowed.is_empty() {
+        all.to_vec()
+    } else {
+        narrowed
+    }
+}
+
+fn component<'a>(name: &'a str, usage: Option<Usage>, findings: &[&'a Finding]) -> Component<'a> {
     let first = findings[0];
     let worst_severity = findings
         .iter()
@@ -179,11 +206,17 @@ fn component<'a>(name: &'a str, findings: &[&'a Finding]) -> Component<'a> {
     };
     Component {
         kind: "cryptographic-asset",
-        bom_ref: format!("crypto/algorithm/{}", slug(name)),
+        bom_ref: match usage {
+            Some(usage) => format!("crypto/algorithm/{}/{usage}", slug(name)),
+            None => format!("crypto/algorithm/{}", slug(name)),
+        },
         name,
         crypto_properties: CbomCrypto {
             asset_type: "algorithm",
-            algorithm_properties: first.crypto.as_ref().map(algorithm_properties),
+            algorithm_properties: first
+                .crypto
+                .as_ref()
+                .map(|crypto| algorithm_properties(crypto, usage)),
         },
         evidence: Evidence {
             occurrences: findings
@@ -216,15 +249,21 @@ fn component<'a>(name: &'a str, findings: &[&'a Finding]) -> Component<'a> {
             ),
             Property::new("shorwatch:severity", severity_label(worst_severity)),
             Property::new("shorwatch:status", status),
-        ],
+        ]
+        .into_iter()
+        .chain(usage.map(|usage| Property::new("shorwatch:usage", usage.label())))
+        .collect(),
     }
 }
 
-fn algorithm_properties(crypto: &CryptoProperties) -> AlgorithmProperties<'_> {
+fn algorithm_properties(
+    crypto: &CryptoProperties,
+    usage: Option<Usage>,
+) -> AlgorithmProperties<'_> {
     AlgorithmProperties {
         primitive: crypto.primitive,
         parameter_set_identifier: crypto.parameter_set.as_deref(),
-        crypto_functions: &crypto.functions,
+        crypto_functions: functions_for(&crypto.functions, usage),
         classical_security_level: crypto.classical_security_level,
         nist_quantum_security_level: crypto.nist_quantum_security_level,
     }
@@ -308,8 +347,8 @@ struct AlgorithmProperties<'a> {
     primitive: shorwatch_core::Primitive,
     #[serde(skip_serializing_if = "Option::is_none")]
     parameter_set_identifier: Option<&'a str>,
-    #[serde(skip_serializing_if = "<[_]>::is_empty")]
-    crypto_functions: &'a [shorwatch_core::CryptoFunction],
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    crypto_functions: Vec<shorwatch_core::CryptoFunction>,
     #[serde(skip_serializing_if = "Option::is_none")]
     classical_security_level: Option<u32>,
     nist_quantum_security_level: u8,
@@ -368,6 +407,62 @@ mod tests {
     #[test]
     fn cbom_report() {
         insta::assert_snapshot!(render(&scan()));
+    }
+
+    #[test]
+    fn rsa_that_signs_and_rsa_that_wraps_a_key_are_two_components() {
+        let mut scan = scan();
+        // The real RSA profile's functions, not the fixture's.
+        use CryptoFunction::{Decrypt, Encrypt, Keygen, Sign, Verify};
+        for finding in scan.findings.iter_mut().filter(|f| f.algorithm == "RSA") {
+            finding.crypto.as_mut().unwrap().functions =
+                vec![Keygen, Encrypt, Decrypt, Sign, Verify];
+        }
+        let mut wrapping = scan.findings[0].clone();
+        wrapping.usage = Some(Usage::KeyTransport);
+        scan.findings[0].usage = Some(Usage::Signature);
+        scan.findings.push(wrapping);
+        let bom: serde_json::Value = serde_json::from_str(&render(&scan)).unwrap();
+        let components = bom["components"].as_array().unwrap();
+        let usage = |c: &serde_json::Value| {
+            c["properties"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|p| p["name"] == "shorwatch:usage")
+                .map(|p| p["value"].as_str().unwrap().to_owned())
+        };
+        let rsa: Vec<_> = components.iter().filter(|c| c["name"] == "RSA").collect();
+        let by = |wanted: &str| {
+            rsa.iter()
+                .find(|c| usage(c).as_deref() == Some(wanted))
+                .copied()
+                .unwrap()
+        };
+        let functions = |c: &serde_json::Value| {
+            c["cryptoProperties"]["algorithmProperties"]["cryptoFunctions"].to_string()
+        };
+        assert_eq!(rsa.len(), 2);
+        assert_eq!(by("signature")["bom-ref"], "crypto/algorithm/rsa/signature");
+        assert_eq!(functions(by("signature")), r#"["keygen","sign","verify"]"#);
+        assert_eq!(
+            functions(by("key-transport")),
+            r#"["keygen","encrypt","decrypt"]"#
+        );
+    }
+
+    #[test]
+    fn functions_narrow_to_the_use_and_fall_back_when_nothing_matches() {
+        use CryptoFunction::{Decrypt, Encrypt, Keyderive, Keygen, Sign, Verify};
+        let rsa = [Keygen, Encrypt, Decrypt, Sign, Verify];
+        assert_eq!(functions_for(&rsa, Some(Usage::KeyGeneration)), [Keygen]);
+        // Nothing says which applies: keep them all.
+        assert_eq!(functions_for(&rsa, Some(Usage::Unknown)), rsa);
+        // TLS key exchange lists only `keyderive`: a static RSA suite keeps it.
+        assert_eq!(
+            functions_for(&[Keyderive], Some(Usage::KeyTransport)),
+            [Keyderive]
+        );
     }
 
     #[test]

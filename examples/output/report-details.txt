@@ -27,11 +27,12 @@
    = why: RSA key generation, encryption or signing detected. A cryptographically
           relevant quantum computer running Shor's algorithm recovers RSA private keys,
           and data encrypted today can be harvested now and decrypted later.
-   = help: Plan a protocol migration, not a drop-in swap. For key establishment and
-           encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS
-           204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or
-           RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding
-           post-quantum protection.
+   = help: An RSA key pair is generated here, and the call does not say what it is for.
+           Find out: if the key signs, move to ML-DSA (FIPS 204) or SLH-DSA (FIPS 205);
+           if it encrypts or wraps keys, move to ML-KEM (FIPS 203), which establishes a
+           shared secret key for symmetric encryption rather than replacing RSA
+           encryption one for one. A larger RSA key does not help: no key size resists
+           Shor's algorithm.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/rsa.md
 
  HIGH  ECDSA (JOSE/JWT) · signature · jvm.nimbus.jose-ecdsa · vulnerable
@@ -132,11 +133,12 @@
           and data encrypted today can be harvested now and decrypted later.
    = value: 18:30 "SHA1withRSA" is written here
             17:16 returned by algorithmFor(...)
-   = help: Plan a protocol migration, not a drop-in swap. For key establishment and
-           encryption, move to ML-KEM (FIPS 203); for signatures, move to ML-DSA (FIPS
-           204). During the transition, a hybrid scheme (e.g. X25519+ML-KEM, or
-           RSA/ECDSA dual signatures with ML-DSA) keeps classical security while adding
-           post-quantum protection.
+   = help: RSA signs or verifies here. Move to a post-quantum signature: ML-DSA (FIPS
+           204) or SLH-DSA (FIPS 205), the stateless ones NIST has standardized. During
+           the transition, dual signatures (RSA plus ML-DSA) keep classical security
+           while adding post-quantum protection. Plan the migration around algorithm
+           agility (several keys, accepted algorithms pinned per key), not a drop-in
+           swap.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/rsa.md
 
  MEDIUM  SHA-1 · jvm.jca.sha1 · vulnerable
@@ -282,11 +284,13 @@
           can be decrypted once a large quantum computer exists. Suites with static RSA
           key exchange (TLS_RSA_WITH_*) also lack forward secrecy: a single leaked
           server key opens every past session, even without a quantum computer.
-   = help: Prefer TLS 1.3 and enable a hybrid post-quantum key exchange group such as
-           X25519MLKEM768 wherever your TLS stack and peers support it, keeping a
-           classical group as fallback during the transition. Hybrid key exchange
-           protects recorded traffic now, without waiting for post-quantum certificates.
-           Remove static RSA suites today.
+   = help: These suites agree a key with DHE or ECDHE: forward-secret today, but Shor's
+           algorithm breaks the exchange, so recorded traffic can be decrypted once a
+           large quantum computer exists. Prefer TLS 1.3 and enable a hybrid
+           post-quantum key exchange group such as X25519MLKEM768 wherever your TLS
+           stack and peers support it, keeping a classical group as fallback during the
+           transition. Hybrid key exchange protects recorded traffic now, without
+           waiting for post-quantum certificates.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/tls-key-exchange.md
 
  HIGH  RSA · usage unknown · keys.material.rsa · vulnerable

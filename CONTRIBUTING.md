@@ -84,6 +84,14 @@ purpose when the code cannot say. A rule of your own that says nothing is
 patterns. The rule id never changes with the usage: baselines identify a
 finding by it.
 
+A profile whose algorithm does several things (RSA, TLS key exchange) may also
+give `suggestions:`, a map from usage to the advice for that usage, which
+replaces the general `suggestion` for findings of it. Every claim in those
+texts must trace to a standard (SP 800-227 for KEMs, FIPS 203/204/205, NIST IR
+8547): signing moves to ML-DSA or SLH-DSA, but encrypting to a key moves to a
+KEM, which establishes a shared secret rather than replacing RSA encryption
+one for one.
+
 ### Teaching Shorwatch a library (the dependency inventory)
 
 A library the build files declare is listed in the reports, with its version,
