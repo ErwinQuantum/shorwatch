@@ -273,7 +273,7 @@
            vulnerable to padding-oracle attacks.
    = ref: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/jose-rsa.md
 
- HIGH  TLS key exchange · key-agreement · config.spring-boot.tls-key-exchange · vulnerable
+ HIGH  TLS key exchange · key-agreement · ephemeral-ephemeral · config.spring-boot.tls-key-exchange · vulnerable
   ──▶ examples/spring-service/src/main/resources/application.yml:14:14
    │
 14 │     ciphers: TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_AES_256_GCM_SHA384

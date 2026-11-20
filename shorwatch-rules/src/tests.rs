@@ -342,8 +342,35 @@ fn a_tls_suite_is_key_transport_or_key_agreement_by_its_key_exchange() {
     let usages: Vec<_> = tls.patterns.iter().map(Pattern::usage).collect();
     assert_eq!(
         usages,
-        [Some(Usage::KeyTransport), Some(Usage::KeyAgreement)]
+        [
+            Some(Usage::KeyTransport),
+            Some(Usage::KeyAgreement),
+            Some(Usage::KeyAgreement)
+        ]
     );
+}
+
+#[test]
+fn the_shape_is_stated_only_where_the_name_says_it() {
+    use shorwatch_core::AgreementShape::{EphemeralEphemeral, EphemeralStatic};
+    let rules = builtin_rules().unwrap();
+    let shapes = |id: &str| {
+        let rule = rules.iter().find(|r| r.id == id).unwrap();
+        rule.patterns.iter().map(Pattern::shape).collect::<Vec<_>>()
+    };
+    // The `E` of `ECDHE` / `DHE`: both sides make a fresh key. `DH` / `ECDH`
+    // with no `E` uses the server's long-term key.
+    assert_eq!(
+        shapes("jvm.okhttp.tls-key-exchange"),
+        [None, Some(EphemeralEphemeral), Some(EphemeralStatic)]
+    );
+    // The `ES` of JOSE `ECDH-ES`; ECDH-1PU and a bare curve say nothing.
+    let nimbus = shapes("jvm.nimbus.jose-ecdh");
+    assert_eq!(nimbus[0], Some(EphemeralStatic));
+    assert_eq!(nimbus[1], None);
+    // A JCA `KeyAgreement` does not say which side is fresh: never guessed.
+    let jca = rules.iter().find(|r| r.id == "jvm.jca.ecdh").unwrap();
+    assert!(jca.shape.is_none() && jca.patterns.iter().all(|p| p.shape().is_none()));
 }
 
 #[test]

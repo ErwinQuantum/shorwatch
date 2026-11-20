@@ -15,5 +15,11 @@ patterns:
       matches: '(?i)(^|[,:\s])(TLS_RSA_|(AES(128|256)(-GCM)?-SHA(256|384)?|CAMELLIA(128|256)-SHA(256)?|DES-CBC3-SHA|RC4-(MD5|SHA)|SEED-SHA)($|[,:\s]))'
   - property:
       usage: key-agreement
+      shape: ephemeral-ephemeral
       key: '(?i)(^|\.)(ssl|options)\.(ciphers|cipher-?suites|cipher\.suites|enabled-?cipher-?suites)(\[\d+\])?$'
-      matches: '(?i)(^|[,:\s])(TLS_(DHE?|ECDHE?)_|(ECDHE?|DHE?|EDH)-(RSA|ECDSA|DSS)-)'
+      matches: '(?i)(^|[,:\s])(TLS_((DHE|ECDHE)_|(DH|ECDH)_anon_)|(ECDHE|DHE|EDH)-(RSA|ECDSA|DSS)-)'
+  - property:
+      usage: key-agreement
+      shape: ephemeral-static
+      key: '(?i)(^|\.)(ssl|options)\.(ciphers|cipher-?suites|cipher\.suites|enabled-?cipher-?suites)(\[\d+\])?$'
+      matches: '(?i)(^|[,:\s])(TLS_(DH|ECDH)_(RSA|ECDSA|DSS)_|(ECDH|DH)-(RSA|ECDSA|DSS)-)'

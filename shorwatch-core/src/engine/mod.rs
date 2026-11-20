@@ -8,7 +8,7 @@ use std::collections::HashSet;
 
 use crate::finding::{Finding, Status};
 use crate::ir::{Fact, FactKind, SourceUnit};
-use crate::rule::{CompiledRule, RuleSet, Usage};
+use crate::rule::{AgreementShape, CompiledRule, RuleSet, Usage};
 
 mod fix;
 mod hybrid;
@@ -35,13 +35,16 @@ pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
     let mut findings = Vec::new();
     for rule in rules.rules.iter().filter(|r| r.rule.platform == platform) {
         for fact in unit.facts() {
-            if let Some((matched, usage)) = rule
+            if let Some((matched, usage, shape)) = rule
                 .patterns
                 .iter()
                 .zip(&rule.usages)
-                .find_map(|(p, usage)| Some((match_pattern(p, fact, unit)?, *usage)))
+                .zip(&rule.shapes)
+                .find_map(|((p, usage), shape)| {
+                    Some((match_pattern(p, fact, unit)?, *usage, *shape))
+                })
             {
-                findings.push(build_finding(unit, rule, fact, matched, usage));
+                findings.push(build_finding(unit, rule, fact, matched, (usage, shape)));
             }
         }
     }
@@ -60,7 +63,7 @@ fn build_finding(
     rule: &CompiledRule,
     fact: &Fact,
     matched: Match,
-    usage: Option<Usage>,
+    (usage, shape): (Option<Usage>, Option<AgreementShape>),
 ) -> Finding {
     let hybrid_evidence = hybrid_evidence(unit, rule, fact);
     let spec = &rule.rule;
@@ -70,6 +73,7 @@ fn build_finding(
         category: spec.category,
         severity: spec.severity,
         usage,
+        shape,
         status: if hybrid_evidence.is_some() {
             Status::InTransition
         } else {
@@ -77,8 +81,10 @@ fn build_finding(
         },
         title: spec.title.clone(),
         message: spec.message.clone(),
-        suggestion: usage
-            .and_then(|usage| spec.suggestions.get(&usage))
+        // The most specific advice there is: the shape's, the usage's, the rule's.
+        suggestion: shape
+            .and_then(|shape| spec.shape_suggestions.get(&shape))
+            .or_else(|| usage.and_then(|usage| spec.suggestions.get(&usage)))
             .unwrap_or(&spec.suggestion)
             .clone(),
         references: spec.references.clone(),

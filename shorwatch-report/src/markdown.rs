@@ -6,6 +6,7 @@ use shorwatch_core::{CodeRole, Finding};
 use std::fmt::Write as _;
 
 use crate::summary::{language_counts, severity_label, status_label};
+use crate::usage::usage_with_shape;
 use crate::{Scan, Summary};
 
 /// What was analyzed and what was skipped for want of a frontend.
@@ -90,7 +91,7 @@ pub fn render(scan: &Scan) -> String {
             "| {} | {} | {} | {}{} | {} | `{}` |",
             severity_label(f.severity),
             cell(&f.algorithm),
-            f.usage.map_or("-", |usage| usage.label()),
+            usage_with_shape(f).as_deref().unwrap_or("-"),
             location(scan, f),
             match (&f.detail, f.flow.first()) {
                 (Some(detail), _) => format!(" ({})", cell(detail)),

@@ -77,6 +77,36 @@ concatenation is not a key.
 The JWT flavour (`ECDH-ES`) is on [its own page](jose-ecdh.md); TLS is covered
 in [TLS key exchange](tls-key-exchange.md).
 
+## Which side uses a fresh key
+
+Key agreement comes in shapes, and the advice differs. NIST SP 800-56A names
+them by how many fresh (ephemeral) and long-lived (static) keys each party
+contributes. Shorwatch states the shape of a finding (`shape` in the JSON
+report, next to the usage) only where the code or the name says so, and
+otherwise says `undetermined`: it never guesses from the code around it.
+
+| Shape | Example | What to say |
+|---|---|---|
+| `ephemeral-ephemeral` | the TLS suites with `DHE` or `ECDHE` in the name | ML-KEM (FIPS 203), usually in a hybrid such as X25519MLKEM768 |
+| `ephemeral-static` | JOSE `ECDH-ES`, ECIES, the TLS suites with `DH` or `ECDH` and no `E` | Already the shape of a KEM: the sender encapsulates to the recipient's key (SP 800-227 section 5.1.1). ML-KEM, the same move as for encryption |
+| `static-static` | long-lived key pairs on both sides that authenticate each other (SP 800-56A's static unified model) | No one-to-one replacement: the algorithm is ML-KEM, but the protocol has to change (SP 800-227 section 5.2 gives illustrative constructions, not standardized protocols) |
+| `undetermined` | a `KeyAgreement.getInstance("ECDH")`, a bare X25519 key | Says nothing the usage does not |
+
+What states each shape today: the `E` of `DHE`/`ECDHE` in a TLS suite name
+(RFC 8422 section 2: both sides use ephemeral keys; the same for `DHE`, RFC 5246
+appendix A.5), the `DH`/`ECDH` suites with no `E` (the server's certificate holds
+its long-term key and the client generates a key pair of its own, unless it uses a
+fixed-DH client certificate: RFC 5246 section 7.4.7, RFC 4492 section 2.1), and the
+`ES` of the JOSE `ECDH-ES` names (RFC 7518 section 4.6: "a new ephemeral public key
+value MUST be generated for each key agreement operation"). Those are the only
+ECDH algorithms in the IANA JOSE registry (checked on 2026-11-20). `ECDH-1PU` adds a static key of the
+sender and is not defined by RFC 7518, so it stays `undetermined`.
+
+No rule yet decides `static-static`: neither a TLS suite name nor a JOSE name says
+that both sides use long-lived keys. A rule of your own can declare it
+(`shape: static-static`, see CONTRIBUTING), and its finding then carries the advice
+for that shape instead of a swap to ML-KEM.
+
 ## False positives and limits
 - Shorwatch reports the algorithm it sees. If it also sees post-quantum code
   nearby, it marks the finding `in transition` instead of `vulnerable`. "Nearby"

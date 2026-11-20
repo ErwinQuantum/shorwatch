@@ -5,6 +5,7 @@ platform: jvm
 patterns:
   # jjwt 0.12+
   - field:
+      shape: ephemeral-static
       type: io.jsonwebtoken.Jwts.KEY
       matches: '^ECDH_ES'
   - field:

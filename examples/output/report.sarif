@@ -1136,7 +1136,7 @@
           "ruleIndex": 2,
           "level": "error",
           "message": {
-            "text": "TLS 1.2 cipher suites configured with RSA, DHE or ECDHE key exchange. All three rest on problems Shor's algorithm solves, so TLS traffic recorded today can be decrypted once a large quantum computer exists. Suites with static RSA key exchange (TLS_RSA_WITH_*) also lack forward secrecy: a single leaked server key opens every past session, even without a quantum computer. Used for: key-agreement."
+            "text": "TLS 1.2 cipher suites configured with RSA, DHE or ECDHE key exchange. All three rest on problems Shor's algorithm solves, so TLS traffic recorded today can be decrypted once a large quantum computer exists. Suites with static RSA key exchange (TLS_RSA_WITH_*) also lack forward secrecy: a single leaked server key opens every past session, even without a quantum computer. Used for: key-agreement (ephemeral-ephemeral)."
           },
           "locations": [
             {
@@ -1162,8 +1162,10 @@
             "status": "vulnerable",
             "role": "production",
             "usage": "key-agreement",
+            "shape": "ephemeral-ephemeral",
             "tags": [
-              "usage:key-agreement"
+              "usage:key-agreement",
+              "shape:ephemeral-ephemeral"
             ]
           }
         },

@@ -15,11 +15,14 @@ input_file: shorwatch-rules/tests/fixtures/jwt-ecdh/Vulnerable.kt
   at: "16:26"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-static
 - rule: jvm.jjwt.jose-ecdh
   at: "19:23"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-static
 - rule: jvm.nimbus.jose-ecdh
   at: "22:34"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-static

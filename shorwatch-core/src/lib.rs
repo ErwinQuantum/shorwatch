@@ -26,6 +26,6 @@ pub use inventory::{
 pub use ir::{CodeRole, Language, Library, Platform, SourceUnit};
 pub use link::link;
 pub use rule::{
-    Category, CryptoFunction, CryptoProperties, Note, NoteSet, Observation, ObservationKind,
-    Primitive, Rule, RuleError, RuleSet, Severity, Usage,
+    AgreementShape, Category, CryptoFunction, CryptoProperties, Note, NoteSet, Observation,
+    ObservationKind, Primitive, Rule, RuleError, RuleSet, Severity, Usage,
 };

@@ -14,9 +14,10 @@ use std::fmt::Write as _;
 
 use serde::Serialize;
 use shorwatch_core::ir::Location;
-use shorwatch_core::{CodeRole, Finding, Severity, Usage};
+use shorwatch_core::{AgreementShape, CodeRole, Finding, Severity, Usage};
 
 use crate::summary::status_label;
+use crate::usage::{stated_shape, usage_with_shape};
 use crate::{Scan, fingerprint};
 
 const SCHEMA: &str = "https://json.schemastore.org/sarif-2.1.0.json";
@@ -100,13 +101,13 @@ fn descriptors<'a>(findings: &[&'a Finding]) -> Vec<Descriptor<'a>> {
 /// rule in this scan carry different advice, the help gives each one under
 /// its usage. Returns the plain text and the Markdown.
 fn advice(findings: &[&Finding]) -> (String, String) {
-    let mut by_text: Vec<(&str, Vec<&'static str>)> = Vec::new();
+    let mut by_text: Vec<(&str, Vec<String>)> = Vec::new();
     for finding in findings {
         match by_text.iter_mut().find(|(t, _)| *t == finding.suggestion) {
-            Some((_, usages)) => usages.extend(finding.usage.map(Usage::label)),
+            Some((_, usages)) => usages.extend(usage_with_shape(finding)),
             None => by_text.push((
                 &finding.suggestion,
-                finding.usage.map(Usage::label).into_iter().collect(),
+                usage_with_shape(finding).into_iter().collect(),
             )),
         }
     }
@@ -156,7 +157,7 @@ fn result<'a>(scan: &Scan, finding: &'a Finding, rule_index: usize) -> SarifResu
                     Some(detail) => format!("Found {detail}. {}", finding.message),
                     None => finding.message.clone(),
                 };
-                if let Some(usage) = finding.usage {
+                if let Some(usage) = usage_with_shape(finding) {
                     let _ = write!(text, " Used for: {usage}.");
                 }
                 if let Some(e) = &finding.hybrid_evidence {
@@ -203,14 +204,25 @@ fn result<'a>(scan: &Scan, finding: &'a Finding, rule_index: usize) -> SarifResu
             status: status_label(finding.status),
             role: finding.role,
             usage: finding.usage.map(Usage::label),
+            shape: stated_shape(finding).map(AgreementShape::label),
             // GitHub code scanning filters results by tag.
             tags: finding
                 .usage
                 .map(usage_tag)
                 .into_iter()
+                .chain(stated_shape(finding).map(shape_tag))
                 .chain((finding.role == CodeRole::Test).then_some("test"))
                 .collect(),
         },
+    }
+}
+
+fn shape_tag(shape: AgreementShape) -> &'static str {
+    match shape {
+        AgreementShape::EphemeralEphemeral => "shape:ephemeral-ephemeral",
+        AgreementShape::EphemeralStatic => "shape:ephemeral-static",
+        AgreementShape::StaticStatic => "shape:static-static",
+        AgreementShape::Undetermined => "shape:undetermined",
     }
 }
 
@@ -462,6 +474,8 @@ struct ResultProperties<'a> {
     role: CodeRole,
     #[serde(skip_serializing_if = "Option::is_none")]
     usage: Option<&'static str>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    shape: Option<&'static str>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     tags: Vec<&'static str>,
 }

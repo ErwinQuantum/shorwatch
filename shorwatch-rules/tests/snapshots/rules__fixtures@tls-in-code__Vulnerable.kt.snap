@@ -14,6 +14,7 @@ input_file: shorwatch-rules/tests/fixtures/tls-in-code/Vulnerable.kt
   at: "15:13"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-ephemeral
 - rule: jvm.tls.aes-128
   at: "15:56"
   status: vulnerable
@@ -21,14 +22,17 @@ input_file: shorwatch-rules/tests/fixtures/tls-in-code/Vulnerable.kt
   at: "17:32"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-ephemeral
 - rule: jvm.tls.tls-key-exchange
   at: "22:29"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-ephemeral
 - rule: jvm.tls.tls-key-exchange
   at: "26:40"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-ephemeral
 - rule: jvm.tls.aes-128
   at: "31:32"
   status: vulnerable
@@ -40,3 +44,4 @@ input_file: shorwatch-rules/tests/fixtures/tls-in-code/Vulnerable.kt
   at: "34:9"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-ephemeral

@@ -17,7 +17,9 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 use serde::Serialize;
-use shorwatch_core::{Finding, Library, RuleSet, SourceUnit, Status, Usage, analyze, link};
+use shorwatch_core::{
+    AgreementShape, Finding, Library, RuleSet, SourceUnit, Status, Usage, analyze, link,
+};
 
 #[derive(Serialize)]
 struct Compact {
@@ -27,6 +29,10 @@ struct Compact {
     /// How the algorithm is used there (the Shor-category findings).
     #[serde(skip_serializing_if = "Option::is_none")]
     usage: Option<Usage>,
+    /// Which side of a key agreement uses a fresh key, where the code or the
+    /// name says so (`undetermined` is the common case and is left out).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    shape: Option<AgreementShape>,
     #[serde(skip_serializing_if = "Option::is_none")]
     hybrid_evidence: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,6 +52,9 @@ impl From<Finding> for Compact {
             at: format!("{}:{}", f.location.start.line, f.location.start.column),
             status: f.status,
             usage: f.usage,
+            shape: f
+                .shape
+                .filter(|shape| *shape != AgreementShape::Undetermined),
             hybrid_evidence: f
                 .hybrid_evidence
                 .map(|e| format!("{} @ {}", e.text, e.location.start.line)),
@@ -120,7 +129,16 @@ fn fixtures() {
 }
 
 /// What a finding means, without where it is: twins differ in layout.
-fn meaning(findings: Vec<Compact>) -> Vec<(String, Status, Option<Usage>, bool, bool)> {
+type Meaning = (
+    String,
+    Status,
+    Option<Usage>,
+    Option<AgreementShape>,
+    bool,
+    bool,
+);
+
+fn meaning(findings: Vec<Compact>) -> Vec<Meaning> {
     let mut meaning: Vec<_> = findings
         .into_iter()
         .map(|f| {
@@ -128,6 +146,7 @@ fn meaning(findings: Vec<Compact>) -> Vec<(String, Status, Option<Usage>, bool, 
                 f.rule,
                 f.status,
                 f.usage,
+                f.shape,
                 f.hybrid_evidence.is_some(),
                 f.fix.is_some(),
             )

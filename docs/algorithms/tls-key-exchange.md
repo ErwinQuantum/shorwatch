@@ -75,6 +75,17 @@ Severity: **High**. Shorwatch never offers an automatic fix for this class.
   these) and Kafka's `ssl.cipher.suites`, including when it is passed through
   Spring Boot's `spring.kafka.properties`.
 
+## Which side uses a fresh key
+
+The name of a suite says it. `DHE` and `ECDHE` suites make a fresh key on both
+sides (`ephemeral-ephemeral`): ML-KEM in a hybrid. The suites with `DH` or `ECDH`
+and no `E` use the server's long-term key from its certificate, with a key pair
+the client generates for the connection (`ephemeral-static`; a fixed-DH client
+certificate would make the client static too). They have no forward secrecy, so
+the advice is to remove them today. `DH_anon` and `ECDH_anon` are ephemeral even
+though the name does not show it (RFC 8422 section 2). Named groups set in
+`jdk.tls.namedGroups` are (EC)DHE groups and count as `ephemeral-ephemeral`.
+
 ## What the runtime decides
 
 Most Java and .NET programs never name a key exchange: the JVM or the .NET

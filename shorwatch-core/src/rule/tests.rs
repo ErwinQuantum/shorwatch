@@ -30,11 +30,13 @@ pub(crate) fn rsa_rule() -> Rule {
                 origin: None,
                 unless_chain: None,
                 usage: Some(Usage::KeyGeneration),
+                shape: None,
             },
             Pattern::Construct {
                 ty: "org.bouncycastle.crypto.engines.RSAEngine".into(),
                 arg: None,
                 usage: None,
+                shape: None,
             },
         ],
         hybrid: Some(HybridSpec {
@@ -48,6 +50,8 @@ pub(crate) fn rsa_rule() -> Rule {
         crypto: None,
         usage: Some(crate::rule::Usage::Unknown),
         suggestions: BTreeMap::new(),
+        shape: None,
+        shape_suggestions: BTreeMap::new(),
     }
 }
 
@@ -97,6 +101,7 @@ fn grover_rules_need_no_usage() {
             ty: "a.B".into(),
             arg: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -144,6 +149,7 @@ fn fix_requires_an_argument_to_rewrite() {
             ty: "a.B".into(),
             arg: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -225,6 +231,7 @@ fn a_note_needs_text_platforms_and_something_to_look_for() {
             unless_call: None,
             in_call: None,
             usage: None,
+            shape: None,
         }],
         settings: vec![],
     };

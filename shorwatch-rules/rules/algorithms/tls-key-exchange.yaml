@@ -32,6 +32,27 @@ suggestions:
     stack and peers support it, keeping a classical group as fallback during
     the transition. Hybrid key exchange protects recorded traffic now,
     without waiting for post-quantum certificates.
+shape_suggestions:
+  ephemeral-static: >-
+    These suites (TLS_DH_*, TLS_ECDH_*) use the server's long-term
+    Diffie-Hellman key from its certificate instead of a fresh one for each
+    connection (RFC 5246 appendix A.5; RFC 8422 section 2 says forward
+    secrecy needs fresh ephemeral keys), so one leaked server key opens every
+    recorded session even without a quantum computer. Remove them today.
+    Prefer TLS 1.3 and enable a hybrid post-quantum key exchange group such as
+    X25519MLKEM768 wherever your TLS stack and peers support it, keeping a
+    classical group as fallback during the transition.
+  static-static: >-
+    Both sides use long-lived key pairs here, each authenticating the other
+    (the static unified model of NIST SP 800-56A). ML-KEM (FIPS 203) is the
+    algorithm to move to, but there is no one-to-one replacement for this
+    shape: the protocol has to change. NIST SP 800-227 section 5.2 gives
+    examples of authenticated key establishment built from KEMs (section 5.2.5
+    authenticates both parties with static KEM keys in certificates, plus a
+    fresh ephemeral KEM key), which are illustrations and not standardized
+    protocols. NIST IR 8547 puts every Diffie-Hellman variant of SP 800-56A,
+    static or ephemeral, on the same schedule (deprecated after 2030,
+    disallowed after 2035), so plan the redesign now.
 references:
   - title: "Shorwatch: why TLS key exchange is flagged"
     url: https://github.com/ErwinQuantum/shorwatch/blob/main/docs/algorithms/tls-key-exchange.md

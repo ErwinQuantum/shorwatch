@@ -84,6 +84,17 @@ purpose when the code cannot say. A rule of your own that says nothing is
 patterns. The rule id never changes with the usage: baselines identify a
 finding by it.
 
+A key-agreement pattern may also say **which side uses a fresh key**, with
+`shape:` (`ephemeral-ephemeral`, `ephemeral-static`, `static-static`), and only
+where the code or the name says so: the `E` of `ECDHE` in a suite name, the `ES`
+of JOSE `ECDH-ES`. Without it the finding is `undetermined`, and that is the right
+answer for a `KeyAgreement.getInstance("ECDH")`: never guess the shape from the
+code around it. `shape:` is accepted only on `usage: key-agreement` patterns, and
+`shape_suggestions:` (shape -> text) on a profile gives each shape its own advice
+before `suggestions:`. Cite the source of every claim: RFC 8422 and RFC 5246 for
+TLS suites, RFC 7518 section 4.6 for JOSE, SP 800-56A for the scheme names, SP
+800-227 sections 5.1.1 and 5.2 for the KEM view and the authenticated examples.
+
 A profile whose algorithm does several things (RSA, TLS key exchange) may also
 give `suggestions:`, a map from usage to the advice for that usage, which
 replaces the general `suggestion` for findings of it. Every claim in those

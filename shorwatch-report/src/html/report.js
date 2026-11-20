@@ -475,7 +475,7 @@
           class: `tag ${f.status === "in_transition" ? "transition" : ""}`,
           text: f.status === "in_transition" ? "in transition" : "vulnerable",
         }),
-        f.usage ? el("a", { class: "tag", href: chapterHref({ usage: f.usage }), title: "How the algorithm is used here. Open every finding with this usage.", text: f.usage === "unknown" ? "usage unknown" : f.usage.replace("-", " ") }) : null,
+        f.usage ? el("a", { class: "tag", href: chapterHref({ usage: f.usage }), title: "How the algorithm is used here. Open every finding with this usage.", text: (f.usage === "unknown" ? "usage unknown" : f.usage.replace("-", " ")) + (f.shape && f.shape !== "undetermined" ? ` · ${f.shape}` : "") }) : null,
         isTest(f) ? el("span", { class: "tag", text: "test code" }) : null,
         el("span", { class: "mono tag", text: f.rule_id }),
       ]),

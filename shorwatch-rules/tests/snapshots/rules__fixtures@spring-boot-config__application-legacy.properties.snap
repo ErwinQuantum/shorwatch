@@ -45,3 +45,4 @@ input_file: shorwatch-rules/tests/fixtures/spring-boot-config/application-legacy
   at: "15:47"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-ephemeral

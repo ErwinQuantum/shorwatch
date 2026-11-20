@@ -80,6 +80,7 @@ fn shor(rule_id: &str, algorithm: &str, path: &str, at: Location) -> Finding {
         category: Category::Shor,
         severity: Severity::High,
         usage: Some(Usage::KeyTransport),
+        shape: None,
         status: Status::Vulnerable,
         title: format!("{algorithm} is broken by Shor's algorithm"),
         message: format!("{algorithm} usage detected."),
@@ -131,6 +132,7 @@ pub(crate) fn scan() -> Scan {
         category: Category::Grover,
         severity: Severity::Low,
         usage: None,
+        shape: None,
         title: "AES-128 keeps only about 64 bits of security against Grover's algorithm".into(),
         message: "A 128-bit AES key detected.".into(),
         suggestion: "Use 256-bit keys (AES-256).".into(),
@@ -148,6 +150,7 @@ pub(crate) fn scan() -> Scan {
     };
     let ecdsa = Finding {
         usage: Some(Usage::Signature),
+        shape: None,
         status: Status::InTransition,
         hybrid_evidence: Some(HybridEvidence {
             text: "ML-DSA-65".into(),
@@ -157,6 +160,7 @@ pub(crate) fn scan() -> Scan {
     };
     let jose = Finding {
         usage: Some(Usage::Signature),
+        shape: None,
         ..shor(
             "config.spring-boot.jose-rsa",
             "RSA (JOSE/JWT)",

@@ -27,6 +27,7 @@ pub mod sarif;
 pub mod summary;
 pub mod suppression;
 pub mod terminal;
+mod usage;
 
 pub use links::{SourceLinks, WebLinks};
 pub use runtime::RuntimeNote;

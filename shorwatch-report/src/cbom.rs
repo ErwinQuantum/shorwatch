@@ -24,6 +24,7 @@ use shorwatch_core::{
 
 use crate::Scan;
 use crate::summary::severity_label;
+use crate::usage::stated_shape;
 
 pub fn render(scan: &Scan) -> String {
     let bom = Bom {
@@ -230,7 +231,7 @@ fn component<'a>(name: &'a str, usage: Option<Usage>, findings: &[&'a Finding]) 
                     location: &f.path,
                     line: f.location.start.line,
                     additional_context: format!(
-                        "{} ({}{})",
+                        "{} ({}{}{})",
                         f.rule_id,
                         match f.status {
                             Status::Vulnerable => "vulnerable",
@@ -239,7 +240,11 @@ fn component<'a>(name: &'a str, usage: Option<Usage>, findings: &[&'a Finding]) 
                         match f.role {
                             CodeRole::Production => "",
                             CodeRole::Test => ", test code",
-                        }
+                        },
+                        // Which side uses a fresh key, where the code says so.
+                        stated_shape(f)
+                            .map(|shape| format!(", {shape}"))
+                            .unwrap_or_default(),
                     ),
                 })
                 .collect(),

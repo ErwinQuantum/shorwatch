@@ -248,6 +248,76 @@ class Client {
 }
 
 #[test]
+fn a_key_agreement_says_its_shape_only_where_the_name_does() {
+    let dir = scratch(
+        "shapes",
+        &[(
+            "Agree.java",
+            [
+                "import com.nimbusds.jose.JWEAlgorithm;",
+                "import javax.crypto.KeyAgreement;",
+                "import javax.net.ssl.SSLSocket;",
+                "class Agree {",
+                "  void tls(SSLSocket s) {",
+                "    s.setEnabledCipherSuites(new String[] {",
+                "      \"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256\",",
+                "      \"TLS_ECDH_RSA_WITH_AES_128_CBC_SHA\"",
+                "    });",
+                "  }",
+                "  void jose() {",
+                "    JWEAlgorithm es = JWEAlgorithm.ECDH_ES;",
+                "    JWEAlgorithm pu = JWEAlgorithm.ECDH_1PU;",
+                "  }",
+                "  void jca() throws Exception {",
+                "    KeyAgreement.getInstance(\"ECDH\");",
+                "  }",
+                "  void old(SSLSocket s) {",
+                "    s.setEnabledCipherSuites(new String[] {",
+                "      \"SSL_DH_RSA_EXPORT_WITH_DES40_CBC_SHA\"",
+                "    });",
+                "  }",
+                "}",
+                "",
+            ]
+            .join(
+                "
+",
+            )
+            .as_str(),
+        )],
+    );
+    let output = shorwatch(&[
+        "scan",
+        dir.to_str().unwrap(),
+        "--format",
+        "json",
+        "--fail-on",
+        "never",
+    ]);
+    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let shape_at = |line: u64| {
+        json["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|f| f["location"]["start"]["line"] == line && f["usage"] == "key-agreement")
+            .map(|f| f["shape"].as_str().unwrap_or("none").to_owned())
+            .unwrap_or_else(|| format!("no finding at {line}"))
+    };
+    // The `E` says both sides are fresh; `ECDH` with no `E` is the server's
+    // long-term key; `ECDH-ES` says the sender's key is fresh.
+    assert_eq!(shape_at(7), "ephemeral-ephemeral");
+    assert_eq!(shape_at(8), "ephemeral-static");
+    assert_eq!(shape_at(12), "ephemeral-static");
+    // ECDH-1PU adds a static key of the sender, and a JCA agreement says
+    // nothing: both stay undetermined, never guessed.
+    assert_eq!(shape_at(13), "undetermined");
+    assert_eq!(shape_at(16), "undetermined");
+    // A static suite whose name has a word between the key exchange and `WITH`.
+    assert_eq!(shape_at(20), "ephemeral-static");
+}
+
+#[test]
 fn sarif_output_is_valid_and_uses_relative_uris() {
     let output = shorwatch(&["scan", &path("spring-injected"), "--format", "sarif"]);
     let log: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
