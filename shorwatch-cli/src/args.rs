@@ -4,7 +4,7 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use shorwatch_core::Severity;
+use shorwatch_core::{Severity, Usage};
 
 /// Without a subcommand, `shorwatch [PATHS] [OPTIONS]` scans like
 /// `shorwatch scan`.
@@ -67,7 +67,7 @@ pub enum Command {
 
 const EXIT_CODES: &str = "\
 Exit codes:
-  0  no findings that fail the scan (see --fail-on, --fail-severity)
+  0  no findings that fail the scan (see --fail-on, --fail-severity, --fail-usage)
   1  findings that fail the scan
   2  error (bad arguments, invalid rules, unreadable paths)";
 
@@ -121,6 +121,15 @@ pub struct Gate {
     /// still reported.
     #[arg(long, value_enum, default_value_t = SeverityArg::Info)]
     pub fail_severity: SeverityArg,
+
+    /// Only findings of quantum-vulnerable public-key cryptography used this
+    /// way fail the scan, e.g. `key-transport,key-agreement` to fail on what
+    /// protects confidentiality and only report signatures. `unknown` is a
+    /// usage like any other: leave it out and findings that do not say how
+    /// the algorithm is used never fail. Symmetric findings have no usage and
+    /// are not affected. Default: every usage.
+    #[arg(long, value_enum, value_delimiter = ',', value_name = "USAGES")]
+    pub fail_usage: Vec<UsageArg>,
 
     /// The link shown for the HTML report instead of its local path: where CI
     /// publishes it (an artifact, a Pages site...).
@@ -258,6 +267,27 @@ pub enum FailOn {
     Any,
     /// Never fail; always exit 0 unless there is an error.
     Never,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum UsageArg {
+    Signature,
+    KeyTransport,
+    KeyAgreement,
+    KeyGeneration,
+    Unknown,
+}
+
+impl From<UsageArg> for Usage {
+    fn from(value: UsageArg) -> Self {
+        match value {
+            UsageArg::Signature => Usage::Signature,
+            UsageArg::KeyTransport => Usage::KeyTransport,
+            UsageArg::KeyAgreement => Usage::KeyAgreement,
+            UsageArg::KeyGeneration => Usage::KeyGeneration,
+            UsageArg::Unknown => Usage::Unknown,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]

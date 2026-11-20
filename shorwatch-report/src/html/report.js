@@ -70,9 +70,9 @@
   });
 
   // ---- Routes: the cover, or a chapter of findings ----------------------------
-  // `#/findings?sev=high&project=keycloak&alg=RSA&cat=shor&f=12` opens a
+  // `#/findings?sev=high&project=keycloak&alg=RSA&cat=shor&usage=signature&f=12` opens a
   // chapter; anything else is the cover (`#where` scrolls to its section).
-  const FILTERS = ["sev", "project", "alg", "cat"];
+  const FILTERS = ["sev", "project", "alg", "cat", "usage"];
   function chapterHref(params) {
     const query = new URLSearchParams();
     for (const key of [...FILTERS, "f"]) {
@@ -94,6 +94,7 @@
     if (params.sev && f.severity !== params.sev) return false;
     if (params.alg && f.algorithm !== params.alg) return false;
     if (params.cat && f.category !== params.cat) return false;
+    if (params.usage && f.usage !== params.usage) return false;
     if (params.project) {
       const project = projectOf(f);
       if (!project || project.name !== params.project) return false;
@@ -395,6 +396,7 @@
     if (params.cat === "shor") parts.push("Broken by Shor’s algorithm");
     else if (params.cat) parts.push(`${capitalize(params.cat)} findings`);
     if (params.alg) parts.push(params.alg);
+    if (params.usage) parts.push(`used for ${params.usage.replace("-", " ")}`);
     return parts.length ? parts.join(": ") : "All findings";
   }
 
@@ -470,7 +472,7 @@
           class: `tag ${f.status === "in_transition" ? "transition" : ""}`,
           text: f.status === "in_transition" ? "in transition" : "vulnerable",
         }),
-        f.usage ? el("span", { class: "tag", title: "How the algorithm is used here", text: f.usage === "unknown" ? "usage unknown" : f.usage.replace("-", " ") }) : null,
+        f.usage ? el("a", { class: "tag", href: chapterHref({ usage: f.usage }), title: "How the algorithm is used here. Open every finding with this usage.", text: f.usage === "unknown" ? "usage unknown" : f.usage.replace("-", " ") }) : null,
         isTest(f) ? el("span", { class: "tag", text: "test code" }) : null,
         el("span", { class: "mono tag", text: f.rule_id }),
       ]),

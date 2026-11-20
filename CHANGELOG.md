@@ -30,7 +30,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `cryptographic-asset`s (`crypto/algorithm/rsa/signature`,
   `crypto/algorithm/rsa/key-transport`) with a `shorwatch:usage` property and
   only the functions of that use. Their `bom-ref`s changed: anything keyed on
-  `crypto/algorithm/<name>` must read the new form. SARIF follows (#36).
+  `crypto/algorithm/<name>` must read the new form.
+- **SARIF carries the usage** (#36). Each result has `properties.usage`, the tag
+  `usage:<usage>` (for code scanning filters) and "Used for: ..." in its
+  message. A rule has a single `help`, so when the findings of one rule carry
+  different advice, the help lists each text under its usage. `ruleId` and
+  `partialFingerprints` do not change.
+- **`--fail-usage`** chooses which usages fail the scan, next to `--fail-on`
+  and `--fail-severity`: `--fail-usage key-transport,key-agreement` fails on
+  what protects confidentiality and only reports signatures. A finding of
+  `unknown` usage fails only if `unknown` is listed; symmetric findings have no
+  usage and are not affected.
+- The HTML report filters by usage (`#/findings?usage=signature`); the usage
+  tag of a finding opens that filter.
 
 - Razor views (`.cshtml`) and components (`.razor`) are counted in the
   *NOT analyzed* table of every report, since they hold C# that no frontend

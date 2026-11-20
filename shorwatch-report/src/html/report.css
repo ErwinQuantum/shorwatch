@@ -146,6 +146,8 @@ a.rank-name:hover { color: var(--accent-ink); }
 .badge.sev-low { background: #475569; color: #fff; }
 .badge.sev-info { background: #5f636b; color: #fff; }
 .tag { display: inline-block; font-size: 12px; padding: 2px 8px; border: 1px solid var(--soft); border-radius: 999px; color: var(--muted); }
+a.tag { text-decoration: none; }
+a.tag:hover { border-color: var(--muted); }
 .tag.transition { color: var(--good); border-color: var(--good); }
 
 /* Fix these first */

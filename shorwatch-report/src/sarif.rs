@@ -14,7 +14,7 @@ use std::fmt::Write as _;
 
 use serde::Serialize;
 use shorwatch_core::ir::Location;
-use shorwatch_core::{CodeRole, Finding, Severity};
+use shorwatch_core::{CodeRole, Finding, Severity, Usage};
 
 use crate::summary::status_label;
 use crate::{Scan, fingerprint};
@@ -56,12 +56,15 @@ pub fn render(scan: &Scan) -> String {
 }
 
 fn descriptors<'a>(findings: &[&'a Finding]) -> Vec<Descriptor<'a>> {
-    let mut seen = BTreeMap::new();
+    let mut seen: BTreeMap<&str, Vec<&Finding>> = BTreeMap::new();
     for finding in findings.iter().copied() {
-        seen.entry(finding.rule_id.as_str()).or_insert(finding);
+        seen.entry(finding.rule_id.as_str())
+            .or_default()
+            .push(finding);
     }
     seen.into_values()
-        .map(|f| Descriptor {
+        .map(|group| (group[0], advice(&group)))
+        .map(|(f, (text, markdown))| Descriptor {
             id: &f.rule_id,
             name: &f.algorithm,
             short_description: Text {
@@ -70,10 +73,7 @@ fn descriptors<'a>(findings: &[&'a Finding]) -> Vec<Descriptor<'a>> {
             full_description: Text {
                 text: f.message.clone(),
             },
-            help: Help {
-                text: f.suggestion.clone(),
-                markdown: help_markdown(f),
-            },
+            help: Help { text, markdown },
             help_uri: f.references.first().map(|r| r.url.as_str()),
             default_configuration: Configuration {
                 level: level(f.severity),
@@ -95,15 +95,50 @@ fn descriptors<'a>(findings: &[&'a Finding]) -> Vec<Descriptor<'a>> {
         .collect()
 }
 
-fn help_markdown(finding: &Finding) -> String {
-    let mut text = finding.suggestion.clone();
-    if !finding.references.is_empty() {
-        text.push_str("\n\n**References**\n");
-        for reference in &finding.references {
-            let _ = write!(text, "\n- [{}]({})", reference.title, reference.url);
+/// A rule has one `help`, but its advice depends on the usage (RSA that signs
+/// moves to ML-DSA, RSA that wraps a key to ML-KEM): when the findings of the
+/// rule in this scan carry different advice, the help gives each one under
+/// its usage. Returns the plain text and the Markdown.
+fn advice(findings: &[&Finding]) -> (String, String) {
+    let mut by_text: Vec<(&str, Vec<&'static str>)> = Vec::new();
+    for finding in findings {
+        match by_text.iter_mut().find(|(t, _)| *t == finding.suggestion) {
+            Some((_, usages)) => usages.extend(finding.usage.map(Usage::label)),
+            None => by_text.push((
+                &finding.suggestion,
+                finding.usage.map(Usage::label).into_iter().collect(),
+            )),
         }
     }
-    text
+    let section = |bold: bool| {
+        by_text
+            .iter()
+            .map(|(text, usages)| {
+                let mut usages = usages.clone();
+                usages.sort_unstable();
+                usages.dedup();
+                let label = usages.join(", ");
+                match (label.is_empty(), bold) {
+                    (true, _) => (*text).to_owned(),
+                    (false, true) => format!("**{label}**: {text}"),
+                    (false, false) => format!("{label}: {text}"),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n\n")
+    };
+    let (text, mut markdown) = match by_text.as_slice() {
+        [(only, _)] => ((*only).to_owned(), (*only).to_owned()),
+        _ => (section(false), section(true)),
+    };
+    let references = &findings[0].references;
+    if !references.is_empty() {
+        markdown.push_str("\n\n**References**\n");
+        for reference in references {
+            let _ = write!(markdown, "\n- [{}]({})", reference.title, reference.url);
+        }
+    }
+    (text, markdown)
 }
 
 fn result<'a>(scan: &Scan, finding: &'a Finding, rule_index: usize) -> SarifResult<'a> {
@@ -121,6 +156,9 @@ fn result<'a>(scan: &Scan, finding: &'a Finding, rule_index: usize) -> SarifResu
                     Some(detail) => format!("Found {detail}. {}", finding.message),
                     None => finding.message.clone(),
                 };
+                if let Some(usage) = finding.usage {
+                    let _ = write!(text, " Used for: {usage}.");
+                }
                 if let Some(e) = &finding.hybrid_evidence {
                     let _ = write!(
                         text,
@@ -164,12 +202,25 @@ fn result<'a>(scan: &Scan, finding: &'a Finding, rule_index: usize) -> SarifResu
             algorithm: &finding.algorithm,
             status: status_label(finding.status),
             role: finding.role,
+            usage: finding.usage.map(Usage::label),
             // GitHub code scanning filters results by tag.
-            tags: match finding.role {
-                CodeRole::Test => vec!["test"],
-                CodeRole::Production => Vec::new(),
-            },
+            tags: finding
+                .usage
+                .map(usage_tag)
+                .into_iter()
+                .chain((finding.role == CodeRole::Test).then_some("test"))
+                .collect(),
         },
+    }
+}
+
+fn usage_tag(usage: Usage) -> &'static str {
+    match usage {
+        Usage::Signature => "usage:signature",
+        Usage::KeyTransport => "usage:key-transport",
+        Usage::KeyAgreement => "usage:key-agreement",
+        Usage::KeyGeneration => "usage:key-generation",
+        Usage::Unknown => "usage:unknown",
     }
 }
 
@@ -409,6 +460,8 @@ struct ResultProperties<'a> {
     algorithm: &'a str,
     status: &'static str,
     role: CodeRole,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    usage: Option<&'static str>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     tags: Vec<&'static str>,
 }
@@ -417,6 +470,66 @@ struct ResultProperties<'a> {
 mod tests {
     use super::*;
     use crate::fixtures::scan;
+
+    #[test]
+    fn a_result_carries_its_usage_as_property_tag_and_text() {
+        let log: serde_json::Value = serde_json::from_str(&render(&scan())).unwrap();
+        let results = log["runs"][0]["results"].as_array().unwrap();
+        let wrapping = results
+            .iter()
+            .find(|r| r["properties"]["usage"] == "key-transport")
+            .unwrap();
+        assert!(
+            wrapping["properties"]["tags"]
+                .as_array()
+                .unwrap()
+                .contains(&"usage:key-transport".into())
+        );
+        assert!(
+            wrapping["message"]["text"]
+                .as_str()
+                .unwrap()
+                .contains("Used for: key-transport.")
+        );
+        // The rule and its fingerprint do not depend on it.
+        assert_eq!(wrapping["ruleId"], "jvm.jca.rsa");
+        // A finding with no usage (symmetric) carries none of it.
+        let symmetric = results
+            .iter()
+            .find(|r| r["properties"].get("usage").is_none())
+            .unwrap();
+        assert!(
+            !symmetric["message"]["text"]
+                .as_str()
+                .unwrap()
+                .contains("Used for")
+        );
+    }
+
+    #[test]
+    fn help_gives_each_usage_its_advice_when_the_rule_has_several() {
+        let mut scan = scan();
+        let mut signing = scan.findings[0].clone();
+        signing.usage = Some(Usage::Signature);
+        signing.suggestion = "Sign with ML-DSA.".into();
+        scan.findings.push(signing);
+        let log: serde_json::Value = serde_json::from_str(&render(&scan)).unwrap();
+        let rule = log["runs"][0]["tool"]["driver"]["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|r| r["id"] == "jvm.jca.rsa")
+            .unwrap();
+        let help = rule["help"]["text"].as_str().unwrap();
+        assert!(help.contains("key-transport: "), "{help}");
+        assert!(help.contains("signature: Sign with ML-DSA."), "{help}");
+        assert!(
+            rule["help"]["markdown"]
+                .as_str()
+                .unwrap()
+                .contains("**signature**: ")
+        );
+    }
 
     #[test]
     fn sarif_report() {

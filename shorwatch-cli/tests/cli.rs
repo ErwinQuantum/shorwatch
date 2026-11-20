@@ -132,6 +132,22 @@ fn fail_on_controls_the_exit_code() {
 }
 
 #[test]
+fn fail_usage_picks_the_usages_that_fail() {
+    // spring-app signs and generates keys, but wraps no key (its key agreement
+    // is in transition, which does not fail):
+    // high findings only matter here (the symmetric ones are medium or low).
+    let base = ["scan", &path("spring-app"), "--fail-severity", "high"];
+    let run = |usages: &str| shorwatch(&[&base[..], &["--fail-usage", usages]].concat());
+    assert_eq!(run("key-transport").status.code(), Some(0));
+    assert_eq!(run("signature").status.code(), Some(1));
+    assert_eq!(run("key-transport,key-generation").status.code(), Some(1));
+    // Findings that do not say how the algorithm is used fail only when asked.
+    assert_eq!(run("unknown").status.code(), Some(1));
+    // Everything is still reported.
+    assert!(stdout(&run("key-transport")).contains("findings"));
+}
+
+#[test]
 fn sarif_output_is_valid_and_uses_relative_uris() {
     let output = shorwatch(&["scan", &path("spring-injected"), "--format", "sarif"]);
     let log: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();

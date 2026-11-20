@@ -180,6 +180,7 @@ against the project's configuration files. Source in a language Shorwatch has no
 | `--report-url URL` | The link shown for the HTML report, e.g. where CI publishes it (also `SHORWATCH_REPORT_URL`) |
 | `--fail-on vulnerable\|any\|never` | When to exit with code 1 (default: any finding still `vulnerable`; `never` only reports) |
 | `--fail-severity info\|low\|medium\|high\|critical` | Only findings at or above this severity fail the scan; the rest are still reported |
+| `--fail-usage USAGES` | Only quantum-vulnerable public-key findings used this way fail the scan: `signature`, `key-transport`, `key-agreement`, `key-generation`, `unknown`, comma-separated. Symmetric findings are not affected; everything is still reported |
 | `--exclude-tests` | Skip test code (Maven/Gradle test source sets such as `src/test` or `src/jvmTest`, .NET test projects such as `Acme.Tests/`, test directories, `*Test`/`*IT` classes). Without it, findings in test code are reported and labelled as such |
 | `--overview` | List the files with findings and explain the three most urgent |
 | `--details` | Explain every finding |
@@ -419,6 +420,7 @@ paths). Gating is a choice:
 |---|---|
 | `--fail-on never` | Report only, never fail: a first run, or a dashboard |
 | `--fail-severity high` | Fail on high and critical findings; medium and low are still reported |
+| `--fail-usage key-transport,key-agreement` | Fail only on what protects confidentiality (recorded traffic can be opened later) and just report signatures. A finding whose usage is `unknown` fails only if you list `unknown` |
 | `--fail-on any` | Also fail on findings already in transition (hybrid) |
 | `--exclude-tests` | Leave test code out of the scan, and of the gate |
 | `shorwatch-baseline.json` | Fail only on findings that are new since the baseline was recorded (see [Baseline and suppressions](#baseline-and-suppressions)) |
