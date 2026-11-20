@@ -75,6 +75,31 @@ Severity: **High**. Shorwatch never offers an automatic fix for this class.
   these) and Kafka's `ssl.cipher.suites`, including when it is passed through
   Spring Boot's `spring.kafka.properties`.
 
+## What the runtime decides
+
+Most Java and .NET programs never name a key exchange: the JVM or the .NET
+runtime picks the groups it offers, and in TLS 1.3 the other peer decides too.
+The client offers a list of groups and the server independently selects the
+one to use ([RFC 8446](https://www.rfc-editor.org/rfc/rfc8446), section 4.1.1).
+A scan of the files cannot know the outcome, so a project with no explicit
+setting is neither clean nor classical.
+
+Shorwatch says so once per scan, in every report, when it finds TLS in play:
+`TLS: no explicit setting read; the key-exchange groups are decided at run
+time ... (runtime-decided: neither clean nor classical).` With settings it
+counts them (`TLS: 3 explicit settings read; ...`): suites and named groups
+set in code or configuration, whatever their value, so a hybrid group is
+counted too. This is a note, never a finding: it feeds no gate, baseline or
+SARIF result.
+
+Where it looks for TLS in play: `SSLContext` and the default TLS socket
+factories, the JDK `HttpClient`, `SslStream`, `HttpClient` and its handlers in
+.NET, and configuration keys under `ssl.*` (Spring Boot, Quarkus, Micronaut),
+SSL bundles and Kafka's `security.protocol`. It does not see TLS that lives
+outside the files: terminated by a proxy or load balancer, or reached through
+a framework that never names these types. A scan that finds none says nothing
+about TLS.
+
 ## False positives and limits
 
 - Shorwatch sees the TLS 1.2 suite names. TLS 1.3 suites such as

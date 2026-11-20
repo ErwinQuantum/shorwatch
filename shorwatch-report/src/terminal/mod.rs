@@ -20,6 +20,7 @@ use std::fmt::Write as _;
 
 pub use banner::banner;
 use style::{accent, bold, dim, failure as rgb_red, paint, warning};
+use wrap::wrap;
 
 use shorwatch_core::inventory::Support;
 
@@ -247,6 +248,12 @@ fn coverage(summary: &Summary, indent: &str, out: &mut String) {
                 warning()
             )
         );
+    }
+    for note in &summary.runtime {
+        // One note is a sentence: wrap it under the summary's own column.
+        let continuation = format!("{indent} ");
+        let text = wrap(&note.line(), 88 - continuation.len(), &continuation);
+        let _ = writeln!(out, "{continuation}{}", paint(text, dim()));
     }
 }
 

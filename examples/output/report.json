@@ -25,6 +25,15 @@
         "files": 1
       }
     ],
+    "runtime": [
+      {
+        "id": "tls-key-exchange",
+        "topic": "TLS",
+        "text": "the key-exchange groups are decided at run time, by the JVM or runtime and by the other peer, and are not analyzed (runtime-decided: neither clean nor classical).",
+        "uses": 1,
+        "settings": 1
+      }
+    ],
     "files_with_findings": 9,
     "findings": 17,
     "vulnerable": 16,

@@ -6,7 +6,7 @@ use serde::Serialize;
 use shorwatch_core::inventory::Support;
 use shorwatch_core::{CodeRole, Severity, Status};
 
-use crate::{LanguageFiles, Scan, Suppression};
+use crate::{LanguageFiles, RuntimeNote, Scan, Suppression};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Summary {
@@ -17,6 +17,9 @@ pub struct Summary {
     /// Source files skipped for want of a frontend.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub unanalyzed: Vec<LanguageFiles>,
+    /// What the runtime decides and a scan of the files does not read.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub runtime: Vec<RuntimeNote>,
     /// Files with at least one finding.
     pub files_with_findings: usize,
     pub findings: usize,
@@ -67,6 +70,7 @@ impl Summary {
             files_scanned: scan.files_scanned,
             languages: scan.languages.clone(),
             unanalyzed: scan.unanalyzed.clone(),
+            runtime: scan.runtime.clone(),
             files_with_findings: findings
                 .iter()
                 .map(|f| f.path.as_str())

@@ -41,6 +41,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   what protects confidentiality and only reports signatures. A finding of
   `unknown` usage fails only if `unknown` is listed; symmetric findings have no
   usage and are not affected.
+- **Reports say what the runtime decides** (#34). When a scan finds TLS in the
+  code or the configuration (`SSLContext`, the JDK `HttpClient`, `SslStream`,
+  .NET `HttpClient`, `ssl.*` keys, SSL bundles), the summary of every report
+  carries one line: `TLS: 3 explicit settings read; the key-exchange groups are
+  decided at run time, by the JVM or runtime and by the other peer, and are not
+  analyzed (runtime-decided: neither clean nor classical).` With no explicit
+  setting it says so, so a project that never names a group is not read as
+  migrated, or as classical. The line is in the terminal, Markdown, JSON
+  (`summary.runtime`), HTML and the CBOM (`metadata.properties`). It comes from
+  a new kind of rule file, `notes/<id>.yaml` (patterns for where the topic is in
+  play and for explicit settings), is never a finding and feeds no gate,
+  baseline or SARIF result.
 - The HTML report filters by usage (`#/findings?usage=signature`); the usage
   tag of a finding opens that filter.
 

@@ -15,6 +15,7 @@ use crate::ir::{Platform, ScopeKind};
 mod compile;
 mod crypto;
 mod error;
+mod note;
 #[cfg(test)]
 pub(crate) mod tests;
 mod usage;
@@ -23,6 +24,7 @@ pub use compile::RuleSet;
 pub(crate) use compile::{CompiledArg, CompiledMarker, CompiledPattern, CompiledRule};
 pub use crypto::{CryptoFunction, CryptoProperties, Primitive};
 pub use error::RuleError;
+pub use note::{Note, NoteSet, Observation, ObservationKind};
 pub use usage::Usage;
 
 /// Which quantum attack weakens the algorithm. This decides what kind of

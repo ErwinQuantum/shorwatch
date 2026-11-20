@@ -4,7 +4,7 @@
 //! (embedded at compile time) and loads additional rule files from disk, so a
 //! new detection never requires touching or recompiling the engine.
 //!
-//! A rules directory has four kinds of files, told apart by their location:
+//! A rules directory has five kinds of files, told apart by their location:
 //!
 //! - `algorithms/<profile>.yaml`: what an algorithm is and why it matters
 //!   (category, severity, message, migration advice, references, hybrid
@@ -14,6 +14,9 @@
 //! - `libraries/<id>.yaml`: a cryptographic library a build file may declare
 //!   (its Maven coordinates, and from which version it offers post-quantum
 //!   algorithms, if it does). Not a rule: it feeds the dependency inventory.
+//! - `notes/<id>.yaml`: what the runtime decides and a scan does not read
+//!   (the TLS groups a connection negotiates), said once per scan. Not a
+//!   rule: it never becomes a finding.
 //! - anything else, e.g. `jvm/nimbus/jose-rsa.yaml`: a rule, i.e. the patterns
 //!   one library exposes, plus `profile: <profile>`. Its fields override the
 //!   profile's, and a rule may also be fully self-contained.
@@ -25,7 +28,7 @@
 use std::path::Path;
 
 use serde_yaml_ng::Value;
-pub use shorwatch_core::{LibraryCatalog, LibrarySpec, Rule, RuleError, RuleSet};
+pub use shorwatch_core::{LibraryCatalog, LibrarySpec, Note, NoteSet, Rule, RuleError, RuleSet};
 
 mod catalog;
 mod error;
@@ -71,6 +74,18 @@ pub fn load_dir_libraries(dir: &Path) -> Result<Vec<LibrarySpec>, LoadError> {
     let mut catalog = Catalog::default();
     catalog.add_dir(dir)?;
     catalog.libraries()
+}
+
+/// The notes shipped with Shorwatch.
+pub fn builtin_notes() -> Result<Vec<Note>, LoadError> {
+    Catalog::builtin()?.notes()
+}
+
+/// The notes under `dir` (`notes/<id>.yaml`), to add to the built-in ones.
+pub fn load_dir_notes(dir: &Path) -> Result<Vec<Note>, LoadError> {
+    let mut catalog = Catalog::default();
+    catalog.add_dir(dir)?;
+    catalog.notes()
 }
 
 /// The rules under `dir`. They may use the built-in profiles and markers as

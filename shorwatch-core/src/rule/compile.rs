@@ -141,83 +141,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
             reason: e.to_string(),
         })
     };
-    let arg = |arg: &Option<ArgPattern>| -> Result<Option<CompiledArg>, RuleError> {
-        arg.as_ref()
-            .map(|a| {
-                Ok(CompiledArg {
-                    index: a.index,
-                    regex: regex(&a.matches)?,
-                })
-            })
-            .transpose()
-    };
-
-    let patterns = rule
-        .patterns
-        .iter()
-        .map(|p| {
-            Ok(match p {
-                Pattern::Call {
-                    receiver,
-                    method,
-                    arg: a,
-                    with_arg,
-                    origin,
-                    unless_chain,
-                    ..
-                } => CompiledPattern::Call {
-                    receiver: receiver.clone(),
-                    method: method.clone(),
-                    arg: arg(a)?,
-                    with_arg: arg(with_arg)?,
-                    origin: arg(origin)?,
-                    unless_chain: unless_chain.as_deref().map(regex).transpose()?,
-                },
-                Pattern::Construct { ty, arg: a, .. } => CompiledPattern::Construct {
-                    ty: ty.clone(),
-                    arg: arg(a)?,
-                },
-                Pattern::Field {
-                    owner,
-                    matches,
-                    unless_call,
-                    ..
-                } => CompiledPattern::Field {
-                    owner: owner.clone(),
-                    name: matches.as_deref().map(regex).transpose()?,
-                    unless_call: unless_call.as_deref().map(regex).transpose()?,
-                },
-                Pattern::Literal {
-                    matches,
-                    unless_call,
-                    in_call,
-                    ..
-                } => CompiledPattern::Literal {
-                    value: regex(matches)?,
-                    unless_call: unless_call.as_deref().map(regex).transpose()?,
-                    in_call: in_call.as_deref().map(regex).transpose()?,
-                },
-                Pattern::Property {
-                    key,
-                    matches,
-                    unless_property,
-                    ..
-                } => CompiledPattern::Property {
-                    key: regex(key)?,
-                    value: matches.as_deref().map(regex).transpose()?,
-                    unless_property: unless_property.as_deref().map(regex).transpose()?,
-                },
-                Pattern::Key {
-                    algorithm,
-                    signature,
-                    ..
-                } => CompiledPattern::Key {
-                    algorithm: algorithm.as_deref().map(regex).transpose()?,
-                    signature: signature.as_deref().map(regex).transpose()?,
-                },
-            })
-        })
-        .collect::<Result<Vec<_>, RuleError>>()?;
+    let patterns = compile_patterns(id, &rule.patterns)?;
 
     // A Shor-category finding has a usage: the pattern's, the rule's, or
     // `unknown`, which claims nothing. (The built-in rules state theirs: a
@@ -287,4 +211,94 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
         markers,
         fix,
     })
+}
+
+/// Compiles patterns, whoever they belong to: a rule's, or a note's.
+pub(crate) fn compile_patterns(
+    id: &str,
+    patterns: &[Pattern],
+) -> Result<Vec<CompiledPattern>, RuleError> {
+    let regex = |pattern: &str| {
+        Regex::new(pattern).map_err(|e| RuleError::InvalidRegex {
+            id: id.to_owned(),
+            pattern: pattern.to_owned(),
+            reason: e.to_string(),
+        })
+    };
+    let arg = |arg: &Option<ArgPattern>| -> Result<Option<CompiledArg>, RuleError> {
+        arg.as_ref()
+            .map(|a| {
+                Ok(CompiledArg {
+                    index: a.index,
+                    regex: regex(&a.matches)?,
+                })
+            })
+            .transpose()
+    };
+
+    patterns
+        .iter()
+        .map(|p| {
+            Ok(match p {
+                Pattern::Call {
+                    receiver,
+                    method,
+                    arg: a,
+                    with_arg,
+                    origin,
+                    unless_chain,
+                    ..
+                } => CompiledPattern::Call {
+                    receiver: receiver.clone(),
+                    method: method.clone(),
+                    arg: arg(a)?,
+                    with_arg: arg(with_arg)?,
+                    origin: arg(origin)?,
+                    unless_chain: unless_chain.as_deref().map(regex).transpose()?,
+                },
+                Pattern::Construct { ty, arg: a, .. } => CompiledPattern::Construct {
+                    ty: ty.clone(),
+                    arg: arg(a)?,
+                },
+                Pattern::Field {
+                    owner,
+                    matches,
+                    unless_call,
+                    ..
+                } => CompiledPattern::Field {
+                    owner: owner.clone(),
+                    name: matches.as_deref().map(regex).transpose()?,
+                    unless_call: unless_call.as_deref().map(regex).transpose()?,
+                },
+                Pattern::Literal {
+                    matches,
+                    unless_call,
+                    in_call,
+                    ..
+                } => CompiledPattern::Literal {
+                    value: regex(matches)?,
+                    unless_call: unless_call.as_deref().map(regex).transpose()?,
+                    in_call: in_call.as_deref().map(regex).transpose()?,
+                },
+                Pattern::Property {
+                    key,
+                    matches,
+                    unless_property,
+                    ..
+                } => CompiledPattern::Property {
+                    key: regex(key)?,
+                    value: matches.as_deref().map(regex).transpose()?,
+                    unless_property: unless_property.as_deref().map(regex).transpose()?,
+                },
+                Pattern::Key {
+                    algorithm,
+                    signature,
+                    ..
+                } => CompiledPattern::Key {
+                    algorithm: algorithm.as_deref().map(regex).transpose()?,
+                    signature: signature.as_deref().map(regex).transpose()?,
+                },
+            })
+        })
+        .collect()
 }

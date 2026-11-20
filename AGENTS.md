@@ -44,9 +44,9 @@ resolves across them.
 Module map (one responsibility per file, tests in sibling `tests.rs`):
 
 ```
-core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: model, error, compile, crypto, usage}
+core/src/  ir/{language, location, unit, types, facts, library}  rule/{mod: model, error, compile, crypto, usage, note}
            inventory/{mod: Dependency + dependencies(), spec: LibrarySpec + LibraryCatalog, version}
-           engine/{mod: analyze + findings, matching, hybrid, fix}
+           engine/{mod: analyze + findings, matching, hybrid, fix, notes: observe}
            link/{mod, library, hierarchy, receivers, flow, config}  finding.rs
 rules/src/ lib.rs (public API)  catalog.rs (files → assembled rules, libraries)  error.rs  build.rs
 langs/src/ managed/{mod: ManagedFile, model, resolve, flow, constants}  java/{mod: traversal, syntax, literals}
@@ -54,12 +54,12 @@ langs/src/ managed/{mod: ManagedFile, model, resolve, flow, constants}  java/{mo
            bytecode/{mod: class -> Library, classfile: JVMS parser}
            keys/{mod: format sniffing + labels, der, pem, x509, keystore, ssh}
            build/{mod, maven, gradle, catalog, nuget}  depth.rs (nesting bound)  unsupported.rs (languages seen, not read)
-cli/src/   args, pipeline, discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file)
+cli/src/   args, pipeline, runtime (notes of a scan), discover, layout, projects, classpath (--classpath: dirs, jars, jmods, @file)
            printable (control characters out), suppress/{mod: apply, inline: `shorwatch:ignore`,
            baseline: shorwatch-baseline.json}, gate (--fail-on/--fail-severity/--fail-usage), output,
            browser (--open, `shorwatch open`), ci, watch
 report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, wrap, banner}
-           html/{mod: payload, report.html/css/js}  sarif cbom json markdown summary links suppression
+           html/{mod: payload, report.html/css/js}  sarif cbom json markdown summary links suppression runtime
 ```
 
 ### Invariants (do not break)
@@ -97,6 +97,16 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   split of rule ids**: `report::fingerprint` is the rule id plus the code on the
   line, and baselines and `shorwatch:ignore` rely on it. A regex that mixed two
   usages (static RSA and ECDHE TLS suites) is two patterns.
+- **Notes are not findings** (`rule/note.rs`, `engine/notes.rs`, `notes/<id>.yaml`):
+  what the runtime decides and the files cannot say (the TLS key-exchange groups a
+  connection negotiates, chosen by the JVM or .NET runtime and by the other peer:
+  RFC 8446 section 4.1.1). A note has `uses` (patterns for where the topic is in
+  play) and `settings` (patterns for explicit settings, whatever their value); the
+  engine's `observe` returns where they match and the CLI counts them into one
+  `RuntimeNote` per note that found anything (`Scan::runtime`). Reports print it
+  once per scan, never per file; it feeds no gate, baseline or SARIF result, and
+  it claims neither outcome: *runtime-decided*, not clean and not classical.
+  `--rules` directories may add their own under `notes/`.
 - A fix is never offered when the matched value was resolved indirectly
   (`Arg::resolved_via`: a constant or a `${property}`).
 - Hybrid detection: markers (`import` / `literal` / `type` regexes) are
@@ -299,6 +309,7 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
 algorithms/<profile>.yaml        what & why, once: category, severity, title,
                                  message, suggestion, references, hybrid
 markers/pqc.yaml                 shared hybrid markers (`hybrid: pqc`)
+notes/<id>.yaml                  what the runtime decides (TLS groups): a note, not a rule
 jvm/<library>/<profile>.yaml     patterns only + `profile:`; id jvm.<library>.<profile>
 config/<framework>/<profile>.yaml
 ```

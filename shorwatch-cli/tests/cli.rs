@@ -147,6 +147,106 @@ fn fail_usage_picks_the_usages_that_fail() {
     assert!(stdout(&run("key-transport")).contains("findings"));
 }
 
+/// A folder of its own, under the tests' temporary one.
+fn scratch(name: &str, files: &[(&str, &str)]) -> PathBuf {
+    let dir = Path::new(env!("CARGO_TARGET_TMPDIR")).join(name);
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    for (file, text) in files {
+        std::fs::write(dir.join(file), text).unwrap();
+    }
+    dir
+}
+
+fn runtime_notes(dir: &Path) -> serde_json::Value {
+    let output = shorwatch(&["scan", dir.to_str().unwrap(), "--format", "json"]);
+    assert_eq!(output.status.code(), Some(0), "a note never fails the scan");
+    let json: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    json["summary"]["runtime"].clone()
+}
+
+#[test]
+fn tls_decided_at_run_time_is_said_never_read_as_clean() {
+    // TLS in play, nothing chosen: no finding, but not silence either.
+    let quiet = scratch(
+        "runtime-quiet",
+        &[(
+            "Client.java",
+            "import javax.net.ssl.SSLContext;
+class Client {
+  void run() throws Exception {
+    SSLContext.getInstance(\"TLS\");
+  }
+}
+",
+        )],
+    );
+    let notes = runtime_notes(&quiet);
+    assert_eq!(notes[0]["topic"], "TLS");
+    assert_eq!(notes[0]["uses"], 1);
+    assert_eq!(notes[0]["settings"], 0);
+
+    // A hybrid group is an explicit setting too: counted, not a finding.
+    let set = scratch(
+        "runtime-set",
+        &[(
+            "Client.java",
+            "class Client {
+  void run() {
+    System.setProperty(\"jdk.tls.namedGroups\", \"X25519MLKEM768\");
+  }
+}
+",
+        )],
+    );
+    let notes = runtime_notes(&set);
+    assert_eq!(notes[0]["settings"], 1);
+
+    // Configuration counts as well.
+    let config = scratch(
+        "runtime-config",
+        &[(
+            "application.yml",
+            "server:
+  ssl:
+    enabled: true
+",
+        )],
+    );
+    assert_eq!(runtime_notes(&config)[0]["uses"], 1);
+
+    // .NET too: the HTTP stack, and a policy of cipher suites.
+    let dotnet = scratch(
+        "runtime-dotnet",
+        &[(
+            "Client.cs",
+            "using System.Net.Http;
+using System.Net.Security;
+class Client {
+  void Run() {
+    var http = new HttpClient();
+    var policy = new CipherSuitesPolicy(new TlsCipherSuite[0]);
+  }
+}
+",
+        )],
+    );
+    let notes = runtime_notes(&dotnet);
+    assert_eq!(notes[0]["uses"], 1);
+    assert_eq!(notes[0]["settings"], 1);
+
+    // Code that has nothing to do with TLS gets no note.
+    let none = scratch(
+        "runtime-none",
+        &[(
+            "A.java",
+            "class A { int one() { return 1; } }
+",
+        )],
+    );
+    assert!(runtime_notes(&none).is_null());
+}
+
 #[test]
 fn sarif_output_is_valid_and_uses_relative_uris() {
     let output = shorwatch(&["scan", &path("spring-injected"), "--format", "sarif"]);

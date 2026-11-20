@@ -212,3 +212,56 @@ fn advice_per_usage_is_for_shor_rules_and_never_empty() {
         }
     );
 }
+
+#[test]
+fn a_note_needs_text_platforms_and_something_to_look_for() {
+    let valid = || Note {
+        id: "tls".into(),
+        platforms: vec![Platform::Jvm],
+        topic: "TLS".into(),
+        text: "Decided at run time.".into(),
+        uses: vec![Pattern::Literal {
+            matches: "x".into(),
+            unless_call: None,
+            in_call: None,
+            usage: None,
+        }],
+        settings: vec![],
+    };
+    assert!(NoteSet::compile([valid()]).is_ok());
+    for (note, field) in [
+        (
+            Note {
+                text: " ".into(),
+                ..valid()
+            },
+            "text",
+        ),
+        (
+            Note {
+                platforms: vec![],
+                ..valid()
+            },
+            "platforms",
+        ),
+        (
+            Note {
+                uses: vec![],
+                ..valid()
+            },
+            "uses or settings",
+        ),
+    ] {
+        assert_eq!(
+            NoteSet::compile([note]).unwrap_err(),
+            RuleError::Empty {
+                id: "tls".into(),
+                field
+            }
+        );
+    }
+    assert_eq!(
+        NoteSet::compile([valid(), valid()]).unwrap_err(),
+        RuleError::DuplicateId("tls".into())
+    );
+}

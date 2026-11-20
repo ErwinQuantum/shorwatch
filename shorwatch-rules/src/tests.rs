@@ -392,3 +392,10 @@ fn rsa_advice_depends_on_the_usage() {
         advice(shorwatch_core::Usage::KeyTransport)
     );
 }
+
+#[test]
+fn builtin_notes_compile() {
+    let notes = builtin_notes().unwrap();
+    assert!(notes.iter().any(|n| n.id == "tls-key-exchange"));
+    shorwatch_core::NoteSet::compile(notes).unwrap();
+}

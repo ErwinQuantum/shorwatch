@@ -20,6 +20,9 @@ fn coverage(summary: &Summary, out: &mut String) {
             language_counts(&summary.unanalyzed)
         );
     }
+    for note in &summary.runtime {
+        let _ = writeln!(out, "> **Decided at run time.** {}\n", note.line());
+    }
 }
 
 pub fn render(scan: &Scan) -> String {
@@ -33,7 +36,10 @@ pub fn render(scan: &Scan) -> String {
             summary.files_scanned,
             suppressed_note(&summary)
         );
-        if !summary.languages.is_empty() || !summary.unanalyzed.is_empty() {
+        if !summary.languages.is_empty()
+            || !summary.unanalyzed.is_empty()
+            || !summary.runtime.is_empty()
+        {
             out.push('\n');
             coverage(&summary, &mut out);
         }

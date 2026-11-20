@@ -4,7 +4,7 @@
 use std::fmt::Write as _;
 
 use anyhow::{Context, Result};
-use shorwatch_core::{Category, LibraryCatalog, Rule, RuleSet, Severity};
+use shorwatch_core::{Category, LibraryCatalog, NoteSet, Rule, RuleSet, Severity};
 
 use crate::args::RuleSource;
 
@@ -29,6 +29,18 @@ pub fn libraries(source: &RuleSource) -> Result<LibraryCatalog> {
         specs.extend(extra);
     }
     LibraryCatalog::compile(specs).context("validating libraries")
+}
+
+/// The notes (built-in plus the `notes/` of `--rules` directories): what the
+/// runtime decides and a scan of the files does not read.
+pub fn notes(source: &RuleSource) -> Result<NoteSet> {
+    let mut notes = shorwatch_rules::builtin_notes().context("loading built-in notes")?;
+    for dir in &source.dirs {
+        let extra = shorwatch_rules::load_dir_notes(dir)
+            .with_context(|| format!("loading notes from `{}`", dir.display()))?;
+        notes.extend(extra);
+    }
+    NoteSet::compile(notes).context("validating notes")
 }
 
 /// A plain table of the rules, sorted by id.
