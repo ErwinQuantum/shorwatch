@@ -135,7 +135,7 @@ expression: render(&scan())
           "ruleIndex": 3,
           "level": "error",
           "message": {
-            "text": "RSA usage detected."
+            "text": "RSA usage detected. Used for: key-transport."
           },
           "locations": [
             {
@@ -159,7 +159,11 @@ expression: render(&scan())
           "properties": {
             "algorithm": "RSA",
             "status": "vulnerable",
-            "role": "production"
+            "role": "production",
+            "usage": "key-transport",
+            "tags": [
+              "usage:key-transport"
+            ]
           }
         },
         {
@@ -227,7 +231,7 @@ expression: render(&scan())
           "ruleIndex": 2,
           "level": "error",
           "message": {
-            "text": "ECDSA usage detected. In transition: post-quantum code at line 3 (ML-DSA-65)."
+            "text": "ECDSA usage detected. Used for: signature. In transition: post-quantum code at line 3 (ML-DSA-65)."
           },
           "locations": [
             {
@@ -251,7 +255,11 @@ expression: render(&scan())
           "properties": {
             "algorithm": "ECDSA",
             "status": "in transition",
-            "role": "production"
+            "role": "production",
+            "usage": "signature",
+            "tags": [
+              "usage:signature"
+            ]
           }
         },
         {
@@ -259,7 +267,7 @@ expression: render(&scan())
           "ruleIndex": 0,
           "level": "error",
           "message": {
-            "text": "RSA (JOSE/JWT) usage detected."
+            "text": "RSA (JOSE/JWT) usage detected. Used for: signature."
           },
           "locations": [
             {
@@ -283,7 +291,11 @@ expression: render(&scan())
           "properties": {
             "algorithm": "RSA (JOSE/JWT)",
             "status": "vulnerable",
-            "role": "production"
+            "role": "production",
+            "usage": "signature",
+            "tags": [
+              "usage:signature"
+            ]
           }
         },
         {
@@ -291,7 +303,7 @@ expression: render(&scan())
           "ruleIndex": 3,
           "level": "error",
           "message": {
-            "text": "RSA usage detected."
+            "text": "RSA usage detected. Used for: key-transport."
           },
           "locations": [
             {
@@ -383,7 +395,9 @@ expression: render(&scan())
             "algorithm": "RSA",
             "status": "vulnerable",
             "role": "test",
+            "usage": "key-transport",
             "tags": [
+              "usage:key-transport",
               "test"
             ]
           }
