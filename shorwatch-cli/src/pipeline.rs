@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use rayon::prelude::*;
 use shorwatch_core::{
-    CodeRole, Finding, Library, LibraryCatalog, RuleSet, Severity, SourceUnit, analyze,
+    CodeRole, Finding, Library, LibraryCatalog, NoteSet, RuleSet, Severity, SourceUnit, analyze,
     dependencies, link,
 };
 use shorwatch_report::{LanguageFiles, Project, Scan, project_of};
@@ -16,7 +16,7 @@ use shorwatch_report::{LanguageFiles, Project, Scan, project_of};
 use crate::args::Analysis;
 use crate::discover::{self, display_path};
 use crate::suppress::{self, Baseline};
-use crate::{classpath, printable, projects, rules};
+use crate::{classpath, printable, projects, rules, runtime};
 
 /// Everything a scanning command does before reporting: rules, files,
 /// classpath, projects, the scan, then the findings ignored in the code or
@@ -50,6 +50,7 @@ pub fn run_for_baseline(analysis: &Analysis, version: &str) -> Result<Scan> {
 fn analyze_all(analysis: &Analysis, version: &str) -> Result<Scan> {
     let rules = rules::load(&analysis.rules)?;
     let libraries = rules::libraries(&analysis.rules)?;
+    let notes = rules::notes(&analysis.rules)?;
     let discovered = discover::discover(&analysis.paths)?;
     let unanalyzed = LanguageFiles::sorted(
         discovered
@@ -76,7 +77,9 @@ fn analyze_all(analysis: &Analysis, version: &str) -> Result<Scan> {
     let cwd = std::env::current_dir().unwrap_or_default();
     let paths: Vec<_> = files.iter().map(|(path, _)| path.clone()).collect();
     let projects = projects::detect(&analysis.paths, &paths, &cwd);
-    let mut scan = scan(&files, projects, &library, &rules, &libraries, &options);
+    let mut scan = scan(
+        &files, projects, &library, &rules, &libraries, &notes, &options,
+    );
     scan.unanalyzed = unanalyzed;
     Ok(scan)
 }
@@ -92,6 +95,7 @@ pub fn scan(
     library: &Library,
     rules: &RuleSet,
     libraries: &LibraryCatalog,
+    notes: &NoteSet,
     options: &Options,
 ) -> Scan {
     let cwd = std::env::current_dir().unwrap_or_default();
@@ -156,6 +160,7 @@ pub fn scan(
         links: shorwatch_report::SourceLinks::default(),
         suppressed: Vec::new(),
         dependencies,
+        runtime: runtime::notes(&units, notes),
     }
 }
 

@@ -38,6 +38,11 @@ pub fn render(scan: &Scan) -> String {
                     version: &scan.tool_version,
                 }],
             },
+            properties: scan
+                .runtime
+                .iter()
+                .map(|note| Property::new("shorwatch:runtime-decided", note.line()))
+                .collect(),
         },
         // An inventory lists the cryptography that is there, findings
         // ignored in the code or known from the baseline included.
@@ -305,6 +310,10 @@ enum AnyComponent<'a> {
 #[derive(Serialize)]
 struct Metadata<'a> {
     tools: Tools<'a>,
+    /// What the runtime decides and the scan does not read, one property per
+    /// topic: an inventory that omits it must not read as complete.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    properties: Vec<Property>,
 }
 
 #[derive(Serialize)]

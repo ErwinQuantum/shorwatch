@@ -1,9 +1,11 @@
 //! Engine tests on hand-built units.
 
 use crate::finding::Status;
-use crate::ir::{Arg, FactKind, Language, Location, ScopeKind, TypeRef};
+use crate::ir::{Arg, FactKind, Language, Location, Platform, ScopeKind, TypeRef};
 use crate::rule::tests::rsa_rule;
-use crate::rule::{ArgPattern, Category, FixSpec, Pattern, Rule, RuleSet, Usage};
+use crate::rule::{
+    ArgPattern, Category, FixSpec, Note, NoteSet, ObservationKind, Pattern, Rule, RuleSet, Usage,
+};
 
 use super::*;
 
@@ -898,4 +900,72 @@ fn a_finding_gets_the_advice_of_its_usage() {
         &RuleSet::compile([rule(Some(Usage::KeyTransport))]).unwrap(),
     );
     assert_eq!(other[0].suggestion, "Migrate to ML-KEM / ML-DSA.");
+}
+
+fn note(uses: Vec<Pattern>, settings: Vec<Pattern>) -> Note {
+    Note {
+        id: "tls".into(),
+        platforms: vec![Platform::Jvm],
+        topic: "TLS".into(),
+        text: "Decided at run time.".into(),
+        uses,
+        settings,
+    }
+}
+
+fn call_to(method: &str, arg: Option<&str>) -> Pattern {
+    Pattern::Call {
+        receiver: "java.security.Signature".into(),
+        method: method.into(),
+        arg: arg.map(|matches| ArgPattern {
+            index: 0,
+            matches: matches.into(),
+        }),
+        with_arg: None,
+        origin: None,
+        unless_chain: None,
+        usage: None,
+    }
+}
+
+#[test]
+fn a_note_tells_a_use_from_an_explicit_setting() {
+    let (mut unit, _, method) = unit_with_method();
+    get_instance(
+        &mut unit,
+        method,
+        "java.security.Signature",
+        "SHA256withRSA",
+        3,
+    );
+    // The same call is a use for one note and a setting for the other, and a
+    // setting is not also counted as a use.
+    let uses = NoteSet::compile([note(vec![call_to("getInstance", None)], vec![])]).unwrap();
+    assert_eq!(observe(&unit, &uses)[0].kind, ObservationKind::Use);
+    let both = NoteSet::compile([note(
+        vec![call_to("getInstance", None)],
+        vec![call_to("getInstance", Some("RSA"))],
+    )])
+    .unwrap();
+    let found = observe(&unit, &both);
+    assert_eq!(found.len(), 1);
+    assert_eq!(found[0].kind, ObservationKind::Setting);
+    assert_eq!(found[0].note, "tls");
+}
+
+#[test]
+fn a_note_looks_only_at_its_platforms() {
+    let (mut unit, _, method) = unit_with_method();
+    get_instance(
+        &mut unit,
+        method,
+        "java.security.Signature",
+        "SHA256withRSA",
+        3,
+    );
+    let dotnet = Note {
+        platforms: vec![Platform::Dotnet],
+        ..note(vec![call_to("getInstance", None)], vec![])
+    };
+    assert!(observe(&unit, &NoteSet::compile([dotnet]).unwrap()).is_empty());
 }

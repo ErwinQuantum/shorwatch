@@ -22,12 +22,14 @@ pub mod html;
 pub mod json;
 pub mod links;
 pub mod markdown;
+mod runtime;
 pub mod sarif;
 pub mod summary;
 pub mod suppression;
 pub mod terminal;
 
 pub use links::{SourceLinks, WebLinks};
+pub use runtime::RuntimeNote;
 pub use summary::Summary;
 pub use suppression::{Suppressed, Suppression, fingerprint};
 
@@ -60,6 +62,10 @@ pub struct Scan {
     /// The cryptographic libraries the build files declare. An inventory
     /// next to the findings: it feeds no gate, baseline or SARIF result.
     pub dependencies: Vec<Dependency>,
+    /// What the runtime decides and the files cannot say (the TLS groups a
+    /// connection negotiates), once per scan: silence about it must not read
+    /// as clean.
+    pub runtime: Vec<RuntimeNote>,
 }
 
 /// The index of the project `path` belongs to: the one with the longest

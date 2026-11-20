@@ -13,6 +13,7 @@ mod pipeline;
 mod printable;
 mod projects;
 mod rules;
+mod runtime;
 mod suppress;
 mod watch;
 

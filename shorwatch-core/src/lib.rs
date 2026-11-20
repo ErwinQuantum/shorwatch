@@ -18,7 +18,7 @@ pub mod rule;
 mod engine;
 mod link;
 
-pub use engine::analyze;
+pub use engine::{analyze, observe};
 pub use finding::{Finding, HybridEvidence, Status, SuggestedFix};
 pub use inventory::{
     Dependency, Ecosystem, LibraryCatalog, LibraryError, LibrarySpec, dependencies,
@@ -26,6 +26,6 @@ pub use inventory::{
 pub use ir::{CodeRole, Language, Library, Platform, SourceUnit};
 pub use link::link;
 pub use rule::{
-    Category, CryptoFunction, CryptoProperties, Primitive, Rule, RuleError, RuleSet, Severity,
-    Usage,
+    Category, CryptoFunction, CryptoProperties, Note, NoteSet, Observation, ObservationKind,
+    Primitive, Rule, RuleError, RuleSet, Severity, Usage,
 };

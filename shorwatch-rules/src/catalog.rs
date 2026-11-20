@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use serde_yaml_ng::{Mapping, Value};
-use shorwatch_core::{LibrarySpec, Rule};
+use shorwatch_core::{LibrarySpec, Note, Rule};
 
 use crate::LoadError;
 
@@ -30,6 +30,9 @@ pub struct Catalog {
     /// `libraries/<id>.yaml`: the known cryptographic libraries, which are
     /// not rules (they feed the dependency inventory).
     pub(crate) libraries: Vec<Source>,
+    /// `notes/<id>.yaml`: what the runtime decides and a scan does not read
+    /// (see [`Note`]). Not rules: they never become findings.
+    pub(crate) notes: Vec<Source>,
 }
 
 impl Catalog {
@@ -62,6 +65,10 @@ impl Catalog {
             Some("markers") => &mut self.markers,
             Some("libraries") => {
                 self.libraries.push(source);
+                return Ok(());
+            }
+            Some("notes") => {
+                self.notes.push(source);
                 return Ok(());
             }
             _ => {
@@ -107,6 +114,11 @@ impl Catalog {
         self.rules.iter().map(|r| self.assemble(r)).collect()
     }
 
+    /// Every note.
+    pub fn notes(&self) -> Result<Vec<Note>, LoadError> {
+        self.notes.iter().map(note).collect()
+    }
+
     /// Every known library.
     pub fn libraries(&self) -> Result<Vec<LibrarySpec>, LoadError> {
         self.libraries.iter().map(library).collect()
@@ -150,6 +162,14 @@ pub(crate) fn deserialize(origin: &str, value: Value) -> Result<Rule, LoadError>
         origin: origin.to_owned(),
         message: e.to_string(),
     })
+}
+
+fn note(source: &Source) -> Result<Note, LoadError> {
+    serde_yaml_ng::with::singleton_map_recursive::deserialize(Value::Mapping(source.doc.clone()))
+        .map_err(|e| LoadError::Parse {
+            origin: source.origin.clone(),
+            message: e.to_string(),
+        })
 }
 
 fn library(source: &Source) -> Result<LibrarySpec, LoadError> {

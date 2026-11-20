@@ -13,12 +13,14 @@ use crate::rule::{CompiledRule, RuleSet, Usage};
 mod fix;
 mod hybrid;
 mod matching;
+mod notes;
 #[cfg(test)]
 mod tests;
 
 use fix::suggested_fix;
 use hybrid::hybrid_evidence;
 use matching::{Match, match_pattern};
+pub use notes::observe;
 
 /// Evaluates every rule for the unit's platform against the unit.
 ///

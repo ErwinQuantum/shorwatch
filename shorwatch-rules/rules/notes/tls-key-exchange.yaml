@@ -1,0 +1,47 @@
+id: tls-key-exchange
+topic: TLS
+platforms: [jvm, dotnet, config]
+# One sentence, read after "TLS: 3 explicit settings read;". The longer
+# explanation (RFC 8446 section 4.1.1: the client offers its groups, the server
+# selects one) is in docs/algorithms/tls-key-exchange.md.
+text: >-
+  the key-exchange groups are decided at run time, by the JVM or runtime and
+  by the other peer, and are not analyzed (runtime-decided: neither clean nor
+  classical).
+
+# Where TLS is in play. Enough to say the topic applies; never a finding.
+uses:
+  # JVM: the context and the default factories, and the JDK HTTP client.
+  - call: { type: javax.net.ssl.SSLContext, method: getInstance }
+  - call: { type: javax.net.ssl.SSLContext, method: getDefault }
+  - call: { type: javax.net.ssl.SSLSocketFactory, method: getDefault }
+  - call: { type: javax.net.ssl.SSLServerSocketFactory, method: getDefault }
+  - call: { type: java.net.http.HttpClient, method: newHttpClient }
+  - call: { type: java.net.http.HttpClient, method: newBuilder }
+  # .NET: a TLS stream and the HTTP stack on top of it.
+  - construct: { type: System.Net.Security.SslStream }
+  - construct: { type: System.Net.Http.HttpClient }
+  - construct: { type: System.Net.Http.HttpClientHandler }
+  - construct: { type: System.Net.Http.SocketsHttpHandler }
+  # Configuration: Spring Boot, Quarkus and Micronaut keep TLS under `ssl.*`,
+  # SSL bundles under `spring.ssl.bundle`, and Kafka says so in its protocol.
+  - property: { key: '(?i)(^|\.)ssl\.[\w.-]+(\[\d+\])?$' }
+  - property: { key: '(?i)^spring\.ssl\.bundle\.' }
+  - property: { key: '(?i)(^|\.)security\.protocol$', matches: '(?i)^(SASL_)?SSL$' }
+
+# Explicit settings of what the runtime would otherwise decide: cipher suites
+# and named groups, whatever their value (a hybrid group counts too).
+settings:
+  # JVM: the JSSE properties, and the calls that set suites or groups. Group
+  # and suite names are too common as words to match anywhere, so they count
+  # only inside those calls.
+  - call: { type: java.lang.System, method: setProperty, arg: { index: 0, matches: '^jdk\.tls\.' } }
+  - literal: { matches: '.', in_call: '^(setEnabledCipherSuites|setCipherSuites|setIncludeCipherSuites|setNamedGroups|ciphers)$' }
+  - field: { type: okhttp3.CipherSuite }
+  # .NET: a cipher suites policy (on Linux and macOS), and the enum of suites.
+  - construct: { type: System.Net.Security.CipherSuitesPolicy }
+  - field: { type: System.Net.Security.TlsCipherSuite }
+  # Configuration: the suites keys the TLS rules read, and the JSSE properties
+  # when they live in a properties file.
+  - property: { key: '(?i)(^|\.)(ssl|options)\.(ciphers|cipher-?suites|cipher\.suites|enabled-?cipher-?suites)(\[\d+\])?$' }
+  - property: { key: '(?i)(^|\.)jdk\.tls\.' }

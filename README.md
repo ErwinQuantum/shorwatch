@@ -569,6 +569,14 @@ its own platform. Source in a language without a frontend (Python, Go,
 TypeScript...) is not analyzed, and every report says so (`NOT analyzed: 340
 Python`), so a scan with no findings is never mistaken for a clean one.
 
+What a runtime decides is out of reach for a static scan: the key-exchange
+groups a TLS connection negotiates come from the JVM or .NET runtime and its
+configuration, and from the other peer. When the scan sees TLS in the code or
+the configuration, every report says so once (`TLS: no explicit setting read;
+the key-exchange groups are decided at run time ... (runtime-decided: neither
+clean nor classical)`), so a project with no explicit setting is never read as
+migrated, or as classical.
+
 Java, Kotlin and C# source code and its configuration (`application.yml`,
 `.properties`, `appsettings.json`). Rules are written per platform, not per language: one JVM rule
 covers Java and Kotlin, and every Java test fixture has a Kotlin twin that must

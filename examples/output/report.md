@@ -12,6 +12,8 @@
 
 Analyzed: 5 Java · 2 YAML · 1 Kotlin · 1 Maven · 1 key material.
 
+> **Decided at run time.** TLS: 1 explicit setting read; the key-exchange groups are decided at run time, by the JVM or runtime and by the other peer, and are not analyzed (runtime-decided: neither clean nor classical).
+
 ### Findings
 
 | Severity | Algorithm | Usage | Location | Status | Rule |

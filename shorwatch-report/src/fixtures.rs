@@ -200,6 +200,7 @@ pub(crate) fn scan() -> Scan {
         suppressed: Vec::new(),
         projects: Vec::new(),
         dependencies: Vec::new(),
+        runtime: Vec::new(),
     }
 }
 
