@@ -41,6 +41,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   what protects confidentiality and only reports signatures. A finding of
   `unknown` usage fails only if `unknown` is listed; symmetric findings have no
   usage and are not affected.
+- **Key agreement says which side uses a fresh key** (#33). A key-agreement finding
+  carries a `shape`: `ephemeral-ephemeral` (the TLS suites with `DHE`/`ECDHE`, and
+  named groups), `ephemeral-static` (JOSE `ECDH-ES`, and the `DH`/`ECDH` suites with
+  no `E`, which use the server's long-term key), `static-static`, or `undetermined`,
+  the default: it is stated only where the code or the name says so, never guessed.
+  Each shape has its own advice: ephemeral-static is already KEM-shaped (ML-KEM, the
+  same move as for encryption), and static-static has no one-to-one replacement, so
+  the protocol has to change (NIST SP 800-227 section 5.2 gives illustrative
+  constructions, not standardized protocols). The shape is in the JSON report, the
+  Markdown table, `--details`, the HTML tag, the SARIF result (`properties.shape`,
+  tag `shape:<shape>`) and the CBOM occurrence. No built-in rule decides
+  `static-static` (no suite or JOSE name says it); a rule of your own can.
+  Rule ids and fingerprints do not change.
 - **Reports say what the runtime decides** (#34). When a scan finds TLS in the
   code or the configuration (`SSLContext`, the JDK `HttpClient`, `SslStream`,
   .NET `HttpClient`, `ssl.*` keys, SSL bundles), the summary of every report

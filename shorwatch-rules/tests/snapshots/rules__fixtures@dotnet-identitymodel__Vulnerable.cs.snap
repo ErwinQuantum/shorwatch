@@ -31,6 +31,7 @@ input_file: shorwatch-rules/tests/fixtures/dotnet-identitymodel/Vulnerable.cs
   at: "34:16"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-static
 - rule: dotnet.identitymodel.jose-rsa
   at: "37:56"
   status: vulnerable

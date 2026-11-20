@@ -8,6 +8,7 @@ use shorwatch_core::{CodeRole, Finding, Usage};
 use super::style::{accent, bold, dim, paint, severity_badge, status};
 use super::wrap::wrap;
 use crate::Scan;
+use crate::usage::stated_shape;
 
 const TAB_WIDTH: usize = 4;
 const TEXT_WIDTH: usize = 88;
@@ -29,7 +30,10 @@ pub(super) fn render(scan: &Scan, finding: &Finding) -> String {
         finding
             .usage
             .map(|usage| format!(" {} {}", paint("·", dim()), paint(usage_text(usage), dim())))
-            .unwrap_or_default(),
+            .unwrap_or_default()
+            + &stated_shape(finding)
+                .map(|shape| format!(" {} {}", paint("·", dim()), paint(shape.label(), dim())))
+                .unwrap_or_default(),
         paint("·", dim()),
         paint(&finding.rule_id, dim()),
         paint("·", dim()),

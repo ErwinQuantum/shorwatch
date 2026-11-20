@@ -25,3 +25,4 @@ input_file: shorwatch-rules/tests/fixtures/jwt-aes-128/Vulnerable.kt
   at: "23:36"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-static

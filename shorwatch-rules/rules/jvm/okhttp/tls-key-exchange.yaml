@@ -10,5 +10,11 @@ patterns:
       matches: '^(TLS|SSL)_RSA_'
   - field:
       usage: key-agreement
+      shape: ephemeral-ephemeral
       type: okhttp3.CipherSuite
-      matches: '^(TLS|SSL)_(DHE?|ECDHE?)_'
+      matches: '^(TLS|SSL)_((DHE|ECDHE)_|(DH|ECDH)_anon_)'
+  - field:
+      usage: key-agreement
+      shape: ephemeral-static
+      type: okhttp3.CipherSuite
+      matches: '^(TLS|SSL)_(DH|ECDH)_(RSA|ECDSA|DSS)_'

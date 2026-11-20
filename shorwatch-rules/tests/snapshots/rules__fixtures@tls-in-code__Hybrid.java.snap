@@ -7,4 +7,5 @@ input_file: shorwatch-rules/tests/fixtures/tls-in-code/Hybrid.java
   at: "6:9"
   status: in_transition
   usage: key-agreement
+  shape: ephemeral-ephemeral
   hybrid_evidence: "X25519MLKEM768,x25519 @ 6"

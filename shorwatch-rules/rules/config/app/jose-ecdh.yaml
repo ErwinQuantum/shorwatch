@@ -8,4 +8,10 @@ patterns:
   # "algorithm" settings stay quiet.
   - property:
       key: '(?i)(^|\.)(alg|algorithms?)(\[\d+\])?$'
-      matches: '^ECDH-(ES|1PU)(\+A(128|192|256)KW)?$'
+      matches: '^ECDH-ES(\+A(128|192|256)KW)?$'
+      shape: ephemeral-static
+  # ECDH-1PU adds a static key of the sender: not one of the three shapes
+  # (and not defined by RFC 7518), so it stays undetermined.
+  - property:
+      key: '(?i)(^|\.)(alg|algorithms?)(\[\d+\])?$'
+      matches: '^ECDH-1PU(\+A(128|192|256)KW)?$'

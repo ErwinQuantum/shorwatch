@@ -16,6 +16,7 @@ mod compile;
 mod crypto;
 mod error;
 mod note;
+mod shape;
 #[cfg(test)]
 pub(crate) mod tests;
 mod usage;
@@ -25,6 +26,7 @@ pub(crate) use compile::{CompiledArg, CompiledMarker, CompiledPattern, CompiledR
 pub use crypto::{CryptoFunction, CryptoProperties, Primitive};
 pub use error::RuleError;
 pub use note::{Note, NoteSet, Observation, ObservationKind};
+pub use shape::AgreementShape;
 pub use usage::Usage;
 
 /// Which quantum attack weakens the algorithm. This decides what kind of
@@ -93,6 +95,17 @@ pub struct Rule {
     /// usage with no entry gets `suggestion`. Shor-category rules only.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub suggestions: BTreeMap<Usage, String>,
+    /// The shape of the key agreement where the rule matches, unless a
+    /// pattern says otherwise: a profile whose every pattern is one shape
+    /// (JOSE `ECDH-ES`) declares it once. A key-agreement pattern with
+    /// neither is `undetermined`.
+    #[serde(default)]
+    pub shape: Option<AgreementShape>,
+    /// Advice for a finding of that shape, before `suggestions` and
+    /// `suggestion`: ephemeral-static agreement is already KEM-shaped, while
+    /// static-static has no one-to-one replacement. Shor-category rules only.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub shape_suggestions: BTreeMap<AgreementShape, String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -123,6 +136,10 @@ pub enum Pattern {
         /// How this match uses the algorithm; the rule's `usage` when absent.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         usage: Option<Usage>,
+        /// The shape of the key agreement it finds, where the code or the name
+        /// says so (key-agreement usage only); the rule's `shape` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        shape: Option<AgreementShape>,
     },
     /// `new Type(...)`.
     Construct {
@@ -133,6 +150,10 @@ pub enum Pattern {
         /// How this match uses the algorithm; the rule's `usage` when absent.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         usage: Option<Usage>,
+        /// The shape of the key agreement it finds, where the code or the name
+        /// says so (key-agreement usage only); the rule's `shape` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        shape: Option<AgreementShape>,
     },
     /// `Type.FIELD`: a static field or enum constant of `type` whose name
     /// matches the `matches` regex (any field when absent).
@@ -148,6 +169,10 @@ pub enum Pattern {
         /// How this match uses the algorithm; the rule's `usage` when absent.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         usage: Option<Usage>,
+        /// The shape of the key agreement it finds, where the code or the name
+        /// says so (key-agreement usage only); the rule's `shape` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        shape: Option<AgreementShape>,
     },
     /// A string literal anywhere in the code whose value matches `matches`.
     /// Only for names specific enough to stand alone (`TLS_ECDHE_RSA_...`):
@@ -165,6 +190,10 @@ pub enum Pattern {
         /// How this match uses the algorithm; the rule's `usage` when absent.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         usage: Option<Usage>,
+        /// The shape of the key agreement it finds, where the code or the name
+        /// says so (key-agreement usage only); the rule's `shape` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        shape: Option<AgreementShape>,
     },
     /// A configuration entry whose key matches the `key` regex and whose value
     /// matches `matches` (any value when absent).
@@ -180,6 +209,10 @@ pub enum Pattern {
         /// How this match uses the algorithm; the rule's `usage` when absent.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         usage: Option<Usage>,
+        /// The shape of the key agreement it finds, where the code or the name
+        /// says so (key-agreement usage only); the rule's `shape` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        shape: Option<AgreementShape>,
     },
     /// A key or certificate whose public key `algorithm` and, for
     /// certificates, `signature` algorithm match (either absent: any).
@@ -191,6 +224,10 @@ pub enum Pattern {
         /// How this match uses the algorithm; the rule's `usage` when absent.
         #[serde(default, skip_serializing_if = "Option::is_none")]
         usage: Option<Usage>,
+        /// The shape of the key agreement it finds, where the code or the name
+        /// says so (key-agreement usage only); the rule's `shape` when absent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        shape: Option<AgreementShape>,
     },
 }
 
@@ -204,6 +241,18 @@ impl Pattern {
             | Pattern::Literal { usage, .. }
             | Pattern::Property { usage, .. }
             | Pattern::Key { usage, .. } => *usage,
+        }
+    }
+
+    /// The shape this pattern states, if it states one.
+    pub fn shape(&self) -> Option<AgreementShape> {
+        match self {
+            Pattern::Call { shape, .. }
+            | Pattern::Construct { shape, .. }
+            | Pattern::Field { shape, .. }
+            | Pattern::Literal { shape, .. }
+            | Pattern::Property { shape, .. }
+            | Pattern::Key { shape, .. } => *shape,
         }
     }
 

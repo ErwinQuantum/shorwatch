@@ -4,13 +4,16 @@ platform: jvm
 
 patterns:
   - field:
+      shape: ephemeral-static
       type: org.jose4j.jwe.KeyManagementAlgorithmIdentifiers
       matches: '^ECDH_ES'
   - call:
+      shape: ephemeral-static
       type: org.jose4j.jws.JsonWebSignature
       method: setAlgorithmHeaderValue
       arg: { index: 0, matches: '^ECDH-ES' }
   - call:
+      shape: ephemeral-static
       type: org.jose4j.jwe.JsonWebEncryption
       method: setAlgorithmHeaderValue
       arg: { index: 0, matches: '^ECDH-ES' }

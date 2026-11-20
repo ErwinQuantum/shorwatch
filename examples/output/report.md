@@ -33,7 +33,7 @@ Analyzed: 5 Java · 2 YAML · 1 Kotlin · 1 Maven · 1 key material.
 | high | ECC | key-generation | `examples/spring-service/src/main/kotlin/com/example/payments/partners/PartnerKeys.kt:20` | vulnerable | `jvm.jca.ec` |
 | high | ECDSA \(JOSE/JWT\) | signature | `examples/spring-service/src/main/resources/application-prod.yml:4` | vulnerable | `config.app.jose-ecdsa` |
 | high | RSA \(JOSE/JWT\) | signature | `examples/spring-service/src/main/resources/application.yml:8` | vulnerable | `config.spring-boot.jose-rsa` |
-| high | TLS key exchange | key-agreement | `examples/spring-service/src/main/resources/application.yml:14` | vulnerable | `config.spring-boot.tls-key-exchange` |
+| high | TLS key exchange | key-agreement (ephemeral-ephemeral) | `examples/spring-service/src/main/resources/application.yml:14` | vulnerable | `config.spring-boot.tls-key-exchange` |
 | high | RSA | unknown | `examples/spring-service/src/main/resources/certs/partner-signing.pem:1` (certificate "CN=statements.partner.example, O=Example Partner": RSA 3072-bit, signed with SHA256withRSA, valid until 2031-10-26) | vulnerable | `keys.material.rsa` |
 
 ### Cryptographic libraries

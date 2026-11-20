@@ -10,6 +10,7 @@ input_file: shorwatch-rules/tests/fixtures/okhttp/Vulnerable.java
   at: "13:25"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-ephemeral
 - rule: jvm.okhttp.3des
   at: "14:25"
   status: vulnerable

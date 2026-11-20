@@ -71,6 +71,17 @@ libraries don't offer it yet. Until they do:
   `ECDH-1PU` or key-wrapping variant (`ECDH-ES+A256KW`...), for settings you
   define yourself.
 
+## Which side uses a fresh key
+
+`ECDH-ES` and its key-wrapping variants name the shape: the sender generates a
+new ephemeral key for every key agreement and the recipient's key is long-lived
+(RFC 7518 section 4.6 calls it Ephemeral Static). That already has the shape of
+a KEM, so the move is the same as for encryption: ML-KEM, with the sender
+encapsulating to the recipient's key. Findings that come from an `ECDH-ES` name
+say `ephemeral-static`; `ECDH-1PU` adds a static key of the sender, which is not
+one of the three shapes, and a bare X25519 key says nothing, so those say
+`undetermined`. The full table of shapes is on the [ECDH page](ecdh.md).
+
 ## False positives and limits
 
 - Shorwatch matches constants, classes and configuration values, not strings

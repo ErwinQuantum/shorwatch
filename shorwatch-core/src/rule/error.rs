@@ -25,6 +25,10 @@ pub enum RuleError {
         "rule `{0}`: `suggestions` apply to Shor-category rules only (they are keyed by usage)"
     )]
     SuggestionsNotAllowed(String),
+    #[error(
+        "rule `{0}`: a `shape` describes a key agreement: only patterns with `usage: key-agreement` take one"
+    )]
+    ShapeWithoutAgreement(String),
     #[error("rule `{0}`: reference `{1}` must be an http(s) URL (reports link to it)")]
     ReferenceNotHttp(String, String),
 }

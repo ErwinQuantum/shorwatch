@@ -5,7 +5,9 @@ use std::collections::HashSet;
 
 use regex::Regex;
 
-use super::{ArgPattern, Category, HybridSpec, Marker, Pattern, Rule, RuleError, Usage};
+use super::{
+    AgreementShape, ArgPattern, Category, HybridSpec, Marker, Pattern, Rule, RuleError, Usage,
+};
 use crate::ir::ScopeKind;
 
 #[derive(Debug)]
@@ -70,6 +72,9 @@ pub(crate) struct CompiledRule {
     /// The usage each pattern reports: its own, or the rule's. Parallel to
     /// `patterns`.
     pub usages: Vec<Option<Usage>>,
+    /// The shape each pattern reports: its own, the rule's, or `undetermined`
+    /// for key agreement; none for any other usage. Parallel to `patterns`.
+    pub shapes: Vec<Option<AgreementShape>>,
     pub hybrid_scope: ScopeKind,
     pub markers: Vec<CompiledMarker>,
     pub fix: Option<CompiledFix>,
@@ -129,7 +134,15 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
             .all(|text| !text.trim().is_empty()),
         "suggestions",
     )?;
-    if rule.category != Category::Shor && !rule.suggestions.is_empty() {
+    require(
+        rule.shape_suggestions
+            .values()
+            .all(|text| !text.trim().is_empty()),
+        "shape_suggestions",
+    )?;
+    if rule.category != Category::Shor
+        && !(rule.suggestions.is_empty() && rule.shape_suggestions.is_empty())
+    {
         return Err(RuleError::SuggestionsNotAllowed(rule.id.clone()));
     }
     require(!rule.patterns.is_empty(), "patterns")?;
@@ -156,6 +169,24 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
                 .or((rule.category == Category::Shor).then_some(Usage::Unknown))
         })
         .collect();
+
+    // A shape describes a key agreement, so only a key-agreement pattern can
+    // have one; the others would carry a fact that means nothing.
+    let mut shapes = Vec::with_capacity(rule.patterns.len());
+    for (pattern, usage) in rule.patterns.iter().zip(&usages) {
+        let stated = pattern.shape().or(rule.shape);
+        shapes.push(match (usage, stated) {
+            (Some(Usage::KeyAgreement), stated) => {
+                Some(stated.unwrap_or(AgreementShape::Undetermined))
+            }
+            (_, None) => None,
+            // The rule's own shape is a default: a pattern of another usage
+            // (a profile that mixes) does not take it; one that states its own
+            // shape does not make sense.
+            (_, Some(_)) if pattern.shape().is_none() => None,
+            (_, Some(_)) => return Err(RuleError::ShapeWithoutAgreement(rule.id.clone())),
+        });
+    }
 
     let (hybrid_scope, markers) = match &rule.hybrid {
         Some(spec) => {
@@ -207,6 +238,7 @@ fn compile_rule(rule: Rule) -> Result<CompiledRule, RuleError> {
         rule,
         patterns,
         usages,
+        shapes,
         hybrid_scope,
         markers,
         fix,

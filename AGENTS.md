@@ -93,7 +93,12 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   `suggestions:` map (usage -> text) that replaces `suggestion` for findings
   of that usage; Shor-category only. Each text is checked against NIST sources
   (SP 800-227 for what a KEM is and how it achieves key transport, IR 8547 for
-  the successors). **The usage is added data, never a
+  the successors). A key-agreement pattern may also state a `shape:`
+  (`rule/shape.rs`: `ephemeral-ephemeral`, `ephemeral-static`, `static-static`;
+  `Finding::shape`, `undetermined` by default) **only where the name or the code
+  says so** (the `E` of `ECDHE`, the `ES` of `ECDH-ES`), never from the code
+  around it; `shape_suggestions:` gives a shape its own advice before the usage's.
+  **The usage is added data, never a
   split of rule ids**: `report::fingerprint` is the rule id plus the code on the
   line, and baselines and `shorwatch:ignore` rely on it. A regex that mixed two
   usages (static RSA and ECDHE TLS suites) is two patterns.

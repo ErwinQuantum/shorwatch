@@ -16,14 +16,27 @@ patterns:
       usage: key-transport
       matches: '(^|[,:\s])((TLS|SSL)_RSA_\w*WITH_\w+|(AES(128|256)(-GCM)?-SHA(256|384)?|CAMELLIA(128|256)-SHA(256)?|DES-CBC3-SHA|RC4-(MD5|SHA)|SEED-SHA)($|[,:\s]))'
       unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'
+  # The `E` of `DHE` / `ECDHE` says both sides make a fresh key (RFC 5246
+  # appendix A.5 and section 7.4.7, RFC 8422 section 2). `DH_anon` and `ECDH_anon` are
+  # ephemeral too: RFC 8422 notes that the name does not say it.
   - literal:
       usage: key-agreement
-      matches: '(^|[,:\s])((TLS|SSL)_(DHE?|ECDHE?)_\w*WITH_\w+|(ECDHE?|DHE?|EDH)-(RSA|ECDSA|DSS)-)'
+      shape: ephemeral-ephemeral
+      matches: '(^|[,:\s])((TLS|SSL)_(DHE|ECDHE)_\w*WITH_\w+|(TLS|SSL)_(DH|ECDH)_anon_\w*WITH_\w+|(ECDHE|DHE|EDH)-(RSA|ECDSA|DSS)-)'
+      unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'
+  # `DH` / `ECDH` with no `E`: the server's certificate holds its long-term
+  # Diffie-Hellman key (RFC 5246 appendix A.5), and the client generates a
+  # key pair of its own (a fixed-DH client certificate makes it static too).
+  - literal:
+      usage: key-agreement
+      shape: ephemeral-static
+      matches: '(^|[,:\s])((TLS|SSL)_(DH|ECDH)_(RSA|ECDSA|DSS)_\w*WITH_\w+|(ECDH|DH)-(RSA|ECDSA|DSS)-)'
       unless_call: '(?i)(exclude|disable|remove|deny|block|reject)'
   # `System.setProperty("jdk.tls.namedGroups", "x25519,secp256r1")` with a
   # classical group in the list.
   - call:
       usage: key-agreement
+      shape: ephemeral-ephemeral
       type: java.lang.System
       method: setProperty
       with_arg: { index: 0, matches: '^jdk\.tls\.([a-z]+\.)?namedGroups$' }
@@ -32,5 +45,6 @@ patterns:
   # too common as words to match anywhere, so they count only inside that call.
   - literal:
       usage: key-agreement
+      shape: ephemeral-ephemeral
       matches: '(?i)^\s*(x25519|x448|secp(256|384|521)r1|ffdhe\d+)\s*$'
       in_call: '^setNamedGroups$'

@@ -3,13 +3,24 @@ profile: jose-ecdh
 platform: jvm
 
 patterns:
+  # Only the `ES` names say the sender's key is fresh (RFC 7518 section 4.6);
+  # ECDH-1PU adds a static key of the sender, so it stays undetermined.
+  - field:
+      shape: ephemeral-static
+      type: com.nimbusds.jose.JWEAlgorithm
+      matches: '^ECDH_ES'
   - field:
       type: com.nimbusds.jose.JWEAlgorithm
-      matches: '^ECDH_(ES|1PU)'
+      matches: '^ECDH_1PU'
+  - call:
+      shape: ephemeral-static
+      type: com.nimbusds.jose.JWEAlgorithm
+      method: parse
+      arg: { index: 0, matches: '^ECDH-ES' }
   - call:
       type: com.nimbusds.jose.JWEAlgorithm
       method: parse
-      arg: { index: 0, matches: '^ECDH-(ES|1PU)' }
+      arg: { index: 0, matches: '^ECDH-1PU' }
   - field:
       type: com.nimbusds.jose.jwk.Curve
       matches: '^X(25519|448)$'
@@ -19,4 +30,5 @@ patterns:
   - construct: { type: com.nimbusds.jose.crypto.X25519Decrypter }
   # Algorithm families, e.g. `JWSAlgorithm.Family.RSA.contains(alg)`: accepting
   # any of them means depending on ECDH.
-  - field: { type: com.nimbusds.jose.JWEAlgorithm.Family, matches: '^ECDH_(ES|1PU)$' }
+  - field: { shape: ephemeral-static, type: com.nimbusds.jose.JWEAlgorithm.Family, matches: '^ECDH_ES$' }
+  - field: { type: com.nimbusds.jose.JWEAlgorithm.Family, matches: '^ECDH_1PU$' }

@@ -527,7 +527,7 @@
           {
             "location": "examples/spring-service/src/main/resources/application.yml",
             "line": 14,
-            "additionalContext": "config.spring-boot.tls-key-exchange (vulnerable)"
+            "additionalContext": "config.spring-boot.tls-key-exchange (vulnerable, ephemeral-ephemeral)"
           }
         ]
       },

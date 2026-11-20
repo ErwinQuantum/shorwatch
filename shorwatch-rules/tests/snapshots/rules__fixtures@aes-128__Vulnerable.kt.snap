@@ -24,6 +24,7 @@ input_file: shorwatch-rules/tests/fixtures/aes-128/Vulnerable.kt
   at: "29:50"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-ephemeral
 - rule: jvm.jca.aes-128
   at: "33:9"
   status: vulnerable

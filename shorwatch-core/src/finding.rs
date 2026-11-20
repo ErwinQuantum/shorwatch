@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::ir::{CodeRole, FlowStep, Location};
-use crate::rule::{Category, CryptoProperties, Reference, Severity, Usage};
+use crate::rule::{AgreementShape, Category, CryptoProperties, Reference, Severity, Usage};
 
 /// Whether the project still depends solely on the vulnerable algorithm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
@@ -39,6 +39,10 @@ pub struct Finding {
     /// findings: what the pattern that matched says. Absent for the rest.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub usage: Option<Usage>,
+    /// The shape of the key agreement, for key-agreement findings: which
+    /// side uses a fresh key. `Undetermined` when the code does not say.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shape: Option<AgreementShape>,
     pub status: Status,
     pub title: String,
     pub message: String,

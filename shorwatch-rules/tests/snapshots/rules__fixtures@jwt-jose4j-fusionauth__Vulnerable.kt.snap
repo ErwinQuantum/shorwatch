@@ -31,6 +31,7 @@ input_file: shorwatch-rules/tests/fixtures/jwt-jose4j-fusionauth/Vulnerable.kt
   at: "31:37"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-static
 - rule: jvm.jose4j.jose-aes-128
   at: "32:9"
   status: vulnerable
@@ -38,6 +39,7 @@ input_file: shorwatch-rules/tests/fixtures/jwt-jose4j-fusionauth/Vulnerable.kt
   at: "32:9"
   status: vulnerable
   usage: key-agreement
+  shape: ephemeral-static
 - rule: jvm.jose4j.jose-aes-128
   at: "34:13"
   status: vulnerable

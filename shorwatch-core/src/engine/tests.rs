@@ -4,7 +4,8 @@ use crate::finding::Status;
 use crate::ir::{Arg, FactKind, Language, Location, Platform, ScopeKind, TypeRef};
 use crate::rule::tests::rsa_rule;
 use crate::rule::{
-    ArgPattern, Category, FixSpec, Note, NoteSet, ObservationKind, Pattern, Rule, RuleSet, Usage,
+    AgreementShape, ArgPattern, Category, FixSpec, Note, NoteSet, ObservationKind, Pattern, Rule,
+    RuleError, RuleSet, Usage,
 };
 
 use super::*;
@@ -207,6 +208,7 @@ fn aes_rule() -> Rule {
             }),
             unless_chain: None,
             usage: None,
+            shape: None,
         }],
         hybrid: None,
         fix: Some(FixSpec {
@@ -274,6 +276,7 @@ fn jws_rule(matches: Option<&str>) -> Rule {
             matches: matches.map(str::to_owned),
             unless_call: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     }
@@ -348,6 +351,7 @@ fn literal_pattern_matches_string_literals_anywhere() {
             unless_call: None,
             in_call: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -378,6 +382,7 @@ fn literal_pattern_skips_literals_passed_to_excluded_calls() {
             unless_call: Some("(?i)exclude".into()),
             in_call: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -410,6 +415,7 @@ fn pqc_field_owner_is_hybrid_evidence() {
         origin: None,
         unless_chain: None,
         usage: None,
+        shape: None,
     });
     rule.hybrid.as_mut().unwrap().markers = vec![crate::rule::Marker::Type("(?i)ml-?dsa".into())];
     let set = RuleSet::compile([rule]).unwrap();
@@ -513,6 +519,7 @@ fn unless_chain_skips_a_call_followed_by_a_choice() {
         origin: None,
         unless_chain: Some("^algorithm$".into()),
         usage: None,
+        shape: None,
     }];
     let rules = RuleSet::compile([rule]).unwrap();
     assert_eq!(analyze(&call(&["build"]), &rules).len(), 1);
@@ -542,6 +549,7 @@ fn unless_property_skips_an_entry_another_one_overrides() {
         matches: None,
         unless_property: Some(r"^jwt\.jws-algorithms".into()),
         usage: None,
+        shape: None,
     }];
     let rules = RuleSet::compile([rule]).unwrap();
     assert_eq!(analyze(&config(&["jwt.jwk-set-uri"]), &rules).len(), 1);
@@ -574,6 +582,7 @@ fn literal_pattern_can_require_the_call_it_is_passed_to() {
             unless_call: None,
             in_call: Some("^setNamedGroups$".into()),
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -617,6 +626,7 @@ fn call_pattern_can_constrain_two_arguments() {
             origin: None,
             unless_chain: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -645,6 +655,7 @@ fn field_pattern_skips_reads_passed_to_excluded_calls() {
             matches: Some("^SHA1$".into()),
             unless_call: Some("^Pbkdf2$".into()),
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -678,6 +689,7 @@ fn a_rule_never_fires_on_a_unit_of_another_platform() {
             origin: None,
             unless_chain: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -703,6 +715,7 @@ fn rsa_by_usage() -> Rule {
         origin: None,
         unless_chain: None,
         usage: Some(usage),
+        shape: None,
     };
     Rule {
         usage: None,
@@ -807,6 +820,7 @@ fn a_pattern_without_a_usage_takes_the_rules() {
             origin: None,
             unless_chain: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -854,6 +868,7 @@ fn a_shor_pattern_that_says_nothing_is_unknown() {
             origin: None,
             unless_chain: None,
             usage: None,
+            shape: None,
         }],
         ..rsa_rule()
     };
@@ -879,6 +894,7 @@ fn a_finding_gets_the_advice_of_its_usage() {
         origin: None,
         unless_chain: None,
         usage,
+        shape: None,
     };
     let rule = |usage| Rule {
         usage: None,
@@ -925,6 +941,7 @@ fn call_to(method: &str, arg: Option<&str>) -> Pattern {
         origin: None,
         unless_chain: None,
         usage: None,
+        shape: None,
     }
 }
 
@@ -968,4 +985,115 @@ fn a_note_looks_only_at_its_platforms() {
         ..note(vec![call_to("getInstance", None)], vec![])
     };
     assert!(observe(&unit, &NoteSet::compile([dotnet]).unwrap()).is_empty());
+}
+
+fn agreement_pattern(usage: Usage, shape: Option<AgreementShape>) -> Pattern {
+    Pattern::Call {
+        receiver: "java.security.Signature".into(),
+        method: "getInstance".into(),
+        arg: None,
+        with_arg: None,
+        origin: None,
+        unless_chain: None,
+        usage: Some(usage),
+        shape,
+    }
+}
+
+fn agreement_rule(pattern: Pattern, shape: Option<AgreementShape>) -> Rule {
+    Rule {
+        usage: None,
+        shape,
+        patterns: vec![pattern],
+        shape_suggestions: std::collections::BTreeMap::from([
+            (
+                AgreementShape::EphemeralEphemeral,
+                "Hybrid ML-KEM.".to_owned(),
+            ),
+            (
+                AgreementShape::StaticStatic,
+                "Redesign the protocol.".to_owned(),
+            ),
+        ]),
+        suggestions: std::collections::BTreeMap::from([(
+            Usage::KeyAgreement,
+            "Use ML-KEM.".to_owned(),
+        )]),
+        ..rsa_rule()
+    }
+}
+
+fn first_finding(rule: Rule) -> Finding {
+    let (mut unit, _, method) = unit_with_method();
+    get_instance(&mut unit, method, "java.security.Signature", "X", 3);
+    analyze(&unit, &RuleSet::compile([rule]).unwrap()).remove(0)
+}
+
+#[test]
+fn a_key_agreement_says_its_shape_or_is_undetermined() {
+    let stated = first_finding(agreement_rule(
+        agreement_pattern(
+            Usage::KeyAgreement,
+            Some(AgreementShape::EphemeralEphemeral),
+        ),
+        None,
+    ));
+    assert_eq!(stated.shape, Some(AgreementShape::EphemeralEphemeral));
+    // The code says nothing: never guessed.
+    let silent = first_finding(agreement_rule(
+        agreement_pattern(Usage::KeyAgreement, None),
+        None,
+    ));
+    assert_eq!(silent.shape, Some(AgreementShape::Undetermined));
+    // The rule's shape is the default, and a pattern's own wins.
+    let by_rule = first_finding(agreement_rule(
+        agreement_pattern(Usage::KeyAgreement, None),
+        Some(AgreementShape::EphemeralStatic),
+    ));
+    assert_eq!(by_rule.shape, Some(AgreementShape::EphemeralStatic));
+    let own = first_finding(agreement_rule(
+        agreement_pattern(Usage::KeyAgreement, Some(AgreementShape::StaticStatic)),
+        Some(AgreementShape::EphemeralStatic),
+    ));
+    assert_eq!(own.shape, Some(AgreementShape::StaticStatic));
+    // Other usages have no shape, even under a rule that declares one.
+    let signing = first_finding(agreement_rule(
+        agreement_pattern(Usage::Signature, None),
+        Some(AgreementShape::EphemeralStatic),
+    ));
+    assert_eq!(signing.shape, None);
+}
+
+#[test]
+fn the_advice_of_the_shape_comes_before_the_usage_and_the_rule() {
+    let advice = |shape| {
+        first_finding(agreement_rule(
+            agreement_pattern(Usage::KeyAgreement, shape),
+            None,
+        ))
+        .suggestion
+    };
+    assert_eq!(
+        advice(Some(AgreementShape::StaticStatic)),
+        "Redesign the protocol."
+    );
+    assert_eq!(
+        advice(Some(AgreementShape::EphemeralEphemeral)),
+        "Hybrid ML-KEM."
+    );
+    // No text for that shape: the usage's.
+    assert_eq!(advice(Some(AgreementShape::EphemeralStatic)), "Use ML-KEM.");
+    assert_eq!(advice(None), "Use ML-KEM.");
+}
+
+#[test]
+fn a_shape_on_something_that_is_not_a_key_agreement_is_rejected() {
+    let rule = agreement_rule(
+        agreement_pattern(Usage::Signature, Some(AgreementShape::StaticStatic)),
+        None,
+    );
+    assert_eq!(
+        RuleSet::compile([rule]).unwrap_err(),
+        RuleError::ShapeWithoutAgreement("jvm.jca.rsa".into())
+    );
 }
