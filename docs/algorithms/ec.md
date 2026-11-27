@@ -70,8 +70,11 @@ way it is a protocol migration, so Shorwatch offers no automatic fix.
 
 ## False positives and limits
 
-- Shorwatch reports that an EC key or curve exists, not what it is used for.
-  Parameter specs such as `ECGenParameterSpec` are reported where they are
+- In code, Shorwatch reports that an EC key or curve exists, not what it is
+  used for. A certificate does say it, in its `keyUsage` extension (RFC 5280
+  section 4.2.1.3): `digitalSignature` makes the finding a signature (ECDSA
+  advice), `keyAgreement` a key agreement (ECDH advice). Both, or no
+  extension, stay `unknown`. Parameter specs such as `ECGenParameterSpec` are reported where they are
   built, even before a key exists.
 - Where the file also performs the ECDH or ECDSA operation, that call gets its
   own finding as well.

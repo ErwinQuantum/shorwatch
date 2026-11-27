@@ -83,7 +83,9 @@ a repository holds: PEM and DER certificates, public and private keys, Java
 keystores (JKS, JCEKS), PKCS#12 files and SSH keys. Each one is reported with
 its subject, key size or curve, signature and expiry, e.g. `certificate
 "CN=api.example.com": RSA 2048-bit, signed with SHA256withRSA, valid until
-2031-03-01`.
+2031-03-01`. When a certificate states what its key is for (the `keyUsage`
+extension), the finding says so (`signature`, `key-transport`, `key-agreement`)
+and carries the matching advice; a certificate that states several uses, or none, stays `unknown`.
 
 And the **cryptographic libraries** a project declares in its build files
 (`pom.xml`, `build.gradle`, `build.gradle.kts`, `libs.versions.toml`, and for

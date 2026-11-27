@@ -10,8 +10,8 @@
 
 use std::fmt::Write as _;
 
-use shorwatch_core::Language;
 use shorwatch_core::ir::{FactKind, Location, SourceUnit};
+use shorwatch_core::{Language, Usage};
 
 use crate::span::Lines;
 use crate::{Frontend, LangError, decode};
@@ -19,6 +19,7 @@ use keystore::Entry;
 use x509::KeyInfo;
 
 mod der;
+mod key_usage;
 mod keystore;
 mod pem;
 mod ssh;
@@ -95,6 +96,7 @@ struct Label {
     signature: Option<String>,
     self_signed: bool,
     not_after: Option<String>,
+    usage: Option<Usage>,
 }
 
 impl Label {
@@ -104,6 +106,7 @@ impl Label {
             signature: None,
             self_signed: false,
             not_after: None,
+            usage: None,
         }
     }
 
@@ -117,6 +120,7 @@ impl Label {
             signature: Some(certificate.signature.clone()),
             self_signed: certificate.self_signed,
             not_after: certificate.not_after.clone(),
+            usage: certificate.usage,
         }
     }
 }
@@ -147,6 +151,7 @@ fn push(unit: &mut SourceUnit, key: KeyInfo, label: Label, location: Location) {
         // Nobody verifies a self-signed certificate's signature: trust
         // comes from the certificate itself, so its hash does not matter.
         signature: label.signature.filter(|_| !label.self_signed),
+        usage: label.usage,
         label: text,
     };
     unit.push(kind, SourceUnit::ROOT, location);
@@ -168,6 +173,7 @@ fn pem_block(label: &str, der: &[u8]) -> Option<(KeyInfo, Label)> {
                 signature: Some(signature),
                 self_signed: true,
                 not_after: None,
+                usage: None,
             };
             Some((key, label))
         }
@@ -296,6 +302,7 @@ fn trusted_group(unit: &mut SourceUnit, trusted: &[x509::Certificate], algorithm
         bits: None,
         curve: None,
         signature: None,
+        usage: None,
         label: format!(
             "{} trusted certificates: {algorithm} ({})",
             group.len(),

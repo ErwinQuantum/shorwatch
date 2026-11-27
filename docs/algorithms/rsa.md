@@ -90,6 +90,13 @@ JWT uses of RSA have their own page: [RSA in JOSE](jose-rsa.md).
 
 - An RSA key that only *verifies* old signatures during a migration is not the
   same risk as one that signs new ones. Shorwatch cannot tell them apart.
+- A certificate says what its key is for in its `keyUsage` extension (RFC 5280
+  section 4.2.1.3), and Shorwatch uses it: a certificate that only signs
+  (`digitalSignature`, or `keyCertSign` for a CA) is a signature finding, one
+  that only enciphers keys (`keyEncipherment`) is key transport. A certificate
+  that asserts both, as many TLS certificates do, or none, stays `unknown`:
+  the profile does not restrict the combinations, so one finding cannot name a
+  single successor. Bare private and public keys have no such extension.
 - A certificate that your code merely trusts (a CA in a truststore) is a
   separate matter from a key you generate. Truststores are reported grouped,
   not once per CA.

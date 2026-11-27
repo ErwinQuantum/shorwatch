@@ -41,7 +41,11 @@ pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
                 .zip(&rule.usages)
                 .zip(&rule.shapes)
                 .find_map(|((p, usage), shape)| {
-                    Some((match_pattern(p, fact, unit)?, *usage, *shape))
+                    Some((
+                        match_pattern(p, fact, unit)?,
+                        declared(fact, *usage),
+                        *shape,
+                    ))
                 })
             {
                 findings.push(build_finding(unit, rule, fact, matched, (usage, shape)));
@@ -56,6 +60,20 @@ pub fn analyze(unit: &SourceUnit, rules: &RuleSet) -> Vec<Finding> {
             || reported.insert((f.rule_id.clone(), f.location.start.line))
     });
     findings
+}
+
+/// A certificate that says what its key is for settles a pattern that could
+/// not (`unknown`); a pattern that states its usage keeps it.
+fn declared(fact: &Fact, pattern: Option<Usage>) -> Option<Usage> {
+    match (&fact.kind, pattern) {
+        (
+            FactKind::Key {
+                usage: Some(usage), ..
+            },
+            Some(Usage::Unknown),
+        ) => Some(*usage),
+        _ => pattern,
+    }
 }
 
 fn build_finding(

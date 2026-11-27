@@ -288,3 +288,55 @@ fn truststores_group_the_certificates_they_only_trust() {
         ]
     );
 }
+
+/// What a certificate's `keyUsage` says its key is for.
+fn declared(name: &str, bytes: &[u8]) -> Vec<Option<shorwatch_core::Usage>> {
+    KeyMaterialFrontend
+        .lower_bytes(name, bytes.to_vec())
+        .unwrap()
+        .0
+        .facts()
+        .iter()
+        .map(|f| match &f.kind {
+            FactKind::Key { usage, .. } => *usage,
+            other => panic!("{other:?}"),
+        })
+        .collect()
+}
+
+#[test]
+fn a_certificate_says_what_its_key_is_for() {
+    use shorwatch_core::Usage::{KeyAgreement, KeyTransport, Signature};
+    let usage = |name: &str, bytes: &[u8]| declared(name, bytes);
+    assert_eq!(
+        usage("a.pem", fixture!("cert-rsa-signs.pem")),
+        [Some(Signature)]
+    );
+    assert_eq!(
+        usage("b.pem", fixture!("cert-rsa-wraps-keys.pem")),
+        [Some(KeyTransport)]
+    );
+    // A certificate authority signs certificates and revocation lists.
+    assert_eq!(
+        usage("c.pem", fixture!("cert-rsa-ca.pem")),
+        [Some(Signature)]
+    );
+    assert_eq!(
+        usage("d.pem", fixture!("cert-ec-signs.pem")),
+        [Some(Signature)]
+    );
+    assert_eq!(
+        usage("e.pem", fixture!("cert-ec-agrees.pem")),
+        [Some(KeyAgreement)]
+    );
+}
+
+#[test]
+fn a_certificate_that_says_several_things_or_nothing_has_no_usage() {
+    // Signs the handshake and wraps the secret: two families, no single usage.
+    assert_eq!(declared("both.pem", fixture!("cert-rsa-both.pem")), [None]);
+    // No `keyUsage` extension at all, and keys that are not certificates.
+    assert_eq!(declared("server.pem", fixture!("server.pem")), [None]);
+    assert_eq!(declared("k.pub", fixture!("deploy_rsa.pub")), [None]);
+    assert_eq!(declared("p.pem", fixture!("dh-public.pem")), [None]);
+}
