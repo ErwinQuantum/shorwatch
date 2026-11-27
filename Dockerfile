@@ -5,7 +5,7 @@
 #
 #   docker run --rm -v "$PWD:/src" ghcr.io/erwinquantum/shorwatch scan
 
-FROM rust:1.99-alpine3.22 AS build
+FROM rust:1.100-alpine3.22 AS build
 # tree-sitter grammars are C code.
 RUN apk add --no-cache musl-dev
 WORKDIR /build
