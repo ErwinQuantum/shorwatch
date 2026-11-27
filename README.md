@@ -8,7 +8,7 @@ into a syntax tree, matches it against declarative rules, and reports every use
 of cryptography that a quantum computer would break or weaken, together with
 the post-quantum replacement and the NIST standard behind it.
 
-**Status: v0.3.** Java, Kotlin, Spring and C# projects (the .NET base class
+**Status: v0.4.** Java, Kotlin, Spring and C# projects (the .NET base class
 library, BouncyCastle, JWT through IdentityModel), their configuration
 (`application.yml`, `appsettings.json`), the libraries their build files
 declare (Maven, Gradle, NuGet), and the keys and certificates they hold. See [Coverage](#coverage) for exactly what is and
@@ -77,6 +77,17 @@ change: start at [docs/algorithms](docs/algorithms/README.md).
 The same algorithms are also detected inside **JWT/JOSE** (RS256, PS256,
 ES256, EdDSA, RSA-OAEP, ECDH-ES, A128GCM, ...) with token-specific advice:
 ML-DSA for JOSE, algorithm-agile verifiers and JWKS rotation.
+
+The successor depends on **what the algorithm is used for**, so every finding
+about a public-key algorithm says it: `signature` (ML-DSA or SLH-DSA),
+`key-transport` (encrypting to a key or wrapping one: ML-KEM, which is a
+key-encapsulation mechanism, not a drop-in), `key-agreement` (ML-KEM, usually
+in a hybrid), `key-generation`, or `unknown` when the code does not say, which
+Shorwatch never guesses. The advice, the CBOM, the SARIF result and the
+`--fail-usage` gate follow the usage. A key agreement also says which side
+uses a fresh key where the name does (`ECDHE` is ephemeral on both sides,
+JOSE `ECDH-ES` ephemeral-static), and a certificate's `keyUsage` extension
+settles what its key is for.
 
 Besides code and configuration, Shorwatch reads the **keys and certificates**
 a repository holds: PEM and DER certificates, public and private keys, Java
@@ -273,6 +284,9 @@ default browser when the scan ends, `shorwatch open` afterwards.
           13 high · 3 medium · 1 low
           16 vulnerable · 1 in transition · 1 with a suggested fix
           analyzed: 5 Java · 2 YAML · 1 Kotlin · 1 Maven · 1 key material
+          TLS: 1 explicit setting read; the key-exchange groups are decided at run time,
+          by the JVM or runtime and by the other peer, and are not analyzed
+          (runtime-decided: neither clean nor classical).
           5 cryptographic libraries in the build files · 1 before post-quantum support (BouncyCastle 1.70)
 
  Report   file:///home/you/.cache/shorwatch/spring-service.html
@@ -406,6 +420,9 @@ When the scan fails, the last line of the log says why and links the report:
           13 high · 3 medium · 1 low
           16 vulnerable · 1 in transition · 1 with a suggested fix
           analyzed: 5 Java · 2 YAML · 1 Kotlin · 1 Maven · 1 key material
+          TLS: 1 explicit setting read; the key-exchange groups are decided at run time,
+          by the JVM or runtime and by the other peer, and are not analyzed
+          (runtime-decided: neither clean nor classical).
           5 cryptographic libraries in the build files · 1 before post-quantum support (BouncyCastle 1.70)
 
  Report   https://github.com/acme/payments/actions/runs/912345678
@@ -452,7 +469,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Shorwatch
         run: |
-          v=v0.3.1
+          v=v0.4.0
           n=shorwatch-$v-x86_64-unknown-linux-gnu
           url=https://github.com/ErwinQuantum/shorwatch/releases/download/$v
           curl -sSLO "$url/$n.tar.gz" -O "$url/$n.tar.gz.sha256"

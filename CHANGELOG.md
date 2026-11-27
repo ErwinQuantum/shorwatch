@@ -7,6 +7,18 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-27
+
+Findings now say **what the algorithm is used for**: signing, key transport,
+key agreement, key generation, or `unknown` when the code does not say. The
+advice follows the usage (ML-DSA or SLH-DSA for signatures, ML-KEM for the
+rest), and so do the CBOM, the SARIF results and a new gate, `--fail-usage`.
+Key agreement also says which side uses a fresh key, certificates say what
+their key is for, and every report says when the TLS key exchange is decided at
+run time rather than in the files. Rule ids and fingerprints do not change, so
+baselines and open alerts keep working; the CBOM's `bom-ref`s do change (see
+below).
+
 ### Added
 
 - Findings say **how the algorithm is used**: `signature`, `key-transport`
@@ -100,6 +112,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   `KeyKind.LEGACY.getJceName()` (Kotlin `KeyKind.LEGACY.jceName`) is the
   algorithm of `LEGACY` and only that one, so the other constants of the enum
   are no longer reported (or missed) at that call.
+
+### Changed
+
+- The C# grammar is tree-sitter-c-sharp 0.24 (C# 14, and fixes to how it reads
+  code around `#if` blocks). Initializers that follow an `#if`/`#endif` block
+  are now read: on one large .NET project that added three real RSA findings,
+  and no finding was lost.
 
 ### Fixed
 
