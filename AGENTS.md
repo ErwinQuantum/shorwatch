@@ -281,7 +281,12 @@ report/src/ terminal/{mod: views + summary, overview, detailed, compact, style, 
   key whose certificate is present is not repeated. Encrypted content is
   skipped silently. Fixtures are generated with OpenSSL 3.5 (ML-DSA,
   ML-KEM), keytool and ssh-keygen; private key fixtures start with a
-  "throwaway" comment line.
+  "throwaway" comment line. A certificate's `keyUsage` (RFC 5280 section
+  4.2.1.3, `keys/key_usage.rs`) is `FactKind::Key::usage` when its bits fall
+  in one family (signing incl. CA signing, key transport, key agreement); the
+  engine takes it only where the pattern's own usage is `unknown`, so it never
+  overrides a rule that states one. Several families or no extension stay
+  `unknown`; the label (and so the fingerprint) does not change.
 - **YAML / properties / JSON**: flatten keys like Spring (`a.b[0].c`), one
   `FactKind::Property` per scalar, located at the value. Multi-document YAML,
   flow/block collections, `\` continuations, CRLF. Comments produce nothing.

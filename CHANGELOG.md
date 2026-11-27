@@ -54,6 +54,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   tag `shape:<shape>`) and the CBOM occurrence. No built-in rule decides
   `static-static` (no suite or JOSE name says it); a rule of your own can.
   Rule ids and fingerprints do not change.
+- **Certificates say what their key is for.** A certificate's `keyUsage`
+  extension (RFC 5280 section 4.2.1.3) settles the usage of its key finding:
+  `digitalSignature`, `nonRepudiation` and the CA bits (`keyCertSign`,
+  `cRLSign`) are a `signature`, `keyEncipherment` and `dataEncipherment` a
+  `key-transport`, `keyAgreement` a `key-agreement`, and each gets its own advice (the `ec`
+  profile now has advice for signatures and key agreement). A certificate that
+  states more than one family, as many TLS certificates do (it signs the
+  handshake and wraps the secret), or has no extension, stays `unknown`,
+  as do bare keys. The finding count, labels and fingerprints do not change.
+  On Keycloak the `unknown` findings fell from 157 to 138, on CAS from 200 to 197.
 - **Reports say what the runtime decides** (#34). When a scan finds TLS in the
   code or the configuration (`SSLContext`, the JDK `HttpClient`, `SslStream`,
   .NET `HttpClient`, `ssl.*` keys, SSL bundles), the summary of every report

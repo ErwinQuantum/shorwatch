@@ -2,10 +2,13 @@
 //! (PKCS#8, PKCS#1, SEC 1): the public key algorithm, its size or curve,
 //! and how a certificate is signed.
 
+use shorwatch_core::Usage;
+
 use super::der::{
     self, BIT_STRING, CONTEXT_0, Der, GENERALIZED_TIME, INTEGER, OCTET_STRING, OID, SEQUENCE, SET,
     UTC_TIME,
 };
+use super::key_usage;
 
 /// What a key is, as far as quantum risk goes.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,6 +28,8 @@ pub(super) struct Certificate {
     /// Issued by its own subject: a root CA or a pinned certificate, whose
     /// signature nobody relies on.
     pub(super) self_signed: bool,
+    /// What the `keyUsage` extension says the key is for, when it says one thing.
+    pub(super) usage: Option<Usage>,
 }
 
 /// `Certificate ::= SEQUENCE { tbsCertificate, signatureAlgorithm, signature }`.
@@ -41,12 +46,14 @@ pub(super) fn certificate(bytes: &[u8]) -> Option<Certificate> {
     let not_after = validity.next().and_then(|t| date(t.tag, t.content));
     let subject = tbs.expect(SEQUENCE)?;
     let key = public_key(tbs.expect(SEQUENCE)?)?;
+    let usage = key_usage::of_certificate(&mut tbs);
     Some(Certificate {
         key,
         signature: signature_name(&signature),
         subject: name(subject),
         not_after,
         self_signed: issuer == subject,
+        usage,
     })
 }
 

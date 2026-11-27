@@ -3,6 +3,7 @@
 use serde::Serialize;
 
 use super::{Location, ScopeId, TypeRef};
+use crate::rule::Usage;
 
 /// Statically known value of an argument expression.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -272,6 +273,11 @@ pub enum FactKind {
         /// How a certificate is signed (`SHA256withRSA`), by its issuer.
         #[serde(skip_serializing_if = "Option::is_none")]
         signature: Option<String>,
+        /// What the key is for, when its certificate says so (the `keyUsage`
+        /// extension, RFC 5280 section 4.2.1.3) and says one thing only. A
+        /// pattern that cannot tell the usage takes it from here.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        usage: Option<Usage>,
         /// What holds the key, for people: `certificate CN=api.example.com
         /// (alias "server"), valid until 2027-03-01`.
         label: String,
